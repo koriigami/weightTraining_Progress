@@ -4,19 +4,23 @@ A small read-only web app showing a 6-week home workout plan (Sep 21 – Nov 1,
 2026). Built with Next.js + Tailwind. No login, no database — the plan is a
 static file you can edit directly.
 
-- **Today** (`/`) — today's workout, with a peek at tomorrow.
-- **Plan** (`/plan`) — the full 6 weeks, collapsible on mobile, a grid on desktop.
+Single page, calendar-style: a 6-week grid on desktop (click any day to see
+its workout beside it), a current-week strip with prev/next arrows on
+mobile. The program starts Tue, Sep 22 — Push A, Pull A, Legs, Push B,
+Pull B, and Full Body sessions rotate through the week, each with strength
+and cardio combined, twice-weekly push and pull.
 
-Actual sets/reps logging happens in the **Heavy** app; body weight is tracked
-in **Google Fit**. This app is just the plan you check each morning.
+Actual sets/reps logging happens in the **Heavy** app; body weight is
+tracked directly in **Google Fit** (no integration here — see below).
 
 ## Editing the plan
 
-Everything lives in one file: `data/plan.ts`. Each of the 42 days is built
-from small per-day-type functions (`pushDay`, `pullDay`, `legsDay`, etc.)
-that take the week number and return that week's exercises — so bumping a
-dumbbell weight or changing reps for a given week just means editing the
-`case` for that week in the relevant function.
+Everything lives in one file: `data/plan.ts`. Each session type
+(`pushA`, `pushB`, `pullA`, `pullB`, `legs`, `fullBody`) is a small function
+keyed by week number — so bumping a dumbbell weight or changing reps for a
+given week just means editing the `case` for that week in the relevant
+function. The weekly layout (which day gets which session, which days are
+rest) is in the `WEEK_LAYOUT` table near the top of the file.
 
 ## Local development
 
@@ -44,8 +48,13 @@ Open the deployed URL on your phone:
 The app opens full-screen, without browser chrome, using the icon and name
 from `public/manifest.webmanifest`.
 
-## What's not built yet
+## Why there's no weight tracking in the app
 
-Pulling body weight from Google into the app (via the newer Google Health
-APIs, since the old Fit REST API is being sunset) is a deliberately deferred
-phase — see the plan discussion for details. The app works fully without it.
+Investigated pulling body weight from Google into this app. The old Google
+Fit REST API is deprecated/sunset, and Health Connect (its replacement) is
+Android-only with no web API. The newer "Google Health API"
+(developers.google.com/health) looked promising by name but turns out to be
+the successor to the **Fitbit** Web API — it only reads data from Fitbit
+devices and Pixel Watch, not from the Google Fit app or Health Connect. So
+there's no web-callable path to your Google Fit weight data in 2026. The app
+stays a pure workout viewer; keep using Google Fit for weight.
