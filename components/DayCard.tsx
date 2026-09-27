@@ -20,7 +20,7 @@ const BADGE_LABELS: Record<WorkoutDay['dayType'], string> = {
   legs: 'LEGS',
   'full-body': 'FULL BODY',
   rest: 'REST',
-  'pre-start': 'UPCOMING',
+  'pre-start': 'NOT STARTED',
 };
 
 function estimateMinutes(day: WorkoutDay): number {
@@ -38,7 +38,7 @@ export function DayCard({ day }: { day: WorkoutDay }) {
           {BADGE_LABELS[day.dayType]}
         </span>
         <h2 className="mt-3 text-lg font-semibold text-neutral-800 dark:text-neutral-100">
-          {day.dayType === 'rest' ? 'Rest day — recovery matters' : 'Program starts tomorrow'}
+          {day.dayType === 'rest' ? 'Rest day. Recovery matters' : 'Not started yet'}
         </h2>
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{day.focus}</p>
       </div>

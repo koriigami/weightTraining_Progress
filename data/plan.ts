@@ -29,9 +29,10 @@ export type WorkoutDay = {
 type WeekNumber = WorkoutDay['weekNumber'];
 type SessionType = 'push-a' | 'push-b' | 'pull-a' | 'pull-b' | 'legs' | 'full-body';
 
-// Monday, Sep 21 2026 — the calendar's first day (program starts the next day).
+// Monday, Sep 21 2026 is the calendar's first day. The program itself didn't
+// actually start until Saturday, Sep 26 (see DAY_ONE and WEEK_LAYOUT below).
 const START_DATE = '2026-09-21';
-const DAY_ONE = '2026-09-22';
+const DAY_ONE = '2026-09-26';
 
 function dateAt(offsetDays: number): string {
   const d = new Date(`${START_DATE}T00:00:00Z`);
@@ -41,8 +42,8 @@ function dateAt(offsetDays: number): string {
 
 // Mon=0 ... Sun=6, per week.
 const WEEK_LAYOUT: Record<WeekNumber, DayType[]> = {
-  1: ['pre-start', 'push-a', 'rest', 'pull-a', 'rest', 'legs', 'push-b'],
-  2: ['push-a', 'pull-a', 'rest', 'legs', 'rest', 'push-b', 'pull-b'],
+  1: ['pre-start', 'pre-start', 'pre-start', 'pre-start', 'pre-start', 'full-body', 'full-body'],
+  2: ['full-body', 'full-body', 'rest', 'full-body', 'rest', 'full-body', 'full-body'],
   3: ['push-a', 'pull-a', 'legs', 'rest', 'push-b', 'pull-b', 'full-body'],
   4: ['push-a', 'pull-a', 'legs', 'rest', 'push-b', 'pull-b', 'full-body'],
   5: ['push-a', 'pull-a', 'legs', 'rest', 'push-b', 'pull-b', 'full-body'],
@@ -50,25 +51,25 @@ const WEEK_LAYOUT: Record<WeekNumber, DayType[]> = {
 };
 
 const TITLES: Record<SessionType, string> = {
-  'push-a': 'Push A — Chest Focus',
-  'push-b': 'Push B — Shoulder Focus',
-  'pull-a': 'Pull A — Back Focus',
-  'pull-b': 'Pull B — Biceps Focus',
-  legs: 'Legs — Quads, Glutes, Hamstrings',
-  'full-body': 'Full Body — Compound Circuit',
+  'push-a': 'Push A: Chest Focus',
+  'push-b': 'Push B: Shoulder Focus',
+  'pull-a': 'Pull A: Back Focus',
+  'pull-b': 'Pull B: Biceps Focus',
+  legs: 'Legs: Quads, Glutes, Hamstrings',
+  'full-body': 'Full Body: Compound Circuit',
 };
 
 const WEEK_FOCUS: Record<WeekNumber, string> = {
-  1: 'Baseline — learn form at a comfortable weight. Cardio eases in lightly.',
-  2: 'Core work begins (planks, crunches) on weekends. Bump reps toward the top of your range.',
-  3: 'Milestone 1 — bump dumbbell weight on lifts that hit 12 reps easily last week.',
-  4: 'Add tempo — a slow 3-second lowering phase on your main lifts.',
-  5: 'Milestone 2 — bump weight again where you can, and add supersets.',
-  6: 'Peak week — highest volume early, then lighter to close the program out.',
+  1: 'Full-body sessions to build a base. Learn each movement at a comfortable weight.',
+  2: 'Still full-body. Core work starts on weekends. Push a little more volume as it gets easier.',
+  3: 'Milestone 1. Bump dumbbell weight on lifts that hit 12 reps easily last week.',
+  4: 'Add tempo. Slow the lowering phase to about 3 seconds on your main lifts.',
+  5: 'Milestone 2. Bump weight again where you can, and add supersets.',
+  6: 'Peak week. Highest volume early, then lighter to close the program out.',
 };
 
-const REST_FOCUS = 'Recovery day — a light walk or stretch is fine. Aim for 8 hours of sleep tonight.';
-const PRE_START_FOCUS = 'Program starts tomorrow — first workout Tue, Sep 22 (Push A).';
+const REST_FOCUS = 'Recovery day. A light walk or stretch is fine. Aim for 8 hours of sleep tonight.';
+const PRE_START_FOCUS = 'This program began on Saturday, September 26.';
 
 // Day-of-week cardio modality, Mon=0 ... Sun=6.
 const CARDIO_BY_DOW: Array<'treadmill' | 'cycle'> = [
@@ -91,8 +92,8 @@ const CARDIO_MINUTES: Record<WeekNumber, number> = {
 };
 
 function cardioNotes(week: WeekNumber, dow: number): string | undefined {
-  if (week === 6) return 'Deload — easy pace';
-  if (week === 1 && CARDIO_BY_DOW[dow] === 'cycle') return 'Easing back into cycling — keep it light';
+  if (week === 6) return 'Deload, easy pace';
+  if (week === 1 && CARDIO_BY_DOW[dow] === 'cycle') return 'Easing back into cycling, keep it light';
   return undefined;
 }
 
@@ -128,12 +129,12 @@ function pushA(week: WeekNumber): Exercise[] {
       ];
     case 5:
       return [
-        { name: 'Pushups + DB Shoulder Press', sets: 4, reps: '8-10 each', notes: 'Superset — bump weight' },
+        { name: 'Pushups + DB Shoulder Press', sets: 4, reps: '8-10 each', notes: 'Superset, bump weight' },
         { name: 'DB Chest Flyes + DB Tricep Ext.', sets: 4, reps: '8-10 each', notes: 'Superset' },
       ];
     case 6:
       return [
-        { name: 'Pushups', sets: 1, reps: 'max reps', notes: 'Benchmark — record your number' },
+        { name: 'Pushups', sets: 1, reps: 'max reps', notes: 'Benchmark, record your number' },
         { name: 'DB Chest Flyes (floor)', sets: 4, reps: '8-10' },
         { name: 'DB Shoulder Press', sets: 4, reps: '8-10' },
         { name: 'DB Tricep Overhead Extension', sets: 3, reps: '8-10' },
@@ -149,7 +150,7 @@ function pushB(week: WeekNumber): Exercise[] {
         { name: 'DB Lateral Raises', sets: 3, reps: '12' },
         { name: 'DB Front Raises', sets: 3, reps: '10' },
         { name: 'DB Tricep Kickbacks', sets: 3, reps: '10' },
-        { name: 'Pushups', sets: 2, reps: '8', notes: 'Light — second push day' },
+        { name: 'Pushups', sets: 2, reps: '8', notes: 'Light, second push day' },
       ];
     case 2:
       return [
@@ -177,7 +178,7 @@ function pushB(week: WeekNumber): Exercise[] {
       ];
     case 5:
       return [
-        { name: 'DB Shoulder Press + DB Front Raises', sets: 4, reps: '8-10 each', notes: 'Superset — bump weight' },
+        { name: 'DB Shoulder Press + DB Front Raises', sets: 4, reps: '8-10 each', notes: 'Superset, bump weight' },
         { name: 'DB Lateral Raises', sets: 4, reps: '10-12' },
         { name: 'DB Tricep Kickbacks + Pushups', sets: 4, reps: '8-10 each', notes: 'Superset' },
       ];
@@ -224,7 +225,7 @@ function pullA(week: WeekNumber): Exercise[] {
       ];
     case 5:
       return [
-        { name: 'DB Bent-over Rows + Bicep Curls', sets: 4, reps: '8 each', notes: 'Superset — bump weight' },
+        { name: 'DB Bent-over Rows + Bicep Curls', sets: 4, reps: '8 each', notes: 'Superset, bump weight' },
         { name: 'DB Single-arm Rows', sets: 4, reps: '8/side' },
         { name: 'DB Reverse Flyes', sets: 4, reps: '10-12' },
       ];
@@ -267,7 +268,7 @@ function pullB(week: WeekNumber): Exercise[] {
       ];
     case 5:
       return [
-        { name: 'DB Hammer Curls + Spider Curls', sets: 4, reps: '8 each', notes: 'Superset — bump weight' },
+        { name: 'DB Hammer Curls + Spider Curls', sets: 4, reps: '8 each', notes: 'Superset, bump weight' },
         { name: 'DB Bicep Curls + DB Reverse Flyes', sets: 4, reps: '8-10 each', notes: 'Superset' },
         { name: 'Supermans', sets: 4, reps: '15' },
       ];
@@ -318,7 +319,7 @@ function legs(week: WeekNumber): Exercise[] {
       ];
     case 5:
       return [
-        { name: 'DB Goblet Squats + Glute Bridges', sets: 4, reps: '8 / 15', notes: 'Superset — bump weight on squats' },
+        { name: 'DB Goblet Squats + Glute Bridges', sets: 4, reps: '8 / 15', notes: 'Superset, bump weight on squats' },
         { name: 'DB Sumo Squats', sets: 4, reps: '8', notes: 'Bump weight if possible' },
         { name: 'Calf Raises', sets: 4, reps: '20' },
       ];
@@ -335,7 +336,22 @@ function legs(week: WeekNumber): Exercise[] {
 function fullBody(week: WeekNumber): Exercise[] {
   switch (week) {
     case 1:
+      return [
+        { name: 'Bodyweight Squats', sets: 3, reps: '12' },
+        { name: 'Pushups', sets: 3, reps: '8-10', notes: 'Knees ok' },
+        { name: 'DB Bent-over Rows', sets: 3, reps: '10' },
+        { name: 'DB Lateral Raises', sets: 3, reps: '12' },
+        { name: 'DB Bicep Curls', sets: 3, reps: '10' },
+      ];
     case 2:
+      return [
+        { name: 'Sumo Squats', sets: 3, reps: '12-15' },
+        { name: 'Pushups', sets: 3, reps: '10-12' },
+        { name: 'DB Bent-over Rows', sets: 3, reps: '10-12' },
+        { name: 'DB Shoulder Press', sets: 3, reps: '10-12' },
+        { name: 'DB Bicep Curls', sets: 3, reps: '10-12' },
+        { name: 'DB Tricep Overhead Extension', sets: 3, reps: '10' },
+      ];
     case 3:
       return [
         { name: 'Bodyweight Squats', sets: 3, reps: '15' },
@@ -353,11 +369,11 @@ function fullBody(week: WeekNumber): Exercise[] {
     case 5:
       return [
         { name: 'Squats + Pushups', sets: 4, reps: '12 / 10', notes: 'Superset circuit' },
-        { name: 'DB Rows + DB Shoulder Press', sets: 4, reps: '10 each', notes: 'Superset — bump weight' },
+        { name: 'DB Rows + DB Shoulder Press', sets: 4, reps: '10 each', notes: 'Superset, bump weight' },
       ];
     case 6:
       return [
-        { name: 'Bodyweight Squats', sets: 2, reps: '12', notes: 'Deload — lighter effort, focus on form' },
+        { name: 'Bodyweight Squats', sets: 2, reps: '12', notes: 'Deload, lighter effort, focus on form' },
         { name: 'Pushups', sets: 2, reps: '10' },
         { name: 'DB Bent-over Rows', sets: 2, reps: '10/side' },
         { name: 'DB Shoulder Press', sets: 2, reps: '10' },
@@ -427,7 +443,7 @@ function buildPlan(): WorkoutDay[] {
           date,
           weekNumber,
           dayType,
-          title: 'Program Starts Tomorrow',
+          title: 'Not Started Yet',
           strength: [],
           focus: PRE_START_FOCUS,
         });

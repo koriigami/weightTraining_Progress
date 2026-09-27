@@ -25,7 +25,7 @@ const SHORT_LABEL: Record<WorkoutDay['dayType'], string> = {
   legs: 'Legs',
   'full-body': 'Full Body',
   rest: 'Rest',
-  'pre-start': '—',
+  'pre-start': '·',
 };
 
 const MILESTONE_WEEKS = new Set([3, 5]);
