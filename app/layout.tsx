@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { ProgressProvider } from '@/components/ProgressProvider';
+import { AppNav } from '@/components/AppNav';
 
 export const metadata: Metadata = {
   title: 'Home Workout',
@@ -30,12 +32,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="min-h-screen bg-neutral-50 text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-50">
-        <header className="border-b border-neutral-200 bg-white/80 backdrop-blur dark:border-neutral-800 dark:bg-neutral-950/80">
-          <div className="mx-auto max-w-5xl px-4 py-3">
-            <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Home Workout</span>
-          </div>
-        </header>
-        <main className="mx-auto max-w-5xl px-4 py-4 sm:py-6">{children}</main>
+        <ProgressProvider>
+          <AppNav />
+          <main className="mx-auto max-w-5xl px-4 py-4 sm:py-6">{children}</main>
+        </ProgressProvider>
       </body>
     </html>
   );

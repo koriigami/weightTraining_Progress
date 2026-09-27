@@ -1,5 +1,10 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import { WorkoutDay } from '@/data/plan';
 import { ExerciseRow } from './ExerciseRow';
+import { useProgress } from './ProgressProvider';
+import { todayStr } from '@/lib/date';
 
 const BADGE_STYLES: Record<WorkoutDay['dayType'], string> = {
   'push-a': 'bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300',
@@ -31,6 +36,17 @@ function estimateMinutes(day: WorkoutDay): number {
 }
 
 export function DayCard({ day }: { day: WorkoutDay }) {
+  const { state, complete, uncomplete } = useProgress();
+  const [today, setToday] = useState<string | null>(null);
+
+  useEffect(() => {
+    setToday(todayStr());
+  }, []);
+
+  const isDone = Boolean(state.completions[day.date]);
+  const isWorkoutDay = day.dayType !== 'rest' && day.dayType !== 'pre-start';
+  const canMarkDone = today !== null && isWorkoutDay && day.date <= today;
+
   if (day.dayType === 'rest' || day.dayType === 'pre-start') {
     return (
       <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-5 dark:border-neutral-800 dark:bg-neutral-900/50">
@@ -93,6 +109,29 @@ export function DayCard({ day }: { day: WorkoutDay }) {
       )}
 
       <p className="mt-3 text-xs text-neutral-400 dark:text-neutral-500">{day.focus}</p>
+
+      {canMarkDone && (
+        <div className="mt-4">
+          {isDone ? (
+            <div className="flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-3 dark:bg-emerald-500/10">
+              <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Done</span>
+              <button
+                onClick={() => uncomplete(day.date)}
+                className="text-xs font-medium text-neutral-500 underline dark:text-neutral-400"
+              >
+                Undo
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => complete(day.date)}
+              className="w-full rounded-xl bg-neutral-900 py-3 text-sm font-semibold text-white dark:bg-neutral-100 dark:text-neutral-900"
+            >
+              Mark workout done
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

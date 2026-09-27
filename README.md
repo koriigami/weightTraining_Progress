@@ -1,19 +1,28 @@
 # Home Workout: 6-Week Plan
 
-A small read-only web app showing a 6-week home workout plan (Sep 21 to
-Nov 1, 2026). Built with Next.js and Tailwind. No login, no database. The
-plan is a static file you can edit directly.
+A small personal web app showing a 6-week home workout plan (Sep 21 to
+Nov 1, 2026), with a one-tap "workout done" tracker, XP, levels, ranks,
+achievements, and goals layered on top. Built with Next.js and Tailwind.
+The plan is a static file you can edit directly; progress data is stored
+in Upstash Redis and protected by a passcode, since the URL is public.
 
-Single page, calendar-style: a 6-week grid on desktop (click any day to see
-its workout beside it), a current-week strip with prev/next arrows on
-mobile. Sep 21 to 25 are marked as not started (that's what actually
-happened). The real Day 1 is Sat, Sep 26. Weeks 1 and 2 are full-body
-sessions to build a base, then from week 3 the program splits into
-Push A, Pull A, Legs, Push B, Pull B, and a Full Body day, each with
-strength and cardio combined.
+Calendar page: a 6-week grid on desktop (click any day to see its workout
+beside it), a current-week strip with prev/next arrows on mobile. Sep 21
+to 25 are marked as not started (that's what actually happened). The real
+Day 1 is Sat, Sep 26. Weeks 1 and 2 are full-body sessions to build a
+base, then from week 3 the program splits into Push A, Pull A, Legs,
+Push B, Pull B, and a Full Body day, each with strength and cardio
+combined.
 
-Actual sets/reps logging happens in the **Heavy** app. Body weight is
-tracked directly in **Google Fit** (no integration here, see below).
+Tap "Mark workout done" on any day up to today to log it. Doing so earns
+XP, builds a streak, and can unlock achievements. A morning weight entry
+on the Profile page tracks progress from 110 kg toward a 103 kg target
+and unlocks weight milestones. The Goals page lets you set short-term
+(a few days) or long-term (up to 3 months) goals for workouts, pushups,
+cardio minutes, streaks, or weight.
+
+Actual sets/reps logging happens in the **Heavy** app. This app only
+tracks whether a day was completed as planned, plus a daily weight entry.
 
 ## Editing the plan
 
@@ -31,14 +40,34 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000.
+Open http://localhost:3000. Set `APP_PASSCODE=<anything>` in your shell
+before `npm run dev` to try the passcode prompt locally. With no Redis
+env vars set, progress is kept in memory for the life of the dev server
+(it resets when you restart it).
+
+## Setting up progress storage and the passcode
+
+The calendar itself needs no setup, but XP, achievements, weights and
+goals need a small database and a passcode, since the deployed URL is
+public with no login.
+
+1. In the Vercel dashboard, open this project, go to Storage, and add
+   **Upstash Redis** (free tier). Connect it to the project. This injects
+   the `KV_REST_API_URL` / `UPSTASH_REDIS_REST_URL` style environment
+   variables the app reads through `@upstash/redis`.
+2. In Project Settings, Environment Variables, add `APP_PASSCODE` with a
+   value of your choice.
+3. Redeploy. Open the app on each device and enter the passcode once; it's
+   remembered after that.
 
 ## Deploying to Vercel
 
 1. Push this repo to GitHub (already done if you're reading this from the repo).
 2. Go to [vercel.com/new](https://vercel.com/new) and import the repository.
-3. Framework preset: **Next.js** (auto-detected). No environment variables needed.
-4. Deploy. Every push to `main` redeploys automatically.
+3. Framework preset: **Next.js** (auto-detected).
+4. Follow "Setting up progress storage and the passcode" above before or
+   right after the first deploy.
+5. Deploy. Every push to `main` redeploys automatically.
 
 ## Installing on your phone
 
@@ -49,14 +78,3 @@ Open the deployed URL on your phone:
 
 The app opens full-screen, without browser chrome, using the icon and name
 from `public/manifest.webmanifest`.
-
-## Why there's no weight tracking in the app
-
-Investigated pulling body weight from Google into this app. The old Google
-Fit REST API is deprecated and sunset, and Health Connect (its replacement)
-is Android-only with no web API. The newer "Google Health API"
-(developers.google.com/health) looked promising by name but turns out to be
-the successor to the **Fitbit** Web API. It only reads data from Fitbit
-devices and Pixel Watch, not from the Google Fit app or Health Connect. So
-there's no web-callable path to your Google Fit weight data in 2026. The app
-stays a pure workout viewer. Keep using Google Fit for weight.

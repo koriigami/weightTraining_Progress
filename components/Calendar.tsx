@@ -5,6 +5,7 @@ import { plan, WorkoutDay } from '@/data/plan';
 import { DayCard } from './DayCard';
 import { ProgressBar } from './ProgressBar';
 import { getTodayOrClosest, formatDateShort } from '@/lib/date';
+import { useProgress } from './ProgressProvider';
 
 const DOT_STYLES: Record<WorkoutDay['dayType'], string> = {
   'push-a': 'bg-orange-400',
@@ -37,6 +38,7 @@ function dayOfMonth(date: string): number {
 
 export function Calendar() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const { state } = useProgress();
 
   useEffect(() => {
     setSelectedDate(getTodayOrClosest().day.date);
@@ -108,7 +110,10 @@ export function Calendar() {
                               : 'border-neutral-200 hover:border-neutral-300 dark:border-neutral-800 dark:hover:border-neutral-700'
                           } ${isToday ? 'bg-neutral-100 dark:bg-neutral-900' : 'bg-white dark:bg-neutral-950'}`}
                         >
-                          <div className="text-[10px] text-neutral-400">{dayOfMonth(d.date)}</div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] text-neutral-400">{dayOfMonth(d.date)}</span>
+                            {state.completions[d.date] && <span className="text-[10px] text-emerald-500">&#10003;</span>}
+                          </div>
                           <div className="mt-1 flex items-center gap-1.5">
                             <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${DOT_STYLES[d.dayType]}`} />
                             <span className="truncate text-xs font-medium text-neutral-800 dark:text-neutral-100">
@@ -188,9 +193,13 @@ export function Calendar() {
               >
                 <span className="text-[10px] font-medium uppercase tracking-wide opacity-70">{DOW_LABELS[i]}</span>
                 <span className="text-sm font-semibold">{dayOfMonth(d.date)}</span>
-                <span
-                  className={`h-1.5 w-1.5 rounded-full ${isSelected ? 'bg-white dark:bg-neutral-900' : DOT_STYLES[d.dayType]}`}
-                />
+                {state.completions[d.date] ? (
+                  <span className={`text-[10px] ${isSelected ? '' : 'text-emerald-500'}`}>&#10003;</span>
+                ) : (
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${isSelected ? 'bg-white dark:bg-neutral-900' : DOT_STYLES[d.dayType]}`}
+                  />
+                )}
               </button>
             );
           })}
