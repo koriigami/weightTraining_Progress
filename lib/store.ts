@@ -112,33 +112,78 @@ export function backfillGoalCreatedAt(state: AppState): AppState {
   };
 }
 
-export async function getState(): Promise<AppState> {
-  if (useMemoryStore()) {
-    if (!globalForStore.__wtMemoryStateV2) {
-      globalForStore.__wtMemoryStateV2 = globalForStore.__wtMemoryState
-        ? migrateV1ToV2(globalForStore.__wtMemoryState)
-        : emptyState();
-    }
-    globalForStore.__wtMemoryStateV2 = backfillGoalCreatedAt(globalForStore.__wtMemoryStateV2);
-    return globalForStore.__wtMemoryStateV2;
-  }
-  const redis = getRedis();
-  const v2 = await redis.get<AppState>(STATE_KEY_V2);
-  if (v2) return backfillGoalCreatedAt(v2);
-  const v1 = await redis.get<V1AppState>(STATE_KEY_V1);
-  if (v1) {
-    const migrated = migrateV1ToV2(v1);
-    await redis.set(STATE_KEY_V2, migrated);
-    return migrated;
-  }
-  return emptyState();
+export type Profile = { email: string; name: string; image: string; createdAt: string };
+
+// Minimal key-value surface so the same logic runs on Redis and on the dev memory store.
+export type KV = {
+  get<T>(key: string): Promise<T | null>;
+  set(key: string, value: unknown): Promise<void>;
+};
+
+const stateKey = (userId: string) => `wt:user:${userId}:state`;
+const profileKey = (userId: string) => `wt:user:${userId}:profile`;
+
+function isOwner(email: string | undefined | null): boolean {
+  const owner = process.env.OWNER_EMAIL?.trim().toLowerCase();
+  return Boolean(owner && email && email.trim().toLowerCase() === owner);
 }
 
-export async function saveState(state: AppState): Promise<void> {
-  if (useMemoryStore()) {
-    globalForStore.__wtMemoryStateV2 = state;
-    return;
-  }
-  const redis = getRedis();
-  await redis.set(STATE_KEY_V2, state);
+export function createStore(kv: KV) {
+  return {
+    async getState(userId: string, email?: string | null): Promise<AppState> {
+      const existing = await kv.get<AppState>(stateKey(userId));
+      if (existing) return backfillGoalCreatedAt(existing);
+      if (isOwner(email)) {
+        // Copy the legacy single-user progress once. Legacy keys are never written or deleted.
+        const v2 = await kv.get<AppState>(STATE_KEY_V2);
+        const v1 = v2 ? null : await kv.get<V1AppState>(STATE_KEY_V1);
+        const legacy = v2 ?? (v1 ? migrateV1ToV2(v1) : null);
+        if (legacy) {
+          const copied = backfillGoalCreatedAt(structuredClone(legacy));
+          await kv.set(stateKey(userId), copied);
+          return copied;
+        }
+      }
+      return emptyState();
+    },
+    async saveState(userId: string, state: AppState): Promise<void> {
+      await kv.set(stateKey(userId), state);
+    },
+    async saveProfile(userId: string, p: Omit<Profile, 'createdAt'>): Promise<void> {
+      const prev = await kv.get<Profile>(profileKey(userId));
+      await kv.set(profileKey(userId), { ...p, createdAt: prev?.createdAt ?? new Date().toISOString() });
+    },
+  };
 }
+
+const globalKv = globalThis as unknown as { __wtMemoryKv?: Map<string, unknown> };
+
+// Dev-only memory store. The legacy slots can be seeded (globalThis.__wtMemoryStateV2 / __wtMemoryState)
+// and are read-only here. Per-user data lives in the Map.
+const memoryKv: KV = {
+  async get<T>(key: string) {
+    if (key === STATE_KEY_V2) return (globalForStore.__wtMemoryStateV2 as T) ?? null;
+    if (key === STATE_KEY_V1) return (globalForStore.__wtMemoryState as T) ?? null;
+    return ((globalKv.__wtMemoryKv ??= new Map()).get(key) as T) ?? null;
+  },
+  async set(key, value) {
+    (globalKv.__wtMemoryKv ??= new Map()).set(key, structuredClone(value));
+  },
+};
+
+const redisKv: KV = {
+  async get<T>(key: string) {
+    return getRedis().get<T>(key);
+  },
+  async set(key, value) {
+    await getRedis().set(key, value);
+  },
+};
+
+function active() {
+  return createStore(useMemoryStore() ? memoryKv : redisKv);
+}
+
+export const getState = (userId: string, email?: string | null) => active().getState(userId, email);
+export const saveState = (userId: string, state: AppState) => active().saveState(userId, state);
+export const saveProfile = (userId: string, p: Omit<Profile, 'createdAt'>) => active().saveProfile(userId, p);

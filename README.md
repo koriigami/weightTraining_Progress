@@ -4,8 +4,8 @@ A small personal web app showing a 6-week home workout plan (Sep 21 to
 Nov 1, 2026), with per-exercise logging, XP, levels, hunter ranks (E
 through S), a Strava-style badge collection, and goals layered on top.
 Built with Next.js, Tailwind and Motion. The plan is a static file you
-can edit directly; progress data is stored in Upstash Redis and
-protected by a passcode, since the URL is public.
+can edit directly; progress data is stored in Upstash Redis, per
+user, behind Google sign-in with an invite list.
 
 Calendar page: a 6-week grid on desktop (click any day to see its workout
 beside it), a current-week strip with prev/next arrows on mobile. Sep 21
@@ -49,36 +49,53 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. Set `APP_PASSCODE=<anything>` in your shell
-before `npm run dev` to try the passcode prompt locally. With no Redis
-env vars set, progress is kept in memory for the life of the dev server
-(it resets when you restart it).
+Open http://localhost:3000. With no Google env vars set, the sign-in
+screen shows a "Dev sign-in" email form (development only, never in
+production). Run it like this:
 
-## Setting up progress storage and the passcode
+```bash
+AUTH_SECRET=dev-secret ALLOWED_EMAILS=me@example.com OWNER_EMAIL=me@example.com npm run dev
+```
+
+With no Redis env vars set, progress is kept in memory for the life of
+the dev server (it resets when you restart it).
+
+## Setting up sign-in and progress storage
 
 The calendar itself needs no setup, but XP, badges, weights and goals
-need a small database and a passcode, since the deployed URL is public
-with no login. Progress is stored under the Redis key `wt:state:v2`. If
-that key is missing, the app reads the older `wt:state` key (from a
-previous version of this app) once and migrates it: each old completion
-becomes a day with every strength, core and cardio item ticked. The old
-key is left untouched.
+need a small database and Google sign-in. Each person's progress is
+stored under `wt:user:{id}:state`, where the id is their Google account id.
+Only emails on the invite list can sign in.
+
+The owner's older progress in `wt:state:v2` (or `wt:state` from an even
+earlier version) is copied once into the owner's own key the first time
+the owner signs in. The old keys are never changed or deleted.
 
 1. In the Vercel dashboard, open this project, go to Storage, and add
    **Upstash Redis** (free tier). Connect it to the project. This injects
    the `KV_REST_API_URL` / `UPSTASH_REDIS_REST_URL` style environment
    variables the app reads through `@upstash/redis`.
-2. In Project Settings, Environment Variables, add `APP_PASSCODE` with a
-   value of your choice.
-3. Redeploy. Open the app on each device and enter the passcode once; it's
-   remembered after that.
+2. In Google Cloud Console, create a project. Under APIs and Services,
+   set up the OAuth consent screen (External, Testing) and add each
+   invited person as a test user.
+3. Create an OAuth client ID (type: Web application). Add the redirect
+   URI `https://<your-domain>/api/auth/callback/google`. Add
+   `http://localhost:3000/api/auth/callback/google` too if you want to
+   test Google sign-in locally.
+4. In Vercel Project Settings, Environment Variables, add:
+   - `AUTH_SECRET`: a random string. Run `npx auth secret` to make one.
+   - `AUTH_GOOGLE_ID`: the OAuth client ID.
+   - `AUTH_GOOGLE_SECRET`: the OAuth client secret.
+   - `ALLOWED_EMAILS`: comma-separated Google emails that may sign in.
+   - `OWNER_EMAIL`: the owner's Google email, so their old progress is copied over.
+5. Redeploy.
 
 ## Deploying to Vercel
 
 1. Push this repo to GitHub (already done if you're reading this from the repo).
 2. Go to [vercel.com/new](https://vercel.com/new) and import the repository.
 3. Framework preset: **Next.js** (auto-detected).
-4. Follow "Setting up progress storage and the passcode" above before or
+4. Follow "Setting up sign-in and progress storage" above before or
    right after the first deploy.
 5. Deploy. Every push to `main` redeploys automatically.
 

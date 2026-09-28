@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { signOut, useSession } from 'next-auth/react';
 import { useProgress } from '@/components/ProgressProvider';
 import { ProgressBar } from '@/components/ProgressBar';
 import { RankShield } from '@/components/RankShield';
@@ -15,6 +16,7 @@ import * as feedback from '@/lib/feedback';
 
 export default function ProfilePage() {
   const { progress, state, logWeight } = useProgress();
+  const { data: session } = useSession();
   const today = useToday();
   const [weightInput, setWeightInput] = useState('');
 
@@ -47,6 +49,28 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-4">
+      <div
+        className="flex items-center justify-between gap-3 rounded-2xl border p-4 shadow-sm"
+        style={{ borderColor: 'var(--line)', background: 'var(--surface)' }}
+      >
+        <div className="min-w-0">
+          <div className="truncate text-base font-semibold" style={{ color: 'var(--ink)' }}>
+            {session?.user?.name || session?.user?.email}
+          </div>
+          <div className="text-xs" style={{ color: 'var(--muted)' }}>
+            Signed in
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => signOut({ callbackUrl: '/' })}
+          className="min-h-10 shrink-0 rounded-full border px-4 text-sm font-semibold"
+          style={{ borderColor: 'var(--line)', color: 'var(--ink)', background: 'transparent' }}
+        >
+          Sign out
+        </button>
+      </div>
+
       <div className="rounded-2xl border p-5 shadow-sm" style={{ borderColor: 'var(--line)', background: 'var(--surface)' }}>
         <div className="flex items-center gap-4">
           <RankShield rank={progress.rank} level={progress.level} size={96} />

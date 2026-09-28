@@ -1,5 +1,6 @@
 'use client';
 
+import { useSession } from 'next-auth/react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   allItemKeys,
@@ -28,9 +29,7 @@ type ProgressContextValue = {
   progress: FullProgress;
   loading: boolean;
   authorized: boolean;
-  passcodeError: boolean;
   snackbarVisible: boolean;
-  submitPasscode: (code: string) => void;
   tick: (date: string, key: string, xpAmount: number) => void;
   untick: (date: string, key: string, undoLabel: string) => void;
   logCardio: (date: string, minutes: number, km: number | undefined, xpAmount: number) => void;
@@ -44,8 +43,7 @@ type ProgressContextValue = {
 
 const ProgressContext = createContext<ProgressContextValue | null>(null);
 
-const STORAGE_KEY = 'wt:passcode';
-const SEEN_KEY = 'wt:seen';
+const seenKey = (userId: string) => `wt:seen:${userId}`;
 
 // "Couldn't save": network failure, 401, or a server-side rejection with no
 // message of its own.
@@ -55,9 +53,9 @@ type PostOutcome = { ok: true; data: AppState } | { ok: false; error: string };
 
 type Seen = { level: number; badgeIds: string[] };
 
-function readSeen(): Seen | null {
+function readSeen(userId: string): Seen | null {
   try {
-    const raw = localStorage.getItem(SEEN_KEY);
+    const raw = localStorage.getItem(seenKey(userId));
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (typeof parsed?.level !== 'number' || !Array.isArray(parsed?.badgeIds)) return null;
@@ -67,9 +65,9 @@ function readSeen(): Seen | null {
   }
 }
 
-function writeSeen(seen: Seen) {
+function writeSeen(userId: string, seen: Seen) {
   try {
-    localStorage.setItem(SEEN_KEY, JSON.stringify(seen));
+    localStorage.setItem(seenKey(userId), JSON.stringify(seen));
   } catch {
     // ignore storage errors
   }
@@ -80,13 +78,13 @@ function writeSeen(seen: Seen) {
 // the *current* level or badge set; if that lower snapshot overwrote the
 // record, re-crossing the same threshold later would look "new" again and
 // replay its celebration.
-function updateSeen(level: number, badgeIds: string[]) {
-  const prev = readSeen();
+function updateSeen(userId: string, level: number, badgeIds: string[]) {
+  const prev = readSeen(userId);
   if (!prev) {
-    writeSeen({ level, badgeIds });
+    writeSeen(userId, { level, badgeIds });
     return;
   }
-  writeSeen({
+  writeSeen(userId, {
     level: Math.max(prev.level, level),
     badgeIds: Array.from(new Set([...prev.badgeIds, ...badgeIds])),
   });
@@ -118,15 +116,14 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppState>(emptyState());
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
-  const [passcodeError, setPasscodeError] = useState(false);
-  const [passcode, setPasscode] = useState<string | null>(null);
-  const [checkedStorage, setCheckedStorage] = useState(false);
+  const { data: session } = useSession();
+  const userId = session?.user?.id ?? null;
   const [snackbar, setSnackbar] = useState<SnackbarState>(null);
   const snackbarId = useRef(0);
   const stateRef = useRef(state);
   stateRef.current = state;
-  const passcodeRef = useRef(passcode);
-  passcodeRef.current = passcode;
+  const userIdRef = useRef(userId);
+  userIdRef.current = userId;
 
   // One promise chain serializes every POST, so two rapid actions can never
   // race a read-modify-write on the server. Each request gets a sequence
@@ -138,45 +135,34 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   const today = useToday();
   const celebration = useCelebration();
 
-  useEffect(() => {
-    let stored: string | null = null;
-    try {
-      stored = localStorage.getItem(STORAGE_KEY);
-    } catch {
-      stored = null;
-    }
-    setPasscode(stored);
-    setCheckedStorage(true);
-  }, []);
-
   const showSnackbar = useCallback((text: string, actionLabel?: string, onAction?: () => void) => {
     snackbarId.current += 1;
     setSnackbar({ id: snackbarId.current, text, actionLabel, onAction });
   }, []);
 
   const fetchState = useCallback(
-    async (code: string) => {
+    async () => {
+      const uid = userIdRef.current;
+      if (!uid) return;
       setLoading(true);
       try {
-        const res = await fetch('/api/state', { headers: { 'x-passcode': code } });
+        const res = await fetch('/api/state');
         if (res.status === 401) {
           setAuthorized(false);
-          setPasscodeError(true);
           return;
         }
         if (!res.ok) return;
         const data: AppState = await res.json();
         setState(data);
         setAuthorized(true);
-        setPasscodeError(false);
 
         const now = todayStr();
         const xpNow = totalXp(data, now);
         const level = levelForXp(xpNow);
         const badgeIds = allEarnedBadges(data, now).map((b) => b.id);
-        const seen = readSeen();
+        const seen = readSeen(uid);
         if (seen === null) {
-          writeSeen({ level, badgeIds });
+          writeSeen(uid, { level, badgeIds });
         } else {
           const newBadges = allEarnedBadges(data, now).filter((b) => !seen.badgeIds.includes(b.id));
           const events: CelebrationEvent[] = newBadges.map((b) => ({ kind: 'badge', badge: b }));
@@ -187,7 +173,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
             else events.push({ kind: 'levelup', from: seen.level, to: level, rank: toRank, xpNow });
           }
           if (events.length) celebration.enqueue(events);
-          updateSeen(level, badgeIds);
+          updateSeen(uid, level, badgeIds);
         }
       } catch {
         // A background refetch (after a failed queued write) failing too is
@@ -199,44 +185,26 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     [celebration]
   );
 
-  // Runs once, only for a passcode already in storage from a previous visit.
+  // Load this user's state whenever the signed-in user changes.
   useEffect(() => {
-    if (!checkedStorage) return;
-    if (!passcode) {
+    if (!userId) {
       setLoading(false);
+      setAuthorized(false);
       return;
     }
-    fetchState(passcode);
+    fetchState();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [checkedStorage]);
-
-  const submitPasscode = useCallback(
-    (code: string) => {
-      try {
-        localStorage.setItem(STORAGE_KEY, code);
-      } catch {
-        // ignore storage errors
-      }
-      setPasscode(code);
-      // Called directly (not left to a passcode-changed effect) so
-      // re-submitting the same passcode after a 401 still retries the fetch.
-      fetchState(code);
-    },
-    [fetchState]
-  );
+  }, [userId]);
 
   const postRaw = useCallback(async (body: Record<string, unknown>): Promise<PostOutcome> => {
-    const code = passcodeRef.current;
-    if (!code) return { ok: false, error: GENERIC_SAVE_ERROR };
     try {
       const res = await fetch('/api/state', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-passcode': code },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
       if (res.status === 401) {
         setAuthorized(false);
-        setPasscodeError(true);
         return { ok: false, error: GENERIC_SAVE_ERROR };
       }
       if (!res.ok) {
@@ -268,7 +236,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       if (events.length) celebration.enqueue(events);
       const level = levelForXp(totalXp(after, now));
       const badgeIds = allEarnedBadges(after, now).map((b) => b.id);
-      updateSeen(level, badgeIds);
+      if (userIdRef.current) updateSeen(userIdRef.current, level, badgeIds);
     },
     [celebration]
   );
@@ -295,8 +263,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         if (mySeq === seqRef.current) {
           setState(before);
         } else {
-          const code = passcodeRef.current;
-          if (code) await fetchState(code);
+          await fetchState();
         }
         showSnackbar(GENERIC_SAVE_ERROR);
         return undefined;
@@ -325,8 +292,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         if (mySeq === seqRef.current) {
           setState(before);
         } else {
-          const code = passcodeRef.current;
-          if (code) await fetchState(code);
+          await fetchState();
         }
         return outcome.error;
       });
@@ -502,9 +468,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     progress,
     loading,
     authorized,
-    passcodeError,
     snackbarVisible: snackbar !== null,
-    submitPasscode,
     tick,
     untick,
     logCardio,
@@ -516,54 +480,11 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     deleteGoal,
   };
 
-  const showPrompt = checkedStorage && !loading && !authorized;
-
   return (
     <ProgressContext.Provider value={value}>
-      {showPrompt ? <PasscodePrompt onSubmit={submitPasscode} error={passcodeError} /> : children}
+      {children}
       <Snackbar snackbar={snackbar} onDismiss={() => setSnackbar(null)} />
     </ProgressContext.Provider>
-  );
-}
-
-function PasscodePrompt({ onSubmit, error }: { onSubmit: (code: string) => void; error: boolean }) {
-  const [value, setValue] = useState('');
-  return (
-    <div className="flex min-h-[60vh] items-center justify-center px-4">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          feedback.warm();
-          onSubmit(value);
-        }}
-        className="w-full max-w-xs space-y-3 rounded-2xl border p-6 text-center shadow-sm"
-        style={{ borderColor: 'var(--line)', background: 'var(--surface)' }}
-      >
-        <h1 className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
-          Enter passcode
-        </h1>
-        <p className="text-xs" style={{ color: 'var(--muted)' }}>
-          This app is private. Enter your passcode to continue.
-        </p>
-        <input
-          type="password"
-          autoFocus
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          className="w-full rounded-lg border px-3 py-2 text-sm outline-none"
-          style={{ borderColor: 'var(--line)', background: 'var(--surface)', color: 'var(--ink)' }}
-          placeholder="Passcode"
-        />
-        {error && (
-          <p className="text-xs" style={{ color: 'var(--bad)' }}>
-            Wrong passcode. Try again.
-          </p>
-        )}
-        <button type="submit" className="w-full rounded-lg py-2 text-sm font-semibold text-white" style={{ background: 'var(--ink)' }}>
-          Continue
-        </button>
-      </form>
-    </div>
   );
 }
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isAuthorized } from '@/lib/auth';
+import { auth } from '@/auth';
 import { getState, saveState } from '@/lib/store';
 import {
   AppState,
@@ -40,14 +40,17 @@ function makeId(): string {
 
 const GOAL_TYPES: GoalType[] = ['streak', 'workouts', 'pushups', 'cardio-minutes', 'cardio-km', 'weight'];
 
-export async function GET(req: NextRequest) {
-  if (!isAuthorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-  const state = await getState();
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  const state = await getState(session.user.id, session.user.email);
   return NextResponse.json(state);
 }
 
 export async function POST(req: NextRequest) {
-  if (!isAuthorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  const userId = session.user.id;
 
   let body: { action: string; [key: string]: unknown };
   try {
@@ -56,7 +59,7 @@ export async function POST(req: NextRequest) {
     return bad('invalid body');
   }
 
-  const state: AppState = await getState();
+  const state: AppState = await getState(userId, session.user.email);
   const maxDate = todayPlusOne();
 
   switch (body.action) {
@@ -275,6 +278,6 @@ export async function POST(req: NextRequest) {
       return bad('unknown action');
   }
 
-  await saveState(state);
+  await saveState(userId, state);
   return NextResponse.json(state);
 }

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { RankShield } from '@/components/RankShield';
 import { useProgress } from '@/components/ProgressProvider';
 
@@ -15,6 +16,9 @@ const TITLES: Record<string, string> = {
 export function TopAppBar() {
   const pathname = usePathname();
   const { progress } = useProgress();
+  const { data: session } = useSession();
+  const name = session?.user?.name || session?.user?.email || '?';
+  const image = session?.user?.image;
   const title = TITLES[pathname] ?? 'Home Workout';
 
   const frac = progress.xpIntoLevel.needed > 0 ? progress.xpIntoLevel.current / progress.xpIntoLevel.needed : 0;
@@ -34,6 +38,19 @@ export function TopAppBar() {
       <h1 className="text-xl font-semibold" style={{ color: 'var(--ink)' }}>
         {title}
       </h1>
+      <div className="flex items-center gap-2">
+      <span
+        className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full text-sm font-semibold"
+        style={{ background: 'var(--pill)', color: 'var(--pill-ink)' }}
+        aria-hidden="true"
+      >
+        {image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={image} alt="" width={32} height={32} referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+        ) : (
+          name.charAt(0).toUpperCase()
+        )}
+      </span>
       <Link
         href="/profile"
         aria-label={`Level ${progress.level}, ${progress.rank} rank. Open profile`}
@@ -59,6 +76,7 @@ export function TopAppBar() {
           />
         </svg>
       </Link>
+      </div>
     </header>
   );
 }
