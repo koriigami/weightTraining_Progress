@@ -1,16 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ComponentType } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Flame, Dumbbell, ChevronsUp, Timer, Route, Scale } from 'lucide-react';
 import { plan } from '@/data/plan';
 import { BottomSheet } from '@/components/BottomSheet';
 import { useProgress } from '@/components/ProgressProvider';
-import { addDaysStr, formatDateMed, todayStr } from '@/lib/date';
-import { maxStreakFrom, periodEnd, planTotals, streakDeadline, weightPaceLabel, weightPaceLabelFull } from '@/lib/goals';
+import { useToday } from '@/lib/useToday';
+import { addDaysStr, formatDateMed } from '@/lib/date';
+import { goalReward, maxStreakFrom, periodEnd, planTotals, streakDeadline, weightPaceLabel, weightPaceLabelFull } from '@/lib/goals';
 import type { PeriodPreset } from '@/lib/goals';
-import type { GoalType } from '@/lib/progress';
+import type { Goal, GoalType } from '@/lib/progress';
 
 const TYPES: { id: GoalType; label: string; Icon: ComponentType<{ size?: number }> }[] = [
   { id: 'streak', label: 'Streak', Icon: Flame },
@@ -99,14 +100,19 @@ const slide = {
   center: { x: 0, opacity: 1 },
 };
 
-export function NewGoalSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { progress, addGoal } = useProgress();
+export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClose: () => void; editGoal?: Goal | null }) {
+  const { progress, addGoal, updateGoal } = useProgress();
   const reduceMotion = Boolean(useReducedMotion());
-  const today = todayStr();
+  const today = useToday();
+  const tomorrow = addDaysStr(today, 1);
+  const closeRef = useRef(onClose);
+  const isEdit = Boolean(editGoal);
 
   const [step, setStep] = useState<1 | 2>(1);
   const [direction, setDirection] = useState(1);
   const [type, setType] = useState<GoalType | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const [streakN, setStreakN] = useState(7);
   const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('this-week');
@@ -119,6 +125,7 @@ export function NewGoalSheet({ open, onClose }: { open: boolean; onClose: () => 
   function reset() {
     setStep(1);
     setType(null);
+    setError(null);
     setStreakN(7);
     setPeriodPreset('this-week');
     setCustomEnd('');
@@ -128,16 +135,50 @@ export function NewGoalSheet({ open, onClose }: { open: boolean; onClose: () => 
     setWeightWeeks(4.3);
   }
 
+  // Prefill from the goal being edited, or reset for a fresh "New goal" run,
+  // each time the sheet opens.
+  useEffect(() => {
+    if (!open) return;
+    if (!editGoal) {
+      reset();
+      return;
+    }
+    setError(null);
+    setDirection(1);
+    setType(editGoal.type);
+    setStep(2);
+    if (editGoal.type === 'streak') {
+      setStreakN(editGoal.target);
+    } else if (editGoal.type === 'weight') {
+      setWeightDir(editGoal.direction ?? 'lose');
+      const baseline = editGoal.baseline ?? editGoal.target;
+      setWeightAmt(Math.abs(editGoal.target - baseline) || 0.5);
+      const weeksFromNow = Math.max(2, addDaysStrWeeks(today, editGoal.deadline));
+      setWeightWeeks(weeksFromNow);
+    } else {
+      setPeriodPreset('custom');
+      setCustomEnd(editGoal.deadline);
+      setAmountOverride(editGoal.target);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editGoal]);
+
+  function addDaysStrWeeks(from: string, to: string): number {
+    const days = Math.round((new Date(`${to}T00:00:00Z`).getTime() - new Date(`${from}T00:00:00Z`).getTime()) / 86400000);
+    return Math.round((days / 7) * 10) / 10;
+  }
+
   function handleClose() {
     onClose();
     setTimeout(reset, 300);
   }
 
-  const maxN = maxStreakFrom(today);
-  const streakDl = streakDeadline(today, streakN);
+  const streakStart = editGoal?.start ?? today;
+  const maxN = maxStreakFrom(streakStart);
+  const streakDl = streakDeadline(streakStart, streakN);
   const lastPlanDate = plan[plan.length - 1].date;
 
-  const periodEndDate = periodPreset === 'custom' ? customEnd || today : periodEnd(periodPreset, today);
+  const periodEndDate = periodPreset === 'custom' ? customEnd || tomorrow : periodEnd(periodPreset, today);
   const totals = planTotals(today, periodEndDate);
   const defaultAmount: Record<string, number> = {
     workouts: totals.workouts,
@@ -147,46 +188,93 @@ export function NewGoalSheet({ open, onClose }: { open: boolean; onClose: () => 
   };
   const amount = amountOverride ?? (type ? defaultAmount[type] ?? 0 : 0);
 
-  const latestWeight = progress.stats.latestWeight;
-  const weightTarget = latestWeight !== null ? (weightDir === 'lose' ? latestWeight - weightAmt : latestWeight + weightAmt) : null;
+  // Editing keeps the goal's original baseline; a brand-new goal is priced
+  // off the live latest weight.
+  const baselineForCalc = isEdit ? editGoal!.baseline ?? null : progress.stats.latestWeight;
+  const weightTarget = baselineForCalc !== null ? (weightDir === 'lose' ? baselineForCalc - weightAmt : baselineForCalc + weightAmt) : null;
   const weightPace = weightAmt / weightWeeks;
   const weightDeadline = addDaysStr(today, Math.round(weightWeeks * 7));
 
   function ctaDisabledForStep2(): boolean {
+    if (saving) return true;
     if (!type) return true;
     if (type === 'streak') return !streakDl;
-    if (type === 'weight') return latestWeight === null;
+    if (type === 'weight') return baselineForCalc === null;
     if (periodPreset === 'custom' && !customEnd) return true;
     return amount <= 0;
   }
 
   async function submit() {
     if (!type) return;
+    setError(null);
+    setSaving(true);
+    try {
+      let err: string | null;
+      if (type === 'streak') {
+        if (!streakDl) return;
+        err = isEdit
+          ? await updateGoal(editGoal!, { target: streakN, deadline: streakDl })
+          : await addGoal({ type: 'streak', target: streakN, start: today, deadline: streakDl });
+      } else if (type === 'weight') {
+        if (baselineForCalc === null || weightTarget === null) return;
+        const target = Number(weightTarget.toFixed(1));
+        err = isEdit
+          ? await updateGoal(editGoal!, { target, deadline: weightDeadline, direction: weightDir })
+          : await addGoal({ type: 'weight', target, start: today, deadline: weightDeadline, direction: weightDir, baseline: baselineForCalc });
+      } else {
+        err = isEdit
+          ? await updateGoal(editGoal!, { target: amount, deadline: periodEndDate })
+          : await addGoal({ type, target: amount, start: today, deadline: periodEndDate });
+      }
+      if (err) setError(err);
+      else closeRef.current();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const typeMeta = TYPES.find((t) => t.id === type);
+  const title = isEdit ? `Edit ${(typeMeta?.label ?? '').toLowerCase()} goal` : step === 1 ? 'New goal' : `${typeMeta?.label ?? ''} goal`;
+
+  const rewardCandidate: Goal | null = (() => {
+    if (!type) return null;
+    const createdAt = editGoal?.createdAt ?? new Date().toISOString();
     if (type === 'streak') {
-      if (!streakDl) return;
-      const ok = await addGoal({ type: 'streak', target: streakN, start: today, deadline: streakDl });
-      if (ok) handleClose();
-      return;
+      if (!streakDl) return null;
+      return { id: editGoal?.id ?? '', type: 'streak', target: streakN, start: streakStart, deadline: streakDl, createdAt };
     }
     if (type === 'weight') {
-      if (latestWeight === null || weightTarget === null) return;
-      const ok = await addGoal({
+      if (baselineForCalc === null || weightTarget === null) return null;
+      return {
+        id: editGoal?.id ?? '',
         type: 'weight',
         target: Number(weightTarget.toFixed(1)),
         start: today,
         deadline: weightDeadline,
+        createdAt,
         direction: weightDir,
-        baseline: latestWeight,
-      });
-      if (ok) handleClose();
-      return;
+        baseline: baselineForCalc,
+      };
     }
-    const ok = await addGoal({ type, target: amount, start: today, deadline: periodEndDate });
-    if (ok) handleClose();
-  }
+    if (amount <= 0) return null;
+    return { id: editGoal?.id ?? '', type, target: amount, start: today, deadline: periodEndDate, createdAt };
+  })();
+  const reward = rewardCandidate ? goalReward(rewardCandidate) : null;
 
-  const typeMeta = TYPES.find((t) => t.id === type);
-  const title = step === 1 ? 'New goal' : `${typeMeta?.label ?? ''} goal`;
+  const footerNote = (step === 2 || isEdit) && (reward !== null || error) ? (
+    <div className="mb-2 flex flex-col gap-1">
+      {reward !== null && (
+        <p className="text-sm font-semibold" style={{ color: 'var(--accent)' }}>
+          Reward +{reward} XP
+        </p>
+      )}
+      {error && (
+        <p className="text-sm font-medium" style={{ color: 'var(--bad)' }}>
+          {error}
+        </p>
+      )}
+    </div>
+  ) : undefined;
 
   return (
     <BottomSheet
@@ -195,11 +283,18 @@ export function NewGoalSheet({ open, onClose }: { open: boolean; onClose: () => 
       ariaLabel={title}
       title={title}
       fixed
-      onBack={step === 2 ? () => { setDirection(-1); setStep(1); } : undefined}
-      cta={step === 1 ? { label: 'Continue', onClick: () => { setDirection(1); setStep(2); }, disabled: !type } : { label: 'Save goal', onClick: submit, disabled: ctaDisabledForStep2() }}
+      desktopWidth="lg"
+      closeRef={closeRef}
+      onBack={!isEdit && step === 2 ? () => { setDirection(-1); setStep(1); setError(null); } : undefined}
+      footerNote={footerNote}
+      cta={
+        !isEdit && step === 1
+          ? { label: 'Continue', onClick: () => { setDirection(1); setStep(2); }, disabled: !type }
+          : { label: isEdit ? 'Save changes' : 'Save goal', onClick: submit, disabled: ctaDisabledForStep2() }
+      }
     >
       <AnimatePresence mode="wait" initial={false} custom={direction}>
-        {step === 1 ? (
+        {!isEdit && step === 1 ? (
           <motion.div
             key="step1"
             custom={direction}
@@ -261,7 +356,9 @@ export function NewGoalSheet({ open, onClose }: { open: boolean; onClose: () => 
                     {streakN} workout days in a row
                   </b>
                   {streakDl ? (
-                    <span style={{ color: 'var(--muted)' }}>Starts today, ends {formatDateMed(streakDl)}. Rest days don&apos;t count.</span>
+                    <span style={{ color: 'var(--muted)' }}>
+                      {isEdit ? `Starts ${formatDateMed(streakStart)}` : 'Starts today'}, ends {formatDateMed(streakDl)}. Rest days don&apos;t count.
+                    </span>
                   ) : (
                     <span style={{ color: 'var(--bad)' }}>Not enough workout days left in the plan.</span>
                   )}
@@ -271,11 +368,11 @@ export function NewGoalSheet({ open, onClose }: { open: boolean; onClose: () => 
 
             {type === 'weight' && (
               <div className="flex flex-col gap-4">
-                <Field label="Latest weight">
+                <Field label={isEdit ? 'Starting weight' : 'Latest weight'}>
                   <div className="font-display text-[34px]" style={{ color: 'var(--ink)' }}>
-                    {latestWeight !== null ? `${latestWeight} kg` : 'Not logged'}
+                    {baselineForCalc !== null ? `${baselineForCalc} kg` : 'Not logged'}
                   </div>
-                  {latestWeight === null && (
+                  {baselineForCalc === null && (
                     <span className="text-xs" style={{ color: 'var(--muted)' }}>
                       Log a weight on Profile first.
                     </span>
@@ -303,7 +400,7 @@ export function NewGoalSheet({ open, onClose }: { open: boolean; onClose: () => 
                     <b className="block text-base" style={{ color: 'var(--ink)' }}>
                       {weightDir === 'lose' ? 'Lose' : 'Gain'} {weightAmt.toFixed(1)} kg, to {weightTarget !== null ? weightTarget.toFixed(1) : '--'} kg
                     </b>
-                    <span style={{ color: 'var(--muted)' }}>{latestWeight !== null ? `From ${latestWeight} kg today` : ''}</span>
+                    <span style={{ color: 'var(--muted)' }}>{baselineForCalc !== null ? `From ${baselineForCalc} kg` : ''}</span>
                   </div>
                 </Field>
                 <Field label="By">
@@ -349,7 +446,7 @@ export function NewGoalSheet({ open, onClose }: { open: boolean; onClose: () => 
                     <input
                       type="date"
                       value={customEnd}
-                      min={today}
+                      min={tomorrow}
                       onChange={(e) => setCustomEnd(e.target.value)}
                       className="min-h-11 rounded-lg border px-3 text-sm"
                       style={{ borderColor: 'var(--line)', background: 'var(--surface)', color: 'var(--ink)' }}

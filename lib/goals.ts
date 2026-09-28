@@ -1,12 +1,14 @@
 import { plan } from '../data/plan';
 import { addDaysStr, daysBetween, lastDayOfMonth } from './date';
 import {
+  cardioSince,
   isDayCleared,
+  isDayClearedSince,
   isPushupExercise,
   isWorkoutDay,
   lowerBoundReps,
   planDay,
-  pushupsInLog,
+  pushupsInLogSince,
   workoutDates,
 } from './progress';
 import type { AppState, Goal } from './progress';
@@ -59,19 +61,22 @@ export function streakProgress(
 
 // ---------------- Period goals (workouts / pushups / cardio-minutes / cardio-km) ----------------
 
+// Only progress logged at or after the goal's createdAt counts, so a goal
+// can never be created already partly (or fully) satisfied by past history.
 export function periodGoalValue(goal: Goal, state: AppState): number {
+  const since = goal.createdAt;
   const days = plan.filter((d) => isWorkoutDay(d) && d.date >= goal.start && d.date <= goal.deadline);
   if (goal.type === 'workouts') {
-    return days.filter((d) => isDayCleared(d, state.days[d.date])).length;
+    return days.filter((d) => isDayClearedSince(d, state.days[d.date], since)).length;
   }
   if (goal.type === 'pushups') {
-    return days.reduce((sum, d) => sum + pushupsInLog(d, state.days[d.date]), 0);
+    return days.reduce((sum, d) => sum + pushupsInLogSince(d, state.days[d.date], since), 0);
   }
   if (goal.type === 'cardio-minutes') {
-    return days.reduce((sum, d) => sum + (state.days[d.date]?.cardio?.minutes ?? 0), 0);
+    return days.reduce((sum, d) => sum + cardioSince(state.days[d.date], since).minutes, 0);
   }
   if (goal.type === 'cardio-km') {
-    return days.reduce((sum, d) => sum + (state.days[d.date]?.cardio?.km ?? 0), 0);
+    return days.reduce((sum, d) => sum + cardioSince(state.days[d.date], since).km, 0);
   }
   return 0;
 }
@@ -97,8 +102,13 @@ export function periodEnd(preset: PeriodPreset, start: string): string {
       return addDaysStr(start, 6);
     case '2-weeks':
       return addDaysStr(start, 13);
-    case 'this-month':
-      return lastDayOfMonth(start);
+    case 'this-month': {
+      const end = lastDayOfMonth(start);
+      // On the month's last day, "this month" would otherwise end today,
+      // which the server always rejects (a deadline must be after start).
+      // Roll to next month's end instead of failing silently.
+      return end > start ? end : lastDayOfMonth(addDaysStr(start, 1));
+    }
     case '3-months':
       return addDaysStr(start, 89);
     default:
@@ -197,4 +207,64 @@ export function goalTitle(goal: Goal): string {
 
 export function daysLeft(goal: Goal, today: string): number {
   return Math.max(0, daysBetween(today, goal.deadline));
+}
+
+// ---------------- Goal XP reward ----------------
+
+// Plan totals across the goal's own window, used only to scale the ambition
+// multiplier below (not the same as progress logged toward it).
+function ambitionMultiplier(goal: Goal, planTotal: number): number {
+  if (planTotal <= 0) return goal.target > 0 ? 1.25 : 0.75;
+  const pct = goal.target / planTotal;
+  if (pct < 0.5) return 0.75;
+  if (pct < 1) return 1.0;
+  return 1.25;
+}
+
+// Deterministic from the goal's own fields (never stored). See the v5.1 plan,
+// section 1, for the base-XP table and rounding/clamp rules.
+export function goalReward(goal: Goal): number {
+  let base: number;
+  let multiplier = 1;
+
+  switch (goal.type) {
+    case 'streak':
+      base = 20 * goal.target;
+      break;
+    case 'workouts': {
+      base = 25 * goal.target;
+      const totals = planTotals(goal.start, goal.deadline);
+      multiplier = ambitionMultiplier(goal, totals.workouts);
+      break;
+    }
+    case 'pushups': {
+      base = goal.target / 4;
+      const totals = planTotals(goal.start, goal.deadline);
+      multiplier = ambitionMultiplier(goal, totals.pushups);
+      break;
+    }
+    case 'cardio-minutes': {
+      base = goal.target;
+      const totals = planTotals(goal.start, goal.deadline);
+      multiplier = ambitionMultiplier(goal, totals.cardioMinutes);
+      break;
+    }
+    case 'cardio-km': {
+      base = 8 * goal.target;
+      const totals = planTotals(goal.start, goal.deadline);
+      multiplier = ambitionMultiplier(goal, totals.cardioMinutes * 0.15);
+      break;
+    }
+    case 'weight': {
+      const change = Math.abs(goal.target - (goal.baseline ?? goal.target));
+      base = 120 * change;
+      const weeks = daysBetween(goal.start, goal.deadline) / 7;
+      const kgPerWeek = weeks > 0 ? change / weeks : 0;
+      multiplier = weightPaceLabel(kgPerWeek) === 'Ambitious' ? 1.25 : 1.0;
+      break;
+    }
+  }
+
+  const rounded = Math.round((base * multiplier) / 5) * 5;
+  return Math.min(1000, Math.max(25, rounded));
 }

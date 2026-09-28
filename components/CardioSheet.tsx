@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BottomSheet } from '@/components/BottomSheet';
 import { useProgress } from '@/components/ProgressProvider';
 import { XP } from '@/lib/progress';
@@ -21,6 +21,7 @@ export function CardioSheet({
   const cardio = day.cardio!;
   const existing = state.days[date]?.cardio;
   const isEditing = Boolean(existing);
+  const closeRef = useRef(onClose);
 
   const [minutes, setMinutes] = useState(cardio.minutes);
   const [km, setKm] = useState('');
@@ -39,7 +40,7 @@ export function CardioSheet({
   function save() {
     if (!kmValid) return;
     logCardio(date, minutes, kmValue, xpAmount);
-    onClose();
+    closeRef.current();
   }
 
   return (
@@ -48,6 +49,7 @@ export function CardioSheet({
       onClose={onClose}
       ariaLabel="Log cardio"
       title="Log cardio"
+      closeRef={closeRef}
       cta={{ label: `Save · +${xpAmount} XP`, onClick: save, disabled: !kmValid }}
     >
       <div className="flex flex-col gap-4 pt-2">
@@ -105,7 +107,7 @@ export function CardioSheet({
             type="button"
             onClick={() => {
               removeCardio(date, `${day.cardio!.modality === 'treadmill' ? 'Treadmill' : 'Cycle'} unticked`);
-              onClose();
+              closeRef.current();
             }}
             className="self-start text-sm font-semibold underline"
             style={{ color: 'var(--muted)' }}

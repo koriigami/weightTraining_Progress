@@ -6,7 +6,8 @@ import { WorkoutDay } from '@/data/plan';
 import { ExerciseRow } from './ExerciseRow';
 import { CardioSheet } from './CardioSheet';
 import { useProgress } from './ProgressProvider';
-import { todayStr, formatDateLong } from '@/lib/date';
+import { formatDateLong } from '@/lib/date';
+import { useToday } from '@/lib/useToday';
 import {
   XP,
   clearedStreakSeries,
@@ -64,15 +65,11 @@ function Ring({ frac, size, stroke, color }: { frac: number; size: number; strok
 
 export function DayCard({ day }: { day: WorkoutDay }) {
   const { state, tick, untick, completeAll } = useProgress();
-  const [today, setToday] = useState<string | null>(null);
+  const today = useToday();
   const [cardioOpen, setCardioOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const reduceMotion = useReducedMotion();
   const wasCleared = useRef(false);
-
-  useEffect(() => {
-    setToday(todayStr());
-  }, []);
 
   const isWorkoutDay = day.dayType !== 'rest' && day.dayType !== 'pre-start';
   const isRestOrPreStart = day.dayType === 'rest' || day.dayType === 'pre-start';
@@ -89,8 +86,8 @@ export function DayCard({ day }: { day: WorkoutDay }) {
   const perfect = !isRestOrPreStart && isPerfectDay(day, log);
   const total = dayItemCount(day);
   const done = dayDoneCount(day, log);
-  const canEdit = today !== null && isWorkoutDay && day.date <= today;
-  const isFuture = today !== null && day.date > today;
+  const canEdit = isWorkoutDay && day.date <= today;
+  const isFuture = day.date > today;
   const streakAfter = clearedStreakSeries(state)[day.date] ?? 0;
   const xpToday = log ? xpForDay(day, log, streakAfter) : 0;
 

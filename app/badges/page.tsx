@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useProgress } from '@/components/ProgressProvider';
 import { Badge, TIERS } from '@/components/Badge';
 import type { BadgeTier } from '@/components/Badge';
@@ -8,7 +8,8 @@ import { BottomSheet } from '@/components/BottomSheet';
 import { computeBadges, LIFETIME_FAMILIES, MONTHLY_BADGES, SPECIAL_BADGES } from '@/lib/badges';
 import type { LifetimeFamilyId, MonthlyBadgeId, SpecialBadgeId } from '@/lib/badges';
 import { describeLifetimeTier, describeMonthlyBadge, describeSpecialBadge } from '@/lib/badgeDisplay';
-import { daysBetween, lastDayOfMonth, monthKey, monthLabel, todayStr } from '@/lib/date';
+import { daysBetween, lastDayOfMonth, monthKey, monthLabel } from '@/lib/date';
+import { useToday } from '@/lib/useToday';
 
 const TIER_ORDER: BadgeTier[] = ['bronze', 'silver', 'gold', 'diamond', 'master', 'legend'];
 
@@ -19,7 +20,7 @@ type Selected =
 
 export default function BadgesPage() {
   const { state } = useProgress();
-  const today = todayStr();
+  const today = useToday();
   const badges = computeBadges(state, today);
   const [selected, setSelected] = useState<Selected | null>(null);
 
@@ -171,31 +172,40 @@ export default function BadgesPage() {
 
 function BadgeDetailSheet({ selected, onClose }: { selected: Selected | null; onClose: () => void }) {
   const { state } = useProgress();
-  const today = todayStr();
+  const today = useToday();
   const badges = computeBadges(state, today);
+
+  // The sheet's own exit animation runs after `selected` has already gone
+  // back to null; without this, its content would go blank mid-animation
+  // instead of showing the badge it's closing on.
+  const [lastSelected, setLastSelected] = useState<Selected | null>(null);
+  useEffect(() => {
+    if (selected) setLastSelected(selected);
+  }, [selected]);
+  const effective = selected ?? lastSelected;
 
   let display: ReturnType<typeof describeLifetimeTier> | null = null;
   let earnedAt: string | undefined;
   let ladder: { tier: BadgeTier; earned: boolean; earnedAt?: string }[] | null = null;
 
-  if (selected?.kind === 'lifetime') {
-    const meta = LIFETIME_FAMILIES[selected.family];
-    const fam = badges.lifetime[selected.family];
+  if (effective?.kind === 'lifetime') {
+    const meta = LIFETIME_FAMILIES[effective.family];
+    const fam = badges.lifetime[effective.family];
     const hasTier = fam.tierIndex > 0;
     const currentTier = hasTier ? TIER_ORDER[fam.tierIndex - 1] : TIER_ORDER[0];
-    display = describeLifetimeTier(selected.family, currentTier);
+    display = describeLifetimeTier(effective.family, currentTier);
     display.description = `${meta.metric}. ${fam.value.toLocaleString()}${meta.unit ? ` ${meta.unit}` : ''} so far.`;
     display = { ...display, badgeProps: { ...display.badgeProps, locked: !hasTier, progress: !hasTier ? fam.progressToNext : null } };
     earnedAt = fam.earned[fam.earned.length - 1]?.earnedAt;
     ladder = TIER_ORDER.map((tier, i) => ({ tier, earned: fam.tierIndex > i, earnedAt: fam.earned[i]?.earnedAt }));
-  } else if (selected?.kind === 'monthly') {
-    const info = badges.monthly.find((m) => m.month === selected.month)?.badges[selected.badge];
-    display = describeMonthlyBadge(selected.badge, selected.month, Boolean(info?.earned));
+  } else if (effective?.kind === 'monthly') {
+    const info = badges.monthly.find((m) => m.month === effective.month)?.badges[effective.badge];
+    display = describeMonthlyBadge(effective.badge, effective.month, Boolean(info?.earned));
     display = { ...display, badgeProps: { ...display.badgeProps, locked: !info?.earned } };
     earnedAt = info?.earnedAt;
-  } else if (selected?.kind === 'special') {
-    display = describeSpecialBadge(selected.badge);
-    const info = badges.special[selected.badge];
+  } else if (effective?.kind === 'special') {
+    display = describeSpecialBadge(effective.badge);
+    const info = badges.special[effective.badge];
     display = { ...display, badgeProps: { ...display.badgeProps, locked: !info } };
     earnedAt = info?.earnedAt;
   }

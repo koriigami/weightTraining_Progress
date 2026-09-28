@@ -12,6 +12,7 @@ export function useBackToClose(isOpen: boolean, onClose: () => void): () => void
   const pushedRef = useRef(false);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  const wasOpenRef = useRef(isOpen);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -42,6 +43,30 @@ export function useBackToClose(isOpen: boolean, onClose: () => void): () => void
       window.removeEventListener('popstate', onPopState);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  // Pops a still-pending entry if `isOpen` itself transitions true -> false
+  // (a Save/Remove handler closed via the raw prop instead of this hook's
+  // `close()`, or a parent flipped its open state some other way), so it
+  // never lingers as a dead entry that swallows the next Back press. This is
+  // a SEPARATE effect, keyed on the isOpen value actually changing, rather
+  // than living in the effect above's cleanup: that cleanup also runs for
+  // React Strict Mode's dev-only mount->cleanup->mount dance and for a
+  // caller that hardcodes isOpen=true for its whole lifetime (every
+  // celebration overlay) -- in both of those cases isOpen never becomes
+  // false, so popping there would fire a spurious history.back() that
+  // dismisses the overlay before anyone ever saw it.
+  useEffect(() => {
+    const wasOpen = wasOpenRef.current;
+    wasOpenRef.current = isOpen;
+    if (wasOpen && !isOpen && pushedRef.current) {
+      pushedRef.current = false;
+      try {
+        window.history.back();
+      } catch {
+        // ignore
+      }
+    }
   }, [isOpen]);
 
   return () => {

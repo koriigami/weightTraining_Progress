@@ -1,8 +1,7 @@
 import { plan } from '../data/plan';
 import type { WorkoutDay, Exercise } from '../data/plan';
-import { daysBetween } from './date';
 import { allEarnedBadges } from './badges';
-import { goalStatus } from './goals';
+import { goalReward, goalStatus } from './goals';
 
 export const START_WEIGHT = 110;
 export const TARGET_WEIGHT = 103;
@@ -13,7 +12,7 @@ export type ItemKey = string; // 's0','s1'.. strength index, 'k0','k1'.. core in
 
 export type DayLog = {
   items: Record<ItemKey, { at: string }>;
-  cardio?: { minutes: number; km?: number };
+  cardio?: { minutes: number; km?: number; at: string };
 };
 
 export type GoalType = 'streak' | 'workouts' | 'pushups' | 'cardio-minutes' | 'cardio-km' | 'weight';
@@ -25,6 +24,7 @@ export type Goal = {
   target: number;
   start: string;
   deadline: string;
+  createdAt: string; // ISO instant; anti-farming cutoff for count-based goal progress
   direction?: GoalDirection; // weight only
   baseline?: number; // weight only, kg at creation
 };
@@ -136,6 +136,54 @@ export function pushupsInLog(day: WorkoutDay, log: DayLog | undefined): number {
   return total;
 }
 
+// ---------------- Goal anti-farming: createdAt-aware progress ----------------
+// A workout, pushup or cardio entry only counts toward a goal's progress if it
+// was logged at or after the goal's createdAt, so a goal can never be created
+// already partly (or fully) satisfied by past history.
+
+// Latest `at` timestamp among a day's strength items, or null if none ticked.
+function latestStrengthAt(day: WorkoutDay, log: DayLog | undefined): string | null {
+  if (!log) return null;
+  let latest: string | null = null;
+  for (const k of strengthKeys(day)) {
+    const at = log.items[k]?.at;
+    if (at && (latest === null || at > latest)) latest = at;
+  }
+  return latest;
+}
+
+// A day counts toward a workouts-goal only if it's cleared AND the latest
+// strength tick that cleared it happened at or after `since`.
+export function isDayClearedSince(day: WorkoutDay, log: DayLog | undefined, since: string): boolean {
+  if (!isDayCleared(day, log)) return false;
+  const latest = latestStrengthAt(day, log);
+  return latest !== null && latest >= since;
+}
+
+// Pushups from items ticked at or after `since` only.
+export function pushupsInLogSince(day: WorkoutDay, log: DayLog | undefined, since: string): number {
+  let total = 0;
+  day.strength.forEach((ex, i) => {
+    if (!isPushupExercise(ex.name)) return;
+    const at = log?.items[`s${i}`]?.at;
+    if (at && at >= since) total += lowerBoundReps(ex.reps) * ex.sets;
+  });
+  (day.core ?? []).forEach((ex, i) => {
+    if (!isPushupExercise(ex.name)) return;
+    const at = log?.items[`k${i}`]?.at;
+    if (at && at >= since) total += lowerBoundReps(ex.reps) * ex.sets;
+  });
+  return total;
+}
+
+// Cardio minutes/km for a day only count if the cardio item's own `at` is at
+// or after `since` (cardio is logged as a single item, not per-set).
+export function cardioSince(log: DayLog | undefined, since: string): { minutes: number; km: number } {
+  const c = log?.cardio;
+  if (!c || !c.at || c.at < since) return { minutes: 0, km: 0 };
+  return { minutes: c.minutes, km: c.km ?? 0 };
+}
+
 // ---------------- XP ----------------
 
 export type BadgeTier = 'bronze' | 'silver' | 'gold' | 'diamond' | 'master' | 'legend';
@@ -160,8 +208,7 @@ export function dayClearedXp(streakAfter: number): number {
 }
 
 export function xpForGoal(goal: Goal): number {
-  const days = daysBetween(goal.start, goal.deadline);
-  return days <= 7 ? XP.goalShort : XP.goalLong;
+  return goalReward(goal);
 }
 
 // XP earned from a single day's log: per-item XP, the day-cleared bonus (which

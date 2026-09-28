@@ -87,8 +87,25 @@ export function LevelUpOverlay({ event, onDone }: { event: Event; onDone: () => 
   const [showSub, setShowSub] = useState(false);
   const [dismissable, setDismissable] = useState(false);
   const impactPlayed = useRef(false);
+  const continueRef = useRef<HTMLButtonElement | null>(null);
 
   const close = useBackToClose(true, onDone);
+
+  // Escape and Enter both dismiss, once dismissable; a mouse or touch is
+  // never required to move past this overlay.
+  useEffect(() => {
+    if (!dismissable) return;
+    continueRef.current?.focus();
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' || e.key === 'Enter') {
+        e.preventDefault();
+        close();
+      }
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dismissable]);
 
   const shards = useMemo(
     () =>
@@ -209,14 +226,31 @@ export function LevelUpOverlay({ event, onDone }: { event: Event; onDone: () => 
             <motion.p className="text-base text-[#D9DCEB]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: dur(300) }}>
               {subline}
             </motion.p>
-            <motion.p
-              className="mt-1 text-xs uppercase tracking-[0.12em] text-[#B9BDD2]"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: dismissable ? [0.35, 1, 0.35] : 0.8 }}
-              transition={dismissable ? { duration: 1.4, repeat: Infinity, ease: 'easeInOut' } : { duration: dur(200) }}
-            >
-              Tap to continue
-            </motion.p>
+            {dismissable ? (
+              <motion.button
+                ref={continueRef}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  close();
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+                className="mt-2 min-h-11 rounded-full border border-white/30 px-5 text-xs font-semibold uppercase tracking-[0.12em] text-[#B9BDD2] focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                Continue
+              </motion.button>
+            ) : (
+              <motion.p
+                className="mt-1 text-xs uppercase tracking-[0.12em] text-[#B9BDD2]"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.8 }}
+                transition={{ duration: dur(200) }}
+              >
+                Tap to continue
+              </motion.p>
+            )}
           </>
         )}
       </motion.div>

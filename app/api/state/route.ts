@@ -5,13 +5,14 @@ import {
   AppState,
   DayLog,
   Goal,
+  GoalDirection,
   GoalType,
   allItemKeys,
   isValidItemKey,
   planDay,
 } from '@/lib/progress';
-import { streakDeadline } from '@/lib/goals';
-import { daysBetween } from '@/lib/date';
+import { goalStatus, streakDeadline } from '@/lib/goals';
+import { daysBetween, todayStr } from '@/lib/date';
 
 function todayPlusOne(): string {
   const d = new Date();
@@ -100,7 +101,8 @@ export async function POST(req: NextRequest) {
         return bad('km out of range');
       }
       const log: DayLog = state.days[date] ?? { items: {} };
-      log.cardio = typeof km === 'number' ? { minutes, km } : { minutes };
+      const at = new Date().toISOString();
+      log.cardio = typeof km === 'number' ? { minutes, km, at } : { minutes, at };
       state.days[date] = log;
       break;
     }
@@ -114,12 +116,46 @@ export async function POST(req: NextRequest) {
       const now = new Date().toISOString();
       for (const key of allItemKeys(day)) {
         if (key === 'cardio') {
-          if (!log.cardio && day.cardio) log.cardio = { minutes: day.cardio.minutes };
+          if (!log.cardio && day.cardio) log.cardio = { minutes: day.cardio.minutes, at: now };
         } else if (!log.items[key]) {
           log.items[key] = { at: now };
         }
       }
       state.days[date] = log;
+      break;
+    }
+    case 'setDayLog': {
+      const date = body.date;
+      const rawLog = body.log as Partial<DayLog> | undefined;
+      if (!isValidDate(date)) return bad('invalid date');
+      const day = findWorkoutDay(date);
+      if (!day) return bad('not a workout day');
+      if (!rawLog || typeof rawLog !== 'object' || typeof rawLog.items !== 'object' || rawLog.items === null) {
+        return bad('invalid log');
+      }
+      const validKeys = new Set(allItemKeys(day).filter((k) => k !== 'cardio'));
+      const items: Record<string, { at: string }> = {};
+      for (const [key, entry] of Object.entries(rawLog.items)) {
+        if (!validKeys.has(key) || !entry || typeof entry.at !== 'string') return bad('invalid log');
+        items[key] = { at: entry.at };
+      }
+      let cardio: DayLog['cardio'];
+      if (rawLog.cardio !== undefined) {
+        if (!day.cardio) return bad('no cardio scheduled today');
+        const { minutes, km, at } = rawLog.cardio;
+        if (typeof minutes !== 'number' || Number.isNaN(minutes) || minutes < 1 || minutes > 180) {
+          return bad('minutes out of range');
+        }
+        if (km !== undefined && (typeof km !== 'number' || Number.isNaN(km) || km < 0 || km > 100)) {
+          return bad('km out of range');
+        }
+        cardio = { minutes, at: typeof at === 'string' ? at : new Date().toISOString(), ...(km !== undefined ? { km } : {}) };
+      }
+      if (Object.keys(items).length === 0 && !cardio) {
+        delete state.days[date];
+      } else {
+        state.days[date] = { items, ...(cardio ? { cardio } : {}) };
+      }
       break;
     }
     case 'weight': {
@@ -147,11 +183,12 @@ export async function POST(req: NextRequest) {
         return bad('invalid goal');
       }
 
+      const createdAt = new Date().toISOString();
       let goal: Goal;
       if (raw.type === 'streak') {
         const deadline = streakDeadline(raw.start, raw.target);
         if (!deadline) return bad('not enough workout days left in the plan for that streak length');
-        goal = { id: makeId(), type: 'streak', target: raw.target, start: raw.start, deadline };
+        goal = { id: makeId(), type: 'streak', target: raw.target, start: raw.start, deadline, createdAt };
       } else if (raw.type === 'weight') {
         if (raw.direction !== 'lose' && raw.direction !== 'gain') return bad('direction is required');
         if (!isValidDate(raw.deadline)) return bad('invalid deadline');
@@ -168,6 +205,7 @@ export async function POST(req: NextRequest) {
           target: raw.target,
           start: raw.start,
           deadline: raw.deadline,
+          createdAt,
           direction: raw.direction,
           baseline,
         };
@@ -175,9 +213,48 @@ export async function POST(req: NextRequest) {
         if (!isValidDate(raw.deadline)) return bad('invalid deadline');
         const daysOut = daysBetween(raw.start, raw.deadline);
         if (daysOut <= 0 || daysOut > 180) return bad('deadline out of range');
-        goal = { id: makeId(), type: raw.type as GoalType, target: raw.target, start: raw.start, deadline: raw.deadline };
+        goal = { id: makeId(), type: raw.type as GoalType, target: raw.target, start: raw.start, deadline: raw.deadline, createdAt };
+      }
+      if (goalStatus(goal, state, todayStr()) === 'achieved') {
+        return bad("You've already reached that. Pick a bigger target.");
       }
       state.goals.push(goal);
+      break;
+    }
+    case 'updateGoal': {
+      const id = body.id;
+      const target = body.target;
+      const deadline = body.deadline;
+      const direction = body.direction as GoalDirection | undefined;
+      if (typeof id !== 'string') return bad('invalid id');
+      const existing = state.goals.find((g) => g.id === id);
+      if (!existing) return bad('goal not found');
+      if (goalStatus(existing, state, todayStr()) !== 'active') return bad('only active goals can be edited');
+      if (typeof target !== 'number' || !Number.isFinite(target) || target <= 0) return bad('invalid goal');
+
+      let updated: Goal;
+      if (existing.type === 'streak') {
+        const newDeadline = streakDeadline(existing.start, target);
+        if (!newDeadline) return bad('not enough workout days left in the plan for that streak length');
+        updated = { ...existing, target, deadline: newDeadline };
+      } else if (existing.type === 'weight') {
+        const dir = direction ?? existing.direction;
+        if (dir !== 'lose' && dir !== 'gain') return bad('direction is required');
+        if (!isValidDate(deadline)) return bad('invalid deadline');
+        const daysOut = daysBetween(existing.start, deadline);
+        if (daysOut <= 0 || daysOut > 180) return bad('deadline out of range');
+        updated = { ...existing, target, deadline, direction: dir };
+      } else {
+        if (!isValidDate(deadline)) return bad('invalid deadline');
+        const daysOut = daysBetween(existing.start, deadline);
+        if (daysOut <= 0 || daysOut > 180) return bad('deadline out of range');
+        updated = { ...existing, target, deadline };
+      }
+
+      if (goalStatus(updated, state, todayStr()) === 'achieved') {
+        return bad("You've already reached that. Pick a bigger target.");
+      }
+      state.goals = state.goals.map((g) => (g.id === id ? updated : g));
       break;
     }
     case 'deleteGoal': {
@@ -189,7 +266,9 @@ export async function POST(req: NextRequest) {
     case 'restoreGoal': {
       const goal = body.goal as Goal | undefined;
       if (!goal || typeof goal.id !== 'string' || !GOAL_TYPES.includes(goal.type)) return bad('invalid goal');
-      if (!state.goals.find((g) => g.id === goal.id)) state.goals.push(goal);
+      if (!state.goals.find((g) => g.id === goal.id)) {
+        state.goals.push(typeof goal.createdAt === 'string' ? goal : { ...goal, createdAt: `${goal.start}T00:00:00Z` });
+      }
       break;
     }
     default:

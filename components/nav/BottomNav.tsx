@@ -20,7 +20,6 @@ export function BottomNav() {
   const pathname = usePathname();
   return (
     <nav
-      role="tablist"
       aria-label="Main"
       data-testid="bottom-nav"
       className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t md:hidden"
@@ -37,8 +36,7 @@ export function BottomNav() {
           <Link
             key={tab.href}
             href={tab.href}
-            role="tab"
-            aria-selected={active}
+            aria-current={active ? 'page' : undefined}
             className="flex flex-col items-center justify-center gap-1 text-xs"
             style={{ color: active ? 'var(--ink)' : 'var(--muted)', fontWeight: active ? 700 : 500 }}
           >

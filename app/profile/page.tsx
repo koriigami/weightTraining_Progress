@@ -5,7 +5,8 @@ import { useProgress } from '@/components/ProgressProvider';
 import { ProgressBar } from '@/components/ProgressBar';
 import { RankShield } from '@/components/RankShield';
 import { Badge } from '@/components/Badge';
-import { todayStr, monthLabel, monthKey } from '@/lib/date';
+import { monthLabel, monthKey } from '@/lib/date';
+import { useToday } from '@/lib/useToday';
 import { RANK_TITLES, START_WEIGHT, TARGET_WEIGHT, nextRankLevel } from '@/lib/progress';
 import { allEarnedBadges } from '@/lib/badges';
 import { computeMonthlyProgress } from '@/lib/badges';
@@ -14,14 +15,12 @@ import * as feedback from '@/lib/feedback';
 
 export default function ProfilePage() {
   const { progress, state, logWeight } = useProgress();
-  const [today, setToday] = useState<string | null>(null);
+  const today = useToday();
   const [weightInput, setWeightInput] = useState('');
 
   useEffect(() => {
-    const t = todayStr();
-    setToday(t);
-    setWeightInput(state.weights[t] !== undefined ? String(state.weights[t]) : '');
-  }, [state.weights]);
+    setWeightInput(state.weights[today] !== undefined ? String(state.weights[today]) : '');
+  }, [today, state.weights]);
 
   const stats = progress.stats;
   const weightPct = stats.latestWeight

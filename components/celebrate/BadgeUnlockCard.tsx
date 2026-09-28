@@ -14,6 +14,7 @@ export function BadgeUnlockCard({ badge, onDone }: { badge: EarnedBadgeSummary; 
   const [dismissable, setDismissable] = useState(false);
   const [shine, setShine] = useState(false);
   const revealed = useRef(false);
+  const niceRef = useRef<HTMLButtonElement | null>(null);
   const close = useBackToClose(true, onDone);
 
   const { name, description, xp, badgeProps } = describeEarnedBadge(badge);
@@ -21,6 +22,22 @@ export function BadgeUnlockCard({ badge, onDone }: { badge: EarnedBadgeSummary; 
   useEffect(() => {
     feedback.warm();
   }, []);
+
+  // Escape and Enter both dismiss, matching the level-up overlay; no mouse
+  // or touch required.
+  useEffect(() => {
+    if (!dismissable) return;
+    niceRef.current?.focus();
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' || e.key === 'Enter') {
+        e.preventDefault();
+        close();
+      }
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dismissable]);
 
   function onFlipComplete() {
     if (revealed.current) return;
@@ -103,6 +120,7 @@ export function BadgeUnlockCard({ badge, onDone }: { badge: EarnedBadgeSummary; 
 
         {dismissable && (
           <motion.button
+            ref={niceRef}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.2 }}
