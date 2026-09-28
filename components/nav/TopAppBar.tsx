@@ -23,8 +23,13 @@ export function TopAppBar() {
 
   return (
     <header
-      className="sticky top-0 z-20 flex h-16 items-center justify-between border-b px-4"
-      style={{ background: 'var(--surface)', borderColor: 'var(--line)', paddingTop: 'env(safe-area-inset-top)' }}
+      className="sticky top-0 z-20 flex items-center justify-between border-b px-4 md:pl-24 md:pr-6"
+      style={{
+        background: 'var(--surface)',
+        borderColor: 'var(--line)',
+        paddingTop: 'env(safe-area-inset-top)',
+        height: 'calc(4rem + env(safe-area-inset-top))',
+      }}
     >
       <h1 className="text-xl font-semibold" style={{ color: 'var(--ink)' }}>
         {title}
