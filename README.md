@@ -1,10 +1,11 @@
 # Home Workout: 6-Week Plan
 
 A small personal web app showing a 6-week home workout plan (Sep 21 to
-Nov 1, 2026), with a one-tap "workout done" tracker, XP, levels, ranks,
-achievements, and goals layered on top. Built with Next.js and Tailwind.
-The plan is a static file you can edit directly; progress data is stored
-in Upstash Redis and protected by a passcode, since the URL is public.
+Nov 1, 2026), with per-exercise logging, XP, levels, hunter ranks (E
+through S), a Strava-style badge collection, and goals layered on top.
+Built with Next.js, Tailwind and Motion. The plan is a static file you
+can edit directly; progress data is stored in Upstash Redis and
+protected by a passcode, since the URL is public.
 
 Calendar page: a 6-week grid on desktop (click any day to see its workout
 beside it), a current-week strip with prev/next arrows on mobile. Sep 21
@@ -14,12 +15,20 @@ base, then from week 3 the program splits into Push A, Pull A, Legs,
 Push B, Pull B, and a Full Body day, each with strength and cardio
 combined.
 
-Tap "Mark workout done" on any day up to today to log it. Doing so earns
-XP, builds a streak, and can unlock achievements. A morning weight entry
-on the Profile page tracks progress from 110 kg toward a 103 kg target
-and unlocks weight milestones. The Goals page lets you set short-term
-(a few days) or long-term (up to 3 months) goals for workouts, pushups,
-cardio minutes, streaks, or weight.
+Tick off each exercise on any day up to today as you go: strength items
+earn XP and clear the day once every strength exercise is done, core and
+cardio are bonus XP on top. Cardio opens a small sheet for minutes and an
+optional distance. Clearing days, hitting streaks, logging pushups,
+cardio distance and weigh-ins all build toward a badge collection (see
+the Badges tab), and level-ups and rank-ups get a full-screen callout. A
+morning weight entry on the Profile page tracks progress from 110 kg
+toward a 103 kg target. The Goals page lets you set a streak (the end
+date is worked out for you from the plan), a workouts/pushups/cardio
+target over a period, or a weight goal with a Lose/Gain direction and a
+pace meter.
+
+Navigation follows Material 3: a bottom tab bar on phones, a navigation
+rail on wider screens, both with Calendar, Profile, Badges and Goals.
 
 Actual sets/reps logging happens in the **Heavy** app. This app only
 tracks whether a day was completed as planned, plus a daily weight entry.
@@ -47,9 +56,13 @@ env vars set, progress is kept in memory for the life of the dev server
 
 ## Setting up progress storage and the passcode
 
-The calendar itself needs no setup, but XP, achievements, weights and
-goals need a small database and a passcode, since the deployed URL is
-public with no login.
+The calendar itself needs no setup, but XP, badges, weights and goals
+need a small database and a passcode, since the deployed URL is public
+with no login. Progress is stored under the Redis key `wt:state:v2`. If
+that key is missing, the app reads the older `wt:state` key (from a
+previous version of this app) once and migrates it: each old completion
+becomes a day with every strength, core and cardio item ticked. The old
+key is left untouched.
 
 1. In the Vercel dashboard, open this project, go to Storage, and add
    **Upstash Redis** (free tier). Connect it to the project. This injects

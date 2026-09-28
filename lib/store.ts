@@ -1,12 +1,14 @@
 import { Redis } from '@upstash/redis';
-import { AppState, emptyState } from './progress';
+import { emptyState, planDay, strengthKeys, coreKeys } from './progress';
+import type { AppState, DayLog, Goal } from './progress';
 
-const STATE_KEY = 'wt:state';
+const STATE_KEY_V2 = 'wt:state:v2';
+const STATE_KEY_V1 = 'wt:state';
 
 // Next.js dev re-evaluates route modules when a new route is compiled, which would
 // reset a plain module-scope variable. globalThis survives that, so the dev-only
 // memory store is attached there instead.
-const globalForStore = globalThis as unknown as { __wtMemoryState?: AppState };
+const globalForStore = globalThis as unknown as { __wtMemoryStateV2?: AppState; __wtMemoryState?: V1AppState };
 
 function hasRedisEnv(): boolean {
   const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
@@ -25,21 +27,83 @@ function useMemoryStore(): boolean {
   return !hasRedisEnv() && process.env.NODE_ENV !== 'production';
 }
 
+// ---------------- v1 -> v2 migration ----------------
+
+type V1Goal = {
+  id: string;
+  type: 'workouts' | 'pushups' | 'cardio-minutes' | 'streak' | 'weight';
+  target: number;
+  start: string;
+  deadline: string;
+};
+
+type V1AppState = {
+  completions: Record<string, { at: string }>;
+  weights: Record<string, number>;
+  goals: V1Goal[];
+};
+
+// A v1 completion becomes a DayLog with every strength, core and cardio item
+// ticked (at = v1 at), cardio minutes = planned minutes, no km. v1 weight goals
+// get direction 'lose' and a baseline (first weight on or after the goal's
+// start, else 110).
+export function migrateV1ToV2(v1: V1AppState): AppState {
+  const days: Record<string, DayLog> = {};
+  for (const [date, c] of Object.entries(v1.completions)) {
+    const day = planDay(date);
+    if (!day) continue;
+    const items: Record<string, { at: string }> = {};
+    strengthKeys(day).forEach((k) => {
+      items[k] = { at: c.at };
+    });
+    coreKeys(day).forEach((k) => {
+      items[k] = { at: c.at };
+    });
+    const log: DayLog = { items };
+    if (day.cardio) log.cardio = { minutes: day.cardio.minutes };
+    days[date] = log;
+  }
+
+  const goals: Goal[] = v1.goals.map((g): Goal => {
+    if (g.type === 'weight') {
+      const weightDates = Object.keys(v1.weights)
+        .filter((d) => d >= g.start)
+        .sort();
+      const baseline = weightDates.length ? v1.weights[weightDates[0]] : 110;
+      return { id: g.id, type: 'weight', target: g.target, start: g.start, deadline: g.deadline, direction: 'lose', baseline };
+    }
+    return { id: g.id, type: g.type, target: g.target, start: g.start, deadline: g.deadline };
+  });
+
+  return { version: 2, days, weights: { ...v1.weights }, goals };
+}
+
 export async function getState(): Promise<AppState> {
   if (useMemoryStore()) {
-    if (!globalForStore.__wtMemoryState) globalForStore.__wtMemoryState = emptyState();
-    return globalForStore.__wtMemoryState;
+    if (!globalForStore.__wtMemoryStateV2) {
+      globalForStore.__wtMemoryStateV2 = globalForStore.__wtMemoryState
+        ? migrateV1ToV2(globalForStore.__wtMemoryState)
+        : emptyState();
+    }
+    return globalForStore.__wtMemoryStateV2;
   }
   const redis = getRedis();
-  const state = await redis.get<AppState>(STATE_KEY);
-  return state ?? emptyState();
+  const v2 = await redis.get<AppState>(STATE_KEY_V2);
+  if (v2) return v2;
+  const v1 = await redis.get<V1AppState>(STATE_KEY_V1);
+  if (v1) {
+    const migrated = migrateV1ToV2(v1);
+    await redis.set(STATE_KEY_V2, migrated);
+    return migrated;
+  }
+  return emptyState();
 }
 
 export async function saveState(state: AppState): Promise<void> {
   if (useMemoryStore()) {
-    globalForStore.__wtMemoryState = state;
+    globalForStore.__wtMemoryStateV2 = state;
     return;
   }
   const redis = getRedis();
-  await redis.set(STATE_KEY, state);
+  await redis.set(STATE_KEY_V2, state);
 }

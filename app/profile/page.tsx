@@ -1,20 +1,16 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useProgress } from '@/components/ProgressProvider';
 import { ProgressBar } from '@/components/ProgressBar';
-import { todayStr } from '@/lib/date';
-import { START_WEIGHT, TARGET_WEIGHT, Rank } from '@/lib/progress';
-
-const RANK_COLORS: Record<Rank, string> = {
-  E: 'bg-neutral-200 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300',
-  D: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-  C: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
-  B: 'bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300',
-  A: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
-  S: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
-};
+import { RankShield } from '@/components/RankShield';
+import { Badge } from '@/components/Badge';
+import { todayStr, monthLabel, monthKey } from '@/lib/date';
+import { RANK_TITLES, START_WEIGHT, TARGET_WEIGHT, nextRankLevel } from '@/lib/progress';
+import { allEarnedBadges } from '@/lib/badges';
+import { computeMonthlyProgress } from '@/lib/badges';
+import { describeEarnedBadge } from '@/lib/badgeDisplay';
+import * as feedback from '@/lib/feedback';
 
 export default function ProfilePage() {
   const { progress, state, logWeight } = useProgress();
@@ -40,33 +36,66 @@ export default function ProfilePage() {
     logWeight(today, kg);
   }
 
-  const recentAchievements = [...progress.achievements]
-    .filter((a) => a.unlockedAt)
-    .sort((a, b) => (a.unlockedAt! < b.unlockedAt! ? 1 : -1))
-    .slice(0, 3);
+  const nextRank = nextRankLevel(progress.rank);
+  const showcase = today
+    ? [...allEarnedBadges(state, today)]
+        .sort((a, b) => (a.earnedAt < b.earnedAt ? 1 : -1))
+        .slice(0, 3)
+        .map((b) => ({ badge: b, display: describeEarnedBadge(b) }))
+    : [];
+
+  const thisMonth = today ? computeMonthlyProgress(state).find((m) => m.month === monthKey(today)) : undefined;
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-        <div className="flex items-center gap-3">
-          <span className={`flex h-14 w-14 items-center justify-center rounded-2xl text-2xl font-bold ${RANK_COLORS[progress.rank]}`}>
-            {progress.rank}
-          </span>
-          <div>
-            <div className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Level {progress.level}</div>
-            <div className="text-xs text-neutral-500 dark:text-neutral-400">{progress.xp} total XP</div>
+      <div className="rounded-2xl border p-5 shadow-sm" style={{ borderColor: 'var(--line)', background: 'var(--surface)' }}>
+        <div className="flex items-center gap-4">
+          <RankShield rank={progress.rank} level={progress.level} size={96} />
+          <div className="min-w-0">
+            <div className="font-display text-2xl" style={{ color: 'var(--ink)' }}>
+              Level {progress.level}
+            </div>
+            <div className="text-sm" style={{ color: 'var(--muted)' }}>
+              {RANK_TITLES[progress.rank]}
+            </div>
+            <div className="text-xs" style={{ color: 'var(--muted)' }}>
+              {progress.xp.toLocaleString()} total XP
+            </div>
           </div>
         </div>
         <div className="mt-3 space-y-1">
           <ProgressBar current={progress.xpIntoLevel.current} total={progress.xpIntoLevel.needed} />
-          <div className="text-xs text-neutral-400 dark:text-neutral-500">
-            {progress.xpIntoLevel.current} / {progress.xpIntoLevel.needed} XP to level {progress.level + 1}
+          <div className="flex justify-between text-xs" style={{ color: 'var(--muted)' }}>
+            <span>
+              {progress.xpIntoLevel.current} / {progress.xpIntoLevel.needed} XP to level {progress.level + 1}
+            </span>
+            {nextRank !== null && <span>Next rank at level {nextRank}</span>}
           </div>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-        <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Weight</h2>
+      {showcase.length > 0 && (
+        <div className="rounded-2xl border p-5 shadow-sm" style={{ borderColor: 'var(--line)', background: 'var(--surface)' }}>
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
+            Showcase
+          </h2>
+          <div className="mt-3 flex gap-4">
+            {showcase.map(({ badge, display }) => (
+              <div key={badge.id} className="flex flex-1 flex-col items-center gap-1 text-center">
+                <Badge {...display.badgeProps} size={64} />
+                <span className="text-xs font-medium" style={{ color: 'var(--ink)' }}>
+                  {display.name}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="rounded-2xl border p-5 shadow-sm" style={{ borderColor: 'var(--line)', background: 'var(--surface)' }}>
+        <h2 className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
+          Weight
+        </h2>
         <form onSubmit={submitWeight} className="mt-2 flex gap-2">
           <input
             type="number"
@@ -75,68 +104,66 @@ export default function ProfilePage() {
             value={weightInput}
             onChange={(e) => setWeightInput(e.target.value)}
             placeholder="kg today"
-            className="w-28 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+            className="w-28 rounded-lg border px-3 py-2 text-sm outline-none"
+            style={{ borderColor: 'var(--line)', background: 'var(--surface)', color: 'var(--ink)' }}
           />
-          <button
-            type="submit"
-            className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-semibold text-white dark:bg-neutral-100 dark:text-neutral-900"
-          >
+          <button type="submit" className="rounded-lg px-4 py-2 text-sm font-semibold text-white" style={{ background: 'var(--ink)' }}>
             Log
           </button>
         </form>
         <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
           <div>
-            <div className="text-neutral-400 dark:text-neutral-500">Latest</div>
-            <div className="font-semibold text-neutral-900 dark:text-neutral-100">
+            <div style={{ color: 'var(--muted)' }}>Latest</div>
+            <div className="font-semibold" style={{ color: 'var(--ink)' }}>
               {stats.latestWeight !== null ? `${stats.latestWeight} kg` : 'Not logged'}
             </div>
           </div>
           <div>
-            <div className="text-neutral-400 dark:text-neutral-500">Lost</div>
-            <div className="font-semibold text-neutral-900 dark:text-neutral-100">{stats.kgLost.toFixed(1)} kg</div>
+            <div style={{ color: 'var(--muted)' }}>Lost</div>
+            <div className="font-semibold" style={{ color: 'var(--ink)' }}>
+              {stats.kgLost.toFixed(1)} kg
+            </div>
           </div>
         </div>
         <div className="mt-3 space-y-1">
           <ProgressBar current={weightPct} total={100} />
-          <div className="flex justify-between text-xs text-neutral-400 dark:text-neutral-500">
+          <div className="flex justify-between text-xs" style={{ color: 'var(--muted)' }}>
             <span>{START_WEIGHT} kg</span>
             <span>{TARGET_WEIGHT} kg</span>
           </div>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-        <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Stats</h2>
+      <div className="rounded-2xl border p-5 shadow-sm" style={{ borderColor: 'var(--line)', background: 'var(--surface)' }}>
+        <h2 className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
+          Stats
+        </h2>
         <div className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-          <Stat label="Workouts done" value={stats.workoutsCompleted} />
+          <Stat label="Days cleared" value={stats.daysCleared} />
           <Stat label="Current streak" value={stats.currentStreak} />
           <Stat label="Best streak" value={stats.bestStreak} />
           <Stat label="Lifetime pushups" value={stats.lifetimePushups} />
           <Stat label="Cardio minutes" value={stats.cardioMinutes} />
+          <Stat label="Treadmill km" value={stats.treadmillKm} />
+          <Stat label="Cycle km" value={stats.cycleKm} />
           <Stat label="Weigh-ins" value={stats.weighIns} />
         </div>
       </div>
 
-      <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Recent achievements</h2>
-          <Link href="/achievements" className="text-xs font-medium text-neutral-500 underline dark:text-neutral-400">
-            See all
-          </Link>
+      {thisMonth && (
+        <div className="rounded-2xl border p-5 shadow-sm" style={{ borderColor: 'var(--line)', background: 'var(--surface)' }}>
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
+            This month &middot; {today ? monthLabel(monthKey(today)) : ''}
+          </h2>
+          <div className="mt-2 space-y-1.5 text-sm">
+            <MiniStat label="Days cleared" value={thisMonth.badges['month-clear'].value} target={thisMonth.badges['month-clear'].target} />
+            <MiniStat label="Pushups" value={thisMonth.badges['pushup-month'].value} target={thisMonth.badges['pushup-month'].target} />
+            <MiniStat label="Cardio minutes" value={thisMonth.badges['cardio-month'].value} target={thisMonth.badges['cardio-month'].target} />
+          </div>
         </div>
-        {recentAchievements.length === 0 ? (
-          <p className="mt-2 text-xs text-neutral-400 dark:text-neutral-500">None yet. Complete a workout to start.</p>
-        ) : (
-          <ul className="mt-2 space-y-1.5">
-            {recentAchievements.map((a) => (
-              <li key={a.id} className="flex items-center justify-between text-sm">
-                <span className="font-medium text-neutral-800 dark:text-neutral-100">{a.name}</span>
-                <span className="text-xs text-neutral-400 dark:text-neutral-500">{a.unlockedAt}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      )}
+
+      <SettingsCard />
     </div>
   );
 }
@@ -144,8 +171,83 @@ export default function ProfilePage() {
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div>
-      <div className="text-neutral-400 dark:text-neutral-500">{label}</div>
-      <div className="text-base font-semibold text-neutral-900 dark:text-neutral-100">{value}</div>
+      <div style={{ color: 'var(--muted)' }}>{label}</div>
+      <div className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value, target }: { label: string; value: number; target: number }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span style={{ color: 'var(--muted)' }}>{label}</span>
+      <span className="font-semibold tabular-nums" style={{ color: 'var(--ink)' }}>
+        {value} / {target}
+      </span>
+    </div>
+  );
+}
+
+function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className="flex min-h-11 items-center gap-2.5 text-sm font-semibold"
+      style={{ color: 'var(--ink)' }}
+    >
+      <span
+        className="relative h-8 w-[52px] rounded-full border-2 transition-colors"
+        style={{ background: checked ? 'var(--pill-ink)' : 'var(--surface-2)', borderColor: checked ? 'var(--pill-ink)' : 'var(--muted)' }}
+      >
+        <span
+          className="absolute top-0.5 h-6 w-6 rounded-full transition-all"
+          style={{ left: checked ? 22 : 2, background: checked ? 'var(--surface)' : 'var(--muted)' }}
+        />
+      </span>
+      {label}
+    </button>
+  );
+}
+
+function SettingsCard() {
+  const [sound, setSound] = useState(true);
+  const [vibrate, setVibrate] = useState(true);
+
+  useEffect(() => {
+    const prefs = feedback.getPrefs();
+    setSound(prefs.sound);
+    setVibrate(prefs.vibrate);
+  }, []);
+
+  return (
+    <div className="rounded-2xl border p-5 shadow-sm" style={{ borderColor: 'var(--line)', background: 'var(--surface)' }}>
+      <h2 className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
+        Settings
+      </h2>
+      <div className="mt-2 flex flex-col gap-1">
+        <Switch
+          checked={sound}
+          label="Sound"
+          onChange={(v) => {
+            setSound(v);
+            feedback.setSoundEnabled(v);
+            if (v) feedback.warm();
+          }}
+        />
+        <Switch
+          checked={vibrate}
+          label="Vibration"
+          onChange={(v) => {
+            setVibrate(v);
+            feedback.setVibrateEnabled(v);
+          }}
+        />
+      </div>
     </div>
   );
 }

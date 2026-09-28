@@ -1,10 +1,23 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { AppState, Goal, FullProgress, computeProgress, emptyState, levelForXp, totalXp } from '@/lib/progress';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  computeProgress,
+  emptyState,
+  isDayCleared,
+  levelForXp,
+  planDay,
+  rankForLevel,
+  totalXp,
+} from '@/lib/progress';
+import type { AppState, FullProgress, Goal } from '@/lib/progress';
+import { allEarnedBadges } from '@/lib/badges';
 import { todayStr } from '@/lib/date';
-
-type Toast = { id: number; text: string };
+import * as feedback from '@/lib/feedback';
+import { useCelebration } from '@/components/celebrate/CelebrationProvider';
+import type { CelebrationEvent } from '@/components/celebrate/CelebrationProvider';
+import { Snackbar } from '@/components/Snackbar';
+import type { SnackbarState } from '@/components/Snackbar';
 
 type ProgressContextValue = {
   state: AppState;
@@ -13,18 +26,64 @@ type ProgressContextValue = {
   authorized: boolean;
   passcodeError: boolean;
   submitPasscode: (code: string) => void;
-  complete: (date: string) => void;
-  uncomplete: (date: string) => void;
-  logWeight: (date: string, kg: number) => void;
-  addGoal: (goal: Omit<Goal, 'id'>) => void;
-  deleteGoal: (id: string) => void;
-  toasts: Toast[];
+  tick: (date: string, key: string, xpAmount: number) => Promise<void>;
+  untick: (date: string, key: string, undoLabel: string) => Promise<void>;
+  logCardio: (date: string, minutes: number, km: number | undefined, xpAmount: number) => Promise<void>;
+  removeCardio: (date: string, undoLabel: string) => Promise<void>;
+  completeAll: (date: string) => Promise<void>;
+  logWeight: (date: string, kg: number) => Promise<void>;
+  addGoal: (goal: Omit<Goal, 'id'>) => Promise<boolean>;
+  deleteGoal: (goal: Goal) => Promise<void>;
 };
 
 const ProgressContext = createContext<ProgressContextValue | null>(null);
 
 const STORAGE_KEY = 'wt:passcode';
-let toastId = 0;
+const SEEN_KEY = 'wt:seen';
+
+type Seen = { level: number; badgeIds: string[] };
+
+function readSeen(): Seen | null {
+  try {
+    const raw = localStorage.getItem(SEEN_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed?.level !== 'number' || !Array.isArray(parsed?.badgeIds)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeSeen(seen: Seen) {
+  try {
+    localStorage.setItem(SEEN_KEY, JSON.stringify(seen));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+// Badges first, level-up / rank-up last, like a chest reveal before the climax.
+function diffCelebrations(before: AppState, after: AppState, today: string): CelebrationEvent[] {
+  const beforeIds = new Set(allEarnedBadges(before, today).map((b) => b.id));
+  const afterBadges = allEarnedBadges(after, today);
+  const newBadges = afterBadges.filter((b) => !beforeIds.has(b.id));
+  const events: CelebrationEvent[] = newBadges.map((b) => ({ kind: 'badge', badge: b }));
+
+  const afterXp = totalXp(after, today);
+  const beforeLevel = levelForXp(totalXp(before, today));
+  const afterLevel = levelForXp(afterXp);
+  if (afterLevel > beforeLevel) {
+    const fromRank = rankForLevel(beforeLevel);
+    const toRank = rankForLevel(afterLevel);
+    if (fromRank !== toRank) {
+      events.push({ kind: 'rankup', fromRank, toRank, level: afterLevel, xpNow: afterXp });
+    } else {
+      events.push({ kind: 'levelup', from: beforeLevel, to: afterLevel, rank: toRank, xpNow: afterXp });
+    }
+  }
+  return events;
+}
 
 export function ProgressProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppState>(emptyState());
@@ -33,7 +92,12 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   const [passcodeError, setPasscodeError] = useState(false);
   const [passcode, setPasscode] = useState<string | null>(null);
   const [checkedStorage, setCheckedStorage] = useState(false);
-  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [snackbar, setSnackbar] = useState<SnackbarState>(null);
+  const snackbarId = useRef(0);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
+  const celebration = useCelebration();
 
   useEffect(() => {
     let stored: string | null = null;
@@ -46,31 +110,51 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     setCheckedStorage(true);
   }, []);
 
-  const pushToast = useCallback((text: string) => {
-    const id = ++toastId;
-    setToasts((t) => [...t, { id, text }]);
-    setTimeout(() => {
-      setToasts((t) => t.filter((x) => x.id !== id));
-    }, 3200);
+  const showSnackbar = useCallback((text: string, actionLabel?: string, onAction?: () => void) => {
+    snackbarId.current += 1;
+    setSnackbar({ id: snackbarId.current, text, actionLabel, onAction });
   }, []);
 
-  const fetchState = useCallback(async (code: string) => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/state', { headers: { 'x-passcode': code } });
-      if (res.status === 401) {
-        setAuthorized(false);
-        setPasscodeError(true);
-        return;
+  const fetchState = useCallback(
+    async (code: string) => {
+      setLoading(true);
+      try {
+        const res = await fetch('/api/state', { headers: { 'x-passcode': code } });
+        if (res.status === 401) {
+          setAuthorized(false);
+          setPasscodeError(true);
+          return;
+        }
+        const data: AppState = await res.json();
+        setState(data);
+        setAuthorized(true);
+        setPasscodeError(false);
+
+        const today = todayStr();
+        const xpNow = totalXp(data, today);
+        const level = levelForXp(xpNow);
+        const badgeIds = allEarnedBadges(data, today).map((b) => b.id);
+        const seen = readSeen();
+        if (seen === null) {
+          writeSeen({ level, badgeIds });
+        } else {
+          const newBadges = allEarnedBadges(data, today).filter((b) => !seen.badgeIds.includes(b.id));
+          const events: CelebrationEvent[] = newBadges.map((b) => ({ kind: 'badge', badge: b }));
+          if (level > seen.level) {
+            const fromRank = rankForLevel(seen.level);
+            const toRank = rankForLevel(level);
+            if (fromRank !== toRank) events.push({ kind: 'rankup', fromRank, toRank, level, xpNow });
+            else events.push({ kind: 'levelup', from: seen.level, to: level, rank: toRank, xpNow });
+          }
+          if (events.length) celebration.enqueue(events);
+          writeSeen({ level, badgeIds });
+        }
+      } finally {
+        setLoading(false);
       }
-      const data = await res.json();
-      setState(data);
-      setAuthorized(true);
-      setPasscodeError(false);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [celebration]
+  );
 
   useEffect(() => {
     if (!checkedStorage) return;
@@ -79,23 +163,21 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     fetchState(passcode);
-  }, [checkedStorage, passcode, fetchState]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkedStorage, passcode]);
 
-  const submitPasscode = useCallback(
-    (code: string) => {
-      try {
-        localStorage.setItem(STORAGE_KEY, code);
-      } catch {
-        // ignore storage errors
-      }
-      setPasscode(code);
-    },
-    []
-  );
+  const submitPasscode = useCallback((code: string) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, code);
+    } catch {
+      // ignore storage errors
+    }
+    setPasscode(code);
+  }, []);
 
   const post = useCallback(
-    async (body: Record<string, unknown>) => {
-      if (!passcode) return;
+    async (body: Record<string, unknown>): Promise<AppState | undefined> => {
+      if (!passcode) return undefined;
       const res = await fetch('/api/state', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-passcode': passcode },
@@ -104,91 +186,159 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       if (res.status === 401) {
         setAuthorized(false);
         setPasscodeError(true);
-        return;
+        return undefined;
       }
-      if (!res.ok) return;
-      const data: AppState = await res.json();
-      return data;
+      if (!res.ok) return undefined;
+      return (await res.json()) as AppState;
     },
     [passcode]
   );
 
-  const complete = useCallback(
-    async (date: string) => {
-      const before = { ...state, achievements: computeProgress(state, todayStr()) };
-      const beforeXp = totalXp(state);
-      const beforeLevel = levelForXp(beforeXp);
-      const beforeUnlocked = new Set(computeProgress(state, todayStr()).achievements.filter((a) => a.unlockedAt).map((a) => a.id));
-
-      const optimistic: AppState = { ...state, completions: { ...state.completions, [date]: { at: new Date().toISOString() } } };
-      setState(optimistic);
-
-      const data = await post({ action: 'complete', date });
-      if (!data) return;
-      setState(data);
-
-      const afterXp = totalXp(data);
-      const afterLevel = levelForXp(afterXp);
-      const gained = afterXp - beforeXp;
-      pushToast(`+${gained} XP`);
-      if (afterLevel > beforeLevel) {
-        pushToast(`Level up. You're now level ${afterLevel}.`);
-      }
-      const afterAchievements = computeProgress(data, todayStr()).achievements;
-      for (const a of afterAchievements) {
-        if (a.unlockedAt && !beforeUnlocked.has(a.id)) {
-          pushToast(`Achievement unlocked: ${a.name}`);
-        }
-      }
-      void before;
+  // Applies a server response: updates state, plays feedback/celebrations for
+  // whatever changed between `before` and the new state, and refreshes wt:seen.
+  const applyResult = useCallback(
+    (before: AppState, after: AppState) => {
+      setState(after);
+      const today = todayStr();
+      const events = diffCelebrations(before, after, today);
+      if (events.length) celebration.enqueue(events);
+      const level = levelForXp(totalXp(after, today));
+      const badgeIds = allEarnedBadges(after, today).map((b) => b.id);
+      writeSeen({ level, badgeIds });
     },
-    [state, post, pushToast]
+    [celebration]
   );
 
-  const uncomplete = useCallback(
-    async (date: string) => {
-      const optimistic: AppState = { ...state, completions: { ...state.completions } };
-      delete optimistic.completions[date];
+  const tick = useCallback(
+    async (date: string, key: string, xpAmount: number) => {
+      const before = stateRef.current;
+      const day = planDay(date);
+      const wasCleared = day ? isDayCleared(day, before.days[date]) : false;
+      const optimisticLog = { ...(before.days[date] ?? { items: {} }) };
+      optimisticLog.items = { ...optimisticLog.items, [key]: { at: new Date().toISOString() } };
+      const optimistic: AppState = { ...before, days: { ...before.days, [date]: optimisticLog } };
       setState(optimistic);
-      const data = await post({ action: 'uncomplete', date });
-      if (data) setState(data);
+      feedback.tick();
+
+      const data = await post({ action: 'tick', date, key });
+      if (!data) return;
+      applyResult(before, data);
+      const nowCleared = day ? isDayCleared(day, data.days[date]) : false;
+      if (!wasCleared && nowCleared) feedback.dayCleared();
+      void xpAmount;
     },
-    [state, post]
+    [post, applyResult]
+  );
+
+  const untick = useCallback(
+    async (date: string, key: string, undoLabel: string) => {
+      const before = stateRef.current;
+      const optimisticLog = { ...(before.days[date] ?? { items: {} }) };
+      optimisticLog.items = { ...optimisticLog.items };
+      delete optimisticLog.items[key];
+      const optimistic: AppState = { ...before, days: { ...before.days, [date]: optimisticLog } };
+      setState(optimistic);
+
+      const data = await post({ action: 'untick', date, key });
+      if (!data) return;
+      applyResult(before, data);
+      showSnackbar(undoLabel, 'Undo', () => {
+        tick(date, key, 0);
+      });
+    },
+    [post, applyResult, showSnackbar, tick]
+  );
+
+  const logCardio = useCallback(
+    async (date: string, minutes: number, km: number | undefined, xpAmount: number) => {
+      const before = stateRef.current;
+      const optimisticLog = { ...(before.days[date] ?? { items: {} }) };
+      optimisticLog.cardio = km !== undefined ? { minutes, km } : { minutes };
+      const optimistic: AppState = { ...before, days: { ...before.days, [date]: optimisticLog } };
+      setState(optimistic);
+      feedback.tick();
+
+      const data = await post({ action: 'logCardio', date, minutes, km });
+      if (!data) return;
+      applyResult(before, data);
+      void xpAmount;
+    },
+    [post, applyResult]
+  );
+
+  const removeCardio = useCallback(
+    async (date: string, undoLabel: string) => {
+      const before = stateRef.current;
+      const prevCardio = before.days[date]?.cardio;
+      const optimisticLog = { ...(before.days[date] ?? { items: {} }) };
+      delete optimisticLog.cardio;
+      const optimistic: AppState = { ...before, days: { ...before.days, [date]: optimisticLog } };
+      setState(optimistic);
+
+      const data = await post({ action: 'untick', date, key: 'cardio' });
+      if (!data) return;
+      applyResult(before, data);
+      showSnackbar(undoLabel, 'Undo', () => {
+        if (prevCardio) logCardio(date, prevCardio.minutes, prevCardio.km, 0);
+      });
+    },
+    [post, applyResult, showSnackbar, logCardio]
+  );
+
+  const completeAll = useCallback(
+    async (date: string) => {
+      const before = stateRef.current;
+      const day = planDay(date);
+      const wasCleared = day ? isDayCleared(day, before.days[date]) : false;
+
+      const data = await post({ action: 'completeAll', date });
+      if (!data) return;
+      applyResult(before, data);
+      const nowCleared = day ? isDayCleared(day, data.days[date]) : false;
+      if (!wasCleared && nowCleared) feedback.dayCleared();
+    },
+    [post, applyResult]
   );
 
   const logWeight = useCallback(
     async (date: string, kg: number) => {
-      const beforeUnlocked = new Set(computeProgress(state, todayStr()).achievements.filter((a) => a.unlockedAt).map((a) => a.id));
-      const optimistic: AppState = { ...state, weights: { ...state.weights, [date]: kg } };
+      const before = stateRef.current;
+      const optimistic: AppState = { ...before, weights: { ...before.weights, [date]: kg } };
       setState(optimistic);
+
       const data = await post({ action: 'weight', date, kg });
       if (!data) return;
-      setState(data);
-      pushToast('Weight logged. +10 XP');
-      const afterAchievements = computeProgress(data, todayStr()).achievements;
-      for (const a of afterAchievements) {
-        if (a.unlockedAt && !beforeUnlocked.has(a.id)) {
-          pushToast(`Achievement unlocked: ${a.name}`);
-        }
-      }
+      applyResult(before, data);
     },
-    [state, post, pushToast]
+    [post, applyResult]
   );
 
   const addGoal = useCallback(
-    async (goal: Omit<Goal, 'id'>) => {
+    async (goal: Omit<Goal, 'id'>): Promise<boolean> => {
+      const before = stateRef.current;
       const data = await post({ action: 'addGoal', goal });
-      if (data) setState(data);
+      if (!data) return false;
+      applyResult(before, data);
+      return true;
     },
-    [post]
+    [post, applyResult]
   );
 
   const deleteGoal = useCallback(
-    async (id: string) => {
-      const data = await post({ action: 'deleteGoal', id });
-      if (data) setState(data);
+    async (goal: Goal) => {
+      const before = stateRef.current;
+      const optimistic: AppState = { ...before, goals: before.goals.filter((g) => g.id !== goal.id) };
+      setState(optimistic);
+
+      const data = await post({ action: 'deleteGoal', id: goal.id });
+      if (!data) return;
+      applyResult(before, data);
+      showSnackbar('Goal deleted', 'Undo', async () => {
+        const restored = await post({ action: 'restoreGoal', goal });
+        if (restored) setState(restored);
+      });
     },
-    [post]
+    [post, applyResult, showSnackbar]
   );
 
   const progress = useMemo(() => computeProgress(state, todayStr()), [state]);
@@ -200,12 +350,14 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     authorized,
     passcodeError,
     submitPasscode,
-    complete,
-    uncomplete,
+    tick,
+    untick,
+    logCardio,
+    removeCardio,
+    completeAll,
     logWeight,
     addGoal,
     deleteGoal,
-    toasts,
   };
 
   const showPrompt = checkedStorage && !loading && !authorized;
@@ -213,16 +365,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   return (
     <ProgressContext.Provider value={value}>
       {showPrompt ? <PasscodePrompt onSubmit={submitPasscode} error={passcodeError} /> : children}
-      <div className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex flex-col items-center gap-2 px-4">
-        {toasts.map((t) => (
-          <div
-            key={t.id}
-            className="pointer-events-auto rounded-full bg-neutral-900 px-4 py-2 text-sm font-medium text-white shadow-lg dark:bg-neutral-100 dark:text-neutral-900"
-          >
-            {t.text}
-          </div>
-        ))}
-      </div>
+      <Snackbar snackbar={snackbar} onDismiss={() => setSnackbar(null)} />
     </ProgressContext.Provider>
   );
 }
@@ -234,25 +377,33 @@ function PasscodePrompt({ onSubmit, error }: { onSubmit: (code: string) => void;
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          feedback.warm();
           onSubmit(value);
         }}
-        className="w-full max-w-xs space-y-3 rounded-2xl border border-neutral-200 bg-white p-6 text-center shadow-sm dark:border-neutral-800 dark:bg-neutral-900"
+        className="w-full max-w-xs space-y-3 rounded-2xl border p-6 text-center shadow-sm"
+        style={{ borderColor: 'var(--line)', background: 'var(--surface)' }}
       >
-        <h1 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">Enter passcode</h1>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">This app is private. Enter your passcode to continue.</p>
+        <h1 className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
+          Enter passcode
+        </h1>
+        <p className="text-xs" style={{ color: 'var(--muted)' }}>
+          This app is private. Enter your passcode to continue.
+        </p>
         <input
           type="password"
           autoFocus
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+          className="w-full rounded-lg border px-3 py-2 text-sm outline-none"
+          style={{ borderColor: 'var(--line)', background: 'var(--surface)', color: 'var(--ink)' }}
           placeholder="Passcode"
         />
-        {error && <p className="text-xs text-red-500">Wrong passcode. Try again.</p>}
-        <button
-          type="submit"
-          className="w-full rounded-lg bg-neutral-900 py-2 text-sm font-semibold text-white dark:bg-neutral-100 dark:text-neutral-900"
-        >
+        {error && (
+          <p className="text-xs" style={{ color: 'var(--bad)' }}>
+            Wrong passcode. Try again.
+          </p>
+        )}
+        <button type="submit" className="w-full rounded-lg py-2 text-sm font-semibold text-white" style={{ background: 'var(--ink)' }}>
           Continue
         </button>
       </form>

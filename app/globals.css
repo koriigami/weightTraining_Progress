@@ -2,16 +2,137 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg: #f3f4f9;
+  --surface: #ffffff;
+  --surface-2: #eceef6;
+  --ink: #161a2b;
+  --muted: #5e6478;
+  --line: #e0e3ee;
+  --accent: #c98a0b;
+  --accent-soft: #fbefd2;
+  --ok: #12805c;
+  --ok-soft: #d9f3e8;
+  --warn: #b26b00;
+  --bad: #c0342b;
+  --pill: #e4e1f7;
+  --pill-ink: #2e2767;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0d0f1d;
+    --surface: #171a2e;
+    --surface-2: #20243c;
+    --ink: #edeff8;
+    --muted: #979db6;
+    --line: #2a2e4a;
+    --accent: #f2b53a;
+    --accent-soft: #3a2f14;
+    --ok: #4fd39d;
+    --ok-soft: #113b2c;
+    --warn: #f0b040;
+    --bad: #ff7a70;
+    --pill: #35306b;
+    --pill-ink: #e3dfff;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #0d0f1d;
+  --surface: #171a2e;
+  --surface-2: #20243c;
+  --ink: #edeff8;
+  --muted: #979db6;
+  --line: #2a2e4a;
+  --accent: #f2b53a;
+  --accent-soft: #3a2f14;
+  --ok: #4fd39d;
+  --ok-soft: #113b2c;
+  --warn: #f0b040;
+  --bad: #ff7a70;
+  --pill: #35306b;
+  --pill-ink: #e3dfff;
+  color-scheme: dark;
+}
+
 html {
   -webkit-tap-highlight-color: transparent;
 }
 
-body {
-  background-color: #fafafa;
+.font-display {
+  font-family: var(--font-display), 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #0a0a0a;
+body {
+  background-color: var(--bg);
+  color: var(--ink);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Bottom nav (80px) + its safe-area inset, for mobile main content. */
+.pb-bottom-nav {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+
+.celebrate-rays {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 180vmax;
+  height: 180vmax;
+  margin: -90vmax 0 0 -90vmax;
+  border-radius: 50%;
+  -webkit-mask-image: radial-gradient(circle, #000 0, rgba(0, 0, 0, 0.5) 18%, transparent 48%);
+  mask-image: radial-gradient(circle, #000 0, rgba(0, 0, 0, 0.5) 18%, transparent 48%);
+  animation: celebrate-spin 8s linear infinite;
+}
+
+@keyframes celebrate-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes celebrate-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.badge-legend {
+  animation: badge-prism 6s ease-in-out infinite alternate;
+}
+
+@keyframes badge-prism {
+  to {
+    filter: hue-rotate(25deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge-legend {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }
