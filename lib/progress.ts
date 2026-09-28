@@ -180,7 +180,9 @@ export function pushupsInLogSince(day: WorkoutDay, log: DayLog | undefined, sinc
 // or after `since` (cardio is logged as a single item, not per-set).
 export function cardioSince(log: DayLog | undefined, since: string): { minutes: number; km: number } {
   const c = log?.cardio;
-  if (!c || !c.at || c.at < since) return { minutes: 0, km: 0 };
+  // Cardio saved before cardio.at existed still has its tick time on the item.
+  const at = c?.at ?? log?.items['cardio']?.at;
+  if (!c || !at || at < since) return { minutes: 0, km: 0 };
   return { minutes: c.minutes, km: c.km ?? 0 };
 }
 
