@@ -624,7 +624,14 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     [runRoutineAction]
   );
 
-  const prefs = useMemo(() => resolvePrefs(state), [state]);
+  // With no stored prefs (the owner's migrated progress) the device's own sound and
+  // haptics choice in wt:prefs is what they get, so Settings shows what really plays.
+  const prefs = useMemo(() => {
+    const p = resolvePrefs(state);
+    if (state.prefs) return p;
+    const device = feedback.getPrefs();
+    return { ...p, sound: device.sound, haptic: device.vibrate };
+  }, [state]);
   const lookup = useMemo(() => stateLookup(state), [state]);
   const routines = useMemo(() => state.routines ?? [], [state.routines]);
   const workouts = useMemo(() => state.workouts ?? [], [state.workouts]);
