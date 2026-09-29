@@ -5,7 +5,8 @@ standalone HTML files in `docs/design/`. Open them in a browser. They are
 clickable prototypes, so they show the flows better than screenshots do.
 `docs/ROADMAP.md` holds the full plan and the decisions behind it.
 
-The final target is board 05. The build follows it.
+Board 05 is the look. Board 06 fixes what day-to-day use of the built app turned up, and the
+XP Rulebook sets the scoring rules. Once they are signed off, the build follows all three.
 
 ## 01 Hunter board (v1 to v5.1 of the original app)
 
@@ -83,6 +84,55 @@ rounds:
   library lives inside Routines.
 - Charts use 3D bars on a sunken panel. Clouds drift behind the top of each
   screen.
+
+## 06 UX fixes board v6
+
+`docs/design/06-ux-fixes-board-v6.html`
+
+Made after using the v7 app for real. It shows each changed screen in its states, side by side,
+with a phone and a desktop. Decisions:
+
+- Nothing starts by accident. Empty workout opens the exercise picker, and its pinned button is
+  Start workout, disabled until an exercise is picked. The clock starts on that tap. Cardio works
+  the same way: pick an activity, then Start workout. A routine's Start still starts at once.
+- The center nav button is one word with an icon: Workout with a +. The board can switch it to
+  Train to compare.
+- Home has one Today card with three states: Ready (the next routine, then Other routine, Cardio
+  and Empty workout), In progress (clock, sets, Resume) and Done today (each workout with its XP,
+  Next time, and a gentle row when a routine's cardio wasn't logged). The yellow Empty workout
+  block is gone. This week opens the calendar.
+- Evening cardio after a gym session is its own workout.
+- The log's stats row adapts: strength shows Duration, Volume, Sets and XP; cardio shows Time,
+  Distance, Speed or Pace, and XP; a mix shows Duration, Volume, Distance and XP. Cardio gets two
+  big fields (Time follows the clock until typed in). A chip tracks the finish bonus, and
+  exercises show Beat last time +10 or Record +25.
+- Every past workout has a page: stats, where the XP came from, muscles, every set. Everything
+  can be edited in the log layout without a clock, and Delete asks first.
+- Workout cards open that page, show the routine as a gold chip even after a rename, mark
+  exercises added on top of the routine, and tag custom exercises.
+- Routines: Create routine with a + at the top, tabs pinned in the header, a ⋯ menu with
+  Duplicate and Delete routine.
+- Rank: tabs pinned, and it always opens on your level, including a second tap on the tab.
+- Profile shows a real month grid. Onboarding's Skip moves to the top bar. One game-style date
+  picker opens inside the sheet you're in, or as a popover on desktop.
+- An owner-only Insights page shows the group, never a person, and hides groups under 5 people.
+- Button words: one or two plain words and an icon (Create routine, Start workout, Keep logging).
+
+## XP Rulebook (rules v2)
+
+`docs/design/xp-reference.html`
+
+The scoring rules in one page, with a calculator. The ideas: XP comes from effort and from
+beating yourself, never from how heavy you lift, and a real session is needed for the finish
+bonus.
+
+- +5 a set, whatever the weight. Cardio 1 XP a minute, 30 at most a set, +10 with distance.
+- New: +10 per exercise for beating last time. A record (best ever) pays +25 instead.
+- The +50 finish bonus needs 20 work minutes, with a set counting as 3 minutes. At most 2 a day.
+- The weekly goal counts only workouts with a finish bonus.
+- Iron Mover counts sets, not tonnes. Month Clear needs 25 training days. New: Goal Month and
+  Clean Sweep. Plan-only badges retire.
+- The level curve stays at 50 × n × (n − 1) until the testers' data says otherwise.
 
 ## As built
 

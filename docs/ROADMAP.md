@@ -2,8 +2,9 @@
 
 ## Status (updated after stage 4)
 
-The redesign is built on branch `claude/home-workout-nutrition-plan-kuyhvx`. `main` and
-production are still on the older app until the branch is merged.
+The v7 redesign was merged to `main` (304f149) and is live. The next round, v8, fixes what
+day-to-day use turned up, moves XP to rules v2 and removes the 6-week plan. Its plan is in
+`docs/V8_PLAN.md`.
 
 | Stage | What | State |
 |---|---|---|
@@ -14,9 +15,10 @@ production are still on the older app until the branch is merged.
 | 3A | Routines, Explore, Exercises, editor, Log workout, Victory and Share | Done |
 | 3B | Rank Road and Badges, Profile, Statistics, Calendar, Settings, onboarding | Done |
 | 4 | Reward moments (level up, rank up, badge chest) with a queue, sounds and haptics, goals and volumes in the person's units, plan-only badges hidden, docs, full regression at 390 px and 1440 px, axe check | Done |
+| v7 release | Merged to `main`, deployed to production | Done |
+| v8 design | Board 06 (UX fixes) and the XP Rulebook, see `docs/design/` | Waiting for sign-off |
+| v8 build | Stages A to F in `docs/V8_PLAN.md` | Not started |
 
-What is left before a release is a merge of the branch to `main`, and a look at the deployed
-preview with the real Google sign-in and Redis.
 
 ### Next
 

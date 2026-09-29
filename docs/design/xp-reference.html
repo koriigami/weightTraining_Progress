@@ -1,0 +1,330 @@
+<title>XP Rulebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Lilita+One&display=swap">
+<style>
+/* Layout: one reading column of rule cards on a sky-to-parchment page, like the app. Arena Bright only, one committed light look. */
+:root{
+  color-scheme:light;
+  --page:linear-gradient(180deg,#78C3FF 0%,#B9E4FF 420px,#FFF3D6 980px,#FBE6BD 100%);
+  --surface:#FFF8E8; --surface-2:#F4E4C0; --calm:#FFFDF6; --line:#E2CB98;
+  --ink:#2E1F0C; --muted:#7D6545; --link:#1E7A28;
+  --p1:#86EA64; --p2:#2BA438; --p-bevel:#186A20;
+  --s-grad:linear-gradient(180deg,#FFE9A0 0%,#FFD970 50%,#F2B940 100%); --s-line:#D49A2A; --s-bevel:#B8862E; --s-ink:#4A3212;
+  --xp:#FFC21A; --xp-hi:#FFF28F; --xp-deep:#C7870A; --ok:#2BA438; --ok-deep:#186A20; --ok-soft:#DDF5D2; --new:#6B21A8; --new-soft:#EFE3FF;
+  --stroke:#3A230C; --track:rgba(110,70,20,.2);
+  --hero:linear-gradient(170deg,#4AA8F5 0%,#2F8FE8 38%,#1D5FBF 100%); --hero-stroke:#0E3A7A;
+  --card-shadow:inset 0 0 0 3px rgba(255,255,255,.6),0 4px 0 #D7BA7C,0 14px 24px -18px rgba(120,80,20,.5);
+  --font-ui:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-num:'Lilita One','Arial Rounded MT Bold','Trebuchet MS',sans-serif;
+}
+*{box-sizing:border-box}
+body{background:var(--page);color:var(--ink);font-family:var(--font-ui);font-size:15.5px;line-height:1.5}
+.gt{font-family:var(--font-num);font-weight:400;color:#fff;letter-spacing:.01em;text-shadow:0 2px 0 var(--stroke),1.5px 0 0 var(--stroke),-1.5px 0 0 var(--stroke),0 -1.5px 0 var(--stroke),1px 1px 0 var(--stroke),-1px 1px 0 var(--stroke),0 4px 0 var(--stroke)}
+.wrap{max-width:1000px;margin:0 auto;padding-inline:24px;padding-block:40px 100px;display:flex;flex-direction:column;gap:40px}
+@media (max-width:600px){.wrap{padding-inline:16px;padding-block:28px 80px;gap:32px}}
+header h1{font-size:54px;line-height:1.05;margin:0 0 10px}
+header p{margin:0;max-width:62ch;font-size:17px;color:#1B3A5C;font-weight:600}
+.status{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:14px;font-weight:800;font-size:13px;background:var(--surface);border:1.5px solid var(--line)}
+.pill.new,.tag.new{background:var(--new-soft);color:var(--new);border-color:#D2B8F5}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:11px;font-weight:800;font-size:11.5px;white-space:nowrap;border:1.5px solid var(--line);background:var(--surface-2);color:var(--muted);vertical-align:1px}
+.tag.chg{background:#FFF2C9;color:#6B4410;border-color:#E3B03A}
+.tag.same{background:var(--calm)}
+section{display:flex;flex-direction:column;gap:14px}
+h2{font-size:32px;margin:0;line-height:1.1}
+.lede{margin:0;color:var(--muted);max-width:68ch;font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px 20px;box-shadow:var(--card-shadow)}
+.card h3{margin:0 0 8px;font-family:var(--font-num);font-weight:400;font-size:21px;letter-spacing:.01em}
+.card p{margin:0 0 8px;max-width:70ch}
+.principles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:820px){.principles{grid-template-columns:minmax(0,1fr)}}
+.principles .card b{display:block;font-size:16px;margin-bottom:4px}
+.principles .card span{color:var(--muted);font-weight:600;font-size:14.5px}
+.tbl{overflow-x:auto;border-radius:16px;border:1px solid var(--line);background:var(--calm)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14.5px}
+th{text-align:left;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:10px 14px;background:var(--surface-2);border-bottom:2px solid var(--line)}
+td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.xp{font-family:var(--font-num);font-size:19px;color:var(--xp-deep);white-space:nowrap}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td small{display:block;color:var(--muted);font-weight:600}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+.ex-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.ex-row:last-child{border-bottom:0}
+.ex-row b{font-family:var(--font-num);font-weight:400;font-size:18px;white-space:nowrap}
+.ex-row.total b{color:var(--xp-deep)}
+.mk{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px;border-radius:12px;font-weight:800;font-size:12px;white-space:nowrap}
+.mk-beat{background:var(--ok-soft);color:var(--ok-deep);border:1.5px solid #9ED88A}
+.mk-rec{background:linear-gradient(180deg,#FFF28F,#FFC21A);color:#5A3A00;border:1.5px solid #C7870A;box-shadow:0 2px 0 #C7870A}
+/* calculator */
+.calc{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:760px){.calc{grid-template-columns:minmax(0,1fr)}}
+.ctrl{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.ctrl:last-child{border-bottom:0}
+.ctrl label{font-weight:700}
+.ctrl label small{display:block;color:var(--muted);font-weight:600;font-size:13px}
+.step{display:flex;align-items:center;gap:8px}
+.step button{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--s-line);background:var(--s-grad);color:var(--s-ink);box-shadow:0 3px 0 var(--s-bevel);font-size:20px;font-weight:800;line-height:1;cursor:pointer;display:grid;place-items:center}
+.step button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--s-bevel)}
+.step output{min-width:42px;text-align:center;font-family:var(--font-num);font-size:22px}
+.seg{display:flex;background:var(--calm);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+.seg button{border:0;background:none;height:32px;min-width:40px;padding:0 10px;border-radius:9px;font-weight:800;font-size:14px;color:var(--muted);cursor:pointer;font-family:inherit}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,var(--p1),var(--p2));color:#fff;box-shadow:0 2px 0 var(--p-bevel)}
+.result{background:var(--hero);color:#fff;border:3px solid #F5C542;border-radius:20px;padding:18px;box-shadow:0 4px 0 #154A94,0 18px 30px -18px rgba(20,60,120,.7)}
+.result .big{font-family:var(--font-num);font-size:46px;line-height:1;color:var(--xp-hi);text-shadow:0 2px 0 var(--hero-stroke),1px 0 0 var(--hero-stroke),-1px 0 0 var(--hero-stroke),0 -1px 0 var(--hero-stroke)}
+.result .lines{margin-top:12px;background:rgba(255,255,255,.12);border-radius:14px;padding:4px 12px}
+.result .ex-row{border-color:rgba(255,255,255,.2)}
+.result .ex-row b{color:#fff}
+.fb{display:flex;align-items:center;gap:10px;margin-top:12px;font-weight:800;font-size:14px}
+.fb .tr{flex:1;height:12px;border-radius:6px;background:rgba(0,0,0,.25);border:1.5px solid var(--hero-stroke);overflow:hidden}
+.fb .tr i{display:block;height:100%;background:linear-gradient(180deg,var(--xp-hi),var(--xp) 55%,var(--xp-deep));transition:width .25s}
+.fb.ready .tr i{background:linear-gradient(180deg,#C2F7A8,#46C24C 55%,#228A2E)}
+/* people */
+.person{display:flex;flex-direction:column;gap:6px}
+.person header{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.person .av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:18px;flex:none}
+.person header b{display:block;font-size:17px}
+.person header small{color:var(--muted);font-weight:600}
+.bar2{display:grid;grid-template-columns:120px minmax(0,1fr) 70px;align-items:center;gap:10px;font-size:14px;font-weight:700}
+.bar2 .t{height:16px;border-radius:8px;background:var(--track);overflow:hidden;border:1.5px solid rgba(58,35,12,.3)}
+.bar2 .t i{display:block;height:100%;background:linear-gradient(180deg,#C2F7A8,#46C24C 55%,#228A2E)}
+.bar2 .t i.gold{background:linear-gradient(180deg,var(--xp-hi),var(--xp) 55%,var(--xp-deep))}
+.bar2 span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+/* levels */
+.ranks{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+@media (max-width:760px){.ranks{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.rk{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 6px;box-shadow:var(--card-shadow)}
+.rk b{font-family:var(--font-num);font-weight:400;font-size:17px}
+.rk small{color:var(--muted);font-weight:700;font-size:12.5px}
+tr.gate td{background:#FFF6DA;font-weight:800}
+.rdot{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:8px;vertical-align:-1px}
+.note{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1.5px dashed #D4A43A;border-radius:14px;padding:12px 14px;font-weight:600;font-size:14.5px}
+ul.plain{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+ul.plain li::marker{color:var(--xp-deep)}
+:focus-visible{outline:2px solid var(--xp-deep);outline-offset:2px}
+</style>
+
+<main class="wrap">
+  <header>
+    <h1 class="gt">XP Rulebook</h1>
+    <p>How Home Workout turns training into XP, levels, ranks and badges. These are rules v2, the version we agreed in chat. Nothing here is built yet.</p>
+    <div class="status"><span class="pill new">New in v2</span><span class="pill" style="background:#FFF2C9;border-color:#E3B03A;color:#6B4410">Changed in v2</span><span class="pill">Unchanged</span></div>
+  </header>
+
+  <section aria-labelledby="p">
+    <h2 class="gt" id="p">Three ideas behind every rule</h2>
+    <div class="principles">
+      <div class="card"><b>Effort, not load</b><span>A set earns the same 5 XP at 2 kg or 200 kg. How heavy you lift never scales XP.</span></div>
+      <div class="card"><b>Beat yourself</b><span>Extra XP comes from doing better than your own last time, or your own best ever. Nobody is compared with anybody else.</span></div>
+      <div class="card"><b>A real session counts</b><span>The +50 finish bonus needs about 20 minutes of work, so logging a single set doesn't pay like a workout.</span></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="src">
+    <h2 class="gt" id="src">Where XP comes from</h2>
+    <p class="lede">Everything is worked out again from your workouts every time the app loads. Edit or delete a workout and the XP follows.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Source</th><th>XP</th><th>Rule</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><b>Strength set</b></td><td class="xp">+5</td><td>Each ticked set with at least 1 rep, or a hold of 5 seconds or more. Weight and reps don't change it.</td><td><span class="tag chg">Changed</span><small>Needs 1 rep or 5 s now</small></td></tr>
+        <tr><td><b>Cardio</b></td><td class="xp">+1 a min</td><td>Each minute of a cardio set, up to 30 per set. Interval sets count work plus easy minutes, with the same cap.</td><td><span class="tag chg">Changed</span><small>Intervals were uncapped</small></td></tr>
+        <tr><td><b>Distance</b></td><td class="xp">+10</td><td>A cardio set that logs a distance above 0.</td><td><span class="tag same">Unchanged</span></td></tr>
+        <tr><td><b>Beat last time</b></td><td class="xp">+10</td><td>Once per exercise per workout, when your best set beats the last workout that had that exercise. See the table below.</td><td><span class="tag new">New</span></td></tr>
+        <tr><td><b>Record</b></td><td class="xp">+25</td><td>Once per exercise per workout, when your best set beats every earlier workout. Paid instead of the +10, never both.</td><td><span class="tag chg">Changed</span><small>Now every kind of exercise</small></td></tr>
+        <tr><td><b>Finish bonus</b></td><td class="xp">+50</td><td>A workout with 20 work minutes: each ticked strength set counts as 3 minutes, and cardio counts its minutes. At most 2 a day.</td><td><span class="tag chg">Changed</span><small>Was any workout</small></td></tr>
+        <tr><td><b>Weekly goal</b></td><td class="xp">+50</td><td>The first time in a Monday to Sunday week that your count of workouts with a finish bonus reaches your weekly goal.</td><td><span class="tag chg">Changed</span><small>Only full workouts count</small></td></tr>
+        <tr><td><b>Weigh-in</b></td><td class="xp">+10</td><td>Each day you log your weight.</td><td><span class="tag same">Unchanged</span></td></tr>
+        <tr><td><b>Badges</b></td><td class="xp">25 to 500</td><td>Each badge tier: Bronze 25, Silver 50, Gold 100, Diamond 200, Master 350, Legend 500. Monthly badges 75, special badges 50.</td><td><span class="tag same">Unchanged</span><small>The catalogue changes</small></td></tr>
+        <tr><td><b>Goals</b></td><td class="xp">25 to 1000</td><td>Paid when a goal is achieved. See the goals table.</td><td><span class="tag chg">Changed</span><small>Counts workouts now</small></td></tr>
+        <tr><td><b>How long a workout lasts</b></td><td class="xp">0</td><td>The clock itself never gives XP. The finish bonus uses sets and cardio minutes, not the clock.</td><td><span class="tag same">Unchanged</span></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="beat">
+    <h2 class="gt" id="beat">Beat last time and records</h2>
+    <p class="lede">Your best set of an exercise in this workout is compared twice: with the last workout that had that exercise, then with your best ever. The first time you do an exercise there is nothing to beat, so it earns neither.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Kind of exercise</th><th>Beat last time (+10)</th><th>Record (+25 instead)</th></tr></thead>
+      <tbody>
+        <tr><td><b>Weight and reps</b><small>Rows, curls, presses</small></td><td>More weight with the same reps or more, or more reps at the same weight</td><td>Heaviest ever, or the most reps at your heaviest weight</td></tr>
+        <tr><td><b>Reps only</b><small>Push ups, crunches</small></td><td>More reps in your best set</td><td>Most reps ever in one set</td></tr>
+        <tr><td><b>Time</b><small>Plank</small></td><td>A longer hold</td><td>Longest hold ever</td></tr>
+        <tr><td><b>Cardio</b><small>Run, walk, ride, treadmill</small></td><td>More km, or the same km or more in less time. Without distance: more minutes.</td><td>Longest distance ever</td></tr>
+      </tbody>
+    </table></div>
+    <div class="two">
+      <div class="card"><h3>Example: Bent Over Row</h3>
+        <div class="ex-row"><span>Last time</span><span>10 kg × 12</span></div>
+        <div class="ex-row"><span>Best ever</span><span>10 kg × 12</span></div>
+        <div class="ex-row"><span>Today's best set</span><span>12.5 kg × 10</span></div>
+        <div class="ex-row"><span>Result</span><span class="mk mk-rec">Record +25</span></div>
+        <p style="margin-top:10px;color:var(--muted);font-weight:600;font-size:14px">Heavier than ever, so it's a record. Records win over beat last time, so this pays 25, not 35.</p>
+      </div>
+      <div class="card"><h3>Example: Single Arm Row</h3>
+        <div class="ex-row"><span>Last time</span><span>10 kg × 10</span></div>
+        <div class="ex-row"><span>Best ever</span><span>12.5 kg × 8</span></div>
+        <div class="ex-row"><span>Today's best set</span><span>10 kg × 12</span></div>
+        <div class="ex-row"><span>Result</span><span class="mk mk-beat">Beat last time +10</span></div>
+        <p style="margin-top:10px;color:var(--muted);font-weight:600;font-size:14px">Same weight, more reps than last time. Your best is still 12.5 kg, so it's not a record.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="calc">
+    <h2 class="gt" id="calc">Try a workout</h2>
+    <p class="lede">Change the numbers to see what a workout earns. The finish bonus needs 20 work minutes: each set counts as 3, since a set plus its rest takes 1.5 to 3 minutes.</p>
+    <div class="calc">
+      <div class="card" id="controls"></div>
+      <div class="result" aria-live="polite" id="result"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="fair">
+    <h2 class="gt" id="fair">Same week, two people</h2>
+    <p class="lede">Both train 4 times a week, 15 sets a session, and beat last time on 2 exercises each session, with one record a week. One lifts 8 kg dumbbells, the other lifts 40 kg.</p>
+    <div class="two">
+      <div class="card person"><header><span class="av" style="background:linear-gradient(160deg,#5AA2FF,#14318F)">S</span><div><b>College student</b><small>8 kg dumbbells</small></div></header>
+        <div class="ex-row"><span>60 sets</span><b>+300</b></div><div class="ex-row"><span>Beat last time, 7 times</span><b>+70</b></div><div class="ex-row"><span>1 record</span><b>+25</b></div><div class="ex-row"><span>4 finish bonuses</span><b>+200</b></div><div class="ex-row"><span>Weekly goal</span><b>+50</b></div><div class="ex-row total"><span><b style="font-family:var(--font-ui);font-size:15px">This week</b></span><b>645 XP</b></div>
+      </div>
+      <div class="card person"><header><span class="av" style="background:linear-gradient(160deg,#FF5C7C,#6E0B27)">B</span><div><b>Bodybuilder</b><small>40 kg dumbbells</small></div></header>
+        <div class="ex-row"><span>60 sets</span><b>+300</b></div><div class="ex-row"><span>Beat last time, 7 times</span><b>+70</b></div><div class="ex-row"><span>1 record</span><b>+25</b></div><div class="ex-row"><span>4 finish bonuses</span><b>+200</b></div><div class="ex-row"><span>Weekly goal</span><b>+50</b></div><div class="ex-row total"><span><b style="font-family:var(--font-ui);font-size:15px">This week</b></span><b>645 XP</b></div>
+      </div>
+    </div>
+    <div class="card"><h3>Why Iron Mover changed</h3><p>The old Iron Mover badge counted tonnes lifted. Its 6 tiers are worth 1,225 XP. Weeks until each of them earns the last tier:</p>
+      <div class="bar2"><span>Old, tonnes</span><span class="t"><i class="gold" style="width:100%"></i></span><span>21 wks</span></div>
+      <div class="bar2" style="margin-top:6px"><span></span><span class="t"><i class="gold" style="width:19%"></i></span><span>4 wks</span></div>
+      <p style="margin:6px 0 12px;color:var(--muted);font-weight:600;font-size:14px">Top bar: the student, 4.8 t a week. Bottom bar: the bodybuilder, 24 t a week. Legend is 100 t.</p>
+      <div class="bar2"><span>New, sets</span><span class="t"><i style="width:100%"></i></span><span>83 wks</span></div>
+      <div class="bar2" style="margin-top:6px"><span></span><span class="t"><i style="width:100%"></i></span><span>83 wks</span></div>
+      <p style="margin:6px 0 0;color:var(--muted);font-weight:600;font-size:14px">5,000 sets at 60 a week: the same day for both of them.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="lv">
+    <h2 class="gt" id="lv">Levels and ranks</h2>
+    <p class="lede">Level n starts at 50 × n × (n − 1) XP, so each level costs 100 more XP than the one before. There is no top level. The weeks column assumes the 645 XP steady week above, before any badge or goal XP, which makes it quicker in practice.</p>
+    <div class="ranks" id="ranks"></div>
+    <div class="note"><span>Pace stays as it is for now. After about 3 weeks of your testers' data, the Insights page shows how fast people really climb, and we look at the curve again.</span></div>
+    <div class="tbl"><table>
+      <thead><tr><th>Level</th><th>Rank</th><th class="num">Starts at</th><th class="num">XP to next level</th><th class="num">Weeks to get here</th></tr></thead>
+      <tbody id="levels"></tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="bd">
+    <h2 class="gt" id="bd">Badges</h2>
+    <p class="lede">Every badge counts your own workouts, so anyone can earn all of them. Badges already earned stay earned.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Lifetime badge</th><th>Counts</th><th class="num">Bronze</th><th class="num">Silver</th><th class="num">Gold</th><th class="num">Diamond</th><th class="num">Master</th><th class="num">Legend</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><b>Finisher</b></td><td>Workouts with a finish bonus</td><td class="num">1</td><td class="num">10</td><td class="num">25</td><td class="num">50</td><td class="num">100</td><td class="num">250</td><td><span class="tag chg">Changed</span></td></tr>
+        <tr><td><b>Iron Mover</b></td><td>Sets logged</td><td class="num">50</td><td class="num">250</td><td class="num">500</td><td class="num">1,000</td><td class="num">2,500</td><td class="num">5,000</td><td><span class="tag chg">Changed</span><small>Was tonnes</small></td></tr>
+        <tr><td><b>Record Breaker</b></td><td>Records</td><td class="num">1</td><td class="num">5</td><td class="num">15</td><td class="num">30</td><td class="num">60</td><td class="num">100</td><td><span class="tag same">Unchanged</span></td></tr>
+        <tr><td><b>Streak Keeper</b></td><td>Weeks in a row with a workout</td><td class="num">2</td><td class="num">4</td><td class="num">8</td><td class="num">12</td><td class="num">26</td><td class="num">52</td><td><span class="tag same">Unchanged</span></td></tr>
+        <tr><td><b>All-Rounder</b></td><td>Muscle groups trained</td><td class="num">3</td><td class="num">6</td><td class="num">9</td><td class="num">12</td><td class="num">14</td><td class="num">16</td><td><span class="tag same">Unchanged</span></td></tr>
+        <tr><td><b>Engine</b></td><td>Cardio minutes</td><td class="num">60</td><td class="num">300</td><td class="num">600</td><td class="num">1,200</td><td class="num">2,500</td><td class="num">5,000</td><td><span class="tag chg">Changed</span><small>Counts workouts now</small></td></tr>
+        <tr><td><b>Road Runner</b></td><td>Km run or walked</td><td class="num">10</td><td class="num">50</td><td class="num">100</td><td class="num">250</td><td class="num">500</td><td class="num">1,000</td><td><span class="tag same">Unchanged</span></td></tr>
+        <tr><td><b>Rider</b></td><td>Km ridden</td><td class="num">25</td><td class="num">100</td><td class="num">250</td><td class="num">500</td><td class="num">1,000</td><td class="num">2,000</td><td><span class="tag same">Unchanged</span></td></tr>
+        <tr><td><b>Pushup Path</b></td><td>Push-up reps logged</td><td class="num">100</td><td class="num">500</td><td class="num">1,000</td><td class="num">2,500</td><td class="num">5,000</td><td class="num">10,000</td><td><span class="tag chg">Changed</span><small>Counts workouts now</small></td></tr>
+        <tr><td><b>Scale Keeper</b></td><td>Weigh-ins</td><td class="num">7</td><td class="num">30</td><td class="num">60</td><td class="num">100</td><td class="num">200</td><td class="num">365</td><td><span class="tag same">Unchanged</span></td></tr>
+        <tr><td><b>Shedding</b></td><td>Kg lost since your first weigh-in</td><td class="num">1</td><td class="num">3</td><td class="num">5</td><td class="num">7</td><td class="num">10</td><td class="num">15</td><td><span class="tag same">Unchanged</span></td></tr>
+      </tbody>
+    </table></div>
+    <div class="two">
+      <div class="tbl"><table style="min-width:0">
+        <thead><tr><th>Monthly badge (75 XP)</th><th>In one calendar month</th></tr></thead>
+        <tbody>
+          <tr><td><b>Month Clear</b> <span class="tag chg">Changed</span></td><td>Trained on 25 days or more</td></tr>
+          <tr><td><b>Goal Month</b> <span class="tag new">New</span></td><td>Weekly goal met in every week of the month</td></tr>
+          <tr><td><b>Cardio Month</b> <span class="tag chg">Changed</span></td><td>600 cardio minutes (150 a week)</td></tr>
+          <tr><td><b>50K Walk/Run</b> <span class="tag chg">Changed</span></td><td>50 km run or walked</td></tr>
+          <tr><td><b>100K Ride</b> <span class="tag chg">Changed</span></td><td>100 km ridden</td></tr>
+          <tr><td><b>Pushup Month</b> <span class="tag chg">Changed</span></td><td>1,000 push-ups</td></tr>
+          <tr><td><b>Weigh-in Month</b> <span class="tag same">Unchanged</span></td><td>20 weigh-ins</td></tr>
+        </tbody>
+      </table></div>
+      <div class="tbl"><table style="min-width:0">
+        <thead><tr><th>Special badge (50 XP)</th><th>Earned once</th></tr></thead>
+        <tbody>
+          <tr><td><b>Clean Sweep</b> <span class="tag new">New</span></td><td>Finish a routine with every planned set ticked</td></tr>
+          <tr><td><b>Goal Getter</b> <span class="tag same">Unchanged</span></td><td>Your first goal achieved</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="note"><span>Retired, because they only worked with the 6-week plan or repeat another badge: Iron Will, Grinder, Perfect Month, Awakening, Perfect Day, Full Week and Program Complete. The weekly Streak Keeper replaces the daily streak, since rest days are part of training.</span></div>
+  </section>
+
+  <section aria-labelledby="gl">
+    <h2 class="gt" id="gl">Goals</h2>
+    <p class="lede">Goals now count your logged workouts. Only progress logged after you create a goal counts. The reward is rounded to the nearest 5 and kept between 25 and 1,000.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Goal</th><th>Reward</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><b>Workouts</b></td><td>25 × workouts</td><td>12 workouts by 31 Oct: 300 XP</td></tr>
+        <tr><td><b>Weekly streak</b> <span class="tag new">New</span></td><td>50 × weeks</td><td>8 weeks in a row: 400 XP</td></tr>
+        <tr><td><b>Cardio minutes</b></td><td>1 × minutes</td><td>600 minutes this month: 600 XP</td></tr>
+        <tr><td><b>Distance</b></td><td>8 × km</td><td>50 km by the end of the month: 400 XP</td></tr>
+        <tr><td><b>Push-ups</b></td><td>Push-ups ÷ 4</td><td>1,000 push-ups: 250 XP</td></tr>
+        <tr><td><b>Weight</b></td><td>120 × kg to change, × 1.25 at an ambitious pace (0.5 to 1 kg a week)</td><td>Lose 4 kg in 6 weeks: 600 XP</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="wh">
+    <h2 class="gt" id="wh">Where you see each rule</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Screen</th><th>What it shows</th></tr></thead>
+      <tbody>
+        <tr><td><b>Log workout</b></td><td>+5 pops as you tick sets, Beat last time and Record chips on each exercise, the finish bonus chip, live XP in the stats row</td></tr>
+        <tr><td><b>Victory</b></td><td>The XP lines for the workout that just finished, then level up, rank up and badge moments</td></tr>
+        <tr><td><b>Workout page</b></td><td>Where the XP came from, line by line. It updates after an edit.</td></tr>
+        <tr><td><b>Home and Rank</b></td><td>Your level, XP bar and rank. The Rank Road with every gate.</td></tr>
+        <tr><td><b>Profile</b></td><td>XP per week on the chart, goals and their rewards</td></tr>
+        <tr><td><b>Insights (owner only)</b></td><td>How fast the group climbs, to check the pace</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="ch">
+    <h2 class="gt" id="ch">When v2 goes live</h2>
+    <div class="card"><ul class="plain">
+      <li>Every workout is scored again with the v2 rules, so levels can move a little. Level up moments you already saw don't play again.</li>
+      <li>Your 6-week plan days become normal past workouts first, so they are scored the same way as everything else. A copy of your data is saved before that happens.</li>
+      <li>Guards stay in place: workouts dated after tomorrow don't count, the server works out all XP itself, and there are limits on sets per exercise and exercises per workout.</li>
+    </ul></div>
+  </section>
+</main>
+
+<script>
+(function(){
+const SH='M60 4 C80 12 98 12 112 10 V58 C112 92 90 116 60 128 C30 116 8 92 8 58 V10 C22 12 40 12 60 4 Z';
+const RM={E:{rim:['#DCE2EA','#5B6470'],face:['#98A3B1','#3E4652']},D:{rim:['#A6F3CF','#0F7A4F'],face:['#3DC98A','#0A5236']},C:{rim:['#BFE1FF','#1D4ED8'],face:['#5AA2FF','#14318F']},B:{rim:['#E7CCFF','#6B21A8'],face:['#B272F0','#46106F']},A:{rim:['#FFF0A8','#A36B00'],face:['#FFC933','#7A4E00']},S:{rim:['#FFC2CE','#9F1239'],face:['#FF5C7C','#6E0B27']}};
+let uid=0;
+function shield(r,size){const id='s'+(++uid),m=RM[r];return `<svg viewBox="0 0 120 132" width="${size}" height="${Math.round(size*1.1)}" role="img" aria-label="${r} rank"><defs><linearGradient id="${id}a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${m.rim[0]}"/><stop offset="1" stop-color="${m.rim[1]}"/></linearGradient><linearGradient id="${id}f" x1="0" y1="0" x2=".6" y2="1"><stop offset="0" stop-color="${m.face[0]}"/><stop offset="1" stop-color="${m.face[1]}"/></linearGradient></defs><path d="${SH}" fill="url(#${id}a)"/><path d="${SH}" fill="url(#${id}f)" transform="translate(60 66) scale(.82) translate(-60 -66)"/><text x="60" y="83" text-anchor="middle" font-family="Lilita One, Arial Rounded MT Bold, sans-serif" font-size="60" fill="#fff">${r}</text></svg>`;}
+const xpFor=n=>50*n*(n-1), rankFor=l=>l>=30?'S':l>=20?'A':l>=15?'B':l>=10?'C':l>=5?'D':'E', fmt=n=>n.toLocaleString('en-GB');
+const WEEK=645, GATES=[[1,'E'],[5,'D'],[10,'C'],[15,'B'],[20,'A'],[30,'S']];
+const weeks=x=>x===0?'Day one':x/WEEK<1?'Under a week':`${Math.round(x/WEEK)} wks`;
+document.getElementById('ranks').innerHTML=GATES.map(([l,r])=>`<div class="rk">${shield(r,46)}<b>${r} rank</b><small>Level ${l}</small><small>${fmt(xpFor(l))} XP</small><small>${weeks(xpFor(l))}</small></div>`).join('');
+const RC={E:'#7E8896',D:'#1FA56A',C:'#3B7BE8',B:'#9147D6',A:'#E0A21A',S:'#E0405F'};
+let rows='';for(let n=1;n<=35;n++){const r=rankFor(n),gate=GATES.some(g=>g[0]===n);rows+=`<tr class="${gate?'gate':''}"><td>Level ${n}</td><td><span class="rdot" style="background:${RC[r]}"></span>${r}${gate&&n>1?' (new rank)':''}</td><td class="num">${fmt(xpFor(n))}</td><td class="num">${fmt(100*n)}</td><td class="num">${weeks(xpFor(n))}</td></tr>`;}
+document.getElementById('levels').innerHTML=rows;
+
+/* calculator */
+const S={sets:15,min:0,km:0,beats:2,recs:0,prior:0};
+const F=[['sets','Strength sets ticked','5 XP each, 3 work minutes each',0,40,1],['min','Cardio minutes','1 XP a minute, 30 at most per set',0,90,5],['km','Distance logged','Adds 10 XP when above 0',0,1,1],['beats','Exercises that beat last time','10 XP each',0,8,1],['recs','Exercises with a record','25 XP each, instead of 10',0,8,1]];
+function ctrlHTML(){return F.map(([k,l,s,lo,hi,st])=>k==='km'?`<div class="ctrl"><label>${l}<small>${s}</small></label><div class="seg" role="group" aria-label="${l}"><button aria-pressed="${!S.km}" data-k="km" data-v="0">No</button><button aria-pressed="${!!S.km}" data-k="km" data-v="1">Yes</button></div></div>`:`<div class="ctrl"><label for="o-${k}">${l}<small>${s}</small></label><div class="step"><button aria-label="Less" data-k="${k}" data-d="-${st}">−</button><output id="o-${k}">${S[k]}</output><button aria-label="More" data-k="${k}" data-d="${st}">+</button></div></div>`).join('')+`<div class="ctrl"><label>Finish bonuses already earned today<small>2 a day at most</small></label><div class="seg" role="group" aria-label="Finish bonuses already earned today">${[0,1,2].map(v=>`<button aria-pressed="${S.prior===v}" data-k="prior" data-v="${v}">${v}</button>`).join('')}</div></div>`;}
+function calc(){
+  const cx=S.min>0?Math.min(30,S.min)+(S.km?10:0):0, setXp=S.sets*5, beats=Math.max(0,S.beats), recs=Math.max(0,S.recs);
+  const work=S.sets*3+S.min, ok=work>=20, capped=S.prior>=2, fin=ok&&!capped?50:0;
+  const total=setXp+cx+beats*10+recs*25+fin;
+  const lines=[['Sets',`${S.sets} × 5`,setXp],['Cardio',S.min>0?`${Math.min(30,S.min)} min${S.min>30?' (30 cap)':''}${S.km?' + distance':''}`:'none',cx],['Beat last time',`${beats} × 10`,beats*10],['Records',`${recs} × 25`,recs*25],['Finish bonus',!ok?`${work} of 20 work min`:capped?'2 already today':'earned',fin]];
+  document.getElementById('result').innerHTML=`<div style="font-weight:800;opacity:.9">This workout earns</div><div class="big">+${total} XP</div><div class="fb ${ok?'ready':''}"><span>${ok?(capped?'Enough work, but the daily limit is reached':'Finish bonus earned'):'Finish bonus'}</span></div><div class="fb ${ok?'ready':''}" style="margin-top:6px"><span class="tr"><i style="width:${Math.min(100,work/20*100)}%"></i></span><span style="font-variant-numeric:tabular-nums">${Math.min(work,99)} / 20 min</span></div><div class="lines">${lines.map(([a,b,c])=>`<div class="ex-row"><span>${a}<small style="display:block;opacity:.85;font-weight:600">${b}</small></span><b>+${c}</b></div>`).join('')}</div>`;
+}
+function draw(){document.getElementById('controls').innerHTML=ctrlHTML();calc();}
+document.getElementById('controls').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k;if(b.dataset.v!==undefined)S[k]=+b.dataset.v;else{const f=F.find(x=>x[0]===k);S[k]=Math.max(f[3],Math.min(f[4],S[k]+(+b.dataset.d)));}if(S.recs+S.beats>8){if(k==='recs')S.beats=8-S.recs;else S.recs=8-S.beats;}draw();});
+draw();
+})();
+</script>
