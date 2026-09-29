@@ -64,7 +64,6 @@ type ProgressContextValue = {
   progress: FullProgress;
   loading: boolean;
   authorized: boolean;
-  snackbarVisible: boolean;
   /** The dark wood toast. Shows for 4s, or 6s with an action such as Undo. */
   showToast: (text: string, actionLabel?: string, onAction?: () => void) => void;
   routines: Routine[];
@@ -185,8 +184,8 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   const [authorized, setAuthorized] = useState(false);
   const { data: session } = useSession();
   const userId = session?.user?.id ?? null;
-  const [snackbar, setSnackbar] = useState<ToastState>(null);
-  const snackbarId = useRef(0);
+  const [toast, setToast] = useState<ToastState>(null);
+  const toastId = useRef(0);
   const stateRef = useRef(state);
   stateRef.current = state;
   const userIdRef = useRef(userId);
@@ -202,9 +201,9 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   const today = useToday();
   const celebration = useCelebration();
 
-  const showSnackbar = useCallback((text: string, actionLabel?: string, onAction?: () => void) => {
-    snackbarId.current += 1;
-    setSnackbar({ id: snackbarId.current, text, actionLabel, onAction });
+  const showToast = useCallback((text: string, actionLabel?: string, onAction?: () => void) => {
+    toastId.current += 1;
+    setToast({ id: toastId.current, text, actionLabel, onAction });
   }, []);
 
   const fetchState = useCallback(
@@ -244,7 +243,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         }
       } catch {
         // A background refetch (after a failed queued write) failing too is
-        // not itself user-actionable beyond the error snackbar already shown.
+        // not itself user-actionable beyond the error toast already shown.
       } finally {
         setLoading(false);
       }
@@ -332,18 +331,18 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         } else {
           await fetchState();
         }
-        showSnackbar(GENERIC_SAVE_ERROR);
+        showToast(GENERIC_SAVE_ERROR);
         return undefined;
       });
       queueRef.current = run.catch(() => undefined);
       return run;
     },
-    [post, applyResult, showSnackbar, fetchState]
+    [post, applyResult, showToast, fetchState]
   );
 
   // Same queue, same rollback/refetch rules as runQueued, but for callers
   // (goal add/edit) that need the server's own error message to show inline
-  // in a sheet instead of a snackbar. Resolves to null on success.
+  // in a sheet instead of a toast. Resolves to null on success.
   const runQueuedWithError = useCallback(
     (
       body: Record<string, unknown>,
@@ -404,10 +403,10 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       setState(optimistic);
 
       runQueued({ action: 'untick', date, key }, before, () => {
-        showSnackbar(undoLabel, 'Undo', () => tick(date, key, 0));
+        showToast(undoLabel, 'Undo', () => tick(date, key, 0));
       });
     },
-    [runQueued, showSnackbar, tick]
+    [runQueued, showToast, tick]
   );
 
   const logCardio = useCallback(
@@ -436,12 +435,12 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       setState(optimistic);
 
       runQueued({ action: 'untick', date, key: 'cardio' }, before, () => {
-        showSnackbar(undoLabel, 'Undo', () => {
+        showToast(undoLabel, 'Undo', () => {
           if (prevCardio) logCardio(date, prevCardio.minutes, prevCardio.km, 0);
         });
       });
     },
-    [runQueued, showSnackbar, logCardio]
+    [runQueued, showToast, logCardio]
   );
 
   const completeAll = useCallback(
@@ -468,7 +467,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       runQueued({ action: 'completeAll', date }, before, (data) => {
         const nowCleared = isDayCleared(day, data.days[date]);
         if (!wasCleared && nowCleared) feedback.dayCleared();
-        showSnackbar('Day completed.', 'Undo', () => {
+        showToast('Day completed.', 'Undo', () => {
           const restoreBefore = stateRef.current;
           const optimisticRestore: AppState = { ...restoreBefore, days: { ...restoreBefore.days } };
           if (prevLog) optimisticRestore.days[date] = prevLog;
@@ -478,7 +477,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         });
       });
     },
-    [runQueued, showSnackbar]
+    [runQueued, showToast]
   );
 
   const logWeight = useCallback(
@@ -522,7 +521,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       setState(optimistic);
 
       runQueued({ action: 'deleteGoal', id: goal.id }, before, () => {
-        showSnackbar('Goal deleted', 'Undo', () => {
+        showToast('Goal deleted', 'Undo', () => {
           const restoreBefore = stateRef.current;
           const optimisticRestore: AppState = { ...restoreBefore, goals: [...restoreBefore.goals, goal] };
           setState(optimisticRestore);
@@ -530,7 +529,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         });
       });
     },
-    [runQueued, showSnackbar]
+    [runQueued, showToast]
   );
 
   // ---------------- Routines, workouts, prefs, custom exercises ----------------
@@ -651,8 +650,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     progress,
     loading,
     authorized,
-    snackbarVisible: snackbar !== null,
-    showToast: showSnackbar,
+    showToast,
     routines,
     workouts,
     prefs,
@@ -679,7 +677,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   return (
     <ProgressContext.Provider value={value}>
       {children}
-      <Toast toast={snackbar} onDismiss={() => setSnackbar(null)} />
+      <Toast toast={toast} onDismiss={() => setToast(null)} />
     </ProgressContext.Provider>
   );
 }

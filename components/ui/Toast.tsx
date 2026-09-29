@@ -12,7 +12,7 @@ const ACTION_MS = 6000;
 /**
  * The dark wood pill toast. One toast at a time: a newer id replaces the
  * current one and restarts the timer, and hovering or focusing it pauses the
- * timer. Same behaviour as the Snackbar it replaces.
+ * timer.
  */
 export function Toast({ toast, onDismiss }: { toast: ToastState; onDismiss: () => void }) {
   const reduceMotion = useReducedMotion();
