@@ -11,6 +11,8 @@ import {
 } from './progress';
 import type { AppState, BadgeTier, Goal } from './progress';
 import { goalStatusAsOf } from './goals';
+import { scoreState } from './workoutScoring';
+import type { WorkoutScore } from './workoutScoring';
 
 export type BadgeShape = 'shield' | 'hex' | 'circle' | 'diamond' | 'square' | 'star';
 
@@ -22,7 +24,12 @@ export type LifetimeFamilyId =
   | 'road-runner'
   | 'rider'
   | 'shedding'
-  | 'scale-keeper';
+  | 'scale-keeper'
+  | 'finisher'
+  | 'iron-mover'
+  | 'record-breaker'
+  | 'streak-keeper'
+  | 'all-rounder';
 
 export const LIFETIME_FAMILIES: Record<
   LifetimeFamilyId,
@@ -58,6 +65,27 @@ export const LIFETIME_FAMILIES: Record<
     tiers: [7, 30, 60, 100, 200, 365],
     unit: '',
   },
+  // The families below score logged workouts (routines), not the 6-week plan.
+  finisher: { name: 'Finisher', metric: 'Workouts finished', shape: 'shield', icon: 'target', tiers: [1, 10, 25, 50, 100, 250], unit: 'workouts' },
+  'iron-mover': { name: 'Iron Mover', metric: 'Tonnes lifted', shape: 'hex', icon: 'dumbbell', tiers: [1, 5, 10, 25, 50, 100], unit: 't' },
+  'record-breaker': {
+    name: 'Record Breaker',
+    metric: 'Personal records',
+    shape: 'diamond',
+    icon: 'trophy',
+    dy: 2,
+    tiers: [1, 5, 15, 30, 60, 100],
+    unit: 'PRs',
+  },
+  'streak-keeper': {
+    name: 'Streak Keeper',
+    metric: 'Best weekly streak',
+    shape: 'square',
+    icon: 'week',
+    tiers: [2, 4, 8, 12, 26, 52],
+    unit: 'weeks',
+  },
+  'all-rounder': { name: 'All-Rounder', metric: 'Muscle groups trained', shape: 'circle', icon: 'star', tiers: [3, 6, 9, 12, 14, 16], unit: 'groups' },
 };
 
 const TIER_NAMES: BadgeTier[] = ['bronze', 'silver', 'gold', 'diamond', 'master', 'legend'];
@@ -137,15 +165,80 @@ function scaleKeeperSeries(state: AppState): Sample[] {
   return dates.map((date, i) => ({ date, value: i + 1 }));
 }
 
-const SERIES_BUILDERS: Record<LifetimeFamilyId, (state: AppState) => Sample[]> = {
-  'iron-will': ironWillSeries,
-  'pushup-path': pushupPathSeries,
-  grinder: grinderSeries,
-  engine: engineSeries,
-  'road-runner': (s) => modalityKmSeries(s, 'treadmill'),
-  rider: (s) => modalityKmSeries(s, 'cycle'),
-  shedding: sheddingSeries,
-  'scale-keeper': scaleKeeperSeries,
+// Adds distance from logged workouts to a plan-based km series. With nothing to
+// add the plan series comes back untouched, so plan-only totals do not change.
+function withWorkoutKm(plan: Sample[], scores: WorkoutScore[], pick: (s: WorkoutScore) => number): Sample[] {
+  const extra = scores.filter((s) => pick(s) > 0);
+  if (extra.length === 0) return plan;
+  const dates = Array.from(new Set([...plan.map((p) => p.date), ...extra.map((s) => s.date)])).sort();
+  const out: Sample[] = [];
+  let pi = 0;
+  let ei = 0;
+  let planValue = 0;
+  let extraTotal = 0;
+  for (const date of dates) {
+    while (pi < plan.length && plan[pi].date <= date) planValue = plan[pi++].value;
+    while (ei < extra.length && extra[ei].date <= date) extraTotal += pick(extra[ei++]);
+    out.push({ date, value: planValue + extraTotal });
+  }
+  return out;
+}
+
+function finisherSeries(scores: WorkoutScore[]): Sample[] {
+  return scores.map((s, i) => ({ date: s.date, value: i + 1 }));
+}
+
+function ironMoverSeries(scores: WorkoutScore[]): Sample[] {
+  let kg = 0;
+  return scores.map((s) => {
+    kg += s.volume;
+    return { date: s.date, value: Math.round(kg) / 1000 };
+  });
+}
+
+function recordBreakerSeries(scores: WorkoutScore[]): Sample[] {
+  let total = 0;
+  return scores.map((s) => {
+    total += s.prs.length;
+    return { date: s.date, value: total };
+  });
+}
+
+function streakKeeperSeries(scores: WorkoutScore[]): Sample[] {
+  const weeks = new Set<string>();
+  let best = 0;
+  return scores.map((s) => {
+    const week = mondayOf(s.date);
+    weeks.add(week);
+    let run = 0;
+    for (let cur = week; weeks.has(cur); cur = addDaysStr(cur, -7)) run++;
+    best = Math.max(best, run);
+    return { date: s.date, value: best };
+  });
+}
+
+function allRounderSeries(scores: WorkoutScore[]): Sample[] {
+  const seen = new Set<string>();
+  return scores.map((s) => {
+    s.muscles.forEach((m) => seen.add(m));
+    return { date: s.date, value: seen.size };
+  });
+}
+
+const SERIES_BUILDERS: Record<LifetimeFamilyId, (state: AppState, scores: WorkoutScore[]) => Sample[]> = {
+  'iron-will': (s) => ironWillSeries(s),
+  'pushup-path': (s) => pushupPathSeries(s),
+  grinder: (s) => grinderSeries(s),
+  engine: (s) => engineSeries(s),
+  'road-runner': (s, w) => withWorkoutKm(modalityKmSeries(s, 'treadmill'), w, (x) => x.runKm),
+  rider: (s, w) => withWorkoutKm(modalityKmSeries(s, 'cycle'), w, (x) => x.rideKm),
+  shedding: (s) => sheddingSeries(s),
+  'scale-keeper': (s) => scaleKeeperSeries(s),
+  finisher: (_s, w) => finisherSeries(w),
+  'iron-mover': (_s, w) => ironMoverSeries(w),
+  'record-breaker': (_s, w) => recordBreakerSeries(w),
+  'streak-keeper': (_s, w) => streakKeeperSeries(w),
+  'all-rounder': (_s, w) => allRounderSeries(w),
 };
 
 export type EarnedTier = { tier: BadgeTier; earnedAt: string; threshold: number };
@@ -159,9 +252,9 @@ export type FamilyProgress = {
   progressToNext: number | null; // 0..1
 };
 
-function familyProgress(id: LifetimeFamilyId, state: AppState): FamilyProgress {
+function familyProgress(id: LifetimeFamilyId, state: AppState, scores: WorkoutScore[]): FamilyProgress {
   const meta = LIFETIME_FAMILIES[id];
-  const series = SERIES_BUILDERS[id](state);
+  const series = SERIES_BUILDERS[id](state, scores);
   const value = series.length ? series[series.length - 1].value : 0;
   const earned: EarnedTier[] = [];
   meta.tiers.forEach((threshold, i) => {
@@ -369,8 +462,9 @@ export type BadgeState = {
 
 export function computeBadges(state: AppState, today: string): BadgeState {
   const lifetime = {} as Record<LifetimeFamilyId, FamilyProgress>;
+  const scores = scoreState(state, today);
   (Object.keys(LIFETIME_FAMILIES) as LifetimeFamilyId[]).forEach((id) => {
-    lifetime[id] = familyProgress(id, state);
+    lifetime[id] = familyProgress(id, state, scores);
   });
   return {
     lifetime,

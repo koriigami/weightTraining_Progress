@@ -2,6 +2,8 @@ import { plan } from '../data/plan';
 import type { WorkoutDay, Exercise } from '../data/plan';
 import { allEarnedBadges } from './badges';
 import { goalReward, goalStatus } from './goals';
+import { computeWorkoutStats, workoutXpTotal } from './workoutScoring';
+import type { WorkoutStats } from './workoutScoring';
 import type { CustomExercise } from '../data/exercises';
 import type { Prefs, Routine, WorkoutLog } from './routines';
 
@@ -349,8 +351,10 @@ export function bestStreak(state: AppState): number {
 
 // ---------------- Total XP ----------------
 
+// Total XP is the legacy plan XP (days, weigh-ins, goals) plus XP from logged
+// workouts. Badge XP covers every badge, including the ones workouts earn.
 export function totalXp(state: AppState, todayDate: string): number {
-  let xp = 0;
+  let xp = workoutXpTotal(state, todayDate);
   const streaks = clearedStreakSeries(state);
   for (const date of workoutDates()) {
     xp += xpForDay(dayByDate[date], state.days[date], streaks[date]);
@@ -436,6 +440,7 @@ export type FullProgress = {
   rank: Rank;
   xpIntoLevel: { current: number; needed: number; level: number };
   stats: Stats;
+  workout: WorkoutStats;
 };
 
 export function computeProgress(state: AppState, todayDate: string): FullProgress {
@@ -447,5 +452,6 @@ export function computeProgress(state: AppState, todayDate: string): FullProgres
     rank: rankForLevel(level),
     xpIntoLevel: xpIntoLevel(xp),
     stats: computeStats(state, todayDate),
+    workout: computeWorkoutStats(state, todayDate),
   };
 }

@@ -311,12 +311,6 @@ export function exerciseById(id: string): ExerciseDef | undefined {
   return byId[id];
 }
 
-// Rides count toward the Rider badge. Distance on foot counts toward Road
-// Runner. Other distance cardio (rower, elliptical) counts toward neither.
-export function isRideExercise(e: ExerciseDef): boolean {
-  return e.cardioKind === 'ride';
-}
-
 export function isCardioExercise(e: ExerciseDef): boolean {
   return e.metric === 'distance_time' || e.metric === 'intervals';
 }
