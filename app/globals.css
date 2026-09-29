@@ -3148,6 +3148,340 @@ textarea.wt-input {
   box-shadow: 0 3px 0 -1px rgba(245, 197, 66, 0.7);
 }
 
+/* ------------------------------------------------------------------
+   Stage 3B: Rank, Profile, Statistics, Calendar, Settings, Onboarding.
+   Ported from the final board.
+   ------------------------------------------------------------------ */
+
+/* ---- Rank Road ---- */
+.wt-roadcard {
+  padding: 10px 16px;
+}
+.wt-road-wrap {
+  position: relative;
+}
+/* A zero-height sticky strip, so the chip floats over the road without pushing it down. */
+.wt-nextchip {
+  position: sticky;
+  top: 68px;
+  z-index: 6;
+  height: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.wt-nextchip .wt-chip {
+  pointer-events: auto;
+  margin-top: 6px;
+  max-width: 100%;
+  box-shadow: 0 3px 0 var(--s-bevel), 0 10px 18px -8px rgba(70, 45, 0, 0.5);
+}
+@media (min-width: 768px) {
+  .wt-nextchip {
+    top: 92px;
+  }
+}
+.wt-road {
+  list-style: none;
+  margin: 0;
+  padding: 50px 0 4px;
+  display: flex;
+  flex-direction: column;
+}
+.wt-road-row {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-height: 62px;
+  padding: 6px 0;
+}
+.wt-road-row::before {
+  content: '';
+  position: absolute;
+  left: 27px;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  background: var(--track);
+  border-radius: 4px;
+}
+.wt-road-row.done::before {
+  background: linear-gradient(180deg, var(--xp-hi), var(--xp) 60%, var(--xp-deep));
+}
+.wt-road-row.cur::before {
+  background: linear-gradient(180deg, var(--track) 50%, var(--xp) 50%);
+}
+.wt-node {
+  position: relative;
+  z-index: 1;
+  width: 62px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.wt-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 3px solid var(--line);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-num);
+  font-size: 15px;
+  color: var(--muted);
+}
+.wt-road-row.done .wt-dot {
+  background: linear-gradient(180deg, var(--xp-hi), var(--xp-deep));
+  border-color: var(--stroke);
+  color: #fff;
+  text-shadow: 0 1px 0 var(--stroke);
+}
+.wt-road-t {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wt-road-t b {
+  font-weight: 800;
+}
+.wt-road-t small,
+.wt-gate-card small {
+  color: var(--muted);
+}
+.wt-road-row.cur .wt-road-t {
+  background: var(--surface);
+  border: 2px solid var(--xp);
+  border-radius: 16px;
+  padding: 10px 12px;
+  box-shadow: 0 0 0 4px rgba(245, 184, 46, 0.18), var(--card-shadow);
+}
+.wt-road-row.cur .wt-road-t .wt-xpbar {
+  margin-top: 6px;
+}
+.wt-now {
+  color: var(--link);
+  font-weight: 800;
+}
+.wt-pulse {
+  display: inline-grid;
+  animation: wt-pulse 1.6s ease-in-out infinite;
+}
+@keyframes wt-pulse {
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+/* Rank gates: four states. */
+.wt-gate-btn {
+  border: 0;
+  background: none;
+  padding: 0;
+  min-height: 56px;
+  cursor: pointer;
+  color: inherit;
+}
+.wt-gate-card {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-radius: 18px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--card-shadow);
+}
+.wt-gate-card .gt {
+  font-size: 20px;
+  line-height: 1.15;
+}
+.wt-gate-card .wt-xpbar {
+  margin-top: 5px;
+}
+.wt-ru-k {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+/* Unlocked earlier, and your rank: a sky card with a gold frame. */
+.wt-gate.g-past .wt-gate-card,
+.wt-gate.g-current .wt-gate-card {
+  background: var(--hero);
+  color: #fff;
+  border: var(--hero-border);
+  box-shadow: var(--hero-shadow);
+  --stroke: var(--hero-stroke);
+}
+.wt-gate.g-past .wt-gate-card small,
+.wt-gate.g-current .wt-gate-card small {
+  color: var(--hero-sub);
+}
+.wt-gate.g-past .wt-now,
+.wt-gate.g-current .wt-now {
+  color: var(--v-title);
+}
+/* Your rank also glows. */
+.wt-gate.g-current .wt-gate-card {
+  box-shadow: 0 0 0 4px rgba(245, 197, 66, 0.5), 0 0 26px rgba(245, 197, 66, 0.6), var(--hero-shadow);
+}
+/* Next to unlock: cream with a gold border. */
+.wt-gate.g-next .wt-gate-card {
+  background: linear-gradient(180deg, #fffbee, #fff0c8);
+  border: 2.5px solid #e3b03a;
+  box-shadow: 0 3px 0 #c8932a;
+}
+/* Locked and further away: cream, dashed, with a padlock chip. */
+.wt-gate.g-locked .wt-gate-card {
+  background: var(--surface);
+  border: 2px dashed #d9bd7f;
+  box-shadow: none;
+}
+.wt-lockchip {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 3px 9px;
+}
+
+/* Locked art stays visible: muted, with a padlock medallion. */
+.wt-locked-art {
+  position: relative;
+  display: inline-grid;
+}
+.wt-locked-art > svg {
+  filter: saturate(0.5) brightness(1.08);
+  opacity: 0.85;
+}
+.wt-lkm {
+  position: absolute;
+  right: -4px;
+  bottom: -2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #8a6420, #5c3f10);
+  color: #ffe9a8;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff8e8;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+}
+.wt-lock-rib {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-num);
+  font-size: 15px;
+  color: #fff;
+  background: linear-gradient(180deg, #8a6420, #5c3f10);
+  padding: 4px 16px;
+  border-radius: 10px;
+  box-shadow: 0 2px 0 #3a230c;
+}
+.wt-lock-rib.open {
+  background: linear-gradient(180deg, var(--p1), var(--p2));
+  box-shadow: 0 2px 0 var(--p-bevel);
+}
+.wt-ladder {
+  list-style: none;
+  margin: -4px 0 16px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+}
+.wt-ladder li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* ---- Badges ---- */
+.wt-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.wt-badges-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.wt-bgrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.wt-bcard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 14px 12px;
+  box-shadow: var(--card-shadow);
+  color: inherit;
+  cursor: pointer;
+}
+.wt-bcard:active {
+  transform: translateY(2px);
+}
+.wt-bcard b {
+  font-size: 15px;
+}
+.wt-bcard small {
+  color: var(--muted);
+}
+.wt-bcard .wt-xpbar {
+  width: 100%;
+}
+.wt-trophies {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.wt-trophy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: 0;
+  background: none;
+  padding: 4px 0;
+  min-height: 44px;
+  color: inherit;
+  cursor: pointer;
+}
+.wt-trophy small {
+  font-weight: 700;
+  font-size: 12px;
+}
+
 @tailwind utilities;
 
 @media (prefers-reduced-motion: reduce) {
