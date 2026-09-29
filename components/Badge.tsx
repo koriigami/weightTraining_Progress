@@ -96,8 +96,8 @@ export function Badge({ shape, tier, colors, icon, dy = 0, text, month, locked, 
       viewBox="0 0 120 124"
       width={size}
       height={size}
-      role="img"
-      aria-label={label ?? ''}
+      // With no label the art is decoration: hidden from screen readers, not an image with no name.
+      {...(label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true, focusable: false })}
       className={[isLegend ? 'badge-legend' : '', className].filter(Boolean).join(' ')}
     >
       <defs>

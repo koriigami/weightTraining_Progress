@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { allEarnedBadges } from '../lib/badges';
 import type { EarnedBadgeSummary } from '../lib/badges';
 import { buildBadgeCards, cardToEarned } from '../lib/badgeCards';
+import { contrastWithWhite, ribbonBackground } from '../lib/badgeColors';
 import { describeMomentBadge } from '../lib/badgeDisplay';
 import { VICTORY_HOLD_MS, eventKey, mergeQueue, momentCopy, orderEvents, rankMomentForGate } from '../lib/celebrations';
 import type { CelebrationEvent } from '../lib/celebrations';
@@ -102,13 +103,25 @@ describe('badge medal for the unlock moment', () => {
     const m = describeMomentBadge({ id: 'x', kind: 'lifetime', family: 'iron-mover', tier: 'gold', earnedAt: '2026-09-27' });
     expect(m).toMatchObject({ name: 'Iron Mover', ribbon: 'Gold', what: 'Tonnes lifted: 10 t', icon: 'dumbbell' });
     expect(m.medal).toEqual(['#FFE58A', '#C78A00']);
-    expect(m.ribbonColor).toBe('#C78A00');
+    // The gold ribbon is the tier's dark gold, darkened until the white text on it reads.
+    expect(m.ribbonColor).toBe(ribbonBackground('#C78A00'));
+    expect(contrastWithWhite(m.ribbonColor)).toBeGreaterThanOrEqual(4.5);
   });
 
-  it('every tier from Bronze to Legend has its own ribbon colour', () => {
+  it('every tier from Bronze to Legend has its own ribbon colour, and white text reads on it', () => {
     const tiers = ['bronze', 'silver', 'gold', 'diamond', 'master', 'legend'] as const;
     const colors = tiers.map((tier) => describeMomentBadge({ id: 'x', kind: 'lifetime', family: 'finisher', tier, earnedAt: '2026-09-27' }).ribbonColor);
     expect(new Set(colors).size).toBe(6);
+    for (const c of colors) expect(contrastWithWhite(c)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('a ribbon colour that already reads is left alone, and a light one is darkened', () => {
+    expect(ribbonBackground('#8C4A1F')).toBe('#8C4A1F');
+    expect(contrastWithWhite('#7D8796')).toBeLessThan(4.5);
+    const darker = ribbonBackground('#7D8796');
+    expect(darker).not.toBe('#7D8796');
+    expect(contrastWithWhite(darker)).toBeGreaterThanOrEqual(4.5);
+    expect(contrastWithWhite('#000000')).toBe(21);
   });
 
   it('a monthly badge and a special badge reuse the same moment', () => {

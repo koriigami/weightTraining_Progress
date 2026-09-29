@@ -3,7 +3,7 @@
 // lib/badges.ts (pure computation) since this is presentation only.
 import { LIFETIME_FAMILIES, MONTHLY_BADGES, SPECIAL_BADGES } from './badges';
 import type { EarnedBadgeSummary, LifetimeFamilyId, MonthlyBadgeId, SpecialBadgeId } from './badges';
-import { MEDAL_TIERS, MONTHLY_COLORS, TIERS } from './badgeColors';
+import { MEDAL_TIERS, MONTHLY_COLORS, TIERS, ribbonBackground } from './badgeColors';
 import type { BadgeProps } from '@/components/Badge';
 import { XP } from './progress';
 import type { BadgeTier } from './progress';
@@ -90,7 +90,7 @@ export function describeMomentBadge(b: EarnedBadgeSummary): MomentBadge {
       name: meta.name,
       what: threshold !== undefined ? `${meta.metric}: ${withUnit(threshold, meta.unit)}` : meta.metric,
       ribbon: tierName(b.tier),
-      ribbonColor: medal[1],
+      ribbonColor: ribbonBackground(medal[1]),
       medal,
       icon: meta.icon,
       dy: meta.dy,
@@ -104,7 +104,7 @@ export function describeMomentBadge(b: EarnedBadgeSummary): MomentBadge {
       name: meta.name,
       what: `${meta.rule}, ${monthLabel(b.month)}`,
       ribbon: 'Monthly',
-      ribbonColor: colors[1],
+      ribbonColor: ribbonBackground(colors[1]),
       medal: colors,
       icon: meta.icon,
       text: meta.text,
@@ -113,5 +113,5 @@ export function describeMomentBadge(b: EarnedBadgeSummary): MomentBadge {
   }
   const meta = SPECIAL_BADGES[b.badge];
   const gold = MEDAL_TIERS.gold;
-  return { name: meta.name, what: meta.description, ribbon: 'Special', ribbonColor: gold[1], medal: gold, icon: meta.icon, xp: XP.specialBadge };
+  return { name: meta.name, what: meta.description, ribbon: 'Special', ribbonColor: ribbonBackground(gold[1]), medal: gold, icon: meta.icon, xp: XP.specialBadge };
 }

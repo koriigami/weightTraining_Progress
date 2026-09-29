@@ -35,3 +35,36 @@ export const MEDAL_TIERS: Record<BadgeTier, [string, string]> = {
   master: ['#DCC2FF', '#6D28D9'],
   legend: ['#FFB8C6', '#BE123C'],
 };
+
+const channel = (v: number): number => {
+  const c = v / 255;
+  return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+};
+
+const parseHex = (hex: string): [number, number, number] => {
+  const h = hex.replace('#', '');
+  return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)) as [number, number, number];
+};
+
+/** WCAG contrast of white text on a solid colour, 1 to 21. */
+export function contrastWithWhite(hex: string): number {
+  const [r, g, b] = parseHex(hex);
+  const lum = 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+  return 1.05 / (lum + 0.05);
+}
+
+/**
+ * The colour itself when white text reads on it at 4.5:1, else the same hue
+ * darkened until it does. The tier ribbon in the unlock moment writes white on it.
+ */
+export function ribbonBackground(hex: string, min = 4.5): string {
+  let [r, g, b] = parseHex(hex);
+  let out = hex;
+  for (let i = 0; i < 30 && contrastWithWhite(out) < min; i++) {
+    r = Math.round(r * 0.93);
+    g = Math.round(g * 0.93);
+    b = Math.round(b * 0.93);
+    out = `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+  }
+  return out;
+}
