@@ -1,35 +1,77 @@
 'use client';
 
-import { EXERCISES, MUSCLES } from '@/data/exercises';
+import { useState } from 'react';
+import { Plus } from 'lucide-react';
+import { EXERCISES } from '@/data/exercises';
+import { emptyFilters, libraryOrder } from '@/lib/exerciseFilter';
+import type { ExerciseFilters as Filters } from '@/lib/exerciseFilter';
+import { useDesktopLayout, useWideLayout } from '@/lib/useMediaQuery';
 import { useProgress } from '@/components/ProgressProvider';
-import { ComingCard } from '@/components/ComingCard';
 import { RoutinesTabs } from '@/components/RoutinesTabs';
-import { Card, CardHead } from '@/components/ui/Card';
+import { CustomExerciseSheet } from '@/components/exercises/CustomExerciseSheet';
+import { ExerciseDetail, ExerciseInfoSheet } from '@/components/exercises/ExerciseDetail';
+import { ExerciseFilters } from '@/components/exercises/ExerciseFilters';
+import { ExerciseList, useVisibleCount } from '@/components/exercises/ExerciseList';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Screen } from '@/components/ui/Screen';
-import { Thumb } from '@/components/ui/Thumb';
 
 export default function ExercisesPage() {
-  const { customExercises } = useProgress();
-  const sample = EXERCISES.slice(0, 6);
+  const { customExercises, lookup } = useProgress();
+  const desktop = useDesktopLayout();
+  const wide = useWideLayout();
+  const [filters, setFilters] = useState<Filters>(emptyFilters);
+  const [activeId, setActiveId] = useState<string>(EXERCISES[0].id);
+  const [sheetId, setSheetId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const exercises = libraryOrder(EXERCISES, customExercises);
+  const count = useVisibleCount(exercises, filters);
+  const active = lookup(activeId) ?? EXERCISES[0];
+
+  // From 1100px the detail sits in the side column. Below that it opens as a sheet.
+  function open(id: string) {
+    if (wide) setActiveId(id);
+    else setSheetId(id);
+  }
+
   return (
-    <Screen header={<PageHeader title="Exercises" large />}>
+    <Screen
+      header={
+        <PageHeader
+          title={desktop ? 'Exercises' : 'Routines'}
+          large
+          actions={
+            desktop ? (
+              <Button variant="secondary" icon={<Plus size={18} aria-hidden="true" />} onClick={() => setCreating(true)}>
+                Custom exercise
+              </Button>
+            ) : (
+              <button type="button" className="wt-textbtn" onClick={() => setCreating(true)}>
+                <Plus size={16} aria-hidden="true" /> Custom
+              </button>
+            )
+          }
+        />
+      }
+      aside={
+        wide ? (
+          <Card>
+            <h2 className="gt" style={{ fontSize: 20, margin: '0 0 12px' }}>
+              {active.name}
+            </h2>
+            <ExerciseDetail exercise={active} />
+          </Card>
+        ) : undefined
+      }
+    >
       <RoutinesTabs current="exercises" />
-      <Card>
-        <CardHead title={`${EXERCISES.length + customExercises.length} exercises`} />
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {sample.map((e) => (
-            <li key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Thumb exercise={e} size={44} />
-              <span style={{ minWidth: 0 }}>
-                <b style={{ display: 'block' }}>{e.name}</b>
-                <small style={{ color: 'var(--muted)' }}>{MUSCLES[e.primary]}</small>
-              </span>
-            </li>
-          ))}
-        </ul>
+      <ExerciseFilters filters={filters} onChange={setFilters} resultCount={count} />
+      <Card tone="flush">
+        <ExerciseList exercises={exercises} filters={filters} onFiltersChange={setFilters} mode="browse" activeId={wide ? activeId : null} onInfo={open} />
       </Card>
-      <ComingCard>The searchable library with muscle and equipment filters, the muscle map for each exercise and custom exercises arrive with the Exercises screen.</ComingCard>
+      <ExerciseInfoSheet exercise={sheetId ? lookup(sheetId) ?? null : null} onClose={() => setSheetId(null)} />
+      <CustomExerciseSheet open={creating} onClose={() => setCreating(false)} onCreated={(e) => setActiveId(e.id)} />
     </Screen>
   );
 }

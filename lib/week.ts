@@ -73,7 +73,8 @@ export type UpNextItem = {
   lastDate: string | null; // the last time it was done
 };
 
-function statsFor(routine: Routine, workouts: readonly WorkoutLog[], today: string): UpNextItem {
+// How many workouts this week started from the routine, and when it was last done.
+export function routineWeekStats(routine: Routine, workouts: readonly WorkoutLog[], today: string): UpNextItem {
   const monday = mondayOf(today);
   const sunday = addDaysStr(monday, 6);
   let done = 0;
@@ -98,7 +99,7 @@ const byLeastRecent = (a: UpNextItem, b: UpNextItem) => {
 // done least recently. When every routine with a count has reached it, nothing,
 // and `allDone` says so.
 export function upNextRoutines(routines: readonly Routine[], workouts: readonly WorkoutLog[], today: string, max = 2): { items: UpNextItem[]; allDone: boolean } {
-  const all = routines.map((r) => statsFor(r, workouts, today));
+  const all = routines.map((r) => routineWeekStats(r, workouts, today));
   const pending = all.filter((s) => s.target !== null && s.done < s.target);
   if (pending.length > 0) return { items: [...pending].sort(byLeastRecent).slice(0, max), allDone: false };
   if (all.some((s) => s.target !== null)) return { items: [], allDone: true };

@@ -3,8 +3,8 @@
 import { useSession } from 'next-auth/react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import * as feedback from '@/lib/feedback';
-import { setXp } from '@/lib/routines';
-import type { LoggedSet, WorkoutTotals } from '@/lib/routines';
+import { instantiateRoutine, setXp, workoutItemsFromRoutine } from '@/lib/routines';
+import type { LoggedSet, Routine, WorkoutTotals } from '@/lib/routines';
 import * as S from '@/lib/session';
 import type { CardioKind, Removal, Session, SessionResult, SetPatch } from '@/lib/session';
 import { useProgress } from '@/components/ProgressProvider';
@@ -26,6 +26,8 @@ type WorkoutSessionValue = {
 
   /** Start an empty workout, or one prefilled from a routine. Returns an error message, or null. */
   start: (routineId?: string) => string | null;
+  /** Starts a workout from a ready-made routine that is not saved (Try now). Dumbbell weights are set for this person. */
+  startTemplate: (routine: Routine) => string | null;
   /** Quick log of a run, walk or ride. */
   startCardio: (kind: CardioKind) => string | null;
   /** Rejects an exercise that is already in the workout. Returns an error message, or null. */
@@ -75,7 +77,7 @@ const EMPTY_TOTALS: WorkoutTotals = { sets: 0, volume: 0, xp: 0, exercises: 0, c
 export function WorkoutSessionProvider({ children }: { children: React.ReactNode }) {
   const { data: auth } = useSession();
   const userId = auth?.user?.id ?? null;
-  const { routines, lookup, saveWorkout } = useProgress();
+  const { routines, lookup, saveWorkout, prefs } = useProgress();
 
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
@@ -88,6 +90,8 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
   lookupRef.current = lookup;
   const routinesRef = useRef(routines);
   routinesRef.current = routines;
+  const prefsRef = useRef(prefs);
+  prefsRef.current = prefs;
   const finishing = useRef<Promise<FinishResult> | null>(null);
 
   // One place that changes the workout: the ref (for instant reads), React state
@@ -145,6 +149,16 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
       const routine = routinesRef.current.find((r) => r.id === routineId);
       if (!routine) return 'That routine no longer exists.';
       commit(S.sessionFromRoutine(routine, now));
+      return null;
+    },
+    [commit]
+  );
+
+  const startTemplate = useCallback(
+    (routine: Routine) => {
+      if (sessionRef.current) return 'Finish or discard your current workout first.';
+      const personal = instantiateRoutine(routine, routine.id, prefsRef.current);
+      commit(S.newSession(new Date(), { title: routine.title, items: workoutItemsFromRoutine(personal) }));
       return null;
     },
     [commit]
@@ -295,6 +309,7 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
     lastFinished,
     clearLastFinished,
     start,
+    startTemplate,
     startCardio,
     addExercise,
     removeExercise,

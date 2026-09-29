@@ -23,7 +23,7 @@ export const TAB_ITEMS = {
       href: '/routines',
       label: 'Routines',
       icon: ClipboardList,
-      active: (p: string) => p === '/routines' || p === '/exercises' || p.startsWith('/routine/'),
+      active: (p: string) => p === '/routines' || p === '/exercises' || p === '/explore' || p.startsWith('/explore/') || p.startsWith('/routine/'),
     },
   ] as NavItem[],
   right: [rank, profile] as NavItem[],
@@ -32,7 +32,7 @@ export const TAB_ITEMS = {
 // Desktop sidebar: Exercises gets its own item.
 export const SIDEBAR_ITEMS: NavItem[] = [
   home,
-  { key: 'routines', href: '/routines', label: 'Routines', icon: ClipboardList, active: (p) => p === '/routines' || p.startsWith('/routine/') },
+  { key: 'routines', href: '/routines', label: 'Routines', icon: ClipboardList, active: (p) => p === '/routines' || p === '/explore' || p.startsWith('/explore/') || p.startsWith('/routine/') },
   { key: 'exercises', href: '/exercises', label: 'Exercises', icon: BookOpen, active: (p) => p === '/exercises' },
   rank,
   profile,
@@ -40,7 +40,7 @@ export const SIDEBAR_ITEMS: NavItem[] = [
 
 // The screens that show the tab bar on the phone. Everything else is a pushed
 // page with its own back button (and sometimes a pinned action bar).
-const TAB_ROOTS = ['/', '/routines', '/exercises', '/rank', '/profile'];
+const TAB_ROOTS = ['/', '/routines', '/explore', '/exercises', '/rank', '/profile'];
 
 export function isTabRoot(pathname: string): boolean {
   return TAB_ROOTS.includes(pathname);
