@@ -6,6 +6,12 @@ import type { RefObject } from 'react';
 const FOCUSABLE =
   'a[href], button:not([disabled]):not([tabindex="-1"]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+// Controls that are display: none (like the Sheet's close button on the phone)
+// cannot take focus, so they are skipped.
+function focusables(root: HTMLElement): HTMLElement[] {
+  return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => el.getClientRects().length > 0);
+}
+
 // Page scroll is locked while any dialog is open. A counter keeps two stacked
 // dialogs from restoring the wrong value.
 let scrollLocks = 0;
@@ -45,7 +51,7 @@ export function useDialog(open: boolean, ref: RefObject<HTMLElement | null>, onE
     const raf = requestAnimationFrame(() => {
       const root = ref.current;
       if (!root) return;
-      const target = root.querySelector<HTMLElement>('[data-autofocus]') ?? root.querySelector<HTMLElement>(FOCUSABLE) ?? root;
+      const target = root.querySelector<HTMLElement>('[data-autofocus]') ?? focusables(root)[0] ?? root;
       target.focus();
     });
 
@@ -60,7 +66,7 @@ export function useDialog(open: boolean, ref: RefObject<HTMLElement | null>, onE
       if (e.key !== 'Tab') return;
       const root = ref.current;
       if (!root) return;
-      const items = Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE));
+      const items = focusables(root);
       if (items.length === 0) {
         e.preventDefault();
         root.focus();

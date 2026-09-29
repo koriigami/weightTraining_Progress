@@ -1475,6 +1475,14 @@ textarea.wt-input {
     min-height: 100%;
   }
 }
+.wt-main.has-dock .wt-screen {
+  min-height: calc(100dvh - var(--dock-h, 0px));
+}
+@media (min-width: 768px) {
+  .wt-main.has-dock .wt-screen {
+    min-height: 100%;
+  }
+}
 .wt-wrap {
   flex: 1;
   width: 100%;
@@ -1864,6 +1872,31 @@ textarea.wt-input {
 .wt-minibar .r {
   font-family: var(--font-num);
   font-size: 15px;
+}
+.wt-hero-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.wt-hero-lvl {
+  font-size: 32px;
+  line-height: 1;
+}
+.wt-hero-t {
+  font-weight: 800;
+  color: var(--hero-sub);
+  margin-top: 2px;
+}
+.wt-hero-xp {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 8px;
+  color: var(--hero-sub);
+  font-variant-numeric: tabular-nums;
 }
 .wt-skip {
   position: fixed;

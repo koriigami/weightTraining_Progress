@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { signOut, useSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
+import { Settings } from 'lucide-react';
 import { useProgress } from '@/components/ProgressProvider';
 import { ProgressBar } from '@/components/ProgressBar';
 import { RankShield } from '@/components/RankShield';
@@ -13,10 +15,16 @@ import { allEarnedBadges } from '@/lib/badges';
 import { computeMonthlyProgress } from '@/lib/badges';
 import { describeEarnedBadge } from '@/lib/badgeDisplay';
 import * as feedback from '@/lib/feedback';
+import { GoalsSection } from '@/components/goals/GoalsSection';
+import { ComingCard } from '@/components/ComingCard';
+import { useShell } from '@/components/nav/ShellContext';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Screen } from '@/components/ui/Screen';
 
 export default function ProfilePage() {
   const { progress, state, logWeight } = useProgress();
   const { data: session } = useSession();
+  const { askSignOut } = useShell();
   const today = useToday();
   const [weightInput, setWeightInput] = useState('');
 
@@ -48,6 +56,20 @@ export default function ProfilePage() {
   const thisMonth = today ? computeMonthlyProgress(state).find((m) => m.month === monthKey(today)) : undefined;
 
   return (
+    <Screen
+      header={
+        <PageHeader
+          title="Profile"
+          large
+          actions={
+            <Link href="/settings" className="wt-backbtn" aria-label="Settings">
+              <Settings size={20} aria-hidden="true" />
+            </Link>
+          }
+        />
+      }
+    >
+    <ComingCard title="Profile is being rebuilt">Stats, goals, weight and this month move into inline sections with the new charts. Everything you had is still here.</ComingCard>
     <div className="space-y-4">
       <div
         className="flex items-center justify-between gap-3 rounded-2xl border p-4 shadow-sm"
@@ -63,8 +85,8 @@ export default function ProfilePage() {
         </div>
         <button
           type="button"
-          onClick={() => signOut({ callbackUrl: '/' })}
-          className="min-h-10 shrink-0 rounded-full border px-4 text-sm font-semibold"
+          onClick={askSignOut}
+          className="min-h-11 shrink-0 rounded-full border px-4 text-sm font-semibold"
           style={{ borderColor: 'var(--line)', color: 'var(--ink)', background: 'transparent' }}
         >
           Sign out
@@ -127,10 +149,10 @@ export default function ProfilePage() {
             value={weightInput}
             onChange={(e) => setWeightInput(e.target.value)}
             placeholder="kg today"
-            className="w-28 rounded-lg border px-3 py-2 text-sm outline-none"
+            className="min-h-11 w-28 rounded-lg border px-3 py-2 text-sm outline-none"
             style={{ borderColor: 'var(--line)', background: 'var(--surface)', color: 'var(--ink)' }}
           />
-          <button type="submit" className="rounded-lg px-4 py-2 text-sm font-semibold text-white" style={{ background: 'var(--ink)' }}>
+          <button type="submit" className="min-h-11 rounded-lg px-4 py-2 text-sm font-semibold text-white" style={{ background: 'var(--ink)' }}>
             Log
           </button>
         </form>
@@ -187,7 +209,15 @@ export default function ProfilePage() {
       )}
 
       <SettingsCard />
+
+      <section id="goals" className="scroll-mt-24 space-y-3">
+        <h2 className="font-display text-xl" style={{ color: 'var(--ink)' }}>
+          Goals
+        </h2>
+        <GoalsSection />
+      </section>
     </div>
+    </Screen>
   );
 }
 

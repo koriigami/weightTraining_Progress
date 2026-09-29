@@ -10,6 +10,9 @@ import type { LifetimeFamilyId, MonthlyBadgeId, SpecialBadgeId } from '@/lib/bad
 import { describeLifetimeTier, describeMonthlyBadge, describeSpecialBadge } from '@/lib/badgeDisplay';
 import { daysBetween, lastDayOfMonth, monthKey, monthLabel } from '@/lib/date';
 import { useToday } from '@/lib/useToday';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Screen } from '@/components/ui/Screen';
+import { ComingCard } from '@/components/ComingCard';
 
 const TIER_ORDER: BadgeTier[] = ['bronze', 'silver', 'gold', 'diamond', 'master', 'legend'];
 
@@ -18,7 +21,7 @@ type Selected =
   | { kind: 'monthly'; badge: MonthlyBadgeId; month: string }
   | { kind: 'special'; badge: SpecialBadgeId };
 
-export default function BadgesPage() {
+function BadgesView() {
   const { state } = useProgress();
   const today = useToday();
   const badges = computeBadges(state, today);
@@ -236,5 +239,16 @@ function BadgeDetailSheet({ selected, onClose }: { selected: Selected | null; on
         </div>
       )}
     </BottomSheet>
+  );
+}
+
+export default function RankPage() {
+  return (
+    <Screen header={<PageHeader title="Rank" large />}>
+      <ComingCard title="Rank Road is coming">
+        The road from E to S, with the four gate states and previews of locked shields and badges, arrives with the Rank screen. Your badges are below.
+      </ComingCard>
+      <BadgesView />
+    </Screen>
   );
 }
