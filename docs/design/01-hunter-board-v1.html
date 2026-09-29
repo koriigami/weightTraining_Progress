@@ -1,0 +1,718 @@
+<title>Hunter Design Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.9.3/confetti.browser.min.js"></script>
+<style>
+:root{
+  --bg:#F3F4F9; --surface:#FFFFFF; --surface-2:#ECEEF6; --ink:#161A2B; --muted:#5E6478; --line:#E0E3EE;
+  --accent:#C98A0B; --accent-soft:#FBEFD2; --ok:#12805C; --ok-soft:#D9F3E8; --warn:#B26B00; --bad:#C0342B;
+  --pill:#E4E1F7; --pill-ink:#2E2767;
+  --display:"Lilita One","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;
+  --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D0F1D; --surface:#171A2E; --surface-2:#20243C; --ink:#EDEFF8; --muted:#979DB6; --line:#2A2E4A;
+    --accent:#F2B53A; --accent-soft:#3A2F14; --ok:#4FD39D; --ok-soft:#113B2C; --warn:#F0B040; --bad:#FF7A70;
+    --pill:#35306B; --pill-ink:#E3DFFF; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D0F1D; --surface:#171A2E; --surface-2:#20243C; --ink:#EDEFF8; --muted:#979DB6; --line:#2A2E4A;
+  --accent:#F2B53A; --accent-soft:#3A2F14; --ok:#4FD39D; --ok-soft:#113B2C; --warn:#F0B040; --bad:#FF7A70;
+  --pill:#35306B; --pill-ink:#E3DFFF; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);padding-inline:16px;padding-block:24px 64px}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+h1,h2,h3{margin:0;text-wrap:balance}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(32px,6vw,52px);line-height:1;letter-spacing:.5px}
+h2{font-size:20px;font-weight:700}
+h3{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+p{margin:0}
+.lede{color:var(--muted);max-width:62ch;margin-top:10px}
+.section{display:flex;flex-direction:column;gap:16px}
+.section-head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px}
+.section-head p{color:var(--muted);max-width:60ch;font-size:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px}
+.btn{font:600 14px var(--body);border:0;border-radius:999px;padding:12px 20px;min-height:44px;cursor:pointer;background:var(--ink);color:var(--bg);transition:transform .12s}
+.btn:active{transform:scale(.97)}
+.btn.gold{background:linear-gradient(180deg,#FFD66B,#E09A12);color:#3B2600;box-shadow:0 3px 0 #9A6300}
+.btn.ghost{background:var(--surface-2);color:var(--ink)}
+.btn:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+
+/* shields */
+.shields{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+@media (max-width:720px){.shields{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.shield-cell{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.shield-cell b{font-size:14px}
+.shield-cell span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* badges */
+.family{display:grid;grid-template-columns:160px 1fr;gap:16px;align-items:center;padding-block:12px;border-top:1px solid var(--line)}
+.family:first-of-type{border-top:0}
+@media (max-width:640px){.family{grid-template-columns:1fr}}
+.family-name b{display:block;font-size:15px}
+.family-name span{font-size:12px;color:var(--muted)}
+.tiers{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+@media (max-width:640px){.tiers{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:14px}}
+svg.legend{animation:prism 6s ease-in-out infinite alternate}
+@keyframes prism{to{filter:hue-rotate(25deg)}}
+.toggles{display:flex;flex-wrap:wrap;gap:20px;margin-left:auto}
+.switch{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14px;cursor:pointer;min-height:44px}
+.switch input{appearance:none;width:52px;height:32px;border-radius:16px;background:var(--surface-2);border:2px solid var(--muted);position:relative;cursor:pointer;margin:0;transition:background .2s,border-color .2s}
+.switch input::after{content:"";position:absolute;top:6px;left:6px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:all .2s}
+.switch input:checked{background:var(--pill-ink);border-color:var(--pill-ink)}
+.switch input:checked::after{left:22px;top:2px;width:24px;height:24px;background:var(--surface)}
+.tier{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.tier svg{width:100%;max-width:84px;height:auto}
+.medals{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:16px}
+.medal{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.medal svg{width:100%;max-width:104px;height:auto}
+.medal b{font-size:14px}
+.medal span{font-size:12px;color:var(--muted)}
+.new-dot{position:relative}
+.new-dot::after{content:"NEW";position:absolute;top:0;right:8%;font:700 10px var(--body);letter-spacing:.06em;background:var(--bad);color:#fff;border-radius:999px;padding:2px 6px}
+
+/* layout of phone + notes */
+.demo{display:grid;grid-template-columns:minmax(0,380px) 1fr;gap:32px;align-items:start}
+@media (max-width:860px){.demo{grid-template-columns:1fr}}
+.notes{display:flex;flex-direction:column;gap:14px;font-size:14px}
+.notes li{margin-bottom:6px}
+.notes ul{margin:0;padding-left:18px;color:var(--muted)}
+.notes b{color:var(--ink)}
+
+/* phone */
+.phone{position:relative;width:100%;max-width:380px;height:760px;margin:0 auto;border-radius:36px;background:var(--bg);border:10px solid #0A0B14;overflow:hidden;box-shadow:0 24px 60px rgba(10,12,30,.25);display:flex;flex-direction:column}
+.appbar{height:64px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+.appbar h4{margin:0;font-size:20px;font-weight:600}
+.rankchip{display:flex;align-items:center;gap:6px;border:0;background:var(--surface-2);border-radius:999px;padding:4px 10px 4px 4px;min-height:40px;color:var(--ink);cursor:pointer}
+.rankchip b{font-family:var(--display);font-weight:400;font-size:16px}
+.xpring{width:22px;height:22px}
+.screen{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.bottomnav{flex:0 0 auto;height:80px;display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-top:1px solid var(--line)}
+.tab{border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:500 12px var(--body);color:var(--muted);cursor:pointer}
+.tab .ind{width:64px;height:32px;border-radius:16px;display:grid;place-items:center;transition:background .25s}
+.tab svg{width:24px;height:24px}
+.tab[aria-selected="true"]{color:var(--ink);font-weight:700}
+.tab[aria-selected="true"] .ind{background:var(--pill);color:var(--pill-ink)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:16px;position:relative}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chip{display:inline-flex;align-items:center;border-radius:999px;padding:3px 10px;font:700 11px var(--body);letter-spacing:.06em}
+.chip.fb{background:#EFE3FF;color:#6B21A8}
+:root[data-theme="dark"] .chip.fb{background:#3A2560;color:#D9B8FF}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chip.fb{background:#3A2560;color:#D9B8FF}}
+.dayring{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.dayring svg{width:36px;height:36px}
+.card h5{margin:10px 0 4px;font-size:18px}
+.item{display:flex;align-items:center;gap:12px;min-height:52px;padding:4px 4px;border-radius:12px;cursor:pointer;position:relative;user-select:none}
+.item:active{background:var(--surface-2)}
+.check{width:28px;height:28px;flex:0 0 28px}
+.check circle{fill:none;stroke:var(--line);stroke-width:2.5;transition:fill .2s,stroke .2s}
+.check path{fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:20;stroke-dashoffset:20}
+.item.done .check circle{fill:var(--ok);stroke:var(--ok)}
+.item.done .check path{stroke-dashoffset:0;transition:stroke-dashoffset .28s .08s ease-out}
+.item.done .name{color:var(--muted)}
+.item .name{flex:1;font-size:15px}
+.item .reps{font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px}
+.cardio{background:var(--surface-2);border-radius:14px;padding:4px 8px;margin-top:6px}
+.xpfloat{position:absolute;right:56px;top:10px;font:700 13px var(--body);color:#3B2600;background:linear-gradient(180deg,#FFE08A,#F0B12A);border-radius:999px;padding:2px 10px;pointer-events:none}
+.complete-all{margin-top:12px;width:100%;border:0;border-radius:999px;min-height:48px;background:var(--accent-soft);color:var(--ink);font:600 15px var(--body);cursor:pointer}
+.stamp{position:absolute;right:14px;top:56px;transform:rotate(-8deg);border:3px solid var(--ok);color:var(--ok);font-family:var(--display);font-size:22px;padding:2px 12px;border-radius:10px;pointer-events:none}
+.goalcard{display:flex;gap:14px;align-items:center}
+.goalcard svg{width:64px;height:64px;flex:0 0 64px}
+.goalcard b{display:block}
+.goalcard span{font-size:13px;color:var(--muted)}
+.fab{align-self:flex-end;border:0;border-radius:16px;min-height:56px;padding:0 20px;background:var(--pill);color:var(--pill-ink);font:600 15px var(--body);cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+
+/* sheet inside phone */
+.scrim{position:absolute;inset:0;background:rgba(5,6,15,.5);opacity:0;transition:opacity .25s;z-index:5}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-radius:28px 28px 0 0;transform:translateY(100%);transition:transform .32s cubic-bezier(.2,.9,.25,1);max-height:88%;display:flex;flex-direction:column;overflow:hidden}
+.sheet.fixed{height:min(640px,88%)}
+.sheet-head{flex:0 0 auto;padding:8px 16px 4px;touch-action:none}
+.sheet-title{display:flex;align-items:center;gap:4px;min-height:48px}
+.iconbtn{width:48px;height:48px;margin-left:-12px;border:0;border-radius:50%;background:none;color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.iconbtn:active{background:var(--surface-2)}
+.sheet-body{flex:1 1 auto;min-height:0;overflow:auto;padding:4px 16px 16px}
+.sheet-foot{flex:0 0 auto;padding:12px 16px calc(16px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--surface)}
+.sheet-foot .btn{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.sheet.open{transform:none}
+.scrim.open{opacity:1}
+.handle{width:32px;height:4px;border-radius:2px;background:var(--line);margin:6px auto 12px}
+.sheet h4{margin:0;font-size:20px}
+.types{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.type{border:1px solid var(--line);background:var(--surface);border-radius:16px;min-height:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:600 13px var(--body);color:var(--ink);cursor:pointer}
+.type svg{width:26px;height:26px}
+.type[aria-pressed="true"]{border-color:var(--ink);background:var(--surface-2)}
+.field{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.field label{font-size:13px;color:var(--muted);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.fchip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;min-height:40px;padding:0 14px;font:600 14px var(--body);cursor:pointer}
+.fchip[aria-pressed="true"]{background:var(--pill);color:var(--pill-ink);border-color:transparent}
+.fchip:disabled{opacity:.4;cursor:not-allowed}
+.computed{background:var(--surface-2);border-radius:12px;padding:12px;font-size:14px}
+.computed b{display:block;font-size:16px}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:none;min-height:44px;font:600 14px var(--body);color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--pill);color:var(--pill-ink)}
+.stepper{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.stepper button{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font:600 22px var(--body);color:var(--ink);cursor:pointer}
+.stepper output{font-family:var(--display);font-size:30px;font-variant-numeric:tabular-nums}
+.pace{display:flex;flex-direction:column;gap:6px}
+.pace-bar{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--ok) 0 33%,var(--warn) 33% 66%,var(--bad) 66%);position:relative}
+.pace-bar i{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:var(--ink);transition:left .25s}
+.pace span{font-size:13px}
+
+/* snackbar */
+.snack{position:absolute;left:12px;right:12px;bottom:92px;z-index:4;background:#2B2F45;color:#fff;border-radius:6px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;font-size:14px;transform:translateY(20px);opacity:0;transition:all .2s}
+.snack.show{transform:none;opacity:1}
+.snack button{border:0;background:none;color:#FFD66B;font:700 14px var(--body);cursor:pointer;min-height:36px}
+
+/* celebrations: deliberately dark in both themes */
+.celebrate{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;background:rgba(4,5,14,.86);color:#fff;overflow:hidden;cursor:pointer}
+.rays{position:absolute;left:50%;top:44%;width:180vmax;height:180vmax;margin:-90vmax 0 0 -90vmax;border-radius:50%;
+  background:repeating-conic-gradient(from 0deg,var(--ray) 0 7deg,transparent 7deg 18deg);
+  -webkit-mask:radial-gradient(circle,#000 0,rgba(0,0,0,.5) 18%,transparent 48%);mask:radial-gradient(circle,#000 0,rgba(0,0,0,.5) 18%,transparent 48%);
+  opacity:0;animation:spin 8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.stage{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:16px}
+.slot{position:relative;width:180px;height:210px}
+.slot svg{position:absolute;inset:0;width:100%;height:100%}
+.headline{font-family:var(--display);font-weight:400;font-size:clamp(40px,9vw,64px);line-height:1.1;letter-spacing:1px}
+.headline span{display:inline-block;opacity:0;
+  background:linear-gradient(180deg,#FFF6C8 0%,#FFD24A 45%,#E08A00 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 0 #6B3E00)}
+.sub{font-size:16px;color:#D9DCEB;opacity:0}
+.tap{margin-top:18px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#B9BDD2;opacity:0}
+.tap.on{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+.shard{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px}
+
+/* badge reveal */
+.reveal-card{width:min(300px,84vw);aspect-ratio:3/4;max-width:100%;perspective:1000px}
+.flip{position:relative;width:100%;height:100%;transform-style:preserve-3d}
+.face,.back{position:absolute;inset:0;border-radius:24px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;overflow:hidden}
+.face{background:radial-gradient(circle at 50% 35%,#2B2F55,#12142A);border:2px solid #3A3F70}
+.back{transform:rotateY(180deg);background:repeating-linear-gradient(45deg,#1B1E3A 0 12px,#20244A 12px 24px);border:2px solid #3A3F70}
+.back b{font-family:var(--display);font-size:64px;color:#3A3F70}
+.face svg{width:62%;height:auto;max-width:100%}
+.face .tierlbl{font:700 12px var(--body);letter-spacing:.14em;text-transform:uppercase;color:#FFD66B}
+.face h3{font-family:var(--display);font-weight:400;font-size:28px;color:#fff;text-transform:none;letter-spacing:.5px}
+.face p{font-size:14px;color:#C3C7DC}
+.face .xp{font:700 14px var(--body);color:#3B2600;background:linear-gradient(180deg,#FFE08A,#F0B12A);border-radius:999px;padding:3px 12px}
+.shine{position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.55) 50%,transparent 60%);transform:translateX(-100%);pointer-events:none}
+.nice{margin-top:18px}
+
+@media (prefers-reduced-motion:reduce){
+  .rays{animation:none}
+  .tap.on{animation:none;opacity:.8}
+  .sheet,.scrim,.check path,.snack{transition:none!important}
+}
+.footnote{font-size:13px;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Hunter Design Board</h1>
+    <p class="lede">The visual reference for the workout app's game layer: rank shields, badge tiers, Strava-style monthly medals, the level-up and rank-up takeovers, and the Android interaction patterns. Tap anything that looks like it does something.</p>
+  </header>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Ranks</h2>
+      <p>Shield metal changes with rank. The letter uses the display face. S rank adds an outer glow.</p>
+    </div>
+    <div class="panel">
+      <div class="shields" id="shields"></div>
+      <div class="row" style="margin-top:20px">
+        <button class="btn gold" id="play-level">Play level up (6 to 7)</button>
+        <button class="btn" id="play-rank">Play rank up (E to D)</button>
+        <button class="btn ghost" id="play-badge">Play badge reveal</button>
+        <div class="toggles">
+          <label class="switch"><input type="checkbox" id="snd" checked> Sound</label>
+          <label class="switch"><input type="checkbox" id="vib" checked> Vibration</label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Lifetime badges</h2>
+      <p>Six tiers per family: Bronze, Silver, Gold, Diamond, then Master (obsidian with an ember rim) and Legend (prismatic, it shimmers). Shape tells you the family, metal tells you the tier. The next tier you haven't earned shows as a grey silhouette inside a progress ring.</p>
+    </div>
+    <div class="panel" id="families"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Monthly medals</h2>
+      <p>Earned once per calendar month, like Strava challenges. The ribbon carries the month. This month's unfinished challenge shows progress and days left.</p>
+    </div>
+    <div class="panel"><div class="medals" id="medals"></div></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Milestones</h2>
+      <p>One-time specials. Star crest, always gold.</p>
+    </div>
+    <div class="panel"><div class="medals" id="specials"></div></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>On the phone</h2>
+      <p>Tick exercises, switch tabs, open the goal sheet. The page underneath never moves: sheets and snackbars float over it.</p>
+    </div>
+    <div class="demo">
+      <div class="phone" id="phone">
+        <div class="appbar">
+          <h4 id="screen-title">Today</h4>
+          <button class="rankchip" aria-label="Level 6, E rank. Open profile" id="rankchip"></button>
+        </div>
+        <div class="screen" id="screen"></div>
+        <div class="bottomnav" role="tablist" id="nav"></div>
+        <div class="snack" id="snack" role="status"><span id="snack-text"></span><button id="snack-undo">Undo</button></div>
+        <div class="scrim" id="scrim" hidden></div>
+        <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="New goal" hidden></div>
+      </div>
+      <div class="notes">
+        <h3>What to notice</h3>
+        <ul>
+          <li><b>Per-exercise ticks.</b> The circle fills, the check draws, and a gold "+15 XP" chip rises. Ticking the last strength exercise stamps the day as cleared. Cardio and core never block the streak.</li>
+          <li><b>Untick with Undo.</b> Tap a ticked row. A snackbar appears above the bottom bar with Undo.</li>
+          <li><b>Bottom navigation.</b> Four destinations, icon plus label, with the pill indicator behind the active icon. No burger, no content pushed down.</li>
+          <li><b>Rank chip.</b> Top right: shield, level, and a ring showing XP toward the next level. Tapping it opens Profile.</li>
+          <li><b>Goal sheet.</b> Step one shows only the six goal types. Continue opens that type's details. The sheet keeps one fixed height and the button stays pinned at the bottom on every step. Streak has no date field; the end date is worked out from your plan and skips rest days. Weight asks Lose or Gain, then shows the target weight and a pace meter.</li>
+          <li><b>Back button.</b> In the app, Android back closes the sheet or celebration instead of leaving the page. Here, press Escape.</li>
+        </ul>
+        <p class="footnote">Example data: level 6, 108.8 kg latest weight, Sat Oct 10 as today. The app uses your real numbers.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="celebrate" id="celebrate" hidden>
+  <div class="rays" id="rays"></div>
+  <div class="stage" id="stage"></div>
+</div>
+
+<script>
+(function(){
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let uid = 0;
+
+/* ---------- feedback: synthesized sounds + haptics (reference for lib/feedback.ts) ---------- */
+const FB = (function(){
+  let ctx=null, master=null;
+  const prefs={sound:true,vibrate:true};
+  function ac(){
+    if(!prefs.sound) return null;
+    try{
+      if(!ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;ctx=new C();master=ctx.createGain();master.gain.value=.35;master.connect(ctx.destination)}
+      if(ctx.state==='suspended') ctx.resume();
+      return ctx.state==='running'||ctx.state==='suspended'?ctx:null;
+    }catch(e){return null}
+  }
+  function tone(f,t,peak,decay,type,dest){const o=ctx.createOscillator(),g=ctx.createGain();o.type=type||'sine';o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(peak,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+decay);o.connect(g);g.connect(dest||master);o.start(t);o.stop(t+decay+.05);return o}
+  function bell(f,t,peak,decay){peak=peak||.4;decay=decay||.8;tone(f,t,peak,decay);tone(f*2.76,t,peak*.35,decay*.6);tone(f*5.4,t,peak*.12,decay*.4)}
+  function vib(p){if(!prefs.vibrate)return;try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
+  return {
+    prefs,
+    tick(){vib(10);if(!ac())return;const t=ctx.currentTime;tone(1320,t,.22,.07);tone(2640,t,.05,.05)},
+    cleared(){vib([15,40,25]);if(!ac())return;const t=ctx.currentTime;bell(1046.5,t,.35,.9);bell(1568,t+.09,.35,1.1)},
+    levelUp(){vib([30,60,40]);if(!ac())return;const t=ctx.currentTime;[523.25,659.25,783.99,1046.5].forEach((f,i)=>bell(f,t+i*.08,.3,.9));
+      [2093,2637].forEach(f=>{const o=tone(f,t+.35,.07,.9);const l=ctx.createOscillator(),lg=ctx.createGain();l.frequency.value=6;lg.gain.value=8;l.connect(lg);lg.connect(o.frequency);l.start(t+.35);l.stop(t+1.3)})},
+    rankUp(){vib([40,50,40,50,80]);if(!ac())return;const t=ctx.currentTime;
+      const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.setValueAtTime(90,t);o.frequency.exponentialRampToValueAtTime(40,t+.3);g.gain.setValueAtTime(.6,t);g.gain.exponentialRampToValueAtTime(.0001,t+.35);o.connect(g);g.connect(master);o.start(t);o.stop(t+.4);
+      const buf=ctx.createBuffer(1,ctx.sampleRate*.12,ctx.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);
+      const n=ctx.createBufferSource(),lp=ctx.createBiquadFilter(),ng=ctx.createGain();n.buffer=buf;lp.type='lowpass';lp.frequency.value=800;ng.gain.value=.4;n.connect(lp);lp.connect(ng);ng.connect(master);n.start(t);
+      [392,523.25,659.25,783.99,1046.5].forEach((f,i)=>bell(f,t+.15+i*.09,.28,.9));
+      const f2=ctx.createBiquadFilter();f2.type='lowpass';f2.frequency.value=2500;f2.connect(master);
+      [261.63,329.63,392].forEach(f=>{const s=ctx.createOscillator(),sg=ctx.createGain();s.type='sawtooth';s.frequency.value=f;sg.gain.setValueAtTime(0,t+.6);sg.gain.linearRampToValueAtTime(.06,t+.66);sg.gain.setValueAtTime(.06,t+1.5);sg.gain.exponentialRampToValueAtTime(.0001,t+1.9);s.connect(sg);sg.connect(f2);s.start(t+.6);s.stop(t+2)})},
+    badge(){vib([20,40,20]);if(!ac())return;const t=ctx.currentTime;[1568,2093,2637,3136].forEach((f,i)=>tone(f,t+i*.05,.18,.25))},
+    warm(){ac()}
+  };
+})();
+document.getElementById('snd').addEventListener('change',e=>{FB.prefs.sound=e.target.checked});
+document.getElementById('vib').addEventListener('change',e=>{FB.prefs.vibrate=e.target.checked});
+
+/* ---------- materials ---------- */
+const TIERS = {
+  bronze:{rim:['#E3A86B','#8C5A2B'],face:['#B87B45','#5E3A1A'],label:'Bronze'},
+  silver:{rim:['#F4F7FA','#8E9AA6'],face:['#B7C2CD','#56616E'],label:'Silver'},
+  gold:{rim:['#FFE27A','#B8860B'],face:['#E8B83A','#7A5600'],label:'Gold'},
+  diamond:{rim:['#9EF0FF','#6A5CFF'],face:['#5DB6F5','#3423C9'],label:'Diamond'},
+  master:{rim:['#FFB36B','#C2410C'],face:['#3A2A3F','#120C18'],label:'Master'},
+  legend:{rim:['#FF6B8A','#FFD24A','#5EE0A3','#7CC0FF','#B272F0'],face:['#3A1F7A','#120A33'],label:'Legend'},
+  locked:{rim:['#B3B7C4','#6C7080'],face:['#8C90A0','#4D5160'],label:'Locked'}
+};
+const MONTHLY = {
+  clear:['#7FF0D6','#0E8C73'], pushup:['#FFC38A','#D2530F'], cardio:['#FF9DA8','#C21F3C'],
+  run:['#FFB199','#E0461F'], ride:['#9FD8FF','#1466C2'], perfect:['#FFE27A','#B8860B'], weigh:['#D6B8FF','#6B2FC9']
+};
+const RANKS = {
+  E:{rim:['#DCE2EA','#5B6470'],face:['#98A3B1','#3E4652'],name:'E-Rank Hunter',levels:'Levels 1 to 4'},
+  D:{rim:['#A6F3CF','#0F7A4F'],face:['#3DC98A','#0A5236'],name:'D-Rank Hunter',levels:'Levels 5 to 9'},
+  C:{rim:['#BFE1FF','#1D4ED8'],face:['#5AA2FF','#14318F'],name:'C-Rank Hunter',levels:'Levels 10 to 14'},
+  B:{rim:['#E7CCFF','#6B21A8'],face:['#B272F0','#46106F'],name:'B-Rank Hunter',levels:'Levels 15 to 19'},
+  A:{rim:['#FFF0A8','#A36B00'],face:['#FFC933','#7A4E00'],name:'A-Rank Hunter',levels:'Levels 20 to 29'},
+  S:{rim:['#FFC2CE','#9F1239'],face:['#FF5C7C','#6E0B27'],name:'S-Rank Hunter',levels:'Level 30 and up',glow:'#FF4D6D'}
+};
+
+/* ---------- icons (24px grid, stroke) ---------- */
+const ICON = {
+  flame:'<path d="M12 3c.5 3 4 4.6 4 9a4 4 0 0 1-8 0c0-2 .8-3.2 2-4.2.1 1.8 1 2.8 2 2.8 0-2.6-.8-4.8 0-7.6z"/>',
+  chevrons:'<path d="M6 13l6-6 6 6M6 19l6-6 6 6"/>',
+  dumbbell:'<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>',
+  timer:'<circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 2M9.5 3h5"/>',
+  run:'<circle cx="14.5" cy="4.5" r="1.8"/><path d="M8 20l3-6 3 2.5V21M6 11.5l3.5-3.5 4 2 3 3.5"/>',
+  bike:'<circle cx="6" cy="16.5" r="3.5"/><circle cx="18" cy="16.5" r="3.5"/><path d="M6 16.5l4-8h4.5l3.5 8M10 8.5l3 8M13 5.5h3"/>',
+  down:'<path d="M3 6l6.5 6.5 4-4L21 16M21 10v6h-6"/>',
+  calcheck:'<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M9 15l2 2 4-4"/>',
+  star:'<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8 6.8 19.6l1-5.8-4.3-4.1 5.9-.8z"/>',
+  trophy:'<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4.5a3 3 0 0 0 3.5 4M16 6h3.5a3 3 0 0 1-3.5 4M12 13v4M8.5 20h7M10 17h4"/>',
+  week:'<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M7.5 14h9"/>',
+  target:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>',
+  crown:'<path d="M4 18h16M5 18L3.5 8l5 3.5L12 5l3.5 6.5 5-3.5L19 18"/>',
+  cal:'<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>',
+  award:'<circle cx="12" cy="9" r="5.5"/><path d="M8.5 13.5L7 21l5-2.5 5 2.5-1.5-7.5"/>',
+  back:'<path d="M15 5l-7 7 7 7"/>',
+  scale:'<rect x="3.5" y="4" width="17" height="16" rx="3"/><path d="M8 9a5 5 0 0 1 8 0M12 9.5l1.5-1.5"/>'
+};
+function iconSvg(name,size){return `<svg viewBox="0 0 24 24" width="${size||24}" height="${size||24}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[name]}</svg>`}
+
+/* ---------- shapes (120 box) ---------- */
+const SHAPES = {
+  shield:'M60 6 L106 20 V56 C106 84 88 104 60 114 C32 104 14 84 14 56 V20 Z',
+  hex:'M60 6 L107 33 V87 L60 114 L13 87 V33 Z',
+  circle:'M60 10 A46 46 0 1 1 59.99 10 Z',
+  diamond:'M60 6 Q64 6 68 10 L110 52 Q114 60 110 68 L68 110 Q60 116 52 110 L10 68 Q6 60 10 52 L52 10 Q56 6 60 6 Z',
+  square:'M34 12 H86 Q108 12 108 34 V86 Q108 108 86 108 H34 Q12 108 12 86 V34 Q12 12 34 12 Z',
+  star:(function(){let p='';for(let i=0;i<16;i++){const r=i%2?38:54;const a=-Math.PI/2+i*Math.PI/8;p+=(i?'L':'M')+(60+r*Math.cos(a)).toFixed(1)+' '+(60+r*Math.sin(a)).toFixed(1)+' '}return p+'Z'})()
+};
+
+/* makeBadge: the reference implementation for components/Badge.tsx */
+function makeBadge(o){
+  const id='b'+(++uid);
+  const mat = o.colors ? {rim:[o.colors[0],o.colors[1]],face:[o.colors[0],o.colors[1]]} : TIERS[o.locked?'locked':o.tier];
+  const face = o.colors ? [shade(o.colors[0],-.05),shade(o.colors[1],-.25)] : mat.face;
+  const shape = SHAPES[o.shape];
+  const ribbon = o.shape==='circle' && !o.month ? `<path d="M40 88 L30 118 L44 110 L52 120 L58 96 Z" fill="${face[1]}"/><path d="M80 88 L90 118 L76 110 L68 120 L62 96 Z" fill="${face[1]}"/>` : '';
+  const banner = o.month ? `<path d="M8 84 H112 L104 96 L112 108 H8 L16 96 Z" fill="url(#${id}r)" stroke="rgba(0,0,0,.25)"/><text x="60" y="101" text-anchor="middle" font-family="Lilita One, Arial Rounded MT Bold, sans-serif" font-size="14" fill="#fff" style="paint-order:stroke" stroke="rgba(0,0,0,.35)" stroke-width="2">${o.month}</text>` : '';
+  const sparkCol = o.tier==='master' ? '#FFB36B' : '#fff';
+  const sparkle = ['diamond','master','legend'].includes(o.tier) && !o.locked ? `<path d="M96 18 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z" fill="${sparkCol}" opacity=".9"/><path d="M22 92 l2 4 4 2 -4 2 -2 4 -2 -4 -4 -2 4 -2z" fill="${sparkCol}" opacity=".75"/>${o.tier==='legend'?'<path d="M100 88 l2 4 4 2 -4 2 -2 4 -2 -4 -4 -2 4 -2z" fill="#fff" opacity=".8"/><path d="M20 24 l1.5 3 3 1.5 -3 1.5 -1.5 3 -1.5 -3 -3 -1.5 3 -1.5z" fill="#fff" opacity=".7"/>':''}` : '';
+  const dy = o.dy||0;
+  const emblem = o.text
+    ? `<text x="60" y="${o.month?63:72}" text-anchor="middle" font-family="Lilita One, Arial Rounded MT Bold, sans-serif" font-size="${o.text.length>3?24:30}" fill="#fff" style="paint-order:stroke" stroke="rgba(0,0,0,.28)" stroke-width="3">${o.text}</text>`
+    : `<g transform="translate(${o.month?38:36} ${(o.month?30:36)+dy}) scale(${o.month?1.85:2})" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" filter="url(#${id}s)">${ICON[o.icon]}</g>`;
+  const stops = mat.rim.map((c,i)=>`<stop offset="${i/(mat.rim.length-1)}" stop-color="${c}"/>`).join('');
+  const ring = o.locked && o.progress!=null ? (()=>{const c=2*Math.PI*57;return `<circle cx="60" cy="60" r="57" fill="none" stroke="var(--line)" stroke-width="5"/><circle cx="60" cy="60" r="57" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="${(c*o.progress).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 60 60)"/>`})() : '';
+  const inner = o.locked && o.progress!=null ? 'translate(60 60) scale(.74) translate(-60 -60)' : '';
+  const lock = o.locked ? `<g transform="translate(84 84)"><circle r="13" fill="var(--surface)" stroke="var(--line)"/><rect x="-5.5" y="-2" width="11" height="8" rx="2" fill="var(--muted)"/><path d="M-3.5 -2 v-3 a3.5 3.5 0 0 1 7 0 v3" fill="none" stroke="var(--muted)" stroke-width="2"/></g>` : '';
+  const legend = o.tier==='legend' && !o.locked;
+  return `<svg viewBox="0 0 120 124" role="img" aria-label="${o.label||''}" ${legend?'class="legend"':''}>
+  <defs>
+    <linearGradient id="${id}a" x1="0" y1="0" x2="${legend?1:0}" y2="1">${stops}</linearGradient>
+    <linearGradient id="${id}f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${face[0]}"/><stop offset="1" stop-color="${face[1]}"/></linearGradient>
+    <linearGradient id="${id}r" x1="0" y1="0" x2="0" y2="1">${stops}</linearGradient>
+    <clipPath id="${id}c"><path d="${shape}" transform="translate(60 60) scale(.84) translate(-60 -60)"/></clipPath>
+    <filter id="${id}s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.2" flood-color="#000" flood-opacity=".35"/></filter>
+    <filter id="${id}d" x="-10%" y="-10%" width="120%" height="125%"><feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#000" flood-opacity=".25"/></filter>
+  </defs>
+  ${ring}
+  <g transform="${inner}" ${o.locked?'opacity=".45"':''}>
+    ${ribbon}
+    <path d="${shape}" fill="url(#${id}a)" filter="url(#${id}d)"/>
+    <path d="${shape}" fill="url(#${id}f)" transform="translate(60 60) scale(.84) translate(-60 -60)"/>
+    <g clip-path="url(#${id}c)"><ellipse cx="60" cy="22" rx="62" ry="34" fill="#fff" opacity=".18"/></g>
+    <path d="${shape}" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.2" transform="translate(60 60) scale(.84) translate(-60 -60)"/>
+    ${emblem}${sparkle}${banner}
+  </g>
+  ${lock}
+</svg>`;
+}
+function shade(hex,amt){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=v=>Math.max(0,Math.min(255,Math.round(v+(amt<0?v*amt:(255-v)*amt))));return '#'+[f(r),f(g),f(b)].map(v=>v.toString(16).padStart(2,'0')).join('')}
+
+/* makeShield: the reference implementation for components/RankShield.tsx */
+// optical nudges: letter + level are centered as one group, weighted toward the shield's top
+const LETTER_DX={C:-3,D:3,B:1.5};
+const SHIELD='M60 4 C80 12 98 12 112 10 V58 C112 92 90 116 60 128 C30 116 8 92 8 58 V10 C22 12 40 12 60 4 Z';
+function makeShield(rank,opts){
+  opts=opts||{}; const r=RANKS[rank]; const id='s'+(++uid);
+  const glow = r.glow ? `<path d="${SHIELD}" fill="${r.glow}" opacity=".55" filter="url(#${id}g)"/>` : '';
+  const label = opts.level!=null ? `<text x="60" y="93" text-anchor="middle" font-family="Lilita One, Arial Rounded MT Bold, sans-serif" font-size="15" fill="#fff" opacity=".92" class="lvl">LV ${opts.level}</text>` : '';
+  return `<svg viewBox="0 0 120 132" role="img" aria-label="${r.name}">
+  <defs>
+    <linearGradient id="${id}a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${r.rim[0]}"/><stop offset="1" stop-color="${r.rim[1]}"/></linearGradient>
+    <linearGradient id="${id}f" x1="0" y1="0" x2=".6" y2="1"><stop offset="0" stop-color="${r.face[0]}"/><stop offset="1" stop-color="${r.face[1]}"/></linearGradient>
+    <clipPath id="${id}c"><path d="${SHIELD}" transform="translate(60 66) scale(.82) translate(-60 -66)"/></clipPath>
+    <filter id="${id}g" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7"/></filter>
+    <filter id="${id}t" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="0" flood-color="#000" flood-opacity=".35"/></filter>
+  </defs>
+  ${glow}
+  <path d="${SHIELD}" fill="url(#${id}a)"/>
+  <path d="${SHIELD}" fill="url(#${id}f)" transform="translate(60 66) scale(.82) translate(-60 -66)"/>
+  <g clip-path="url(#${id}c)"><path d="M0 0 H120 V52 C80 44 40 60 0 50 Z" fill="#fff" opacity=".16"/></g>
+  <path d="${SHIELD}" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.3" transform="translate(60 66) scale(.82) translate(-60 -66)"/>
+  <text x="${60+(LETTER_DX[rank]||0)}" y="${opts.level!=null?69:83}" text-anchor="middle" font-family="Lilita One, Arial Rounded MT Bold, sans-serif" font-size="${opts.level!=null?54:60}" fill="#fff" filter="url(#${id}t)">${rank}</text>
+  ${label}
+</svg>`;
+}
+
+/* ---------- render: shields ---------- */
+document.getElementById('shields').innerHTML = Object.keys(RANKS).map(k=>`<div class="shield-cell"><div style="width:84px;max-width:100%">${makeShield(k)}</div><b>${RANKS[k].name}</b><span>${RANKS[k].levels}</span></div>`).join('');
+
+/* ---------- render: families ---------- */
+const FAMILIES = [
+  {name:'Iron Will',metric:'Best streak',shape:'shield',icon:'flame',tiers:[3,7,14,30,60,100],unit:'days',have:2,value:9},
+  {name:'Pushup Path',metric:'Lifetime pushups',shape:'hex',icon:'chevrons',tiers:[100,500,1000,2500,5000,10000],unit:'',have:1,value:372},
+  {name:'Grinder',metric:'Days cleared',shape:'hex',icon:'dumbbell',tiers:[5,15,30,60,120,200],unit:'days',have:1,value:11},
+  {name:'Engine',metric:'Cardio minutes',shape:'circle',icon:'timer',dy:-6,tiers:[60,300,600,1200,2500,5000],unit:'min',have:1,value:140},
+  {name:'Road Runner',metric:'Treadmill km',shape:'circle',icon:'run',dy:-4,tiers:[10,50,100,250,500,1000],unit:'km',have:1,value:18.4},
+  {name:'Rider',metric:'Cycle km',shape:'circle',icon:'bike',dy:-9,tiers:[25,100,250,500,1000,2000],unit:'km',have:0,value:14},
+  {name:'Shedding',metric:'Kg lost from 110',shape:'diamond',icon:'down',dy:4,tiers:[1,3,5,7,10,15],unit:'kg',have:1,value:1.2},
+  {name:'Scale Keeper',metric:'Weigh-ins',shape:'square',icon:'calcheck',tiers:[7,30,60,100,200,365],unit:'',have:1,value:12}
+];
+const TIER_KEYS=['bronze','silver','gold','diamond','master','legend'];
+document.getElementById('families').innerHTML = FAMILIES.map((f,fi)=>{
+  // preview shows every tier in full color, except the next unearned tier as locked with progress
+  const cells = f.tiers.map((t,i)=>{
+    const isNext = i===f.have && fi%2===0;
+    const prev = i===0?0:f.tiers[i-1];
+    const prog = isNext ? Math.max(0,Math.min(1,(f.value-prev)/(t-prev))) : null;
+    const lbl = `${t.toLocaleString()}${f.unit?' '+f.unit:''}`;
+    return `<div class="tier">${makeBadge({shape:f.shape,tier:TIER_KEYS[i],icon:f.icon,dy:f.dy,locked:isNext,progress:prog,label:f.name+' '+TIERS[TIER_KEYS[i]].label})}<span>${isNext?`${f.value.toLocaleString()} / ${lbl}`:`${TIERS[TIER_KEYS[i]].label} · ${lbl}`}</span></div>`;
+  }).join('');
+  return `<div class="family"><div class="family-name"><b>${f.name}</b><span>${f.metric}</span></div><div class="tiers">${cells}</div></div>`;
+}).join('');
+
+/* ---------- render: monthly medals ---------- */
+const MEDALS=[
+  {name:'20K Walk/Run',sub:'October 2026',text:'20K',c:MONTHLY.run,month:'OCT 26',isNew:true},
+  {name:'Month Clear',sub:'October 2026',icon:'week',c:MONTHLY.clear,month:'OCT 26'},
+  {name:'Pushup Month',sub:'October 2026',text:'300',c:MONTHLY.pushup,month:'OCT 26'},
+  {name:'Cardio Month',sub:'September 2026',text:'150',c:MONTHLY.cardio,month:'SEP 26'},
+  {name:'40K Ride',sub:'28 of 40 km, 9 days left',text:'40K',c:MONTHLY.ride,month:'NOV 26',locked:true,progress:.7},
+  {name:'Perfect Month',sub:'Every workout day cleared',icon:'crown',c:MONTHLY.perfect,month:'OCT 26'},
+  {name:'Weigh-in Month',sub:'20 weigh-ins',icon:'scale',c:MONTHLY.weigh,month:'OCT 26'}
+];
+document.getElementById('medals').innerHTML = MEDALS.map(m=>`<div class="medal ${m.isNew?'new-dot':''}">${makeBadge({shape:'circle',colors:m.c,text:m.text,icon:m.icon,month:m.month,locked:m.locked,progress:m.progress,label:m.name})}<b>${m.name}</b><span>${m.sub}</span></div>`).join('');
+
+/* ---------- render: specials ---------- */
+const SPECIALS=[
+  {name:'Awakening',sub:'First day cleared',icon:'flame'},
+  {name:'Perfect Day',sub:'Every item ticked',icon:'star'},
+  {name:'Full Week',sub:'A whole week cleared',icon:'week'},
+  {name:'Goal Getter',sub:'First goal achieved',icon:'target'},
+  {name:'Program Complete',sub:'All 6 weeks cleared',icon:'trophy',locked:true,progress:.28}
+];
+document.getElementById('specials').innerHTML = SPECIALS.map(s=>`<div class="medal">${makeBadge({shape:'star',tier:'gold',icon:s.icon,locked:s.locked,progress:s.progress,label:s.name})}<b>${s.name}</b><span>${s.sub}</span></div>`).join('');
+
+/* ---------- celebrations ---------- */
+const cel=document.getElementById('celebrate'), stage=document.getElementById('stage'), rays=document.getElementById('rays');
+let dismissable=false, onClose=null, timers=[];
+function later(fn,ms){timers.push(setTimeout(fn,reduce?0:ms))}
+function openCel(rayColor){FB.warm();timers.forEach(clearTimeout);timers=[];dismissable=false;cel.style.setProperty('--ray',rayColor);cel.hidden=false;cel.animate([{opacity:0},{opacity:1}],{duration:reduce?0:200,fill:'forwards'});rays.animate([{opacity:0},{opacity:.55}],{duration:reduce?0:400,delay:reduce?0:150,fill:'forwards'})}
+function closeCel(){if(!dismissable)return;cel.animate([{opacity:1},{opacity:0}],{duration:reduce?0:180,fill:'forwards'}).onfinish=()=>{cel.hidden=true;stage.innerHTML='';if(onClose){const f=onClose;onClose=null;f()}}}
+cel.addEventListener('click',closeCel);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!cel.hidden)closeCel();else closeSheet()}});
+function burst(){if(reduce||typeof confetti!=='function')return;const o={particleCount:70,spread:62,startVelocity:52,ticks:220,zIndex:1100,colors:['#FFD24A','#FFF3B0','#7CC0FF','#FF6B8A','#5EE0A3']};confetti({...o,angle:60,origin:{x:0,y:.95}});confetti({...o,angle:120,origin:{x:1,y:.95}})}
+function shake(){if(reduce)return;stage.animate([{transform:'translate(0,0)'},{transform:'translate(-6px,3px)'},{transform:'translate(5px,-3px)'},{transform:'translate(-3px,2px)'},{transform:'translate(0,0)'}],{duration:160})}
+function slam(el){return el.animate([{transform:'scale(2.2)',opacity:0},{transform:'scale(.9)',opacity:1,offset:.55},{transform:'scale(1.06)',offset:.78},{transform:'scale(1)',opacity:1}],{duration:reduce?0:520,easing:'cubic-bezier(.3,1.4,.5,1)',fill:'forwards'})}
+function headline(text){const h=document.createElement('div');h.className='headline';h.innerHTML=[...text].map(ch=>`<span>${ch===' '?'&nbsp;':ch}</span>`).join('');stage.appendChild(h);[...h.children].forEach((s,i)=>s.animate([{opacity:0,transform:'translateY(18px) scale(.6)'},{opacity:1,transform:'none'}],{duration:reduce?0:260,delay:reduce?0:i*40,easing:'cubic-bezier(.3,1.5,.5,1)',fill:'forwards'}));return h}
+function countUp(el,from,to){if(reduce){el.textContent='LV '+to;return}const t0=performance.now();(function tick(t){const k=Math.min(1,(t-t0)/600);el.textContent='LV '+Math.round(from+(to-from)*k);if(k<1)requestAnimationFrame(tick)})(t0)}
+function finish(subText){const sub=document.createElement('p');sub.className='sub';sub.textContent=subText;stage.appendChild(sub);sub.animate([{opacity:0},{opacity:1}],{duration:reduce?0:300,fill:'forwards'});const tap=document.createElement('p');tap.className='tap';tap.textContent='Tap to continue';stage.appendChild(tap);later(()=>{tap.classList.add('on');tap.style.opacity='.8';dismissable=true},700)}
+
+function playLevelUp(from,to,rank){
+  openCel(RANKS[rank].rim[0]);
+  const slot=document.createElement('div');slot.className='slot';slot.style.opacity=0;stage.appendChild(slot);
+  slot.innerHTML=makeShield(rank,{level:from});
+  later(()=>{slot.style.opacity=1;slam(slot).onfinish=()=>{shake();burst();FB.levelUp()};
+    later(()=>{countUp(slot.querySelector('.lvl'),from,to);headline('LEVEL UP')},250)
+  },250);
+  later(()=>finish(`Level ${to}. 700 XP to level ${to+1}.`),1200);
+}
+function playRankUp(fromRank,toRank,level){
+  openCel('#FFD24A');
+  const slot=document.createElement('div');slot.className='slot';stage.appendChild(slot);
+  slot.innerHTML=makeShield(fromRank,{level:level-1});
+  slot.animate([{transform:'scale(.6)',opacity:0},{transform:'scale(1)',opacity:1}],{duration:reduce?0:300,fill:'forwards'});
+  later(()=>{
+    // shatter the old shield into shards
+    const col=RANKS[fromRank].face[0];
+    for(let i=0;i<16;i++){const s=document.createElement('div');s.className='shard';const a=Math.random()*Math.PI*2,d=160+Math.random()*180;
+      s.style.background=i%3?col:RANKS[fromRank].rim[0];s.style.clipPath=`polygon(${Math.random()*50}% 0,100% ${Math.random()*60}%,${30+Math.random()*50}% 100%,0 ${40+Math.random()*60}%)`;
+      slot.appendChild(s);s.animate([{transform:'translate(0,0) rotate(0)',opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px) rotate(${Math.random()*540-270}deg)`,opacity:0}],{duration:reduce?0:700,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'})}
+    slot.querySelector('svg').animate([{transform:'scale(1)',opacity:1},{transform:'scale(1.25)',opacity:0}],{duration:reduce?0:220,fill:'forwards'});
+  },700);
+  later(()=>{
+    const slot2=document.createElement('div');slot2.className='slot';slot2.style.position='absolute';slot2.style.top='16px';slot2.style.opacity=0;
+    slot2.innerHTML=makeShield(toRank,{level});stage.insertBefore(slot2,slot);
+    slot2.style.opacity=1;slam(slot2).onfinish=()=>{shake();burst();FB.rankUp();later(burst,350)};
+    later(()=>headline('RANK UP'),250);
+  },1000);
+  later(()=>finish(`You are now a ${RANKS[toRank].name}.`),1900);
+}
+function playBadge(){
+  openCel('#7CC0FF');
+  stage.innerHTML=`<div class="reveal-card"><div class="flip" id="flip">
+    <div class="face">${makeBadge({shape:'shield',tier:'silver',icon:'flame',label:'Iron Will Silver'})}<span class="tierlbl">Silver</span><h3>Iron Will</h3><p>7 cleared days in a row</p><span class="xp">+50 XP</span><div class="shine" id="shine"></div></div>
+    <div class="back"><b>?</b></div></div></div><button class="btn gold nice" id="nice">Nice</button>`;
+  const flip=document.getElementById('flip');flip.style.transform='rotateY(180deg)';
+  later(()=>{flip.animate([{transform:'rotateY(180deg) scale(.8)'},{transform:'rotateY(-12deg) scale(1.04)',offset:.7},{transform:'rotateY(0) scale(1)'}],{duration:reduce?0:700,easing:'cubic-bezier(.3,1.2,.5,1)',fill:'forwards'}).onfinish=()=>{
+    document.getElementById('shine').animate([{transform:'translateX(-100%)'},{transform:'translateX(100%)'}],{duration:reduce?0:900,easing:'ease-in-out'});burst();FB.badge();dismissable=true}},200);
+  document.getElementById('nice').addEventListener('click',e=>{e.stopPropagation();dismissable=true;closeCel()});
+}
+document.getElementById('play-level').onclick=()=>playLevelUp(6,7,'D');
+document.getElementById('play-rank').onclick=()=>playRankUp('E','D',5);
+document.getElementById('play-badge').onclick=playBadge;
+
+/* ---------- phone demo ---------- */
+const screen=document.getElementById('screen'), title=document.getElementById('screen-title');
+let xp=0.62; // fraction of level 6
+function ringSvg(frac,size,stroke,color,track){const r=(size-stroke)/2,c=2*Math.PI*r;return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" aria-hidden="true"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${track}" stroke-width="${stroke}"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${(c*frac).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 ${size/2} ${size/2})"/></svg>`}
+function renderChip(){document.getElementById('rankchip').innerHTML=`<span style="width:26px;display:block">${makeShield('D')}</span><b>6</b><span class="xpring">${ringSvg(xp,22,3,'var(--accent)','var(--line)')}</span>`}
+renderChip();
+
+const DAY=[{k:'s0',n:'Sumo Squats',r:'3×12-15'},{k:'s1',n:'Pushups',r:'3×10-12'},{k:'s2',n:'DB Bent-over Rows',r:'3×10-12'},{k:'s3',n:'DB Shoulder Press',r:'3×10-12'},{k:'s4',n:'DB Bicep Curls',r:'3×10-12'},{k:'k0',n:'Plank',r:'2×20 sec',core:true},{k:'k1',n:'Crunches',r:'2×12',core:true}];
+const done=new Set(['s0']);
+let cardioDone=false;
+function strengthCleared(){return DAY.filter(d=>!d.core).every(d=>done.has(d.k))}
+function renderToday(){
+  const total=DAY.length+1, n=done.size+(cardioDone?1:0);
+  screen.innerHTML=`<div class="card" id="daycard">
+    <div class="card-head"><span class="chip fb">FULL BODY</span><span class="dayring">${ringSvg(n/total,36,4,'var(--ok)','var(--line)')}<span>${n} / ${total}</span></span></div>
+    <h5>Full Body: Compound Circuit</h5>
+    ${DAY.filter(d=>!d.core).map(itemRow).join('')}
+    <h3 style="margin:10px 0 2px">Core</h3>
+    ${DAY.filter(d=>d.core).map(itemRow).join('')}
+    <div class="cardio"><div class="item ${cardioDone?'done':''}" data-k="cardio" role="checkbox" aria-checked="${cardioDone}" tabindex="0">${checkSvg()}<span class="name">Cycle</span><span class="reps">${cardioDone?'10 min · 3.2 km':'10 min'}</span></div></div>
+    ${n<total?'<button class="complete-all" id="all">Complete all</button>':''}
+    ${strengthCleared()?'<div class="stamp">CLEARED</div>':''}
+  </div>`;
+  screen.querySelectorAll('.item').forEach(el=>{el.addEventListener('click',()=>tick(el));el.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();tick(el)}})});
+  const all=document.getElementById('all');if(all)all.onclick=()=>{DAY.forEach(d=>done.add(d.k));cardioDone=true;gain(95);renderToday();stampIn()};
+}
+function checkSvg(){return `<svg class="check" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12"/><path d="M8.5 14.5l3.8 3.8 7.2-8"/></svg>`}
+function itemRow(d){const on=done.has(d.k);return `<div class="item ${on?'done':''}" data-k="${d.k}" role="checkbox" aria-checked="${on}" tabindex="0">${checkSvg()}<span class="name">${d.n}</span><span class="reps">${d.r}</span></div>`}
+function floatXp(el,amt){if(reduce)return;const f=document.createElement('span');f.className='xpfloat';f.textContent=`+${amt} XP`;el.appendChild(f);f.animate([{transform:'translateY(6px) scale(.7)',opacity:0},{transform:'translateY(-8px) scale(1.05)',opacity:1,offset:.3},{transform:'translateY(-30px)',opacity:0}],{duration:900,easing:'ease-out'}).onfinish=()=>f.remove()}
+function gain(amt){xp=Math.min(.98,xp+amt/1300);renderChip()}
+function stampIn(){FB.cleared();const s=screen.querySelector('.stamp');if(s&&!reduce)s.animate([{transform:'rotate(-8deg) scale(2.4)',opacity:0},{transform:'rotate(-8deg) scale(.92)',opacity:1,offset:.7},{transform:'rotate(-8deg) scale(1)'}],{duration:420,easing:'cubic-bezier(.3,1.4,.5,1)'});if(!reduce&&typeof confetti==='function'){const r=document.getElementById('daycard').getBoundingClientRect();confetti({particleCount:40,spread:70,startVelocity:28,origin:{x:(r.left+r.width/2)/innerWidth,y:(r.top+60)/innerHeight},zIndex:900})}}
+function tick(el){
+  const k=el.dataset.k;
+  if(k==='cardio'){if(cardioDone){cardioDone=false;renderToday();snack('Cycle unticked',()=>{cardioDone=true;renderToday()})}else{openSheet('cardio')}return}
+  const wasCleared=strengthCleared();
+  if(done.has(k)){done.delete(k);renderToday();snack('Unticked',()=>{done.add(k);renderToday()});return}
+  done.add(k);const d=DAY.find(x=>x.k===k);const amt=d.core?10:15;gain(amt);FB.tick();renderToday();
+  const row=screen.querySelector(`[data-k="${k}"]`);floatXp(row,amt);
+  if(!wasCleared&&strengthCleared()){stampIn()}
+}
+let snackTimer;
+function snack(text,undo){const s=document.getElementById('snack');document.getElementById('snack-text').textContent=text;s.classList.add('show');const b=document.getElementById('snack-undo');b.hidden=!undo;b.onclick=()=>{if(undo)undo();s.classList.remove('show')};clearTimeout(snackTimer);snackTimer=setTimeout(()=>s.classList.remove('show'),4000)}
+
+function renderGoals(){screen.innerHTML=`
+  <div class="card goalcard">${ringSvg(3/7,64,7,'var(--accent)','var(--line)')}<div><b>7 workout days in a row</b><span>3 of 7 · ends Mon, Oct 19</span></div></div>
+  <div class="card goalcard">${ringSvg(1.2/3.0,64,7,'var(--ok)','var(--line)')}<div><b>Lose 3.0 kg, to 107.0 kg</b><span>1.2 of 3.0 kg · 24 days left</span></div></div>
+  <button class="fab" id="newgoal">+ New goal</button>`;document.getElementById('newgoal').onclick=()=>openSheet('goal')}
+function renderProfile(){screen.innerHTML=`<div class="card" style="display:flex;gap:16px;align-items:center"><div style="width:84px;flex:0 0 84px">${makeShield('D',{level:6})}</div><div style="flex:1"><b style="font-family:var(--display);font-weight:400;font-size:22px">Level 6</b><div style="font-size:13px;color:var(--muted)">D-Rank Hunter · C rank at level 10</div><div style="height:10px;border-radius:5px;background:var(--line);margin-top:10px;overflow:hidden"><div style="height:100%;width:${Math.round(xp*100)}%;background:linear-gradient(90deg,#FFD24A,#E09A12)"></div></div></div></div>`}
+function renderBadges(){screen.innerHTML=`<h3>This month</h3><div class="card goalcard">${makeBadge({shape:'circle',colors:MONTHLY.run,text:'20K',month:'OCT 26',locked:true,progress:.62,label:'20K Walk/Run'}).replace('<svg','<svg style="width:72px;flex:0 0 72px"')}<div><b>20K Walk/Run</b><span>12.4 of 20 km · 21 days left</span></div></div><h3>Lifetime</h3><div class="tiers">${['bronze','silver','gold','diamond'].map((t,i)=>`<div class="tier">${makeBadge({shape:'shield',tier:t,icon:'flame',locked:i>1,progress:i===2?.4:null})}</div>`).join('')}</div>`}
+const TABS=[{id:'cal',label:'Calendar',icon:'cal',title:'Today',render:renderToday},{id:'pro',label:'Profile',icon:'user',title:'Profile',render:renderProfile},{id:'bad',label:'Badges',icon:'award',title:'Badges',render:renderBadges},{id:'goa',label:'Goals',icon:'target',title:'Goals',render:renderGoals}];
+const nav=document.getElementById('nav');
+nav.innerHTML=TABS.map((t,i)=>`<button class="tab" role="tab" aria-selected="${i===0}" data-i="${i}"><span class="ind">${iconSvg(t.icon)}</span>${t.label}</button>`).join('');
+nav.querySelectorAll('.tab').forEach(b=>b.onclick=()=>selectTab(+b.dataset.i));
+function selectTab(i){nav.querySelectorAll('.tab').forEach((b,j)=>b.setAttribute('aria-selected',String(i===j)));const ind=nav.children[i].querySelector('.ind');if(!reduce)ind.animate([{transform:'scaleX(.4)'},{transform:'scaleX(1)'}],{duration:220,easing:'cubic-bezier(.2,.9,.3,1)'});title.textContent=TABS[i].title;TABS[i].render()}
+document.getElementById('rankchip').onclick=()=>selectTab(1);
+renderToday();
+
+/* ---------- bottom sheet: header, scrolling body, pinned footer ---------- */
+const sheet=document.getElementById('sheet'), scrim=document.getElementById('scrim');
+function openSheet(kind){sheet.hidden=false;scrim.hidden=false;if(kind==='cardio'){renderCardioSheet()}else{goalType=null;goalStep1(0)}requestAnimationFrame(()=>{sheet.classList.add('open');scrim.classList.add('open')})}
+function closeSheet(){if(sheet.hidden)return;sheet.classList.remove('open');scrim.classList.remove('open');setTimeout(()=>{sheet.hidden=true;scrim.hidden=true},reduce?0:320)}
+scrim.onclick=closeSheet;
+let y0=null;sheet.addEventListener('pointerdown',e=>{if(e.target.closest('.sheet-head')&&!e.target.closest('button'))y0=e.clientY});
+window.addEventListener('pointermove',e=>{if(y0==null)return;const dy=Math.max(0,e.clientY-y0);sheet.style.transition='none';sheet.style.transform=`translateY(${dy}px)`});
+window.addEventListener('pointerup',e=>{if(y0==null)return;const dy=e.clientY-y0;y0=null;sheet.style.transition='';sheet.style.transform='';if(dy>90)closeSheet()});
+
+function sheetFrame(title,o){
+  sheet.classList.toggle('fixed',!!o.fixed);
+  sheet.setAttribute('aria-label',title);
+  sheet.innerHTML=`<div class="sheet-head"><div class="handle"></div><div class="sheet-title">${o.back?`<button class="iconbtn" id="sheet-back" aria-label="Back">${iconSvg('back')}</button>`:''}<h4>${title}</h4></div></div>
+    <div class="sheet-body" id="sheet-body"></div>
+    <div class="sheet-foot"><button class="btn gold" id="sheet-cta" ${o.ctaDisabled?'disabled':''}>${o.cta}</button></div>`;
+  return {body:document.getElementById('sheet-body'),cta:document.getElementById('sheet-cta'),back:document.getElementById('sheet-back')};
+}
+// M3 shared axis X: forward slides in from the right, back from the left
+function slide(el,dir){if(reduce||!dir)return;el.animate([{transform:`translateX(${dir*32}px)`,opacity:0},{transform:'none',opacity:1}],{duration:260,easing:'cubic-bezier(.2,0,0,1)'})}
+
+function renderCardioSheet(){
+  let min=10;
+  const f=sheetFrame('Log cardio',{cta:'Save · +30 XP'});
+  f.body.innerHTML=`<div class="field"><label>Cycle · minutes</label><div class="stepper"><button id="cm" aria-label="Less">−</button><output id="cv">10</output><button id="cp" aria-label="More">+</button></div></div>
+  <div class="field"><label for="km">Distance in km (optional)</label><input id="km" inputmode="decimal" value="3.2" style="min-height:48px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 18px var(--body);padding:0 14px"></div>`;
+  const cv=document.getElementById('cv');document.getElementById('cm').onclick=()=>{min=Math.max(1,min-1);cv.textContent=min};document.getElementById('cp').onclick=()=>{min++;cv.textContent=min};
+  f.cta.onclick=()=>{cardioDone=true;gain(30);FB.tick();closeSheet();renderToday();floatXp(screen.querySelector('[data-k="cardio"]'),30)};
+}
+
+const GOAL_TYPES=[['streak','Streak','flame'],['workouts','Workouts','dumbbell'],['pushups','Pushups','chevrons'],['cardio','Cardio time','timer'],['km','Distance','run'],['weight','Weight','scale']];
+let goalType=null;
+function goalStep1(dir){
+  const f=sheetFrame('New goal',{fixed:true,cta:'Continue',ctaDisabled:!goalType});
+  f.body.innerHTML=`<p style="color:var(--muted);font-size:14px;margin:0 0 14px">What do you want to aim for?</p><div class="types">${GOAL_TYPES.map(t=>`<button class="type" aria-pressed="${t[0]===goalType}" data-t="${t[0]}">${iconSvg(t[2],28)}${t[1]}</button>`).join('')}</div>`;
+  f.body.querySelectorAll('.type').forEach(b=>b.onclick=()=>{goalType=b.dataset.t;f.body.querySelectorAll('.type').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));f.cta.disabled=false});
+  f.cta.onclick=()=>goalStep2(1);
+  slide(f.body,dir);
+}
+function goalStep2(dir){
+  const t=GOAL_TYPES.find(x=>x[0]===goalType);
+  const f=sheetFrame(`${t[1]} goal`,{fixed:true,back:true,cta:'Save goal'});
+  f.back.onclick=()=>goalStep1(-1);
+  renderGoalForm(goalType,f.body);
+  f.cta.onclick=()=>{closeSheet();FB.tick();snack('Goal saved')};
+  slide(f.body,dir);
+}
+
+// schedule used by the streak computation: weeks 1-2 full body, then Thu rest
+function workoutDays(){const out=[];const start=new Date(2026,8,21);const L={1:[0,0,0,0,0,1,1],2:[1,1,0,1,0,1,1]};for(let i=0;i<42;i++){const w=Math.floor(i/7)+1,dow=i%7;const on=w<=2?L[w][dow]:dow!==3;if(on){const d=new Date(start);d.setDate(start.getDate()+i);out.push(d)}}return out}
+const TODAY=new Date(2026,9,10);
+function fmt(d){return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
+function renderGoalForm(type,form){
+  if(type==='streak'){
+    const days=workoutDays().filter(d=>d>=TODAY);
+    const pick=n=>{const end=days[n-1];form.querySelector('#streak-out').innerHTML=`<b>${n} workout days in a row</b>Starts today, ends ${fmt(end)}. Rest days don't count.`;form.querySelectorAll('.fchip').forEach(c=>c.setAttribute('aria-pressed',String(+c.dataset.n===n)))};
+    form.innerHTML=`<div class="field" style="margin-top:0"><label>How many workout days in a row?</label><div class="chips">${[3,5,7,14,30].map(n=>`<button class="fchip" data-n="${n}" ${n>days.length?'disabled':''}>${n}</button>`).join('')}</div>${days.length<30?'<span style="font-size:12px;color:var(--muted)">30 is off: your plan ends Nov 1.</span>':''}</div>
+      <div class="field"><div class="computed" id="streak-out"></div></div>`;
+    form.querySelectorAll('.fchip').forEach(c=>c.onclick=()=>pick(+c.dataset.n));pick(7);
+  } else if(type==='weight'){
+    let dir='lose',amt=2.0,weeks=4.3;const latest=108.8;
+    const draw=()=>{const target=(dir==='lose'?latest-amt:latest+amt).toFixed(1);const pace=amt/weeks;const lbl=pace<=.5?'Comfortable':pace<=1?'Ambitious':'Aggressive, hard to sustain';const col=pace<=.5?'var(--ok)':pace<=1?'var(--warn)':'var(--bad)';
+      form.querySelector('#wt').textContent=`${amt.toFixed(1)} kg`;form.querySelector('#wtarget').innerHTML=`<b>${dir==='lose'?'Lose':'Gain'} ${amt.toFixed(1)} kg, to ${target} kg</b>From ${latest} kg today`;
+      form.querySelector('#pace-i').style.left=`calc(${Math.min(96,pace/1.5*100)}% - 2px)`;form.querySelector('#pace-t').innerHTML=`<b style="color:${col}">${pace.toFixed(2)} kg per week.</b> ${lbl}.`;
+      form.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.d===dir)))};
+    form.innerHTML=`<div class="field" style="margin-top:0"><label>Latest weight</label><div style="font-family:var(--display);font-size:34px">108.8 kg</div></div>
+      <div class="field"><label>Direction</label><div class="seg"><button data-d="lose">Lose</button><button data-d="gain">Gain</button></div></div>
+      <div class="field"><label>Amount</label><div class="stepper"><button id="wm" aria-label="Less">−</button><output id="wt"></output><button id="wp" aria-label="More">+</button></div><div class="computed" id="wtarget"></div></div>
+      <div class="field"><label>By</label><div class="chips">${[['2 weeks',2],['1 month',4.3],['2 months',8.6],['3 months',13]].map(([l,w])=>`<button class="fchip" data-w="${w}" aria-pressed="${w===4.3}">${l}</button>`).join('')}</div></div>
+      <div class="field pace"><label>Pace</label><div class="pace-bar"><i id="pace-i"></i></div><span id="pace-t"></span></div>`;
+    form.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{dir=b.dataset.d;draw()});
+    form.querySelector('#wm').onclick=()=>{amt=Math.max(.5,amt-.5);draw()};form.querySelector('#wp').onclick=()=>{amt=Math.min(15,amt+.5);draw()};
+    form.querySelectorAll('[data-w]').forEach(c=>c.onclick=()=>{weeks=+c.dataset.w;form.querySelectorAll('[data-w]').forEach(x=>x.setAttribute('aria-pressed',String(x===c)));draw()});
+    draw();
+  } else {
+    const hint={workouts:['Workout days','6','Your plan has 6 workout days in the next 7 days.'],pushups:['Pushups','96','Your plan has about 96 pushups in the next 7 days.'],cardio:['Cardio minutes','90','Your plan has 90 cardio minutes in the next 7 days.'],km:['Kilometres','20','Treadmill and cycle combined.']}[type];
+    form.innerHTML=`<div class="field" style="margin-top:0"><label>Period</label><div class="chips">${['This week','2 weeks','This month','3 months','Pick date'].map((p,i)=>`<button class="fchip" aria-pressed="${i===0}">${p}</button>`).join('')}</div></div>
+      <div class="field"><label>${hint[0]}</label><div class="stepper"><button aria-label="Less">−</button><output>${hint[1]}</output><button aria-label="More">+</button></div><span style="font-size:13px;color:var(--muted)">${hint[2]}</span></div>`;
+    form.querySelectorAll('.chips .fchip').forEach(c=>c.onclick=()=>form.querySelectorAll('.chips .fchip').forEach(x=>x.setAttribute('aria-pressed',String(x===c))));
+  }
+}
+
+})();
+</script>
