@@ -13,6 +13,7 @@ const Y1 = 124;
 const BAR_W = 22;
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
+const weekOf = (monday: string) => new Date(`${monday}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 
 /** A week's value in what the person sees: XP, sets, or volume in their weight unit. */
 export function chartValue(p: WeekPoint, metric: WeeklyMetric, unit: WeightUnit): number {
@@ -37,7 +38,7 @@ export function WeeklyChart({ points, metric, unit }: { points: WeekPoint[]; met
   const y = (v: number) => Y1 - (v / max) * (Y1 - Y0);
   const labels = weekLabels(points);
   const label = `Weekly ${metric === 'xp' ? 'XP' : metric}, last ${points.length} weeks. ${points
-    .map((p, i) => `Week of ${labels[i].month ?? ''} ${labels[i].day}: ${fmt(data[i])}`)
+    .map((p, i) => `Week of ${weekOf(p.monday)}: ${fmt(data[i])}`)
     .join('. ')}.`;
 
   return (
