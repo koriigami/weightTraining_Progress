@@ -21,6 +21,8 @@ export type GameModalProps = {
   art?: ReactNode;
   /** Sits under the art, e.g. a "Locked" ribbon. */
   badge?: ReactNode;
+  /** More under the sentence, e.g. the list of sets that are not ticked. */
+  extra?: ReactNode;
   /** A destructive confirm: tapping the scrim only shakes the dialog. Esc or Cancel closes it. */
   strict?: boolean;
   cancelLabel?: string;
@@ -46,6 +48,7 @@ export function GameModal({
   icon,
   art,
   badge,
+  extra,
   strict,
   cancelLabel = 'Cancel',
   confirmLabel = 'OK',
@@ -101,6 +104,7 @@ export function GameModal({
         {badge && <div style={{ textAlign: 'center', marginBottom: 10 }}>{badge}</div>}
         <div className="wt-gm-body">
           <p id={bodyId}>{children}</p>
+          {extra}
           <div className={cn('wt-gm-btns', single && 'one')}>
             {single ? (
               <Button variant="secondary" onClick={onCancel} data-autofocus>
