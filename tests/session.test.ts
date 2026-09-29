@@ -1,4 +1,4 @@
-import { EXERCISES } from '../data/exercises';
+import { EXERCISES, exerciseById } from '../data/exercises';
 import { describe, expect, it } from 'vitest';
 import {
   addExercise,
@@ -28,7 +28,7 @@ import {
 import type { Session, SessionResult } from '../lib/session';
 import { applyRoutineAction } from '../lib/routineActions';
 import { emptyState } from '../lib/progress';
-import { LIMITS, defaultPrefs, resolvePrefs } from '../lib/routines';
+import { LIMITS, availableEquipment, defaultPrefs, isAvoided, ownerPrefs, resolvePrefs, seedOwnerRoutines, weeklyGoalOf } from '../lib/routines';
 import type { Routine } from '../lib/routines';
 import { makeLookup } from '../lib/routines';
 import { newUserState } from '../lib/store';
@@ -356,6 +356,45 @@ describe('formatElapsed', () => {
     expect(formatElapsed(12 * 60_000 + 5_000)).toBe('12m 05s');
     expect(formatElapsed(67 * 60_000)).toBe('1h 07m');
     expect(formatElapsed(-5)).toBe('0s');
+  });
+});
+
+describe('owner defaults', () => {
+  it('a state with no stored prefs reads as the owner setup: home, dumbbells and a cardio machine', () => {
+    const p = resolvePrefs(emptyState());
+    expect(p).toEqual(ownerPrefs());
+    expect(p.equipment).toEqual({ kind: 'home', has: ['dumbbell', 'cardio-machine'], dumbbellKg: [2, 3, 5, 10] });
+    expect(p.avoid).toEqual(['lunges']);
+    expect(p.weeklyGoal).toBe(3);
+    expect(p.onboarded).toBe(true);
+    expect(p.units).toEqual({ weight: 'kg', distance: 'km' });
+  });
+
+  it('so none of the owner routines show as "Needs dumbbell"', () => {
+    const have = availableEquipment(resolvePrefs(emptyState()));
+    expect(have.has('dumbbell')).toBe(true);
+    expect(have.has('cardio-machine')).toBe(true);
+    expect(have.has('barbell')).toBe(false);
+    for (const r of seedOwnerRoutines()) {
+      for (const item of r.items) {
+        const e = exerciseById(item.exerciseId)!;
+        expect(have.has(e.equipment), `${r.title}: ${e.name}`).toBe(true);
+      }
+    }
+  });
+
+  it('lunges are avoided, and the weekly goal still reads 3', () => {
+    const p = resolvePrefs(emptyState());
+    expect(isAvoided(exerciseById('db-lunge')!, p)).toBe(true);
+    expect(isAvoided(exerciseById('db-curl')!, p)).toBe(false);
+    expect(weeklyGoalOf(emptyState())).toBe(3);
+  });
+
+  it('stored prefs win, and a new user still starts empty', () => {
+    const mine = { ...defaultPrefs(), onboarded: true, equipment: { kind: 'gym' as const, has: [], dumbbellKg: [] }, avoid: [] };
+    expect(resolvePrefs({ prefs: mine })).toEqual(mine);
+    expect(resolvePrefs(newUserState()).equipment).toEqual({ kind: 'home', has: [], dumbbellKg: [] });
+    expect(resolvePrefs(newUserState()).avoid).toEqual([]);
   });
 });
 

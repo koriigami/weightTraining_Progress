@@ -116,12 +116,27 @@ export function defaultPrefs(): Prefs {
   };
 }
 
+// The owner's migrated progress has no stored prefs (it predates onboarding), so
+// it reads as the owner's own setup: dumbbells at home and a cardio machine, no
+// lunges, three workouts a week. Without this the dumbbell exercises in the
+// owner's routines would all show "Needs dumbbell". Nothing is written: the
+// first time they save a setting, these become their stored prefs.
+export function ownerPrefs(): Prefs {
+  return {
+    ...defaultPrefs(),
+    equipment: { kind: 'home', has: ['dumbbell', 'cardio-machine'], dumbbellKg: [2, 3, 5, 10] },
+    avoid: ['lunges'],
+    weeklyGoal: 3,
+    onboarded: true,
+  };
+}
+
 // New users get explicit prefs with onboarded: false (newUserState), so a state
 // with no prefs at all is someone who predates onboarding, such as the owner's
-// migrated progress. They read as the defaults and count as onboarded, so the
-// app never sends them through the first-run flow.
+// migrated progress. They read as the owner's setup and count as onboarded, so
+// the app never sends them through the first-run flow.
 export function resolvePrefs(state: Pick<AppState, 'prefs'>): Prefs {
-  return state.prefs ?? { ...defaultPrefs(), onboarded: true };
+  return state.prefs ?? ownerPrefs();
 }
 
 export function weeklyGoalOf(state: Pick<AppState, 'prefs'>): number {
