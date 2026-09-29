@@ -2,6 +2,8 @@ import { plan } from '../data/plan';
 import type { WorkoutDay, Exercise } from '../data/plan';
 import { allEarnedBadges } from './badges';
 import { goalReward, goalStatus } from './goals';
+import type { CustomExercise } from '../data/exercises';
+import type { Prefs, Routine, WorkoutLog } from './routines';
 
 export const START_WEIGHT = 110;
 export const TARGET_WEIGHT = 103;
@@ -29,11 +31,18 @@ export type Goal = {
   baseline?: number; // weight only, kg at creation
 };
 
+// The optional fields were added with routines and logged workouts. Old saved
+// states do not have them, and a missing field always reads as empty. `days`
+// stays the legacy 6-week plan log and keeps its own scoring rules.
 export type AppState = {
   version: 2;
   days: Record<string, DayLog>;
   weights: Record<string, number>;
   goals: Goal[];
+  routines?: Routine[];
+  workouts?: WorkoutLog[];
+  prefs?: Prefs;
+  customExercises?: CustomExercise[];
 };
 
 export function emptyState(): AppState {
