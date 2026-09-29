@@ -281,7 +281,7 @@ export function blankSet(e: ExerciseDef): SetPlan {
 // ---------------- The owner's plan as routines ----------------
 
 // Names in data/plan.ts mapped to library ids.
-const PLAN_NAME_TO_ID: Record<string, string> = {
+export const PLAN_NAME_TO_ID: Record<string, string> = {
   Pushups: 'pushup',
   'DB Chest Flyes (floor)': 'db-fly',
   'DB Shoulder Press': 'db-ohp',
