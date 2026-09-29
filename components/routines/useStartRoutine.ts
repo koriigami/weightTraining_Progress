@@ -19,3 +19,15 @@ export function useStartRoutine(): (routineId: string) => void {
     [ws, showToast, router]
   );
 }
+
+/** Starts an empty workout and opens the log, or says why it cannot. */
+export function useStartEmpty(): () => void {
+  const router = useRouter();
+  const { showToast } = useProgress();
+  const ws = useWorkoutSession();
+  return useCallback(() => {
+    const error = ws.start();
+    if (error) showToast(error);
+    else router.push('/workout');
+  }, [ws, showToast, router]);
+}
