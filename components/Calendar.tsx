@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { plan, WorkoutDay } from '@/data/plan';
 import { DayCard } from './DayCard';
 import { ProgressBar } from './ProgressBar';
+import { Button } from '@/components/ui/Button';
 import { getTodayOrClosest, formatDateShort } from '@/lib/date';
 import { useProgress } from './ProgressProvider';
 import { dayDoneCount, dayItemCount, isDayCleared, isPerfectDay } from '@/lib/progress';
@@ -159,8 +160,8 @@ export function Calendar() {
                           onClick={() => setSelectedDate(d.date)}
                           className="rounded-lg border p-2 text-left transition-colors"
                           style={{
-                            borderColor: isSelected ? 'var(--ink)' : 'var(--line)',
-                            background: isSelected ? 'var(--ink)' : isToday ? 'var(--surface-2)' : 'var(--surface)',
+                            borderColor: isSelected ? 'var(--p-bevel)' : 'var(--line)',
+                            background: isSelected ? 'var(--chip-on)' : isToday ? 'var(--surface-2)' : 'var(--surface)',
                           }}
                         >
                           <div className="flex items-center justify-between">
@@ -243,8 +244,8 @@ export function Calendar() {
                 onClick={() => setSelectedDate(d.date)}
                 className="flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-xl border py-2"
                 style={{
-                  borderColor: isSelected ? 'var(--ink)' : isToday ? 'var(--muted)' : 'var(--line)',
-                  background: isSelected ? 'var(--ink)' : isToday ? 'var(--surface-2)' : 'var(--surface)',
+                  borderColor: isSelected ? 'var(--p-bevel)' : isToday ? 'var(--xp)' : 'var(--line)',
+                  background: isSelected ? 'var(--chip-on)' : isToday ? 'var(--surface-2)' : 'var(--surface)',
                   color: isSelected ? '#fff' : 'var(--ink)',
                   opacity: d.dayType === 'pre-start' && !isSelected ? 0.4 : 1,
                 }}
@@ -263,13 +264,9 @@ export function Calendar() {
         </div>
 
         {selectedDate !== todayDate && (
-          <button
-            onClick={() => setSelectedDate(todayDate)}
-            className="w-full rounded-lg border py-2.5 text-xs font-medium"
-            style={{ borderColor: 'var(--line)', color: 'var(--muted)' }}
-          >
-            Jump to Today
-          </button>
+          <Button variant="secondary" size="sm" block onClick={() => setSelectedDate(todayDate)}>
+            Jump to today
+          </Button>
         )}
 
         <DayCard day={selectedDay} />

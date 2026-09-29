@@ -49,7 +49,7 @@ export default function HomePage() {
           Show more workouts
         </Button>
       )}
-      <Link href="/calendar" className="wt-textbtn" style={{ alignSelf: 'flex-start' }}>
+      <Link href="/calendar/plan" className="wt-textbtn" style={{ alignSelf: 'flex-start' }}>
         Open the 6-week plan calendar
       </Link>
     </>

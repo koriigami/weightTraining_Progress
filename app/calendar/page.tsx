@@ -1,16 +1,29 @@
 'use client';
 
-import { Calendar } from '@/components/Calendar';
-import { ComingCard } from '@/components/ComingCard';
+import { CalendarRange } from 'lucide-react';
+import { MonthCalendar } from '@/components/calendar/MonthCalendar';
+import { ButtonLink } from '@/components/ui/Button';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Screen } from '@/components/ui/Screen';
 
-// The 6-week plan calendar stays here until the new calendar replaces it.
 export default function CalendarPage() {
   return (
-    <Screen header={<PageHeader title="Calendar" back="/profile" />}>
-      <ComingCard>The new calendar shows every workout you log. Until it lands, this is your 6-week plan.</ComingCard>
-      <Calendar />
+    <Screen
+      header={
+        <PageHeader
+          title="Calendar"
+          back="/profile"
+          narrow
+          actions={
+            <ButtonLink href="/calendar/plan" variant="secondary" size="sm" icon={<CalendarRange size={16} aria-hidden="true" />}>
+              6-week plan
+            </ButtonLink>
+          }
+        />
+      }
+      narrow
+    >
+      <MonthCalendar />
     </Screen>
   );
 }

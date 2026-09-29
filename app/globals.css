@@ -3866,6 +3866,99 @@ textarea.wt-input {
   height: 16px;
 }
 
+/* ---- Calendar ---- */
+.wt-calhead {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+.wt-calhead div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 8px;
+  font-size: 15px;
+}
+.wt-calhead div + div {
+  border-left: 1px solid var(--line);
+}
+.wt-calhead b {
+  font-family: var(--font-num);
+  font-weight: 400;
+  font-size: 18px;
+}
+.wt-monthnav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 14px 4px;
+}
+.wt-monthnav h2 {
+  margin: 0;
+  font-family: var(--font-num);
+  font-weight: 400;
+  font-size: 22px;
+  text-align: center;
+}
+.wt-mgrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  padding: 4px 8px 12px;
+  row-gap: 4px;
+}
+.wt-dow {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 4px 0;
+  font-weight: 700;
+}
+.wt-dcell {
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  padding: 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+.wt-dcell span {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+}
+.wt-dcell.w span {
+  background: var(--chip-on);
+  color: #fff;
+  box-shadow: 0 3px 0 var(--p-bevel);
+}
+.wt-dcell.today span {
+  box-shadow: inset 0 0 0 2px var(--xp);
+}
+.wt-dcell.w.today span {
+  box-shadow: 0 3px 0 var(--p-bevel), 0 0 0 2px var(--xp);
+}
+.wt-dcell.sel span {
+  outline: 2px solid var(--xp);
+  outline-offset: 2px;
+}
+.wt-dcell.fut {
+  color: var(--muted);
+}
+.wt-monthfoot {
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid var(--line);
+}
+
 @tailwind utilities;
 
 @media (prefers-reduced-motion: reduce) {

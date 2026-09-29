@@ -10,7 +10,7 @@ const profile: NavItem = {
   href: '/profile',
   label: 'Profile',
   icon: User,
-  active: (p) => ['/profile', '/settings', '/stats', '/calendar', '/goals'].some((r) => p === r),
+  active: (p) => ['/profile', '/settings', '/stats', '/goals'].some((r) => p === r) || p === '/calendar' || p.startsWith('/calendar/'),
 };
 
 // Phone tabs: Home, Routines, START (raised, in the tab bar itself), Rank, Profile.
