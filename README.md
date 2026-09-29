@@ -33,6 +33,36 @@ rail on wider screens, both with Calendar, Profile, Badges and Goals.
 Actual sets/reps logging happens in the **Heavy** app. This app only
 tracks whether a day was completed as planned, plus a daily weight entry.
 
+## Data model
+
+Each person's state is one JSON document, `wt:user:{id}:state`, still
+`version: 2`. The original 6-week plan log (`days`, `weights`, `goals`) is
+unchanged and keeps its own scoring. Routines and logged workouts were added as
+optional fields, and a missing field reads as empty:
+
+- `routines`: a routine is one day's exercises, each with planned sets. The
+  owner's six plan sessions are copied in as routines the first time the owner
+  signs in after this change.
+- `workouts`: finished workouts, set by set. The server works out XP and
+  personal records and re-scores after every change.
+- `prefs`: units, equipment, things to avoid, weekly goal, onboarding.
+- `customExercises`: the person's own exercises, next to the library in
+  `data/exercises.ts`.
+
+Total XP is the plan XP plus workout XP (5 per ticked set, cardio by the minute,
+50 for finishing, 25 per PR, 50 for hitting the weekly goal). Levels, ranks and
+badges come from that total. The rules live in `lib/workoutScoring.ts`, and the
+types and helpers in `lib/routines.ts`.
+
+## Tests
+
+```bash
+npm test
+```
+
+Runs vitest over `tests/`. A parity test pins the plan-only numbers (XP, levels,
+ranks, streaks, badges, goals) to what the code produced before workouts existed.
+
 ## Editing the plan
 
 Everything lives in one file: `data/plan.ts`. Each session type
