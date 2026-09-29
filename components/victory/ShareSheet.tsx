@@ -77,8 +77,23 @@ export function ShareSheet({ open, onClose, data }: { open: boolean; onClose: ()
     showToast((await copyText(text)) ? 'Copied to your clipboard.' : "Couldn't copy. Select the text and copy it.");
   }
 
+  const footer = share ? (
+    <>
+      <Button variant="secondary" icon={<Copy size={18} aria-hidden="true" />} onClick={() => void doCopy()}>
+        Copy text
+      </Button>
+      <Button icon={<Share2 size={18} aria-hidden="true" />} onClick={() => void doShare()}>
+        Share
+      </Button>
+    </>
+  ) : (
+    <Button icon={<Copy size={18} aria-hidden="true" />} onClick={() => void doCopy()}>
+      Copy text
+    </Button>
+  );
+
   return (
-    <Sheet open={open} onClose={onClose} title="Share workout">
+    <Sheet open={open} onClose={onClose} title="Share workout" footer={footer}>
       <Hero className="wt-sharecard">
         <RankShield rank={data.rank} level={data.level} size={64} />
         <div className="gt" style={{ fontSize: 26, overflowWrap: 'anywhere' }}>
@@ -108,22 +123,6 @@ export function ShareSheet({ open, onClose, data }: { open: boolean; onClose: ()
         </div>
         <small style={{ fontWeight: 800, color: 'var(--hero-sub)' }}>Home Workout · {RANK_TITLES[data.rank]}</small>
       </Hero>
-      <div className="wt-rc-actions" style={{ marginTop: 14 }}>
-        {share ? (
-          <>
-            <Button variant="secondary" icon={<Copy size={18} aria-hidden="true" />} onClick={() => void doCopy()}>
-              Copy text
-            </Button>
-            <Button className="grow" icon={<Share2 size={18} aria-hidden="true" />} onClick={() => void doShare()}>
-              Share
-            </Button>
-          </>
-        ) : (
-          <Button block icon={<Copy size={18} aria-hidden="true" />} onClick={() => void doCopy()}>
-            Copy text
-          </Button>
-        )}
-      </div>
     </Sheet>
   );
 }

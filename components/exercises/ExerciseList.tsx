@@ -53,69 +53,71 @@ export function ExerciseList({ exercises, filters, onFiltersChange, mode, inList
   const reasons = avoidReasons(hidden, prefs);
 
   return (
-    <div className={cn('wt-exlist', compact && 'compact')} role="list" aria-label="Exercises">
+    <div className={cn('wt-exlist', compact && 'compact')}>
       {groups.map((g) => (
-        <div key={g.key} role="group" aria-label={g.title}>
+        <section key={g.key} aria-label={g.title}>
           <h3 className="wt-grp">
             {g.title}
             <span>{g.exercises.length}</span>
           </h3>
-          {g.exercises.map((e) => {
-            const dup = mode !== 'browse' && Boolean(inList?.has(e.id));
-            const dim = !mine.has(e.equipment);
-            const sel = mode === 'pick' && selected.includes(e.id);
-            const main = (
-              <button
-                type="button"
-                className="wt-exrow-main"
-                aria-pressed={mode === 'pick' && !dup ? sel : undefined}
-                aria-current={mode === 'browse' && activeId === e.id ? 'true' : undefined}
-                onClick={() => {
-                  if (dup) onDuplicate?.(e.id);
-                  else if (mode === 'pick') onPick?.(e.id);
-                  else onInfo(e.id);
-                }}
-              >
-                <Thumb exercise={e} size={44} />
-                <span className="wt-exrow-t">
-                  <b>{e.name}</b>
-                  <small>{exerciseSubtitle(e, { needs: dim && !dup })}</small>
-                </span>
-                {dup && inLabel && (
-                  <span className="wt-inl-tag">
-                    <Check size={12} aria-hidden="true" />
-                    {inLabel}
+          <div role="list" aria-label={g.title}>
+            {g.exercises.map((e) => {
+              const dup = mode !== 'browse' && Boolean(inList?.has(e.id));
+              const dim = !mine.has(e.equipment);
+              const sel = mode === 'pick' && selected.includes(e.id);
+              const main = (
+                <button
+                  type="button"
+                  className="wt-exrow-main"
+                  aria-pressed={mode === 'pick' && !dup ? sel : undefined}
+                  aria-current={mode === 'browse' && activeId === e.id ? 'true' : undefined}
+                  onClick={() => {
+                    if (dup) onDuplicate?.(e.id);
+                    else if (mode === 'pick') onPick?.(e.id);
+                    else onInfo(e.id);
+                  }}
+                >
+                  <Thumb exercise={e} size={44} />
+                  <span className="wt-exrow-t">
+                    <b>{e.name}</b>
+                    <small>{exerciseSubtitle(e, { needs: dim && !dup })}</small>
                   </span>
-                )}
-              </button>
-            );
-            return (
-              <div key={e.id} role="listitem" className={cn('wt-exrow', sel && 'sel', dim && !dup && 'dim', dup && 'inl', mode === 'browse' && activeId === e.id && 'sel')}>
-                {mode === 'add' &&
-                  (dup ? (
-                    <button type="button" className="wt-addbtn" disabled aria-label={`${e.name} is already added`}>
-                      <Check size={16} aria-hidden="true" />
+                  {dup && inLabel && (
+                    <span className="wt-inl-tag">
+                      <Check size={12} aria-hidden="true" />
+                      {inLabel}
+                    </span>
+                  )}
+                </button>
+              );
+              return (
+                <div key={e.id} role="listitem" className={cn('wt-exrow', sel && 'sel', dim && !dup && 'dim', dup && 'inl', mode === 'browse' && activeId === e.id && 'sel')}>
+                  {mode === 'add' &&
+                    (dup ? (
+                      <button type="button" className="wt-addbtn" disabled aria-label={`${e.name} is already added`}>
+                        <Check size={16} aria-hidden="true" />
+                      </button>
+                    ) : (
+                      <button type="button" className="wt-addbtn" aria-label={`${swap ? 'Swap in' : 'Add'} ${e.name}`} onClick={() => onAdd?.(e.id)}>
+                        {swap ? <Replace size={18} aria-hidden="true" /> : <Plus size={18} aria-hidden="true" />}
+                      </button>
+                    ))}
+                  {main}
+                  {sel && (
+                    <span className="wt-selmark" aria-hidden="true">
+                      <Check size={14} />
+                    </span>
+                  )}
+                  {mode !== 'browse' && (
+                    <button type="button" className="wt-iconbtn" aria-label={`About ${e.name}`} onClick={() => onInfo(e.id)}>
+                      <Info size={20} aria-hidden="true" />
                     </button>
-                  ) : (
-                    <button type="button" className="wt-addbtn" aria-label={`${swap ? 'Swap in' : 'Add'} ${e.name}`} onClick={() => onAdd?.(e.id)}>
-                      {swap ? <Replace size={18} aria-hidden="true" /> : <Plus size={18} aria-hidden="true" />}
-                    </button>
-                  ))}
-                {main}
-                {sel && (
-                  <span className="wt-selmark" aria-hidden="true">
-                    <Check size={14} />
-                  </span>
-                )}
-                {mode !== 'browse' && (
-                  <button type="button" className="wt-iconbtn" aria-label={`About ${e.name}`} onClick={() => onInfo(e.id)}>
-                    <Info size={20} aria-hidden="true" />
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
       ))}
       {groups.length === 0 && (
         <div className="wt-empty">
