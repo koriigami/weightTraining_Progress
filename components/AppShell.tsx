@@ -8,13 +8,29 @@ import { TopAppBar } from '@/components/nav/TopAppBar';
 import { BottomNav } from '@/components/nav/BottomNav';
 import { NavRail } from '@/components/nav/NavRail';
 
+function ShellSkeleton() {
+  return (
+    <div
+      className="flex min-h-screen items-center justify-center"
+      style={{ background: 'var(--bg)' }}
+      role="status"
+      aria-busy="true"
+      aria-label="Loading"
+    >
+      <div className="h-10 w-10 animate-pulse rounded-full motion-reduce:animate-none" style={{ background: 'var(--surface-2)' }} />
+    </div>
+  );
+}
+
 export function AppShell({ hasGoogle, hasDev, children }: { hasGoogle: boolean; hasDev: boolean; children: React.ReactNode }) {
-  const { data: session } = useSession();
+  const { status } = useSession();
   const pathname = usePathname();
 
   // Public pages such as the invite-only notice render without the shell.
   if (pathname.startsWith('/auth/')) return <>{children}</>;
-  if (!session?.user?.id) return <SignInScreen hasGoogle={hasGoogle} hasDev={hasDev} />;
+  // The session is fetched on the client, so wait for it before choosing a screen.
+  if (status === 'loading') return <ShellSkeleton />;
+  if (status === 'unauthenticated') return <SignInScreen hasGoogle={hasGoogle} hasDev={hasDev} />;
 
   return (
     <ProgressProvider>

@@ -4,7 +4,7 @@ import './globals.css';
 import { CelebrationProvider } from '@/components/celebrate/CelebrationProvider';
 import { SessionProvider } from 'next-auth/react';
 import { AppShell } from '@/components/AppShell';
-import { auth, hasDevProvider, hasGoogle } from '@/auth';
+import { hasDevProvider, hasGoogle } from '@/auth';
 
 const lilitaOne = Lilita_One({ subsets: ['latin'], weight: '400', variable: '--font-display' });
 
@@ -34,12 +34,11 @@ export const viewport: Viewport = {
   ],
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={lilitaOne.variable}>
       <body className="antialiased" style={{ background: 'var(--bg)', color: 'var(--ink)' }}>
-        <SessionProvider session={session}>
+        <SessionProvider>
           <CelebrationProvider>
             <AppShell hasGoogle={hasGoogle} hasDev={hasDevProvider}>
               {children}
