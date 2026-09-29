@@ -78,3 +78,13 @@ export function liveValue(metric: Metric, set: SetPlan, previous: string, units:
   }
   return previous;
 }
+
+// Ticking a set with empty boxes fills them in first, like the design: no weight
+// counts as 0, and no reps counts as the previous best reps, or 10.
+export function fillOnTick(metric: Metric, set: SetPlan, previous: SetPlan | null): SetPatch | null {
+  if (metric !== 'weight_reps' && metric !== 'reps') return null;
+  const patch: SetPatch = {};
+  if (metric === 'weight_reps' && set.kg === undefined) patch.kg = 0;
+  if (set.reps === undefined) patch.reps = previous?.reps && previous.reps > 0 ? previous.reps : 10;
+  return Object.keys(patch).length > 0 ? patch : null;
+}

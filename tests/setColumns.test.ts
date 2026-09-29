@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { displayValue, liveHeader, liveValue, parseTyped, patchFor, setColumns } from '../lib/setColumns';
+import { displayValue, fillOnTick, liveHeader, liveValue, parseTyped, patchFor, setColumns } from '../lib/setColumns';
 
 const kg = { weight: 'kg' as const, distance: 'km' as const };
 const imperial = { weight: 'lb' as const, distance: 'mi' as const };
@@ -74,5 +74,27 @@ describe('the live column', () => {
 
   it('shows the previous best for strength', () => {
     expect(liveValue('weight_reps', { kg: 5 }, '5 kg × 12', kg)).toBe('5 kg × 12');
+  });
+});
+
+describe('ticking a set with empty boxes', () => {
+  it('fills a missing weight with 0 and missing reps with the previous best or 10', () => {
+    expect(fillOnTick('weight_reps', {}, null)).toEqual({ kg: 0, reps: 10 });
+    expect(fillOnTick('weight_reps', { kg: 5 }, { kg: 5, reps: 12 })).toEqual({ reps: 12 });
+    expect(fillOnTick('weight_reps', { reps: 8 }, null)).toEqual({ kg: 0 });
+    expect(fillOnTick('reps', {}, { reps: 14 })).toEqual({ reps: 14 });
+    expect(fillOnTick('reps', {}, null)).toEqual({ reps: 10 });
+  });
+
+  it('leaves a full set, and other kinds of exercise, alone', () => {
+    expect(fillOnTick('weight_reps', { kg: 5, reps: 10 }, null)).toBeNull();
+    expect(fillOnTick('reps', { reps: 10 }, null)).toBeNull();
+    expect(fillOnTick('time', {}, null)).toBeNull();
+    expect(fillOnTick('distance_time', {}, null)).toBeNull();
+    expect(fillOnTick('intervals', {}, null)).toBeNull();
+  });
+
+  it('keeps a typed 0 reps as it is', () => {
+    expect(fillOnTick('reps', { reps: 0 }, null)).toBeNull();
   });
 });

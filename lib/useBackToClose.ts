@@ -8,11 +8,16 @@ import { useEffect, useRef } from 'react';
 // scrim, tap a button), we call history.back() so the pushed entry is
 // consumed the same way, and the popstate handler is the single place that
 // calls onClose. Never touches the URL.
+//
+// Overlays can stack (a filter sheet on top of the phone picker). Each entry
+// records its depth, and a popstate only closes the overlays whose entry was
+// popped: the one on top, not the ones underneath it.
 export function useBackToClose(isOpen: boolean, onClose: () => void): () => void {
   const pushedRef = useRef(false);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const wasOpenRef = useRef(isOpen);
+  const depthRef = useRef(0);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -27,14 +32,19 @@ export function useBackToClose(isOpen: boolean, onClose: () => void): () => void
     // before anyone ever saw it. Only push once per open.
     if (!pushedRef.current) {
       try {
-        window.history.pushState({ overlay: true }, '');
+        const below = window.history.state?.wtDepth;
+        depthRef.current = (typeof below === 'number' ? below : 0) + 1;
+        window.history.pushState({ overlay: true, wtDepth: depthRef.current }, '');
         pushedRef.current = true;
       } catch {
         pushedRef.current = false;
       }
     }
 
-    const onPopState = () => {
+    const onPopState = (e: PopStateEvent) => {
+      // Landing on an entry at this depth or above means an overlay on top of this one was popped.
+      const landed = typeof e.state?.wtDepth === 'number' ? e.state.wtDepth : 0;
+      if (pushedRef.current && landed >= depthRef.current) return;
       pushedRef.current = false;
       onCloseRef.current();
     };
