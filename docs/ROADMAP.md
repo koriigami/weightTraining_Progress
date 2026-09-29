@@ -1,5 +1,38 @@
 # v7 roadmap: routines like Hevy, plus Solo Leveling gamification
 
+## Status (updated after stage 4)
+
+The redesign is built on branch `claude/home-workout-nutrition-plan-kuyhvx`. `main` and
+production are still on the older app until the branch is merged.
+
+| Stage | What | State |
+|---|---|---|
+| Phase 1 | Google sign-in, per-user data, owner migration, static pages | Done, live |
+| Design boards | v1 to v5, final target is board 05 | Done, in `docs/design/` |
+| 1 | Data layer: exercise library, routines, workouts, scoring, badge families, API actions, legacy parity test | Done |
+| 2 | Arena Bright tokens, UI primitives, shell (tab bar with START, sidebar), Home | Done |
+| 3A | Routines, Explore, Exercises, editor, Log workout, Victory and Share | Done |
+| 3B | Rank Road and Badges, Profile, Statistics, Calendar, Settings, onboarding | Done |
+| 4 | Reward moments (level up, rank up, badge chest) with a queue, sounds and haptics, goals and volumes in the person's units, plan-only badges hidden, docs, full regression at 390 px and 1440 px, axe check | Done |
+
+What is left before a release is a merge of the branch to `main`, and a look at the deployed
+preview with the real Google sign-in and Redis.
+
+### Next
+
+1. **Photo storage with Vercel Blob.** Victory has no photo control yet. Upstash Redis cannot hold
+   images, so photos go to Vercel Blob (free tier) and the workout keeps only a URL in `photo`. A
+   photo stays optional.
+2. **Google Health sync.** Weight first, then workouts. Health Connect is an on-device Android
+   API, so a web app goes through the Google Health cloud API. Verify that before building.
+3. **Image share cards.** Render the Share card to a canvas on the client, then share it as a file
+   with the Web Share API, or offer "Save image". Today Share sends text.
+4. **Generated plans (the Trainer).** Optional, never forced: a plan built from equipment, things
+   to avoid and weekly goal, saved as ordinary routines. Maybe a paid tier later, like Hevy.
+5. Smaller: a real ESLint setup (`npm run lint` is not configured), a component test layer for the
+   reward moments, and an "Update routine with these weights" offer after finishing.
+
+
 ## Context
 
 Phase 1 (Google sign-in, per-user data, owner migration) is live: production serves "Sign in with Google" and `/api/auth/providers` lists Google. GitHub `main` is still at `7f52bec` (the passcode version), though. The feature branch holds Phase 1 at `ebd5b57`. So the next push to `main` would redeploy the old app.

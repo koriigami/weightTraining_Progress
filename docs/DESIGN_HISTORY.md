@@ -84,6 +84,72 @@ rounds:
 - Charts use 3D bars on a sunken panel. Clouds drift behind the top of each
   screen.
 
+## As built
+
+Where each decision from board 05 lives in the code, and where the build differs
+on purpose. Screenshots of each stage are in `docs/screenshots/` (`stage2-*`,
+`stage3a-*`, `stage3b-*`, `stage4-*`).
+
+### Where each decision lives
+
+| Decision | Code |
+|---|---|
+| Arena Bright tokens, clouds, every `wt-` class | `app/globals.css`, `components/ui/Sky.tsx` |
+| Five button types and their states | `components/ui/Button.tsx` |
+| Framed game modal, centered, equal buttons, shake on outside tap | `components/ui/GameModal.tsx` (Discard, Finish and Sign out dialogs use it) |
+| Bottom sheets for pickers and menus | `components/ui/Sheet.tsx`, `components/ui/useDialog.ts` |
+| Screen layout, sticky header, pinned phone footer, desktop side column | `components/ui/Screen.tsx`, `components/ui/PageHeader.tsx` |
+| Phone tab bar with the raised START, desktop sidebar and account menu | `components/nav/` |
+| Home (hunter card, week, Up next, Recent workouts) | `app/page.tsx`, `components/home/` |
+| Routines, Explore and Exercises segments | `app/routines/page.tsx`, `components/RoutinesTabs.tsx`, `components/routines/`, `components/exercises/` |
+| Routine editor with library panel and Summary | `components/routines/RoutineEditor.tsx`, `lib/routineDraft.ts` |
+| No duplicate exercises | `lib/routines.ts` (`findDuplicateExercise`), the picker and the library panel |
+| Cardio routines, interval sets and pace | `data/exercises.ts` (`distance_time`), `lib/routines.ts`, `lib/explore.ts` |
+| Workout log like Hevy's | `components/workout/`, `components/WorkoutSessionProvider.tsx`, `lib/session.ts` |
+| Finish, then Victory, with no claim step | `WorkoutSessionProvider.finish()`, `components/victory/`, `lib/victory.ts` |
+| Level up, rank up, badge chest | `components/celebrate/Moment.tsx`, `Chest.tsx`, `CelebrationProvider.tsx`, `lib/celebrations.ts`, the "Reward moments" block in `app/globals.css` |
+| Sounds and haptics for each moment | `lib/feedback.ts` (`levelUp`, `rankUp`, `whoosh`, `chest`) |
+| Rank Road, four gate states, locked previews, replay | `lib/rankRoad.ts`, `components/rank/`, `app/rank/page.tsx` |
+| Badges as game cards | `lib/badgeCards.ts`, `lib/badgeDisplay.ts`, `lib/badgeColors.ts`, `components/Badge.tsx` |
+| Profile sections, 3D weekly chart | `app/profile/page.tsx`, `components/profile/`, `lib/weekly.ts` |
+| Statistics body heat map | `components/stats/BodyGraph.tsx`, `lib/muscleStats.ts` |
+| Calendar month grid | `components/calendar/MonthCalendar.tsx`, `lib/monthGrid.ts` |
+| Settings as a page, Sign out confirm | `app/settings/page.tsx`, `components/prefs/PrefsFields.tsx`, `components/nav/SignOutDialog.tsx` |
+| Four-screen onboarding | `components/onboarding/OnboardingFlow.tsx` |
+| Goals | `components/goals/`, `lib/goals.ts` |
+
+### Where the build differs from board 05, on purpose
+
+- **The Next rank chip sits above the Rank Road**, in the flow. On the board it
+  floats over the road, where it covered gate cards while scrolling.
+- **Victory hands over to the moments after about 1.8 seconds**, or at the first
+  tap. On the board the moments are separate buttons. Here they queue behind the
+  banner so the banner, the rolling XP, the crowns and the XP bar are seen first.
+- **Reward moments queue.** One at a time, level ups and rank ups before badges.
+  Replaying a badge from the Rank screen leaves out the "+XP" line, since it was
+  paid when it was first earned.
+- **Moments shrink on short screens** (under 740 px and 620 px tall) so nothing
+  is cut off, and a short confetti pop lands with the shield or medal.
+- **No photo control on Victory.** The board has one. It needs file storage, so
+  it waits for Vercel Blob. The workout keeps a small optional `photo` field.
+- **Share sends text, not an image.** The sheet previews the card (title, stats,
+  rank shield, XP) and shares its text with the Web Share API, or copies it. The
+  board's picture of the card, with "Save image", is not built yet.
+- **Goals and volumes follow the person's units.** The board is metric only.
+  Goals are stored in kg and km and typed in kg, lb, km or mi. A total of 1,000 kg
+  or more reads in tonnes (5.7 t), and for pounds as thousands of pounds (12.6k
+  lb).
+- **Plan-only badges are hidden from people with no plan days.** Perfect Month,
+  Awakening, Month Clear, Program Complete, Iron Will and the like can only
+  progress from the owner's 6-week plan, so a new person is not shown a badge
+  they cannot earn. It is a display filter: what is earned does not change.
+- **Shedding counts from a person's own first weigh-in** unless they have plan
+  days, in which case it still counts from 110 kg.
+- **Phone tabs are Home, Routines, START, Rank, Profile** and Statistics,
+  Calendar and Settings are pushed pages under Profile, as decided on the board.
+- **Not built:** the generated plan (rejected), a social feed, Google Health sync
+  and the workout photo. See `docs/ROADMAP.md`.
+
 ## Other design decisions that are not on a board
 
 - No em dashes anywhere in copy, code or docs.
