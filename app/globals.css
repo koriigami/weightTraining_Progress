@@ -1593,6 +1593,17 @@ textarea.wt-input {
     display: none;
   }
 }
+@media (min-width: 768px) {
+  .wt-shell.bare {
+    display: block;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+  .wt-shell.bare .wt-main {
+    overflow: visible;
+  }
+}
 .wt-logo {
   display: flex;
   align-items: center;

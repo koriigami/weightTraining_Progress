@@ -1,24 +1,77 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { ProgressProvider } from '@/components/ProgressProvider';
+import { ProgressProvider, useProgress } from '@/components/ProgressProvider';
+import { WorkoutSessionProvider, useWorkoutSession } from '@/components/WorkoutSessionProvider';
 import { SignInScreen } from '@/components/SignInScreen';
-import { TopAppBar } from '@/components/nav/TopAppBar';
-import { BottomNav } from '@/components/nav/BottomNav';
-import { NavRail } from '@/components/nav/NavRail';
+import { Sidebar } from '@/components/nav/Sidebar';
+import { TabBar } from '@/components/nav/TabBar';
+import { StartSheet } from '@/components/nav/StartSheet';
+import { SignOutDialog } from '@/components/nav/SignOutDialog';
+import { ShellContext } from '@/components/nav/ShellContext';
+import { isTabRoot } from '@/components/nav/items';
+import { cn } from '@/components/ui/cn';
 
 function ShellSkeleton() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ background: 'var(--bg)' }}
-      role="status"
-      aria-busy="true"
-      aria-label="Loading"
-    >
-      <div className="h-10 w-10 animate-pulse rounded-full motion-reduce:animate-none" style={{ background: 'var(--surface-2)' }} />
+    <div className="flex min-h-screen items-center justify-center" role="status" aria-busy="true" aria-label="Loading">
+      <div className="h-10 w-10 animate-pulse rounded-full motion-reduce:animate-none" style={{ background: 'var(--surface)', boxShadow: 'var(--card-shadow)' }} />
     </div>
+  );
+}
+
+// The phone dock (tab bar plus the workout-in-progress bar) is about 72px plus
+// the home-indicator inset, and the bar adds 56px. Screens and toasts keep
+// clear of it through --dock-h.
+const TABBAR_H = '72px';
+const MINIBAR_H = '56px';
+
+function Frame({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { loading, authorized, prefs } = useProgress();
+  const { session } = useWorkoutSession();
+  const [startOpen, setStartOpen] = useState(false);
+  const [signOutOpen, setSignOutOpen] = useState(false);
+
+  // Hold the page back until the first load finishes, so nobody sees an empty
+  // home (or gets sent to onboarding) before their data arrives. Later
+  // refetches (after a failed save) never blank the page again.
+  const booted = useRef(false);
+  if (!loading) booted.current = true;
+  const booting = !booted.current;
+
+  const bare = pathname === '/onboarding';
+  const needsOnboarding = !booting && authorized && !prefs.onboarded && !bare;
+
+  useEffect(() => {
+    if (needsOnboarding) router.replace('/onboarding');
+  }, [needsOnboarding, router]);
+
+  const tabs = isTabRoot(pathname);
+  const showMini = tabs && Boolean(session) && pathname !== '/workout';
+  const dock = tabs ? `calc(${TABBAR_H} + env(safe-area-inset-bottom)${showMini ? ` + ${MINIBAR_H}` : ''})` : '0px';
+
+  const value = useMemo(() => ({ openStart: () => setStartOpen(true), askSignOut: () => setSignOutOpen(true) }), []);
+
+  return (
+    <ShellContext.Provider value={value}>
+      <a className="wt-skip" href="#main">
+        Skip to content
+      </a>
+      <div className={cn('wt-shell', bare && 'bare')} style={{ '--dock-h': dock } as CSSProperties}>
+        {!bare && <Sidebar onStart={value.openStart} onSignOut={value.askSignOut} />}
+        <main id="main" tabIndex={-1} className={cn('wt-main', tabs && 'has-dock')} style={{ outline: 'none' }}>
+          {booting || needsOnboarding ? <ShellSkeleton /> : children}
+        </main>
+        {!bare && tabs && <TabBar onStart={value.openStart} showMini={showMini} />}
+      </div>
+      <StartSheet open={startOpen} onClose={() => setStartOpen(false)} />
+      <SignOutDialog open={signOutOpen} onClose={() => setSignOutOpen(false)} />
+    </ShellContext.Provider>
   );
 }
 
@@ -34,10 +87,9 @@ export function AppShell({ hasGoogle, hasDev, children }: { hasGoogle: boolean; 
 
   return (
     <ProgressProvider>
-      <TopAppBar />
-      <NavRail />
-      <main className="mx-auto max-w-5xl px-4 pb-bottom-nav pt-4 sm:pt-6 md:pb-6 md:pl-24 md:pr-6">{children}</main>
-      <BottomNav />
+      <WorkoutSessionProvider>
+        <Frame>{children}</Frame>
+      </WorkoutSessionProvider>
     </ProgressProvider>
   );
 }

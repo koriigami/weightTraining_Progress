@@ -3,64 +3,50 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Field, Input } from '@/components/ui/Field';
 
 export function SignInScreen({ hasGoogle, hasDev }: { hasGoogle: boolean; hasDev: boolean }) {
   const [email, setEmail] = useState('');
+  const [busy, setBusy] = useState(false);
   const router = useRouter();
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
-      <div
-        className="w-full max-w-sm space-y-4 rounded-2xl border p-6 text-center shadow-sm"
-        style={{ borderColor: 'var(--line)', background: 'var(--surface)' }}
-      >
-        <h1 className="font-display text-3xl" style={{ color: 'var(--ink)' }}>
+      <Card className="w-full max-w-sm space-y-4 text-center">
+        <h1 className="gt text-4xl" style={{ fontSize: 38, lineHeight: 1.1 }}>
           Home Workout
         </h1>
         <p className="text-sm" style={{ color: 'var(--muted)' }}>
           Sign in to see your progress.
         </p>
         {hasGoogle && (
-          <button
-            type="button"
-            onClick={() => signIn('google', { callbackUrl: '/' })}
-            className="min-h-11 w-full rounded-full px-4 py-2 text-sm font-semibold text-white"
-            style={{ background: 'var(--ink)' }}
-          >
+          <Button block size="lg" onClick={() => signIn('google', { callbackUrl: '/' })}>
             Sign in with Google
-          </button>
+          </Button>
         )}
         {hasDev && (
           <form
             onSubmit={async (e) => {
               e.preventDefault();
+              setBusy(true);
               const res = await signIn('dev', { email, redirect: false });
-              if (res?.error) router.push('/auth/denied');
-              else window.location.href = '/';
+              if (res?.error) {
+                setBusy(false);
+                router.push('/auth/denied');
+              } else window.location.href = '/';
             }}
-            className="space-y-3"
+            className="text-left"
           >
-            <input
-              type="email"
-              name="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              aria-label="Email"
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none"
-              style={{ borderColor: 'var(--line)', background: 'var(--surface)', color: 'var(--ink)' }}
-            />
-            <button
-              type="submit"
-              className="min-h-11 w-full rounded-full px-4 py-2 text-sm font-semibold text-white"
-              style={{ background: 'var(--ink)' }}
-            >
+            <Field label="Email">
+              <Input type="email" name="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+            </Field>
+            <Button type="submit" block loading={busy}>
               Dev sign-in
-            </button>
+            </Button>
           </form>
         )}
-      </div>
+      </Card>
     </div>
   );
 }
