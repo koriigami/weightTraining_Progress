@@ -29,8 +29,8 @@ preview with the real Google sign-in and Redis.
    with the Web Share API, or offer "Save image". Today Share sends text.
 4. **Generated plans (the Trainer).** Optional, never forced: a plan built from equipment, things
    to avoid and weekly goal, saved as ordinary routines. Maybe a paid tier later, like Hevy.
-5. Smaller: a real ESLint setup (`npm run lint` is not configured), a component test layer for the
-   reward moments, and an "Update routine with these weights" offer after finishing.
+5. Smaller: a real ESLint setup (`npm run lint` is not configured), and a component test layer for
+   the reward moments.
 
 
 ## Context
