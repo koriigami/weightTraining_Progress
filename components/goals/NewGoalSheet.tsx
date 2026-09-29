@@ -13,7 +13,8 @@ import { Sheet, useSheet } from '@/components/ui/Sheet';
 import { Stepper } from '@/components/ui/Stepper';
 import { useToday } from '@/lib/useToday';
 import { addDaysStr, formatDateMed } from '@/lib/date';
-import { goalReward, maxStreakFrom, periodEnd, planTotals, streakDeadline, weightPaceLabel, weightPaceLabelFull } from '@/lib/goals';
+import { WEIGHT_GOAL_STEP, goalDistanceKm, goalReward, maxStreakFrom, periodEnd, planTotals, streakDeadline, weightGoalTarget, weightPaceLabel, weightPaceLabelFull } from '@/lib/goals';
+import { fmtNumber, kgToUnit, kmToUnit, unitToKg } from '@/lib/units';
 import type { PeriodPreset } from '@/lib/goals';
 import type { Goal, GoalType } from '@/lib/progress';
 
@@ -86,7 +87,11 @@ function GoalActions({ step, isEdit, canSave, saving, onContinue, onBack, onSave
  * the numbers, with the XP reward shown before you save. Editing skips step 1.
  */
 export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClose: () => void; editGoal?: Goal | null }) {
-  const { progress, addGoal, updateGoal } = useProgress();
+  const { progress, addGoal, updateGoal, prefs } = useProgress();
+  // Goals are stored in kg and km. Everything typed and shown here is in the person's own units.
+  const wu = prefs.units.weight;
+  const du = prefs.units.distance;
+  const wStep = WEIGHT_GOAL_STEP[wu];
   const today = useToday();
   const tomorrow = addDaysStr(today, 1);
   const isEdit = Boolean(editGoal);
@@ -101,7 +106,7 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
   const [customEnd, setCustomEnd] = useState('');
   const [amountOverride, setAmountOverride] = useState<number | null>(null);
   const [weightDir, setWeightDir] = useState<'lose' | 'gain'>('lose');
-  const [weightAmt, setWeightAmt] = useState(2.0);
+  const [weightAmt, setWeightAmt] = useState(wStep.start);
   const [weightWeeks, setWeightWeeks] = useState(4.3);
 
   function reset() {
@@ -113,7 +118,7 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
     setCustomEnd('');
     setAmountOverride(null);
     setWeightDir('lose');
-    setWeightAmt(2.0);
+    setWeightAmt(wStep.start);
     setWeightWeeks(4.3);
   }
 
@@ -133,12 +138,12 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
     } else if (editGoal.type === 'weight') {
       setWeightDir(editGoal.direction ?? 'lose');
       const baseline = editGoal.baseline ?? editGoal.target;
-      setWeightAmt(Math.abs(editGoal.target - baseline) || 0.5);
+      setWeightAmt(kgToUnit(Math.abs(editGoal.target - baseline), wu) || wStep.min);
       setWeightWeeks(Math.max(2, weeksBetween(today, editGoal.deadline)));
     } else {
       setPeriodPreset('custom');
       setCustomEnd(editGoal.deadline);
-      setAmountOverride(editGoal.target);
+      setAmountOverride(editGoal.type === 'cardio-km' ? kmToUnit(editGoal.target, du) : editGoal.target);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editGoal]);
@@ -164,15 +169,17 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
     workouts: totals.workouts,
     pushups: totals.pushups,
     'cardio-minutes': totals.cardioMinutes,
-    'cardio-km': 20,
+    'cardio-km': du === 'mi' ? 12 : 20,
   };
   const amount = amountOverride ?? (type ? defaultAmount[type] ?? 0 : 0);
 
   // Editing keeps the goal's original baseline; a brand-new goal is priced
   // off the live latest weight.
   const baselineForCalc = isEdit ? editGoal!.baseline ?? null : progress.stats.latestWeight;
-  const weightTarget = baselineForCalc !== null ? (weightDir === 'lose' ? baselineForCalc - weightAmt : baselineForCalc + weightAmt) : null;
-  const weightPace = weightAmt / weightWeeks;
+  const weightTarget = baselineForCalc !== null ? weightGoalTarget(baselineForCalc, weightDir, weightAmt, wu) : null;
+  // The pace labels are worked out in kg per week, then written in the person's unit.
+  const weightPace = unitToKg(weightAmt, wu) / weightWeeks;
+  const showW = (kg: number) => fmtNumber(kgToUnit(kg, wu));
   const weightDeadline = addDaysStr(today, Math.round(weightWeeks * 7));
 
   function canSaveStep2(): boolean {
@@ -197,14 +204,14 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
           : await addGoal({ type: 'streak', target: streakN, start: today, deadline: streakDl });
       } else if (type === 'weight') {
         if (baselineForCalc === null || weightTarget === null) return false;
-        const target = Number(weightTarget.toFixed(1));
+        const target = weightTarget;
         err = isEdit
           ? await updateGoal(editGoal!, { target, deadline: weightDeadline, direction: weightDir })
           : await addGoal({ type: 'weight', target, start: today, deadline: weightDeadline, direction: weightDir, baseline: baselineForCalc });
       } else {
         err = isEdit
-          ? await updateGoal(editGoal!, { target: amount, deadline: periodEndDate })
-          : await addGoal({ type, target: amount, start: today, deadline: periodEndDate });
+          ? await updateGoal(editGoal!, { target: type === 'cardio-km' ? goalDistanceKm(amount, du) : amount, deadline: periodEndDate })
+          : await addGoal({ type, target: type === 'cardio-km' ? goalDistanceKm(amount, du) : amount, start: today, deadline: periodEndDate });
       }
       if (err) {
         setError(err);
@@ -231,7 +238,7 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
       return {
         id: editGoal?.id ?? '',
         type: 'weight',
-        target: Number(weightTarget.toFixed(1)),
+        target: weightTarget,
         start: today,
         deadline: weightDeadline,
         createdAt,
@@ -240,7 +247,7 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
       };
     }
     if (amount <= 0) return null;
-    return { id: editGoal?.id ?? '', type, target: amount, start: today, deadline: periodEndDate, createdAt };
+    return { id: editGoal?.id ?? '', type, target: type === 'cardio-km' ? goalDistanceKm(amount, du) : amount, start: today, deadline: periodEndDate, createdAt };
   })();
   const reward = rewardCandidate ? goalReward(rewardCandidate) : null;
   const showNote = (step === 2 || isEdit) && (reward !== null || error);
@@ -320,7 +327,7 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
           {type === 'weight' && (
             <>
               <Group label={isEdit ? 'Starting weight' : 'Latest weight'}>
-                <div className="wt-goal-weight">{baselineForCalc !== null ? `${baselineForCalc} kg` : 'Not logged'}</div>
+                <div className="wt-goal-weight">{baselineForCalc !== null ? `${showW(baselineForCalc)} ${wu}` : 'Not logged'}</div>
                 {baselineForCalc === null && <span className="wt-field-hint">Log a weight on Profile first.</span>}
               </Group>
               <Group label="Direction">
@@ -335,12 +342,12 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
                 />
               </Group>
               <Group label="Amount">
-                <Stepper label="Amount" value={weightAmt} min={0.5} max={15} step={0.5} onChange={setWeightAmt} format={(v) => `${v.toFixed(1)} kg`} />
+                <Stepper label="Amount" value={weightAmt} min={wStep.min} max={wStep.max} step={wStep.step} onChange={setWeightAmt} format={(v) => `${v.toFixed(1)} ${wu}`} />
                 <div className="wt-goal-summary">
                   <b>
-                    {weightDir === 'lose' ? 'Lose' : 'Gain'} {weightAmt.toFixed(1)} kg, to {weightTarget !== null ? weightTarget.toFixed(1) : '--'} kg
+                    {weightDir === 'lose' ? 'Lose' : 'Gain'} {weightAmt.toFixed(1)} {wu}, to {weightTarget !== null ? kgToUnit(weightTarget, wu).toFixed(1) : '--'} {wu}
                   </b>
-                  <span>{baselineForCalc !== null ? `From ${baselineForCalc} kg` : ''}</span>
+                  <span>{baselineForCalc !== null ? `From ${showW(baselineForCalc)} ${wu}` : ''}</span>
                 </div>
               </Group>
               <Group label="By">
@@ -358,7 +365,7 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
                 </div>
                 <span style={{ fontSize: 14 }}>
                   <b style={{ color: weightPaceLabel(weightPace) === 'Comfortable' ? 'var(--ok)' : weightPaceLabel(weightPace) === 'Ambitious' ? 'var(--warn)' : 'var(--bad-ink)' }}>
-                    {weightPace.toFixed(2)} kg per week.
+                    {kgToUnit(weightPace, wu).toFixed(2)} {wu} per week.
                   </b>{' '}
                   {weightPaceLabelFull(weightPace)}.
                 </span>
@@ -378,7 +385,7 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
                 </div>
                 {periodPreset === 'custom' && <Input type="date" aria-label="Goal end date" value={customEnd} min={tomorrow} onChange={(e) => setCustomEnd(e.target.value)} />}
               </Group>
-              <Group label={type === 'workouts' ? 'Workout days' : type === 'pushups' ? 'Pushups' : type === 'cardio-minutes' ? 'Cardio minutes' : 'Kilometres'}>
+              <Group label={type === 'workouts' ? 'Workout days' : type === 'pushups' ? 'Pushups' : type === 'cardio-minutes' ? 'Cardio minutes' : du === 'mi' ? 'Miles' : 'Kilometres'}>
                 <Stepper label="Amount" value={amount} min={1} max={100000} onChange={setAmountOverride} />
                 <span className="wt-field-hint">
                   {type === 'workouts' && `Your plan has ${totals.workouts} workout days in that time.`}

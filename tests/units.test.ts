@@ -36,9 +36,29 @@ describe('units', () => {
     expect(fmtNumber(1.256)).toBe('1.26');
   });
 
-  it('formats a volume in whole units with separators', () => {
-    expect(fmtVolume(1240.4, 'kg')).toBe('1,240 kg');
-    expect(fmtVolume(1000, 'lb')).toBe('2,205 lb');
+  it('formats a small volume in whole units with separators', () => {
+    expect(fmtVolume(850.4, 'kg')).toBe('850 kg');
+    expect(fmtVolume(400, 'lb')).toBe('882 lb');
+    expect(fmtVolume(999, 'lb')).toBe('2,202 lb');
     expect(fmtVolume(0, 'kg')).toBe('0 kg');
+  });
+
+  it('writes a big volume in tonnes, with one decimal and no trailing zero', () => {
+    expect(fmtVolume(5700, 'kg')).toBe('5.7 t');
+    expect(fmtVolume(1000, 'kg')).toBe('1 t');
+    expect(fmtVolume(1240.4, 'kg')).toBe('1.2 t');
+    expect(fmtVolume(10000, 'kg')).toBe('10 t');
+    expect(fmtVolume(123456, 'kg')).toBe('123.5 t');
+  });
+
+  it('a pounds person sees the same weight as thousands of pounds, switching at the same point', () => {
+    expect(fmtVolume(5700, 'lb')).toBe('12.6k lb');
+    expect(fmtVolume(1000, 'lb')).toBe('2.2k lb');
+    expect(fmtVolume(10000, 'lb')).toBe('22k lb');
+    // Just under and at 1,000 kg lifted, in both units.
+    expect(fmtVolume(999.4, 'kg')).toBe('999 kg');
+    expect(fmtVolume(999.4, 'lb')).toBe('2,203 lb');
+    expect(fmtVolume(1000, 'kg')).toBe('1 t');
+    expect(fmtVolume(1000, 'lb')).toMatch(/k lb$/);
   });
 });

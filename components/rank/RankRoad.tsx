@@ -80,8 +80,9 @@ function GateCard({ row, road }: { row: GateRow; road: Road }) {
 /**
  * The Rank Road: level 32 at the top, down to level 1, with a rank gate at
  * levels 1, 5, 10, 15, 20 and 30. It opens with your level centered, and the
- * "Next rank" chip scrolls to the next gate. Locked shields stay visible with a
- * padlock, and tapping a gate opens a preview.
+ * "Next rank" chip above the road scrolls to the next gate (it sits in the flow,
+ * so it never covers a gate card). Locked shields stay visible with a padlock.
+ * Tapping a locked gate opens a preview, and an unlocked one replays its rank up.
  */
 export function RankRoad({ xp, onPreview }: { xp: number; onPreview: (gate: GateRow) => void }) {
   const road = useMemo(() => buildRoad(xp), [xp]);

@@ -12,7 +12,7 @@ import {
   workoutDates,
 } from './progress';
 import type { AppState, Goal } from './progress';
-import { fmtNumber, kgToUnit, kmToUnit } from './units';
+import { fmtNumber, kgToUnit, kmToUnit, unitToKg, unitToKm } from './units';
 import type { DistanceUnit, WeightUnit } from './units';
 
 export type GoalUnits = { weight: WeightUnit; distance: DistanceUnit };
@@ -20,6 +20,31 @@ const METRIC: GoalUnits = { weight: 'kg', distance: 'km' };
 
 /** A weight in kg as the number to show in the person's unit. Kilograms come back untouched, so the kg wording is exactly what it was. */
 export const goalWeight = (kg: number, unit: WeightUnit): number => (unit === 'lb' ? kgToUnit(kg, 'lb') : kg);
+
+// What the goal sheet types and shows is in the person's units. These turn that
+// back into the kg and km that are stored. Kilograms and kilometres come out as
+// the same numbers as before (one decimal for a weight target), so a person on
+// the metric units sees no change.
+
+/** The amount of a weight goal, in the person's unit, as kg. */
+export const goalAmountKg = (amount: number, unit: WeightUnit): number => unitToKg(amount, unit);
+
+/** The weight to reach, in kg, for losing or gaining `amount` (in the person's unit) from a baseline in kg. */
+export function weightGoalTarget(baselineKg: number, direction: 'lose' | 'gain', amount: number, unit: WeightUnit): number {
+  const delta = goalAmountKg(amount, unit);
+  const target = direction === 'lose' ? baselineKg - delta : baselineKg + delta;
+  // Two decimals keep a whole number of pounds honest; kilograms keep their one.
+  return Number(target.toFixed(unit === 'lb' ? 2 : 1));
+}
+
+/** A distance goal typed in miles or km, as the km that is stored. */
+export const goalDistanceKm = (amount: number, unit: DistanceUnit): number => (unit === 'mi' ? Math.round(unitToKm(amount, 'mi') * 100) / 100 : amount);
+
+/** The smallest, biggest and default weight step a person can pick, in their unit. */
+export const WEIGHT_GOAL_STEP: Record<WeightUnit, { min: number; max: number; step: number; start: number }> = {
+  kg: { min: 0.5, max: 15, step: 0.5, start: 2 },
+  lb: { min: 1, max: 33, step: 1, start: 5 },
+};
 
 export type GoalStatus = 'active' | 'achieved' | 'failed' | 'expired';
 

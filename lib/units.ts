@@ -45,8 +45,16 @@ export function fmtWeight(kg: number, unit: WeightUnit): string {
   return `${fmtNumber(kgToUnit(kg, unit))} ${unit}`;
 }
 
-// A total lifted, whole numbers with thousands separators: "1,240 kg".
+// One decimal, no trailing zero: 5.7, 10, 1.2.
+const fmtOne = (n: number): string => String(round(n, 1));
+
+// A total lifted. Under 1,000 kg it is whole units with thousands separators:
+// "850 kg", "1,874 lb". From 1,000 kg it gets a short form so it stays readable
+// on a card or a stat tile: tonnes for kilograms ("5.7 t"), and for pounds the
+// same weight in thousands of pounds ("12.6k lb"). Both units switch over at
+// the same weight lifted, so a kg user and a lb user see the change together.
 export function fmtVolume(kg: number, unit: WeightUnit): string {
+  if (kg >= 1000) return unit === 'lb' ? `${fmtOne(kgToUnit(kg, 'lb') / 1000)}k lb` : `${fmtOne(kg / 1000)} t`;
   return `${Math.round(kgToUnit(kg, unit)).toLocaleString('en-US')} ${unit}`;
 }
 

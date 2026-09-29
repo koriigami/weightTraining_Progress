@@ -6,7 +6,7 @@ import { ChevronRight } from 'lucide-react';
 import { useProgress } from '@/components/ProgressProvider';
 import { Card, SectionLabel } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
-import { fmtDistance, fmtNumber, fmtVolume } from '@/lib/units';
+import { fmtDistance, fmtVolume } from '@/lib/units';
 import { profileTiles } from '@/lib/profileStats';
 import { WEEKLY_METRICS, weeklySeries } from '@/lib/weekly';
 import type { WeeklyMetric } from '@/lib/weekly';
@@ -23,7 +23,7 @@ export function StatsSection() {
   const unit = prefs.units.weight;
   const now = points[points.length - 1];
 
-  const lifted = unit === 'kg' ? `${fmtNumber(Math.round(tiles.volumeKg / 100) / 10)} t` : fmtVolume(tiles.volumeKg, unit);
+  const lifted = fmtVolume(tiles.volumeKg, unit);
   const stat = [
     { n: String(tiles.workouts), l: 'Workouts' },
     { n: lifted, l: 'Lifted' },
@@ -43,8 +43,7 @@ export function StatsSection() {
         <div className="wt-chart-head">
           <small>This week</small>
           <div className="wt-chart-big" aria-live="polite">
-            {chartValue(now, metric, unit).toLocaleString('en-US')}
-            {chartUnit(metric, unit)}
+            {metric === 'volume' ? fmtVolume(now.volumeKg, unit) : `${chartValue(now, metric, unit).toLocaleString('en-US')}${chartUnit(metric, unit)}`}
           </div>
         </div>
         <WeeklyChart points={points} metric={metric} unit={unit} />
