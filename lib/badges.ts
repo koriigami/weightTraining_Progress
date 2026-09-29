@@ -48,14 +48,14 @@ export const LIFETIME_FAMILIES: Record<
   engine: { name: 'Engine', metric: 'Cardio minutes', shape: 'circle', icon: 'timer', dy: -6, tiers: [60, 300, 600, 1200, 2500, 5000], unit: 'min' },
   'road-runner': {
     name: 'Road Runner',
-    metric: 'Treadmill km',
+    metric: 'Run and treadmill km',
     shape: 'circle',
     icon: 'run',
     dy: -4,
     tiers: [10, 50, 100, 250, 500, 1000],
     unit: 'km',
   },
-  rider: { name: 'Rider', metric: 'Cycle km', shape: 'circle', icon: 'bike', dy: -9, tiers: [25, 100, 250, 500, 1000, 2000], unit: 'km' },
+  rider: { name: 'Rider', metric: 'Ride km', shape: 'circle', icon: 'bike', dy: -9, tiers: [25, 100, 250, 500, 1000, 2000], unit: 'km' },
   shedding: { name: 'Shedding', metric: 'Kg lost from 110', shape: 'diamond', icon: 'down', dy: 4, tiers: [1, 3, 5, 7, 10, 15], unit: 'kg' },
   'scale-keeper': {
     name: 'Scale Keeper',
