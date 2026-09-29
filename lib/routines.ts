@@ -116,9 +116,12 @@ export function defaultPrefs(): Prefs {
   };
 }
 
-// Missing prefs (anyone who has not finished onboarding) read as the defaults.
+// New users get explicit prefs with onboarded: false (newUserState), so a state
+// with no prefs at all is someone who predates onboarding, such as the owner's
+// migrated progress. They read as the defaults and count as onboarded, so the
+// app never sends them through the first-run flow.
 export function resolvePrefs(state: Pick<AppState, 'prefs'>): Prefs {
-  return state.prefs ?? defaultPrefs();
+  return state.prefs ?? { ...defaultPrefs(), onboarded: true };
 }
 
 export function weeklyGoalOf(state: Pick<AppState, 'prefs'>): number {

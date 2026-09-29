@@ -1,0 +1,336 @@
+'use client';
+
+import { useSession } from 'next-auth/react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import * as feedback from '@/lib/feedback';
+import { setXp } from '@/lib/routines';
+import type { LoggedSet, WorkoutTotals } from '@/lib/routines';
+import * as S from '@/lib/session';
+import type { CardioKind, Removal, Session, SessionResult, SetPatch } from '@/lib/session';
+import { useProgress } from '@/components/ProgressProvider';
+import type { SaveWorkoutResult } from '@/components/ProgressProvider';
+
+export type FinishResult = SaveWorkoutResult;
+
+type WorkoutSessionValue = {
+  /** The workout in progress, or null. Kept in localStorage per user, so a reload does not lose it. */
+  session: Session | null;
+  /** False until the stored session has been read. Wait for it before redirecting away from /workout. */
+  ready: boolean;
+  /** Ticked sets, volume and XP so far (set XP only, without the finish bonus). */
+  totals: WorkoutTotals;
+  counts: { done: number; total: number; unticked: number };
+  /** The last workout finish() saved, for the Victory screen. Lives in memory only. */
+  lastFinished: Extract<FinishResult, { ok: true }> | null;
+  clearLastFinished: () => void;
+
+  /** Start an empty workout, or one prefilled from a routine. Returns an error message, or null. */
+  start: (routineId?: string) => string | null;
+  /** Quick log of a run, walk or ride. */
+  startCardio: (kind: CardioKind) => string | null;
+  /** Rejects an exercise that is already in the workout. Returns an error message, or null. */
+  addExercise: (exerciseId: string) => string | null;
+  /** Returns an undo function, or null when there was nothing at that index. */
+  removeExercise: (index: number) => (() => void) | null;
+  replaceExercise: (index: number, exerciseId: string) => string | null;
+  moveExercise: (index: number, direction: -1 | 1) => void;
+  addSet: (index: number) => string | null;
+  removeSet: (index: number, setIndex: number) => string | null;
+  updateSet: (index: number, setIndex: number, patch: SetPatch) => void;
+  /** Returns whether the set is now ticked and the XP it is worth, for the "+5 XP" pop. */
+  toggleSet: (index: number, setIndex: number) => { done: boolean; xp: number } | null;
+  setTitle: (title: string) => void;
+  setItemNotes: (index: number, notes: string) => void;
+  discard: () => void;
+  /**
+   * Saves the workout. Needs at least one ticked set. Unticked sets are dropped.
+   * The workout stays in progress until the save works, so nothing is lost on
+   * a failure. On success it resolves to the saved workout plus XP before and
+   * after, and the celebration events to play on the Victory screen.
+   */
+  finish: () => Promise<FinishResult>;
+};
+
+const WorkoutSessionContext = createContext<WorkoutSessionValue | null>(null);
+
+function read(userId: string): Session | null {
+  try {
+    return S.parseStoredSession(localStorage.getItem(S.sessionKey(userId)));
+  } catch {
+    return null;
+  }
+}
+
+function write(userId: string, session: Session | null) {
+  try {
+    if (session) localStorage.setItem(S.sessionKey(userId), S.serializeSession(session));
+    else localStorage.removeItem(S.sessionKey(userId));
+  } catch {
+    // Storage can be blocked or full. The workout still works for this visit.
+  }
+}
+
+const EMPTY_TOTALS: WorkoutTotals = { sets: 0, volume: 0, xp: 0, exercises: 0, cardioMinutes: 0, km: 0 };
+
+export function WorkoutSessionProvider({ children }: { children: React.ReactNode }) {
+  const { data: auth } = useSession();
+  const userId = auth?.user?.id ?? null;
+  const { routines, lookup, saveWorkout } = useProgress();
+
+  const [session, setSession] = useState<Session | null>(null);
+  const [ready, setReady] = useState(false);
+  const [lastFinished, setLastFinished] = useState<Extract<FinishResult, { ok: true }> | null>(null);
+
+  const sessionRef = useRef<Session | null>(null);
+  const userRef = useRef<string | null>(userId);
+  userRef.current = userId;
+  const lookupRef = useRef(lookup);
+  lookupRef.current = lookup;
+  const routinesRef = useRef(routines);
+  routinesRef.current = routines;
+  const finishing = useRef<Promise<FinishResult> | null>(null);
+
+  // One place that changes the workout: the ref (for instant reads), React state
+  // (for the screen) and localStorage.
+  const commit = useCallback((next: Session | null) => {
+    sessionRef.current = next;
+    setSession(next);
+    if (userRef.current) write(userRef.current, next);
+  }, []);
+
+  // Load this user's workout in progress when the signed-in user is known.
+  useEffect(() => {
+    if (!userId) {
+      sessionRef.current = null;
+      setSession(null);
+      setReady(false);
+      return;
+    }
+    const stored = read(userId);
+    sessionRef.current = stored;
+    setSession(stored);
+    setReady(true);
+  }, [userId]);
+
+  // Another tab started, edited or finished the workout.
+  useEffect(() => {
+    if (!userId) return undefined;
+    function onStorage(e: StorageEvent) {
+      if (e.key !== S.sessionKey(userId as string)) return;
+      const next = read(userId as string);
+      sessionRef.current = next;
+      setSession(next);
+    }
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [userId]);
+
+  const apply = useCallback(
+    (result: SessionResult): string | null => {
+      if (!result.ok) return result.error;
+      commit(result.session);
+      return null;
+    },
+    [commit]
+  );
+
+  const start = useCallback(
+    (routineId?: string) => {
+      if (sessionRef.current) return 'Finish or discard your current workout first.';
+      const now = new Date();
+      if (!routineId) {
+        commit(S.newSession(now));
+        return null;
+      }
+      const routine = routinesRef.current.find((r) => r.id === routineId);
+      if (!routine) return 'That routine no longer exists.';
+      commit(S.sessionFromRoutine(routine, now));
+      return null;
+    },
+    [commit]
+  );
+
+  const startCardio = useCallback(
+    (kind: CardioKind) => {
+      if (sessionRef.current) return 'Finish or discard your current workout first.';
+      commit(S.cardioSession(kind, new Date(), lookupRef.current));
+      return null;
+    },
+    [commit]
+  );
+
+  const addExercise = useCallback(
+    (exerciseId: string) => {
+      const cur = sessionRef.current;
+      if (!cur) return 'No workout in progress.';
+      return apply(S.addExercise(cur, exerciseId, lookupRef.current));
+    },
+    [apply]
+  );
+
+  const removeExercise = useCallback(
+    (index: number) => {
+      const cur = sessionRef.current;
+      if (!cur) return null;
+      const removal: Removal | null = S.removeExercise(cur, index);
+      if (!removal) return null;
+      commit(removal.session);
+      return () => {
+        const now = sessionRef.current;
+        if (now) commit(S.restoreExercise(now, removal.removed, removal.index));
+      };
+    },
+    [commit]
+  );
+
+  const replaceExercise = useCallback(
+    (index: number, exerciseId: string) => {
+      const cur = sessionRef.current;
+      if (!cur) return 'No workout in progress.';
+      return apply(S.replaceExercise(cur, index, exerciseId, lookupRef.current));
+    },
+    [apply]
+  );
+
+  const moveExercise = useCallback(
+    (index: number, direction: -1 | 1) => {
+      const cur = sessionRef.current;
+      if (cur) commit(S.moveExercise(cur, index, direction));
+    },
+    [commit]
+  );
+
+  const addSet = useCallback(
+    (index: number) => {
+      const cur = sessionRef.current;
+      if (!cur) return 'No workout in progress.';
+      return apply(S.addSet(cur, index, lookupRef.current));
+    },
+    [apply]
+  );
+
+  const removeSet = useCallback(
+    (index: number, setIndex: number) => {
+      const cur = sessionRef.current;
+      if (!cur) return 'No workout in progress.';
+      return apply(S.removeSet(cur, index, setIndex));
+    },
+    [apply]
+  );
+
+  const updateSet = useCallback(
+    (index: number, setIndex: number, patch: SetPatch) => {
+      const cur = sessionRef.current;
+      if (cur) commit(S.updateSet(cur, index, setIndex, patch));
+    },
+    [commit]
+  );
+
+  const toggleSet = useCallback(
+    (index: number, setIndex: number) => {
+      const cur = sessionRef.current;
+      const item = cur?.items[index];
+      const before: LoggedSet | undefined = item?.sets[setIndex];
+      if (!cur || !item || !before) return null;
+      commit(S.toggleSet(cur, index, setIndex));
+      const done = !before.done;
+      if (done) feedback.tick();
+      const e = lookupRef.current(item.exerciseId);
+      return { done, xp: done && e ? setXp(e, before) : 0 };
+    },
+    [commit]
+  );
+
+  const setTitle = useCallback(
+    (title: string) => {
+      const cur = sessionRef.current;
+      if (cur) commit(S.setTitle(cur, title));
+    },
+    [commit]
+  );
+
+  const setItemNotes = useCallback(
+    (index: number, notes: string) => {
+      const cur = sessionRef.current;
+      if (cur) commit(S.setItemNotes(cur, index, notes));
+    },
+    [commit]
+  );
+
+  const discard = useCallback(() => commit(null), [commit]);
+
+  const finish = useCallback((): Promise<FinishResult> => {
+    // A second tap while the first is saving gets the same answer.
+    if (finishing.current) return finishing.current;
+    const cur = sessionRef.current;
+    if (!cur) return Promise.resolve({ ok: false, error: 'No workout in progress.' });
+    const built = S.buildWorkoutInput(cur, { now: new Date(), lookup: lookupRef.current });
+    if (!built.ok) return Promise.resolve(built);
+    const run = (async (): Promise<FinishResult> => {
+      try {
+        // The overlays wait for the Victory screen, which plays them from `events`.
+        const saved = await saveWorkout(built.workout, { celebrate: false });
+        if (!saved.ok) return saved;
+        // Only clear the workout if it has not been replaced in the meantime.
+        if (sessionRef.current === cur) commit(null);
+        setLastFinished(saved);
+        return saved;
+      } finally {
+        finishing.current = null;
+      }
+    })();
+    finishing.current = run;
+    return run;
+  }, [commit, saveWorkout]);
+
+  const totals = useMemo(() => (session ? S.sessionTotals(session, lookup) : EMPTY_TOTALS), [session, lookup]);
+  const counts = useMemo(() => (session ? S.setCounts(session) : { done: 0, total: 0, unticked: 0 }), [session]);
+  const clearLastFinished = useCallback(() => setLastFinished(null), []);
+
+  const value: WorkoutSessionValue = {
+    session,
+    ready,
+    totals,
+    counts,
+    lastFinished,
+    clearLastFinished,
+    start,
+    startCardio,
+    addExercise,
+    removeExercise,
+    replaceExercise,
+    moveExercise,
+    addSet,
+    removeSet,
+    updateSet,
+    toggleSet,
+    setTitle,
+    setItemNotes,
+    discard,
+    finish,
+  };
+
+  return <WorkoutSessionContext.Provider value={value}>{children}</WorkoutSessionContext.Provider>;
+}
+
+export function useWorkoutSession(): WorkoutSessionValue {
+  const ctx = useContext(WorkoutSessionContext);
+  if (!ctx) throw new Error('useWorkoutSession must be used within WorkoutSessionProvider');
+  return ctx;
+}
+
+/** The time since the workout started, as "12m 05s", ticking every second. Empty until the client is ready. */
+export function useElapsed(startedAt: string | undefined): string {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    if (!startedAt) {
+      setNow(null);
+      return undefined;
+    }
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [startedAt]);
+  if (!startedAt || now === null) return '';
+  return S.formatElapsed(now - Date.parse(startedAt));
+}

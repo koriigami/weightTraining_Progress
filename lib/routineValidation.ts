@@ -67,7 +67,7 @@ function optText(v: unknown, max: number): Parsed<string | undefined> {
 // ---------------- Sets ----------------
 
 // Which set fields each metric uses, and their allowed range.
-const SET_FIELDS: Record<Metric, Record<string, [number, number]>> = {
+export const SET_FIELDS: Record<Metric, Record<string, [number, number]>> = {
   weight_reps: { kg: [0, 1000], reps: [0, 1000] },
   reps: { reps: [0, 1000] },
   time: { sec: [0, 7200] },

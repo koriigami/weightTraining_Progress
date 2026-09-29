@@ -11,18 +11,53 @@ import {
   planDay,
   rankForLevel,
   totalXp,
+  xpIntoLevel,
 } from '@/lib/progress';
-import type { AppState, DayLog, FullProgress, Goal, GoalDirection } from '@/lib/progress';
+import type { AppState, DayLog, FullProgress, Goal, GoalDirection, Rank } from '@/lib/progress';
+import type { CustomExercise } from '@/data/exercises';
+import { applyRoutineAction } from '@/lib/routineActions';
+import { resolvePrefs, stateLookup } from '@/lib/routines';
+import type { ExerciseLookup, Prefs, Routine, WorkoutLog } from '@/lib/routines';
+import type { WorkoutInput } from '@/lib/session';
 import { allEarnedBadges } from '@/lib/badges';
 import { todayStr } from '@/lib/date';
 import { useToday } from '@/lib/useToday';
 import * as feedback from '@/lib/feedback';
 import { useCelebration } from '@/components/celebrate/CelebrationProvider';
 import type { CelebrationEvent } from '@/components/celebrate/CelebrationProvider';
-import { Snackbar } from '@/components/Snackbar';
-import type { SnackbarState } from '@/components/Snackbar';
+import { Toast } from '@/components/ui/Toast';
+import type { ToastState } from '@/components/ui/Toast';
 
 type GoalPatch = { target: number; deadline: string; direction?: GoalDirection };
+
+// Where a person stood on the XP ladder at one moment. finish() returns one from
+// before a workout and one from after it, so the Victory screen can roll the
+// counter and fill the bar from one to the other.
+export type XpSnapshot = { xp: number; level: number; rank: Rank; current: number; needed: number };
+
+export type SaveWorkoutResult =
+  | {
+      ok: true;
+      workout: WorkoutLog;
+      before: XpSnapshot;
+      after: XpSnapshot;
+      /** Level ups, rank ups and new badges this workout caused, badges first. Not played yet: hand them to useCelebration().enqueue when the moment is right. */
+      events: CelebrationEvent[];
+    }
+  | { ok: false; error: string };
+
+// A workout as edited on the Victory screen. Only these fields can change.
+export type WorkoutPatchInput = {
+  id: string;
+  title?: string;
+  date?: string;
+  when?: string;
+  notes?: string | null;
+  photo?: string | null;
+};
+
+export type CustomExerciseInput = Omit<CustomExercise, 'id' | 'custom'> & { id?: string };
+export type AddCustomExerciseResult = { ok: true; exercise: CustomExercise } | { ok: false; error: string };
 
 type ProgressContextValue = {
   state: AppState;
@@ -30,6 +65,24 @@ type ProgressContextValue = {
   loading: boolean;
   authorized: boolean;
   snackbarVisible: boolean;
+  /** The dark wood toast. Shows for 4s, or 6s with an action such as Undo. */
+  showToast: (text: string, actionLabel?: string, onAction?: () => void) => void;
+  routines: Routine[];
+  workouts: WorkoutLog[];
+  /** The stored prefs, or the defaults. A user who predates onboarding reads as onboarded. */
+  prefs: Prefs;
+  customExercises: CustomExercise[];
+  /** Finds an exercise by id: the library first, then the user's own. */
+  lookup: ExerciseLookup;
+  /** Every routine, workout, prefs and custom exercise action updates the screen at once and resolves to an error message, or null when it saved. */
+  saveRoutine: (routine: Routine) => Promise<string | null>;
+  deleteRoutine: (id: string) => Promise<string | null>;
+  /** celebrate: false holds back the level-up and badge overlays (they come back in `events`). */
+  saveWorkout: (workout: WorkoutInput, opts?: { celebrate?: boolean }) => Promise<SaveWorkoutResult>;
+  updateWorkout: (patch: WorkoutPatchInput) => Promise<string | null>;
+  deleteWorkout: (id: string) => Promise<string | null>;
+  savePrefs: (prefs: Prefs) => Promise<string | null>;
+  addCustomExercise: (exercise: CustomExerciseInput) => Promise<AddCustomExerciseResult>;
   tick: (date: string, key: string, xpAmount: number) => void;
   untick: (date: string, key: string, undoLabel: string) => void;
   logCardio: (date: string, minutes: number, km: number | undefined, xpAmount: number) => void;
@@ -112,13 +165,27 @@ function diffCelebrations(before: AppState, after: AppState, today: string): Cel
   return events;
 }
 
+// "tick at least one set" becomes "Tick at least one set." for showing to people.
+function sentence(message: string): string {
+  const t = message.trim();
+  if (!t) return GENERIC_SAVE_ERROR;
+  const s = t.charAt(0).toUpperCase() + t.slice(1);
+  return /[.!?]$/.test(s) ? s : `${s}.`;
+}
+
+export function xpSnapshot(state: AppState, today: string): XpSnapshot {
+  const xp = totalXp(state, today);
+  const { current, needed, level } = xpIntoLevel(xp);
+  return { xp, level, rank: rankForLevel(level), current, needed };
+}
+
 export function ProgressProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppState>(emptyState());
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
   const { data: session } = useSession();
   const userId = session?.user?.id ?? null;
-  const [snackbar, setSnackbar] = useState<SnackbarState>(null);
+  const [snackbar, setSnackbar] = useState<ToastState>(null);
   const snackbarId = useRef(0);
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -229,10 +296,10 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   // Applies a server response: updates state, plays feedback/celebrations for
   // whatever changed between `before` and the new state, and refreshes wt:seen.
   const applyResult = useCallback(
-    (before: AppState, after: AppState) => {
+    (before: AppState, after: AppState, celebrate = true) => {
       setState(after);
       const now = todayStr();
-      const events = diffCelebrations(before, after, now);
+      const events = celebrate ? diffCelebrations(before, after, now) : [];
       if (events.length) celebration.enqueue(events);
       const level = levelForXp(totalXp(after, now));
       const badgeIds = allEarnedBadges(after, now).map((b) => b.id);
@@ -278,13 +345,18 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   // (goal add/edit) that need the server's own error message to show inline
   // in a sheet instead of a snackbar. Resolves to null on success.
   const runQueuedWithError = useCallback(
-    (body: Record<string, unknown>, before: AppState, onApplied?: (after: AppState) => void): Promise<string | null> => {
+    (
+      body: Record<string, unknown>,
+      before: AppState,
+      onApplied?: (after: AppState) => void,
+      opts?: { celebrate?: boolean }
+    ): Promise<string | null> => {
       const mySeq = ++seqRef.current;
       const run = queueRef.current.then(async (): Promise<string | null> => {
         const outcome = await postRaw(body);
         if (outcome.ok) {
           if (mySeq === seqRef.current) {
-            applyResult(before, outcome.data);
+            applyResult(before, outcome.data, opts?.celebrate !== false);
             onApplied?.(outcome.data);
           }
           return null;
@@ -461,6 +533,110 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     [runQueued, showSnackbar]
   );
 
+  // ---------------- Routines, workouts, prefs, custom exercises ----------------
+
+  // Runs the same pure action the server runs (lib/routineActions) for an
+  // instant optimistic update, then sends it through the queue. A rejection by
+  // the pure action (bad input, a duplicate) never leaves the device.
+  const runRoutineAction = useCallback(
+    async (
+      body: Record<string, unknown>,
+      opts?: { celebrate?: boolean }
+    ): Promise<{ ok: true; before: AppState; after: AppState } | { ok: false; error: string }> => {
+      const before = stateRef.current;
+      const local = applyRoutineAction(before, body, { today: todayStr() });
+      if (!local.ok) return { ok: false, error: sentence(local.error) };
+      stateRef.current = local.state;
+      setState(local.state);
+      const error = await runQueuedWithError(body, before, undefined, opts);
+      return error === null ? { ok: true, before, after: local.state } : { ok: false, error };
+    },
+    [runQueuedWithError]
+  );
+
+  const saveRoutine = useCallback(
+    async (routine: Routine): Promise<string | null> => {
+      const r = await runRoutineAction({ action: 'saveRoutine', routine });
+      return r.ok ? null : r.error;
+    },
+    [runRoutineAction]
+  );
+
+  const deleteRoutine = useCallback(
+    async (id: string): Promise<string | null> => {
+      const r = await runRoutineAction({ action: 'deleteRoutine', id });
+      return r.ok ? null : r.error;
+    },
+    [runRoutineAction]
+  );
+
+  const saveWorkout = useCallback(
+    async (workout: WorkoutInput, opts?: { celebrate?: boolean }): Promise<SaveWorkoutResult> => {
+      const r = await runRoutineAction({ action: 'saveWorkout', workout }, opts);
+      if (!r.ok) return r;
+      const now = todayStr();
+      const saved = (r.after.workouts ?? []).find((w) => w.id === workout.id);
+      if (!saved) return { ok: false, error: GENERIC_SAVE_ERROR };
+      return {
+        ok: true,
+        workout: saved,
+        before: xpSnapshot(r.before, now),
+        after: xpSnapshot(r.after, now),
+        events: diffCelebrations(r.before, r.after, now),
+      };
+    },
+    [runRoutineAction]
+  );
+
+  const updateWorkout = useCallback(
+    async (patch: WorkoutPatchInput): Promise<string | null> => {
+      const r = await runRoutineAction({ action: 'updateWorkout', ...patch });
+      return r.ok ? null : r.error;
+    },
+    [runRoutineAction]
+  );
+
+  const deleteWorkout = useCallback(
+    async (id: string): Promise<string | null> => {
+      const r = await runRoutineAction({ action: 'deleteWorkout', id });
+      return r.ok ? null : r.error;
+    },
+    [runRoutineAction]
+  );
+
+  const savePrefs = useCallback(
+    async (prefs: Prefs): Promise<string | null> => {
+      const r = await runRoutineAction({ action: 'savePrefs', prefs });
+      return r.ok ? null : r.error;
+    },
+    [runRoutineAction]
+  );
+
+  const addCustomExercise = useCallback(
+    async (exercise: CustomExerciseInput): Promise<AddCustomExerciseResult> => {
+      // The id is picked here so the optimistic copy and the server's agree.
+      const id = exercise.id ?? `custom-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+      const r = await runRoutineAction({ action: 'addCustomExercise', exercise: { ...exercise, id } });
+      if (!r.ok) return r;
+      const saved = (r.after.customExercises ?? []).find((e) => e.id === id);
+      return saved ? { ok: true, exercise: saved } : { ok: false, error: GENERIC_SAVE_ERROR };
+    },
+    [runRoutineAction]
+  );
+
+  const prefs = useMemo(() => resolvePrefs(state), [state]);
+  const lookup = useMemo(() => stateLookup(state), [state]);
+  const routines = useMemo(() => state.routines ?? [], [state.routines]);
+  const workouts = useMemo(() => state.workouts ?? [], [state.workouts]);
+  const customExercises = useMemo(() => state.customExercises ?? [], [state.customExercises]);
+
+  // The server's sound and haptic prefs are the source of truth once they exist.
+  useEffect(() => {
+    if (!state.prefs) return;
+    feedback.setSoundEnabled(state.prefs.sound);
+    feedback.setVibrateEnabled(state.prefs.haptic);
+  }, [state.prefs]);
+
   const progress = useMemo(() => computeProgress(state, today), [state, today]);
 
   const value: ProgressContextValue = {
@@ -469,6 +645,19 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     loading,
     authorized,
     snackbarVisible: snackbar !== null,
+    showToast: showSnackbar,
+    routines,
+    workouts,
+    prefs,
+    customExercises,
+    lookup,
+    saveRoutine,
+    deleteRoutine,
+    saveWorkout,
+    updateWorkout,
+    deleteWorkout,
+    savePrefs,
+    addCustomExercise,
     tick,
     untick,
     logCardio,
@@ -483,7 +672,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   return (
     <ProgressContext.Provider value={value}>
       {children}
-      <Snackbar snackbar={snackbar} onDismiss={() => setSnackbar(null)} />
+      <Toast toast={snackbar} onDismiss={() => setSnackbar(null)} />
     </ProgressContext.Provider>
   );
 }
