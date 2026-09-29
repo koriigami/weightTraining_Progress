@@ -35,7 +35,7 @@ const stack: symbol[] = [];
  * Shared dialog behaviour: moves focus in on open (to [data-autofocus] if there
  * is one, else the first control, else the dialog itself), traps Tab, calls
  * onEscape on Escape, locks page scroll, and gives focus back to whatever
- * opened the dialog when it closes.
+ * opened the dialog when it closes (or to the main area if nothing did).
  */
 export function useDialog(open: boolean, ref: RefObject<HTMLElement | null>, onEscape: () => void) {
   const escRef = useRef(onEscape);
@@ -94,7 +94,12 @@ export function useDialog(open: boolean, ref: RefObject<HTMLElement | null>, onE
       const at = stack.indexOf(id);
       if (at !== -1) stack.splice(at, 1);
       unlockScroll();
-      if (opener && document.contains(opener)) opener.focus();
+      // Back to what opened the dialog. When nothing had focus (a reward moment
+      // that started on its own), or that control is gone, the page's main area
+      // takes it, so keyboard users carry on from the page and not from the top
+      // of the browser.
+      const back = opener && opener !== document.body && document.contains(opener) ? opener : document.getElementById('main');
+      back?.focus({ preventScroll: true });
     };
     // ref is a stable object
     // eslint-disable-next-line react-hooks/exhaustive-deps

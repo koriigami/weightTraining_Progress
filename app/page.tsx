@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, SectionLabel } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Screen } from '@/components/ui/Screen';
+import { hasPlanDays } from '@/lib/badgeCards';
 import { buildFeed } from '@/lib/feed';
 import { useDesktopLayout } from '@/lib/useMediaQuery';
 import { useToday } from '@/lib/useToday';
@@ -49,9 +50,12 @@ export default function HomePage() {
           Show more workouts
         </Button>
       )}
-      <Link href="/calendar/plan" className="wt-textbtn" style={{ alignSelf: 'flex-start' }}>
-        Open the 6-week plan calendar
-      </Link>
+      {/* Only for someone with days logged on the original plan. Everyone can still reach it from Calendar. */}
+      {hasPlanDays(state) && (
+        <Link href="/calendar/plan" className="wt-textbtn" style={{ alignSelf: 'flex-start' }}>
+          Open the 6-week plan calendar
+        </Link>
+      )}
     </>
   );
 
