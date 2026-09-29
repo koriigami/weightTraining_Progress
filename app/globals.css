@@ -3807,6 +3807,65 @@ textarea.wt-input {
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
 }
 
+/* ---- Statistics ---- */
+.wt-daychips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+.wt-dchip {
+  border-radius: 12px;
+  background: var(--calm);
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 12px;
+  color: var(--muted);
+  gap: 2px;
+}
+.wt-dchip b {
+  font-size: 16px;
+  color: var(--ink);
+  font-weight: 700;
+}
+.wt-dchip i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: transparent;
+}
+.wt-dchip.w i {
+  background: var(--hi);
+}
+.wt-mbars {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wt-mbar {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+.wt-mbar span:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.wt-mbar .wt-xpbar {
+  height: 16px;
+}
+
 @tailwind utilities;
 
 @media (prefers-reduced-motion: reduce) {
