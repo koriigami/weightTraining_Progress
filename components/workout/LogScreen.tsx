@@ -3,10 +3,8 @@
 import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dumbbell, Flag, Plus, Trash2 } from 'lucide-react';
-import type { ExerciseDef } from '@/data/exercises';
 import { fmtPreviousBest, previousBestSet } from '@/lib/exerciseHistory';
 import { untickedSets } from '@/lib/finishSummary';
-import { musclesOfExercises } from '@/lib/muscles';
 import { fillOnTick } from '@/lib/setColumns';
 import type { SetPatch } from '@/lib/session';
 import { useDesktopLayout, useWideLayout } from '@/lib/useMediaQuery';
@@ -17,9 +15,9 @@ import { ExercisePicker } from '@/components/exercises/ExercisePicker';
 import { LibraryPanel } from '@/components/exercises/LibraryPanel';
 import type { LibraryPanelHandle } from '@/components/exercises/LibraryPanel';
 import { useShell } from '@/components/nav/ShellContext';
+import { SummaryCard } from '@/components/routines/SummaryCard';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { MuscleMap } from '@/components/ui/MuscleMap';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Screen } from '@/components/ui/Screen';
 import { DiscardDialog } from './DiscardDialog';
@@ -187,8 +185,6 @@ export function LogScreen() {
   const swapItem = swapping !== null ? session.items[swapping] : undefined;
   const swapEx = swapItem ? lookup(swapItem.exerciseId) : undefined;
 
-  const exercises = session.items.map((it) => lookup(it.exerciseId)).filter((e): e is ExerciseDef => Boolean(e));
-  const { primary, secondary } = musclesOfExercises(exercises);
   const stats = <WorkoutStats elapsed={elapsed} volumeKg={ws.totals.volume} sets={ws.totals.sets} xp={ws.totals.xp} weight={units.weight} />;
 
   const blocks = session.items.map((item, i) => {
@@ -267,10 +263,9 @@ export function LogScreen() {
       aside={
         wide ? (
           <>
-            <Card>
+            <SummaryCard items={session.items}>
               <WorkoutStats elapsed={elapsed} volumeKg={ws.totals.volume} sets={ws.totals.sets} xp={ws.totals.xp} weight={units.weight} side />
-              <MuscleMap primary={primary} secondary={secondary} size={76} />
-            </Card>
+            </SummaryCard>
             <LibraryPanel
               ref={panelRef}
               inLabel="In workout"

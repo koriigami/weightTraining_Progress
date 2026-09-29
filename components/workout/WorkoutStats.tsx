@@ -24,6 +24,7 @@ function XpStat({ xp }: { xp: number }) {
  * `side` is the two-by-two version for the desktop Summary card.
  */
 export function WorkoutStats({ elapsed, volumeKg, sets, xp, weight, side }: { elapsed: string; volumeKg: number; sets: number; xp: number; weight: WeightUnit; side?: boolean }) {
+  const setsLabel = side ? 'Sets done' : 'Sets';
   return (
     <div className={cn('wt-logstats', side && 'side')} data-testid="log-stats">
       <div className="wt-stat">
@@ -35,7 +36,7 @@ export function WorkoutStats({ elapsed, volumeKg, sets, xp, weight, side }: { el
         <b>{fmtVolume(volumeKg, weight)}</b>
       </div>
       <div className="wt-stat">
-        <small>Sets</small>
+        <small>{setsLabel}</small>
         <b>{sets}</b>
       </div>
       <div className="wt-stat">
