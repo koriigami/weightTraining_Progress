@@ -1,6 +1,7 @@
 import { Redis } from '@upstash/redis';
 import { emptyState, planDay, strengthKeys, coreKeys } from './progress';
 import type { AppState, DayLog, Goal } from './progress';
+import { defaultPrefs, seedOwnerRoutines } from './routines';
 
 const STATE_KEY_V2 = 'wt:state:v2';
 const STATE_KEY_V1 = 'wt:state';
@@ -112,6 +113,18 @@ export function backfillGoalCreatedAt(state: AppState): AppState {
   };
 }
 
+// Someone new who is not the owner starts with no routines and has not been
+// through onboarding yet.
+export function newUserState(): AppState {
+  return { ...emptyState(), routines: [], prefs: defaultPrefs() };
+}
+
+// The owner's plan sessions become routines, once: only while routines has never
+// been set. An owner who deletes them all keeps an empty list.
+export function withOwnerRoutines(state: AppState): AppState {
+  return state.routines === undefined ? { ...state, routines: seedOwnerRoutines() } : state;
+}
+
 export type Profile = { email: string; name: string; image: string; createdAt: string };
 
 // Minimal key-value surface so the same logic runs on Redis and on the dev memory store.
@@ -132,19 +145,28 @@ export function createStore(kv: KV) {
   return {
     async getState(userId: string, email?: string | null): Promise<AppState> {
       const existing = await kv.get<AppState>(stateKey(userId));
-      if (existing) return backfillGoalCreatedAt(existing);
+      if (existing) {
+        const state = backfillGoalCreatedAt(existing);
+        if (isOwner(email) && state.routines === undefined) {
+          const seeded = withOwnerRoutines(state);
+          await kv.set(stateKey(userId), seeded);
+          return seeded;
+        }
+        return state;
+      }
       if (isOwner(email)) {
         // Copy the legacy single-user progress once. Legacy keys are never written or deleted.
         const v2 = await kv.get<AppState>(STATE_KEY_V2);
         const v1 = v2 ? null : await kv.get<V1AppState>(STATE_KEY_V1);
         const legacy = v2 ?? (v1 ? migrateV1ToV2(v1) : null);
         if (legacy) {
-          const copied = backfillGoalCreatedAt(structuredClone(legacy));
+          const copied = withOwnerRoutines(backfillGoalCreatedAt(structuredClone(legacy)));
           await kv.set(stateKey(userId), copied);
           return copied;
         }
+        return withOwnerRoutines(emptyState());
       }
-      return emptyState();
+      return newUserState();
     },
     async saveState(userId: string, state: AppState): Promise<void> {
       await kv.set(stateKey(userId), state);

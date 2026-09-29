@@ -13,6 +13,7 @@ import {
 } from '@/lib/progress';
 import { goalStatus, streakDeadline } from '@/lib/goals';
 import { daysBetween, todayStr } from '@/lib/date';
+import { applyRoutineAction, isRoutineAction } from '@/lib/routineActions';
 
 function todayPlusOne(): string {
   const d = new Date();
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
     return bad('invalid body');
   }
 
-  const state: AppState = await getState(userId, session.user.email);
+  let state: AppState = await getState(userId, session.user.email);
   const maxDate = todayPlusOne();
 
   switch (body.action) {
@@ -274,8 +275,13 @@ export async function POST(req: NextRequest) {
       }
       break;
     }
-    default:
-      return bad('unknown action');
+    default: {
+      // Routines, workouts, prefs and custom exercises: validated and applied by lib/routineActions.
+      if (!isRoutineAction(body.action)) return bad('unknown action');
+      const result = applyRoutineAction(state, body, { today: todayStr() });
+      if (!result.ok) return bad(result.error);
+      state = result.state;
+    }
   }
 
   await saveState(userId, state);
