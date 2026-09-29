@@ -5,6 +5,8 @@ export { BackButton } from './BackButton';
 export { Card, CardHead, Hero, SectionLabel } from './Card';
 export { Chip, CheckChip, RemovableChip, Tag } from './Chip';
 export { Segmented } from './Segmented';
+export { Stepper } from './Stepper';
+export { Switch } from './Switch';
 export type { SegmentedOption } from './Segmented';
 export { Field, Input, Select, Textarea, SearchField } from './Field';
 export { XpBar } from './XpBar';

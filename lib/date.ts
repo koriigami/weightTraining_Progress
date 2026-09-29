@@ -36,6 +36,12 @@ export function formatDateMed(date: string): string {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
+// "Oct 5" - a date without the weekday, for tight spots.
+export function formatMonthDay(date: string): string {
+  const d = new Date(`${date}T00:00:00`);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 export function addDaysStr(date: string, days: number): string {
   const d = new Date(`${date}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);
