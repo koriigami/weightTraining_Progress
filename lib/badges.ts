@@ -56,7 +56,7 @@ export const LIFETIME_FAMILIES: Record<
     unit: 'km',
   },
   rider: { name: 'Rider', metric: 'Ride km', shape: 'circle', icon: 'bike', dy: -9, tiers: [25, 100, 250, 500, 1000, 2000], unit: 'km' },
-  shedding: { name: 'Shedding', metric: 'Kg lost from 110', shape: 'diamond', icon: 'down', dy: 4, tiers: [1, 3, 5, 7, 10, 15], unit: 'kg' },
+  shedding: { name: 'Shedding', metric: 'Kg lost since you started', shape: 'diamond', icon: 'down', dy: 4, tiers: [1, 3, 5, 7, 10, 15], unit: 'kg' },
   'scale-keeper': {
     name: 'Scale Keeper',
     metric: 'Weigh-ins',
@@ -149,12 +149,22 @@ function modalityKmSeries(state: AppState, modality: 'treadmill' | 'cycle'): Sam
   return out;
 }
 
+// The weight Shedding counts from. The owner's 6-week plan started at 110 kg, so
+// anyone with plan days keeps that number and their badges stay exactly as they
+// were. Everyone else counts from their own first weigh-in: measured against 110,
+// a first weigh-in of 75 kg would count as 35 kg lost and hand out every tier.
+function sheddingBaseline(state: AppState, dates: string[]): number {
+  const hasPlanDays = Object.keys(state.days ?? {}).length > 0;
+  return hasPlanDays || dates.length === 0 ? START_WEIGHT : state.weights[dates[0]];
+}
+
 function sheddingSeries(state: AppState): Sample[] {
   const dates = Object.keys(state.weights).sort();
+  const baseline = sheddingBaseline(state, dates);
   let peak = 0;
   const out: Sample[] = [];
   for (const date of dates) {
-    peak = Math.max(peak, START_WEIGHT - state.weights[date]);
+    peak = Math.max(peak, baseline - state.weights[date]);
     out.push({ date, value: peak });
   }
   return out;
