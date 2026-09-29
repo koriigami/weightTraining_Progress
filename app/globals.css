@@ -1,74 +1,157 @@
 @tailwind base;
 @tailwind components;
-@tailwind utilities;
 
+/* ------------------------------------------------------------------
+   Arena Bright with the Deep Sky hero. One light look, no dark mode.
+   Tokens are ported from docs/design/05-routines-board-v5-final.html.
+   ------------------------------------------------------------------ */
 :root {
-  --bg: #f3f4f9;
-  --surface: #ffffff;
-  --surface-2: #eceef6;
-  --ink: #161a2b;
-  --muted: #5e6478;
-  --line: #e0e3ee;
-  --accent: #c98a0b;
-  --accent-soft: #fbefd2;
-  --ok: #12805c;
-  --ok-soft: #d9f3e8;
-  --warn: #b26b00;
-  --bad: #c0342b;
-  --pill: #e4e1f7;
-  --pill-ink: #2e2767;
   color-scheme: light;
-}
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --bg: #0d0f1d;
-    --surface: #171a2e;
-    --surface-2: #20243c;
-    --ink: #edeff8;
-    --muted: #979db6;
-    --line: #2a2e4a;
-    --accent: #f2b53a;
-    --accent-soft: #3a2f14;
-    --ok: #4fd39d;
-    --ok-soft: #113b2c;
-    --warn: #f0b040;
-    --bad: #ff7a70;
-    --pill: #35306b;
-    --pill-ink: #e3dfff;
-    color-scheme: dark;
-  }
-}
+  --bg-app: linear-gradient(180deg, #86ccff 0%, #cdeeff 200px, #fff6e2 380px, #fbeacb 100%);
+  --bg-solid: #fbeacb;
+  --surface: #fff8e8;
+  --surface-2: #f4e4c0;
+  --calm: #fffdf6;
+  --cell: #ffffff;
+  --line: #e2cb98;
+  --ink: #2e1f0c;
+  --muted: #7d6545;
+  --link: #1e7a28;
+  --focus: #1d5fbf;
 
-:root[data-theme='dark'] {
-  --bg: #0d0f1d;
-  --surface: #171a2e;
-  --surface-2: #20243c;
-  --ink: #edeff8;
-  --muted: #979db6;
-  --line: #2a2e4a;
-  --accent: #f2b53a;
-  --accent-soft: #3a2f14;
-  --ok: #4fd39d;
-  --ok-soft: #113b2c;
-  --warn: #f0b040;
-  --bad: #ff7a70;
-  --pill: #35306b;
-  --pill-ink: #e3dfff;
-  color-scheme: dark;
+  /* primary: green 3D */
+  --p1: #86ea64;
+  --p2: #2ba438;
+  --p-bevel: #186a20;
+  --p-glow: rgba(43, 164, 56, 0.35);
+  --p-ink: #ffffff;
+
+  /* secondary: gold 3D with an outline */
+  --s-grad: linear-gradient(180deg, #ffe9a0 0%, #ffd970 50%, #f2b940 100%);
+  --s-line: #d49a2a;
+  --s-face: #ffedb8;
+  --s-bevel: #b8862e;
+  --s-ink: #4a3212;
+
+  /* XP and reward gold */
+  --xp: #ffc21a;
+  --xp-hi: #fff28f;
+  --xp-deep: #c7870a;
+
+  --ok: #2ba438;
+  --ok-deep: #186a20;
+  --ok-soft: #ddf5d2;
+  --bad: #dd3f33;
+  --bad-ink: #c8322a;
+
+  /* body map */
+  --muscle: #eadcba;
+  --skin: #f5ead1;
+  --hi: #27a844;
+  --sec: #a9de8f;
+  --bodyline: #fffdf6;
+
+  /* nav: dark wood */
+  --nav-bg: linear-gradient(180deg, #6e4722, #4a2e13);
+  --nav-ink: #ebd3a6;
+  --nav-on: #ffffff;
+  --nav-pill: rgba(255, 236, 190, 0.2);
+
+  --stroke: #3a230c;
+  --track: rgba(110, 70, 20, 0.2);
+  --ray1: rgba(255, 222, 110, 0.75);
+  --ray2: rgba(255, 255, 255, 0.6);
+  --scrim: rgba(46, 26, 6, 0.62);
+  --chip-on: linear-gradient(180deg, #86ea64, #2ba438);
+  --chip-on-ink: #ffffff;
+  --card-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.6), 0 4px 0 #d7ba7c, 0 14px 24px -18px rgba(120, 80, 20, 0.5);
+  --chest: #b8642a;
+  --chest-2: #7a3c14;
+  --cloud: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='90'%3E%3Cg fill='white'%3E%3Cellipse cx='70' cy='62' rx='52' ry='20'/%3E%3Cellipse cx='110' cy='46' rx='40' ry='28'/%3E%3Cellipse cx='150' cy='60' rx='44' ry='18'/%3E%3Cellipse cx='300' cy='32' rx='34' ry='13'/%3E%3Cellipse cx='328' cy='24' rx='24' ry='16'/%3E%3Cellipse cx='356' cy='32' rx='30' ry='12'/%3E%3C/g%3E%3C/svg%3E");
+
+  /* hero: Deep Sky, the only hero style */
+  --hero: linear-gradient(170deg, #4aa8f5 0%, #2f8fe8 38%, #1d5fbf 100%);
+  --hero-ink: #ffffff;
+  --hero-sub: rgba(255, 255, 255, 0.92);
+  --hero-stroke: #0e3a7a;
+  --v-title: #ffe68f;
+  --hero-border: 3px solid #f5c542;
+  --hero-shadow: 0 4px 0 #154a94, 0 18px 30px -18px rgba(20, 60, 120, 0.7), inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+  --hero-pattern: var(--cloud);
+  --hero-pattern-size: 300px 64px;
+  --hero-pattern-op: 0.3;
+
+  /* fonts: Figtree for reading, Lilita One for game titles */
+  --font-ui: var(--font-figtree), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-num: var(--font-display), 'Arial Rounded MT Bold', 'Trebuchet MS', sans-serif;
+
+  /* layout, set by the shell */
+  --sidebar-w: 252px;
+  --dock-h: 0px;
+
+  /* Names the pre-redesign pages still use. They now read the new tokens. */
+  --bg: var(--bg-solid);
+  --accent: var(--xp-deep);
+  --accent-soft: var(--s-face);
+  --warn: #b26b00;
+  --pill: #ffe9a0;
+  --pill-ink: #4a3212;
 }
 
 html {
   -webkit-tap-highlight-color: transparent;
-}
-
-.font-display {
-  font-family: var(--font-display), 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif;
+  background: var(--bg-solid);
 }
 
 body {
-  background-color: var(--bg);
+  position: relative;
+  min-height: 100dvh;
+  background: transparent;
   color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.45;
+  overflow-x: hidden;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.font-display {
+  font-family: var(--font-num);
+}
+
+/* Game title: white face, dark stroke, drop shadow. */
+.gt {
+  font-family: var(--font-num);
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 0 var(--stroke), 1.5px 0 0 var(--stroke), -1.5px 0 0 var(--stroke), 0 -1.5px 0 var(--stroke),
+    1px 1px 0 var(--stroke), -1px 1px 0 var(--stroke), 0 4px 0 var(--stroke);
+}
+
+.gt.gold {
+  color: var(--xp-hi);
 }
 
 .safe-bottom {
@@ -79,11 +162,89 @@ body {
   padding-top: env(safe-area-inset-top);
 }
 
-/* Bottom nav (80px) + its safe-area inset, for mobile main content. */
-.pb-bottom-nav {
-  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+/* Scrollbars: hidden on phones and installed apps, thin and themed on desktop. */
+@media (pointer: coarse), (display-mode: standalone), (max-width: 767px) {
+  * {
+    scrollbar-width: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
 }
 
+@media (min-width: 768px) and (pointer: fine) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #d9bd7f transparent;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Sky: a fixed backdrop with three drifting cloud layers in the top band.
+   ------------------------------------------------------------------ */
+.wt-sky {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background: var(--bg-app);
+}
+
+.wt-sky-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 330px;
+  overflow: hidden;
+}
+
+.wt-sky-band i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background-image: var(--cloud);
+  background-repeat: repeat-x;
+  animation: wt-drift linear infinite;
+}
+
+.wt-sky-band i:nth-child(1) {
+  top: 22px;
+  height: 90px;
+  background-size: 420px 90px;
+  opacity: 0.95;
+  animation-duration: 90s;
+}
+
+.wt-sky-band i:nth-child(2) {
+  top: 104px;
+  height: 60px;
+  background-size: 280px 60px;
+  opacity: 0.6;
+  animation-duration: 140s;
+  animation-direction: reverse;
+}
+
+.wt-sky-band i:nth-child(3) {
+  top: 170px;
+  height: 120px;
+  background-size: 560px 120px;
+  opacity: 0.35;
+  animation-duration: 200s;
+  filter: blur(2px);
+}
+
+@keyframes wt-drift {
+  from {
+    background-position-x: 0;
+  }
+  to {
+    background-position-x: -1680px;
+  }
+}
+
+/* Older celebration effects still use these. */
 .celebrate-rays {
   position: absolute;
   left: 50%;
@@ -123,16 +284,26 @@ body {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .badge-legend {
-    animation: none;
-  }
+/* COMPONENT STYLES GO HERE (added with the UI primitives) */
 
+@tailwind utilities;
+
+@media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
     transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .wt-sky-band i {
+    animation: none !important;
+  }
+
+  .badge-legend {
+    animation: none;
   }
 }
