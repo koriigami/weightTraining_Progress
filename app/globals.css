@@ -244,36 +244,6 @@ button:disabled {
   }
 }
 
-/* Older celebration effects still use these. */
-.celebrate-rays {
-  position: absolute;
-  left: 50%;
-  top: 44%;
-  width: 180vmax;
-  height: 180vmax;
-  margin: -90vmax 0 0 -90vmax;
-  border-radius: 50%;
-  -webkit-mask-image: radial-gradient(circle, #000 0, rgba(0, 0, 0, 0.5) 18%, transparent 48%);
-  mask-image: radial-gradient(circle, #000 0, rgba(0, 0, 0, 0.5) 18%, transparent 48%);
-  animation: celebrate-spin 8s linear infinite;
-}
-
-@keyframes celebrate-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes celebrate-pulse {
-  0%,
-  100% {
-    opacity: 0.35;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
 .badge-legend {
   animation: badge-prism 6s ease-in-out infinite alternate;
 }
@@ -281,6 +251,340 @@ button:disabled {
 @keyframes badge-prism {
   to {
     filter: hue-rotate(25deg);
+  }
+}
+
+/* ------------------------------------------------------------------
+   Reward moments: level up, rank up, badge unlock (components/celebrate).
+   Keyframes and timings are ported from board 05:
+   docs/design/05-routines-board-v5-final.html (.moment, .m-rays, .slam,
+   .m-old, .chest, .lid, .m-medal, .shine, .ribbon).
+   ------------------------------------------------------------------ */
+.wt-moment {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: #fff;
+  cursor: pointer;
+  outline: none;
+  background: radial-gradient(circle at 50% 42%, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.88) 75%), var(--scrim);
+  animation: wt-fade 0.25s;
+  -webkit-tap-highlight-color: transparent;
+  --stroke: #3a230c;
+}
+.wt-moment.leaving {
+  animation: wt-fade-out 0.16s ease-in forwards;
+  pointer-events: none;
+}
+@keyframes wt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+.wt-m-rays {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 1000px;
+  height: 1000px;
+  margin: -500px 0 0 -500px;
+  background: repeating-conic-gradient(var(--ray1) 0 9deg, transparent 9deg 18deg);
+  -webkit-mask: radial-gradient(circle, #000 8%, transparent 48%);
+  mask: radial-gradient(circle, #000 8%, transparent 48%);
+  animation: wt-spin 14s linear infinite, wt-fade 0.8s;
+  pointer-events: none;
+}
+.wt-m-glow {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 360px;
+  height: 360px;
+  margin: -180px 0 0 -180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--ray2), transparent 65%);
+  animation: wt-fade 1s;
+  pointer-events: none;
+}
+.wt-m-sparks i {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--c);
+  opacity: 0;
+  animation: wt-m-spark 1.1s var(--d) ease-out forwards;
+  pointer-events: none;
+}
+@keyframes wt-m-spark {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--x), var(--y)) scale(0.5) rotate(220deg);
+  }
+}
+.wt-m-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: 0 20px;
+  margin-top: -40px;
+  max-width: 100%;
+}
+.wt-m-k {
+  font-size: 44px;
+  line-height: 1;
+  color: var(--xp-hi);
+  animation: wt-dropin 0.55s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+.wt-m-stage {
+  position: relative;
+  width: 200px;
+  height: 210px;
+  display: grid;
+  place-items: center;
+}
+.wt-m-stage > * {
+  grid-area: 1 / 1;
+}
+.wt-slam {
+  animation: wt-m-slam 0.6s 0.3s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+.wt-slam.late {
+  animation-delay: 1s;
+}
+@keyframes wt-m-slam {
+  0% {
+    opacity: 0;
+    transform: scale(2.8) rotate(-10deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.wt-m-old {
+  animation: wt-m-oldout 0.9s 0.2s ease-in both;
+}
+@keyframes wt-m-oldout {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.12) rotate(4deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.1) rotate(-30deg);
+  }
+}
+.wt-m-num {
+  font-size: 72px;
+  line-height: 1;
+  color: #fff;
+}
+.wt-m-title {
+  font-size: 30px;
+  line-height: 1.1;
+  color: #fff;
+  animation: wt-dropin 0.5s 1.2s both;
+}
+.wt-m-sub {
+  font-weight: 700;
+  opacity: 0.92;
+  animation: wt-fade 0.6s 1.3s both;
+}
+.wt-m-xp {
+  font-family: var(--font-num);
+  font-size: 17px;
+  color: #3b2600;
+  padding: 2px 14px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--xp-hi), var(--xp));
+  box-shadow: 0 2px 0 var(--xp-deep);
+  animation: wt-fade 0.5s 1.7s both;
+}
+.wt-m-tap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: max(28px, env(safe-area-inset-bottom));
+  min-height: 44px;
+  margin: 0 auto;
+  width: max-content;
+  max-width: 100%;
+  padding: 0 24px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 13px;
+  opacity: 0.8;
+  cursor: pointer;
+  animation: wt-m-blink 1.6s 1.8s infinite both;
+}
+.wt-m-tap:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  border-radius: 999px;
+}
+@keyframes wt-m-blink {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+/* Badge chest: shakes, the lid flips open, the medal rises with a shine. */
+.wt-chest {
+  position: relative;
+  width: 200px;
+  height: 260px;
+  overflow: visible;
+}
+.wt-chest .wt-chest-box {
+  position: absolute;
+  left: 20px;
+  bottom: 0;
+  overflow: visible;
+  animation: wt-m-shake 0.6s 0.2s;
+}
+@keyframes wt-m-shake {
+  20% {
+    transform: rotate(-5deg);
+  }
+  40% {
+    transform: rotate(5deg);
+  }
+  60% {
+    transform: rotate(-4deg);
+  }
+  80% {
+    transform: rotate(3deg);
+  }
+}
+.wt-lid {
+  transform-box: fill-box;
+  transform-origin: 12% 100%;
+  animation: wt-m-lid 0.45s 0.85s ease-out forwards;
+}
+@keyframes wt-m-lid {
+  to {
+    transform: rotate(-24deg) translate(-4px, -22px);
+  }
+}
+.wt-m-medal {
+  position: absolute;
+  left: 50%;
+  bottom: 40px;
+  width: 120px;
+  height: 120px;
+  transform: translate(-50%, 0) scale(0.3);
+  opacity: 0;
+  animation: wt-m-rise 0.75s 1.1s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
+}
+.wt-m-medal svg {
+  display: block;
+  overflow: visible;
+}
+@keyframes wt-m-rise {
+  to {
+    opacity: 1;
+    transform: translate(-50%, -96px) scale(1);
+  }
+}
+.wt-m-shine {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(50% 3%, 91% 27%, 91% 73%, 50% 97%, 9% 73%, 9% 27%);
+  background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.8) 50%, transparent 62%);
+  background-size: 260% 100%;
+  background-position: 130% 0;
+  animation: wt-m-sweep 1.1s 2s ease-in-out forwards;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+@keyframes wt-m-sweep {
+  to {
+    background-position: -70% 0;
+  }
+}
+.wt-m-ribbon {
+  font-family: var(--font-num);
+  font-size: 18px;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--tc);
+  padding: 5px 28px;
+  clip-path: polygon(0 0, 100% 0, 93% 50%, 100% 100%, 0 100%, 7% 50%);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  animation: wt-dropin 0.5s 1.5s both;
+}
+
+/* Short screens: the whole moment shrinks so nothing is cut off. */
+@media (max-height: 740px) {
+  .wt-m-body {
+    transform: scale(0.88);
+  }
+}
+@media (max-height: 620px) {
+  .wt-m-body {
+    transform: scale(0.74);
+    margin-top: -60px;
+  }
+}
+
+/* Reduced motion: the end state, still. Nothing spins, flies or slams in. */
+@media (prefers-reduced-motion: reduce) {
+  .wt-moment,
+  .wt-moment * {
+    animation: none !important;
+  }
+  .wt-m-rays {
+    opacity: 0.5;
+  }
+  .wt-m-sparks {
+    display: none;
+  }
+  .wt-m-old {
+    display: none;
+  }
+  .wt-lid {
+    transform: rotate(-24deg) translate(-4px, -22px);
+  }
+  .wt-m-medal {
+    opacity: 1;
+    transform: translate(-50%, -96px);
+  }
+  .wt-m-shine {
+    display: none;
+  }
+  .wt-m-tap {
+    opacity: 0.9;
   }
 }
 

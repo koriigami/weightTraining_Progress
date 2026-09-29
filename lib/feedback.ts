@@ -150,13 +150,62 @@ export function dayCleared() {
   }
 }
 
+// A low sine that falls in pitch: the weight of something landing or a lid
+// popping. `from` and `to` are in Hz.
+function drop(context: AudioContext, from: number, to: number, t: number, peak: number, dur: number) {
+  if (!master) return;
+  try {
+    const o = context.createOscillator();
+    const g = context.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(from, t);
+    o.frequency.exponentialRampToValueAtTime(to, t + dur);
+    g.gain.setValueAtTime(peak, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g);
+    g.connect(master);
+    o.start(t);
+    o.stop(t + dur + 0.02);
+  } catch {
+    // ignore
+  }
+}
+
+// A short burst of filtered noise: a rattle, a click, a swish. With `sweepTo`
+// the filter glides from `cutoff` to it over the burst.
+function noise(context: AudioContext, t: number, dur: number, cutoff: number, peak: number, type: BiquadFilterType = 'lowpass', sweepTo?: number) {
+  if (!master) return;
+  try {
+    const buf = context.createBuffer(1, Math.max(1, Math.floor(context.sampleRate * dur)), context.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+    const src = context.createBufferSource();
+    const filter = context.createBiquadFilter();
+    const g = context.createGain();
+    src.buffer = buf;
+    filter.type = type;
+    filter.frequency.setValueAtTime(cutoff, t);
+    if (sweepTo) filter.frequency.exponentialRampToValueAtTime(sweepTo, t + dur);
+    g.gain.setValueAtTime(peak, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(filter);
+    filter.connect(g);
+    g.connect(master);
+    src.start(t);
+  } catch {
+    // ignore
+  }
+}
+
+// The level up moment: a shield lands (a soft thud) and a short rising chime rings out.
 export function levelUp() {
   vibrate([30, 60, 40]);
   const context = ac();
   if (!context || !master) return;
   try {
     const t = context.currentTime;
-    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => bell(f, t + i * 0.08, 0.3, 0.9));
+    drop(context, 140, 48, t, 0.4, 0.3);
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => bell(f, t + 0.04 + i * 0.08, 0.3, 0.9));
     [2093, 2637].forEach((f) => {
       const o = tone(f, t + 0.35, 0.07, 0.9);
       if (!o) return;
@@ -232,6 +281,42 @@ export function rankUp() {
   }
 }
 
+// A short swish: the old shield spinning out in the rank up moment.
+export function whoosh() {
+  const context = ac();
+  if (!context || !master) return;
+  try {
+    noise(context, context.currentTime, 0.4, 260, 0.35, 'bandpass', 2400);
+  } catch {
+    // ignore
+  }
+}
+
+// The badge chest: it rattles (four low knocks), the lid pops, then a sparkle
+// runs up as the medal rises. The haptics follow the same beats, so a phone
+// knocks four times, pops once, and shimmers. Start it as the chest starts to shake.
+export function chest() {
+  vibrate([14, 146, 14, 146, 14, 146, 14, 156, 40, 210, 24]);
+  const context = ac();
+  if (!context || !master) return;
+  try {
+    const t = context.currentTime;
+    [0, 0.16, 0.32, 0.48].forEach((dt, i) => {
+      drop(context, 190 - i * 12, 70, t + dt, 0.3, 0.12);
+      noise(context, t + dt, 0.07, 700, 0.18);
+    });
+    // The lid pops.
+    drop(context, 240, 900, t + 0.65, 0.22, 0.1);
+    noise(context, t + 0.65, 0.09, 3000, 0.22, 'highpass');
+    // The medal rises with a sparkle.
+    [1568, 2093, 2637, 3136].forEach((f, i) => tone(f, t + 0.9 + i * 0.05, 0.16, 0.3));
+    bell(1046.5, t + 0.9, 0.22, 1);
+  } catch {
+    // ignore
+  }
+}
+
+// The sparkle on its own, for a small reveal.
 export function badgeReveal() {
   vibrate([20, 40, 20]);
   const context = ac();

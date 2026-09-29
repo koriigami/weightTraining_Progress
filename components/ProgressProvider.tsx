@@ -24,7 +24,8 @@ import { todayStr } from '@/lib/date';
 import { useToday } from '@/lib/useToday';
 import * as feedback from '@/lib/feedback';
 import { useCelebration } from '@/components/celebrate/CelebrationProvider';
-import type { CelebrationEvent } from '@/components/celebrate/CelebrationProvider';
+import { orderEvents } from '@/lib/celebrations';
+import type { CelebrationEvent } from '@/lib/celebrations';
 import { Toast } from '@/components/ui/Toast';
 import type { ToastState } from '@/components/ui/Toast';
 
@@ -41,7 +42,7 @@ export type SaveWorkoutResult =
       workout: WorkoutLog;
       before: XpSnapshot;
       after: XpSnapshot;
-      /** Level ups, rank ups and new badges this workout caused, badges first. Not played yet: hand them to useCelebration().enqueue when the moment is right. */
+      /** Level ups, rank ups and new badges this workout caused, level and rank ups first. Not played yet: hand them to useCelebration().enqueue when the moment is right. */
       events: CelebrationEvent[];
     }
   | { ok: false; error: string };
@@ -142,26 +143,26 @@ function updateSeen(userId: string, level: number, badgeIds: string[]) {
   });
 }
 
-// Badges first, level-up / rank-up last, like a chest reveal before the climax.
+// The moment for going from one level to a higher one: a rank up when the rank
+// changed, else a level up.
+function levelEvent(fromLevel: number, toLevel: number, xpNow: number): CelebrationEvent {
+  const fromRank = rankForLevel(fromLevel);
+  const toRank = rankForLevel(toLevel);
+  if (fromRank !== toRank) return { kind: 'rankup', fromRank, toRank, level: toLevel, xpNow, from: fromLevel };
+  return { kind: 'levelup', from: fromLevel, to: toLevel, rank: toRank, xpNow };
+}
+
+// What a change of state earned: a level up or rank up, then the new badges.
 function diffCelebrations(before: AppState, after: AppState, today: string): CelebrationEvent[] {
   const beforeIds = new Set(allEarnedBadges(before, today).map((b) => b.id));
-  const afterBadges = allEarnedBadges(after, today);
-  const newBadges = afterBadges.filter((b) => !beforeIds.has(b.id));
+  const newBadges = allEarnedBadges(after, today).filter((b) => !beforeIds.has(b.id));
   const events: CelebrationEvent[] = newBadges.map((b) => ({ kind: 'badge', badge: b }));
 
   const afterXp = totalXp(after, today);
   const beforeLevel = levelForXp(totalXp(before, today));
   const afterLevel = levelForXp(afterXp);
-  if (afterLevel > beforeLevel) {
-    const fromRank = rankForLevel(beforeLevel);
-    const toRank = rankForLevel(afterLevel);
-    if (fromRank !== toRank) {
-      events.push({ kind: 'rankup', fromRank, toRank, level: afterLevel, xpNow: afterXp });
-    } else {
-      events.push({ kind: 'levelup', from: beforeLevel, to: afterLevel, rank: toRank, xpNow: afterXp });
-    }
-  }
-  return events;
+  if (afterLevel > beforeLevel) events.push(levelEvent(beforeLevel, afterLevel, afterXp));
+  return orderEvents(events);
 }
 
 // "tick at least one set" becomes "Tick at least one set." for showing to people.
@@ -232,13 +233,8 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         } else {
           const newBadges = allEarnedBadges(data, now).filter((b) => !seen.badgeIds.includes(b.id));
           const events: CelebrationEvent[] = newBadges.map((b) => ({ kind: 'badge', badge: b }));
-          if (level > seen.level) {
-            const fromRank = rankForLevel(seen.level);
-            const toRank = rankForLevel(level);
-            if (fromRank !== toRank) events.push({ kind: 'rankup', fromRank, toRank, level, xpNow });
-            else events.push({ kind: 'levelup', from: seen.level, to: level, rank: toRank, xpNow });
-          }
-          if (events.length) celebration.enqueue(events);
+          if (level > seen.level) events.push(levelEvent(seen.level, level, xpNow));
+          if (events.length) celebration.enqueue(orderEvents(events));
           updateSeen(uid, level, badgeIds);
         }
       } catch {

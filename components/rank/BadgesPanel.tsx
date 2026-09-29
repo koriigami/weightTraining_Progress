@@ -57,7 +57,7 @@ export function BadgesPanel({ cards, today, onOpen }: { cards: BadgeCards; today
   const daysLeft = Math.max(0, daysBetween(today, lastDayOfMonth(today)));
   return (
     <div className="wt-badges">
-      <p className="wt-badges-hint">Locked badges stay visible. Tap one to see what it takes.</p>
+      <p className="wt-badges-hint">Tap an earned badge to watch it unlock again. Locked badges stay visible: tap one to see what it takes.</p>
 
       <SectionLabel>Workouts</SectionLabel>
       <Grid cards={cards.workouts} onOpen={onOpen} />

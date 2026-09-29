@@ -6,7 +6,7 @@
 // design (the first tier, bronze, for a family nobody has started) and the card
 // says what it takes.
 import { computeBadges, LIFETIME_FAMILIES, MONTHLY_BADGES, SPECIAL_BADGES } from './badges';
-import type { BadgeShape, BadgeState, FamilyProgress, LifetimeFamilyId, MonthlyBadgeId, SpecialBadgeId } from './badges';
+import type { BadgeShape, BadgeState, EarnedBadgeSummary, FamilyProgress, LifetimeFamilyId, MonthlyBadgeId, SpecialBadgeId } from './badges';
 import { monthKey, monthLabel, monthRibbon } from './date';
 import type { AppState, BadgeTier } from './progress';
 import { fmtNumber } from './units';
@@ -49,6 +49,20 @@ export type BadgeCard = {
 export const WORKOUT_FAMILIES: LifetimeFamilyId[] = ['finisher', 'iron-mover', 'record-breaker', 'streak-keeper', 'all-rounder'];
 /** The families that predate routines. */
 export const LEGACY_FAMILIES: LifetimeFamilyId[] = ['iron-will', 'pushup-path', 'grinder', 'engine', 'road-runner', 'rider', 'shedding', 'scale-keeper'];
+
+// Badges that can only progress from the 6-week plan's day logs (state.days).
+// A logged workout never moves them, so someone with no plan days recorded could
+// never earn them and is not shown them. Road Runner and Rider are not here:
+// logged runs and rides count towards those. How a badge is earned is not
+// changed by this list. It only decides what the Rank screen shows.
+export const PLAN_ONLY_FAMILIES: LifetimeFamilyId[] = ['iron-will', 'pushup-path', 'grinder', 'engine'];
+export const PLAN_ONLY_MONTHLY: MonthlyBadgeId[] = ['month-clear', 'pushup-month', 'cardio-month', '20k-walk-run', '40k-ride', 'perfect-month'];
+export const PLAN_ONLY_SPECIAL: SpecialBadgeId[] = ['awakening', 'perfect-day', 'full-week', 'program-complete'];
+
+/** True when the person has any legacy plan day recorded. Only then are the plan-based badges shown. */
+export function hasPlanDays(state: AppState): boolean {
+  return Object.keys(state.days ?? {}).length > 0;
+}
 
 const pct = (value: number, target: number | null): number => (target === null ? 100 : target <= 0 ? 0 : Math.max(0, Math.min(100, Math.round((value / target) * 100))));
 
@@ -139,12 +153,18 @@ export type BadgeCards = {
 };
 
 export function buildBadgeCards(state: AppState, today: string): BadgeCards {
-  return badgeCardsFrom(computeBadges(state, today), today);
+  return badgeCardsFrom(computeBadges(state, today), today, { planBadges: hasPlanDays(state) });
 }
 
-export function badgeCardsFrom(b: BadgeState, today: string): BadgeCards {
-  const life = (ids: LifetimeFamilyId[]) => ids.map((id) => lifetimeCard(id, b.lifetime[id]));
-  const monthIds = Object.keys(MONTHLY_BADGES) as MonthlyBadgeId[];
+/**
+ * `planBadges: false` leaves out the badges that only the 6-week plan can move
+ * (see PLAN_ONLY_*). It defaults to true, so every badge shows.
+ */
+export function badgeCardsFrom(b: BadgeState, today: string, opts: { planBadges?: boolean } = {}): BadgeCards {
+  const plan = opts.planBadges !== false;
+  const life = (ids: LifetimeFamilyId[]) => ids.filter((id) => plan || !PLAN_ONLY_FAMILIES.includes(id)).map((id) => lifetimeCard(id, b.lifetime[id]));
+  const monthIds = (Object.keys(MONTHLY_BADGES) as MonthlyBadgeId[]).filter((id) => plan || !PLAN_ONLY_MONTHLY.includes(id));
+  const specialIds = (Object.keys(SPECIAL_BADGES) as SpecialBadgeId[]).filter((id) => plan || !PLAN_ONLY_SPECIAL.includes(id));
   const thisMonth = monthKey(today);
   const current = b.monthly.find((m) => m.month === thisMonth);
 
@@ -165,6 +185,24 @@ export function badgeCardsFrom(b: BadgeState, today: string): BadgeCards {
       cards: current ? monthIds.filter((id) => current.badges[id].eligible).map((id) => monthlyCard(id, thisMonth, current.badges[id])) : [],
     },
     trophies,
-    milestones: (Object.keys(SPECIAL_BADGES) as SpecialBadgeId[]).map((id) => specialCard(id, b.special[id])),
+    milestones: specialIds.map((id) => specialCard(id, b.special[id])),
   };
+}
+
+/**
+ * The earned badge behind an earned card, so tapping it can replay its unlock
+ * moment. A family card stands for the highest tier earned. Null for a locked card.
+ */
+export function cardToEarned(card: BadgeCard): EarnedBadgeSummary | null {
+  if (!card.earned) return null;
+  const earnedAt = card.earnedAt ?? '';
+  if (card.group === 'lifetime' && card.family && card.art.tier) {
+    return { id: `lifetime:${card.family}:${card.art.tier}`, kind: 'lifetime', family: card.family, tier: card.art.tier, earnedAt };
+  }
+  if (card.group === 'monthly') {
+    const [, month, badge] = card.id.split(':');
+    return { id: card.id, kind: 'monthly', badge: badge as MonthlyBadgeId, month, earnedAt };
+  }
+  if (card.group === 'special') return { id: card.id, kind: 'special', badge: card.id.slice('special:'.length) as SpecialBadgeId, earnedAt };
+  return null;
 }

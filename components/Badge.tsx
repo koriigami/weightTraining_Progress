@@ -2,35 +2,16 @@
 
 import { useId } from 'react';
 
+import { TIERS, MONTHLY_COLORS } from '@/lib/badgeColors';
+import type { BadgeTier } from '@/lib/progress';
+
+export { TIERS, MONTHLY_COLORS };
+export type { BadgeTier };
 export type BadgeShape = 'shield' | 'hex' | 'circle' | 'diamond' | 'square' | 'star';
-export type BadgeTier = 'bronze' | 'silver' | 'gold' | 'diamond' | 'master' | 'legend';
-
-type Material = { rim: string[]; face: [string, string]; label: string };
-
-export const TIERS: Record<BadgeTier | 'locked', Material> = {
-  bronze: { rim: ['#E3A86B', '#8C5A2B'], face: ['#B87B45', '#5E3A1A'], label: 'Bronze' },
-  silver: { rim: ['#F4F7FA', '#8E9AA6'], face: ['#B7C2CD', '#56616E'], label: 'Silver' },
-  gold: { rim: ['#FFE27A', '#B8860B'], face: ['#E8B83A', '#7A5600'], label: 'Gold' },
-  diamond: { rim: ['#9EF0FF', '#6A5CFF'], face: ['#5DB6F5', '#3423C9'], label: 'Diamond' },
-  master: { rim: ['#FFB36B', '#C2410C'], face: ['#3A2A3F', '#120C18'], label: 'Master' },
-  legend: { rim: ['#FF6B8A', '#FFD24A', '#5EE0A3', '#7CC0FF', '#B272F0'], face: ['#3A1F7A', '#120A33'], label: 'Legend' },
-  locked: { rim: ['#B3B7C4', '#6C7080'], face: ['#8C90A0', '#4D5160'], label: 'Locked' },
-};
-
-// Keyed by the colorKey each monthly badge carries in lib/badges.ts.
-export const MONTHLY_COLORS: Record<string, [string, string]> = {
-  clear: ['#7FF0D6', '#0E8C73'],
-  pushup: ['#FFC38A', '#D2530F'],
-  cardio: ['#FF9DA8', '#C21F3C'],
-  run: ['#FFB199', '#E0461F'],
-  ride: ['#9FD8FF', '#1466C2'],
-  perfect: ['#FFE27A', '#B8860B'],
-  weigh: ['#D6B8FF', '#6B2FC9'],
-};
 
 // 24px-grid stroke icons, ported verbatim from the design reference so the
 // geometry inside each badge matches exactly.
-const ICON: Record<string, string> = {
+export const BADGE_ICONS: Record<string, string> = {
   flame: '<path d="M12 3c.5 3 4 4.6 4 9a4 4 0 0 1-8 0c0-2 .8-3.2 2-4.2.1 1.8 1 2.8 2 2.8 0-2.6-.8-4.8 0-7.6z"/>',
   chevrons: '<path d="M6 13l6-6 6 6M6 19l6-6 6 6"/>',
   dumbbell: '<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>',
@@ -199,7 +180,7 @@ export function Badge({ shape, tier, colors, icon, dy = 0, text, month, locked, 
             strokeLinecap="round"
             strokeLinejoin="round"
             filter={`url(#${id}-s)`}
-            dangerouslySetInnerHTML={{ __html: ICON[icon] ?? '' }}
+            dangerouslySetInnerHTML={{ __html: BADGE_ICONS[icon] ?? '' }}
           />
         ) : null}
 

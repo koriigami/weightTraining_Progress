@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useCelebration } from '@/components/celebrate/CelebrationProvider';
 import { useProgress } from '@/components/ProgressProvider';
 import { RankShield } from '@/components/RankShield';
 import { BadgesPanel, badgePreview } from '@/components/rank/BadgesPanel';
@@ -11,7 +12,9 @@ import { Card } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Screen } from '@/components/ui/Screen';
 import { Segmented } from '@/components/ui/Segmented';
-import { buildBadgeCards } from '@/lib/badgeCards';
+import { buildBadgeCards, cardToEarned } from '@/lib/badgeCards';
+import type { BadgeCard } from '@/lib/badgeCards';
+import { rankMomentForGate } from '@/lib/celebrations';
 import { gatePreview } from '@/lib/rankRoad';
 import type { GateRow } from '@/lib/rankRoad';
 import { useWideLayout } from '@/lib/useMediaQuery';
@@ -27,14 +30,27 @@ function gateToPreview(gate: GateRow): Preview {
 
 export default function RankPage() {
   const { progress, state } = useProgress();
+  const celebration = useCelebration();
   const today = useToday();
   const wide = useWideLayout();
   const [tab, setTab] = useState<Tab>('road');
   const [preview, setPreview] = useState<Preview | null>(null);
   const cards = useMemo(() => buildBadgeCards(state, today), [state, today]);
 
-  const road = <RankRoad xp={progress.xp} onPreview={(g) => setPreview(gateToPreview(g))} />;
-  const badges = <BadgesPanel cards={cards} today={today} onOpen={(c) => setPreview(badgePreview(c))} />;
+  // An unlocked rank or an earned badge replays its moment. Anything still locked opens the preview.
+  function openGate(g: GateRow) {
+    const moment = g.reached ? rankMomentForGate(g.level) : null;
+    if (moment) celebration.replay(moment);
+    else setPreview(gateToPreview(g));
+  }
+  function openBadge(c: BadgeCard) {
+    const earned = cardToEarned(c);
+    if (earned) celebration.replay({ kind: 'badge', badge: earned });
+    else setPreview(badgePreview(c));
+  }
+
+  const road = <RankRoad xp={progress.xp} onPreview={openGate} />;
+  const badges = <BadgesPanel cards={cards} today={today} onOpen={openBadge} />;
 
   return (
     <Screen header={<PageHeader title="Rank" large />} aside={wide ? badges : undefined}>

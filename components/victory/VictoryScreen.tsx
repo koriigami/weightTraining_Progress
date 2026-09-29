@@ -16,6 +16,7 @@ import { useToday } from '@/lib/useToday';
 import { xpLines, xpTotal } from '@/lib/victory';
 import { scoreState } from '@/lib/workoutScoring';
 import { useCelebration } from '@/components/celebrate/CelebrationProvider';
+import { VICTORY_HOLD_MS } from '@/lib/celebrations';
 import { useProgress } from '@/components/ProgressProvider';
 import type { XpSnapshot } from '@/components/ProgressProvider';
 import { RankShield } from '@/components/RankShield';
@@ -76,11 +77,13 @@ function Victory({ finished }: { finished: Finished }) {
   const celebration = useCelebration();
 
   // Level-ups, rank-ups and new badges play from here. finish() held them back.
+  // The banner, the rolling XP, the crowns and the XP bar play first: the moments
+  // start about 1.8 seconds in, or at the first tap if that comes sooner.
   const played = useRef(false);
   useEffect(() => {
     if (played.current) return;
     played.current = true;
-    celebration.enqueue(finished.events);
+    celebration.enqueue(finished.events, { delayMs: VICTORY_HOLD_MS });
   }, [finished, celebration]);
 
   const saved = finished.workout;

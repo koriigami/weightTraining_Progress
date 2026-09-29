@@ -3,9 +3,10 @@
 // lib/badges.ts (pure computation) since this is presentation only.
 import { LIFETIME_FAMILIES, MONTHLY_BADGES, SPECIAL_BADGES } from './badges';
 import type { EarnedBadgeSummary, LifetimeFamilyId, MonthlyBadgeId, SpecialBadgeId } from './badges';
-import { MONTHLY_COLORS, TIERS } from '@/components/Badge';
+import { MEDAL_TIERS, MONTHLY_COLORS, TIERS } from './badgeColors';
 import type { BadgeProps } from '@/components/Badge';
 import { XP } from './progress';
+import type { BadgeTier } from './progress';
 import { monthLabel, monthRibbon } from './date';
 
 export type BadgeDisplay = { name: string; description: string; xp: number; badgeProps: BadgeProps };
@@ -52,4 +53,65 @@ export function describeSpecialBadge(badge: SpecialBadgeId): BadgeDisplay {
     xp: XP.specialBadge,
     badgeProps: { shape: 'star', tier: 'gold', icon: meta.icon, label: meta.name },
   };
+}
+
+// ---------------- The unlock moment ----------------
+
+export type MomentBadge = {
+  name: string;
+  /** What it measures or asks for, in one line. */
+  what: string;
+  /** The tier ribbon: Bronze to Legend, or Monthly or Special. */
+  ribbon: string;
+  ribbonColor: string;
+  /** The hexagon medal's light and dark colours. */
+  medal: [string, string];
+  icon?: string;
+  text?: string;
+  /** Extra vertical nudge for the icon, in the badge's 120-unit space. */
+  dy?: number;
+  xp: number;
+};
+
+const tierName = (tier: BadgeTier): string => TIERS[tier].label;
+// "1 workout", "5 workouts", "3 kg". A lone 1 drops the plural s.
+const withUnit = (n: number, unit: string): string => {
+  const u = n === 1 && unit.endsWith('s') ? unit.slice(0, -1) : unit;
+  return `${n.toLocaleString('en-US')}${u ? ` ${u}` : ''}`;
+};
+
+/** What the badge unlock moment shows for an earned badge: the medal, the ribbon, the name and what it measures. */
+export function describeMomentBadge(b: EarnedBadgeSummary): MomentBadge {
+  if (b.kind === 'lifetime') {
+    const meta = LIFETIME_FAMILIES[b.family];
+    const threshold = meta.tiers[['bronze', 'silver', 'gold', 'diamond', 'master', 'legend'].indexOf(b.tier)];
+    const medal = MEDAL_TIERS[b.tier];
+    return {
+      name: meta.name,
+      what: threshold !== undefined ? `${meta.metric}: ${withUnit(threshold, meta.unit)}` : meta.metric,
+      ribbon: tierName(b.tier),
+      ribbonColor: medal[1],
+      medal,
+      icon: meta.icon,
+      dy: meta.dy,
+      xp: XP.badgeTier[b.tier],
+    };
+  }
+  if (b.kind === 'monthly') {
+    const meta = MONTHLY_BADGES[b.badge];
+    const colors = MONTHLY_COLORS[meta.colorKey];
+    return {
+      name: meta.name,
+      what: `${meta.rule}, ${monthLabel(b.month)}`,
+      ribbon: 'Monthly',
+      ribbonColor: colors[1],
+      medal: colors,
+      icon: meta.icon,
+      text: meta.text,
+      xp: XP.monthlyBadge,
+    };
+  }
+  const meta = SPECIAL_BADGES[b.badge];
+  const gold = MEDAL_TIERS.gold;
+  return { name: meta.name, what: meta.description, ribbon: 'Special', ribbonColor: gold[1], medal: gold, icon: meta.icon, xp: XP.specialBadge };
 }

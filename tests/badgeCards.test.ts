@@ -1,7 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { LIFETIME_FAMILIES, allEarnedBadges, computeBadges } from '../lib/badges';
+import { LIFETIME_FAMILIES, MONTHLY_BADGES, SPECIAL_BADGES, allEarnedBadges, computeBadges } from '../lib/badges';
 import type { FamilyProgress } from '../lib/badges';
-import { LEGACY_FAMILIES, WORKOUT_FAMILIES, badgeCardsFrom, buildBadgeCards, lifetimeCard, specialCard, tierLabel } from '../lib/badgeCards';
+import {
+  LEGACY_FAMILIES,
+  PLAN_ONLY_FAMILIES,
+  PLAN_ONLY_MONTHLY,
+  PLAN_ONLY_SPECIAL,
+  WORKOUT_FAMILIES,
+  badgeCardsFrom,
+  buildBadgeCards,
+  hasPlanDays,
+  lifetimeCard,
+  specialCard,
+  tierLabel,
+} from '../lib/badgeCards';
 import { emptyState } from '../lib/progress';
 import type { AppState } from '../lib/progress';
 import legacy from './fixtures/legacyState.json';
@@ -14,8 +26,8 @@ const run = (date: string, km: number) => workout(date, [{ id: 'run', sets: [{ m
 const push = (date: string) => workout(date, [{ id: 'pushup', sets: [{ reps: 10 }] }]);
 
 describe('badge cards', () => {
-  it('shows every family: the 5 new ones, then the 8 that predate routines', () => {
-    const cards = buildBadgeCards(emptyState(), TODAY);
+  it('shows every family to someone with plan days: the 5 new ones, then the 8 that predate routines', () => {
+    const cards = buildBadgeCards(legacyState, TODAY);
     expect(cards.workouts.map((c) => c.name)).toEqual(['Finisher', 'Iron Mover', 'Record Breaker', 'Streak Keeper', 'All-Rounder']);
     expect(cards.lifetime.map((c) => c.name)).toEqual(['Iron Will', 'Pushup Path', 'Grinder', 'Engine', 'Road Runner', 'Rider', 'Shedding', 'Scale Keeper']);
     expect([...WORKOUT_FAMILIES, ...LEGACY_FAMILIES].sort()).toEqual(Object.keys(LIFETIME_FAMILIES).sort());
@@ -27,8 +39,8 @@ describe('badge cards', () => {
     expect(c).toMatchObject({ earned: false, tierName: 'Locked', value: 0, target: 1, pct: 0, progressText: '0 of 1 workouts' });
     expect(c.art.tier).toBe('bronze');
     expect(c.hint).toBe('Bronze unlocks at 1 workouts. You are at 0 workouts. Workouts finished.');
-    const iron = buildBadgeCards(emptyState(), TODAY).lifetime[0];
-    expect(iron.progressText).toBe('0 of 3 days');
+    const iron = buildBadgeCards(legacyState, TODAY).lifetime[0];
+    expect(iron.name).toBe('Iron Will');
   });
 
   it('an earned tier shows its name, and the bar counts towards the next one', () => {
@@ -122,5 +134,53 @@ describe('badge cards', () => {
   it('names the tier with a capital', () => {
     expect(tierLabel('bronze')).toBe('Bronze');
     expect(tierLabel('legend')).toBe('Legend');
+  });
+
+  describe('plan-based badges', () => {
+    const planOnly = new Set<string>([...PLAN_ONLY_FAMILIES.map((f) => LIFETIME_FAMILIES[f].name), ...PLAN_ONLY_MONTHLY.map((m) => MONTHLY_BADGES[m].name), ...PLAN_ONLY_SPECIAL.map((s) => SPECIAL_BADGES[s].name)]);
+    const names = (b: ReturnType<typeof buildBadgeCards>) => [...b.workouts, ...b.lifetime, ...b.month.cards, ...b.trophies, ...b.milestones].map((c) => c.name);
+
+    it('a person with no plan days recorded does not see Perfect Month, Awakening, Month Clear, Program Complete or the other plan-only badges', () => {
+      const shown = names(buildBadgeCards(emptyState(), TODAY));
+      for (const n of ['Perfect Month', 'Awakening', 'Month Clear', 'Program Complete', 'Perfect Day', 'Full Week', 'Iron Will', 'Pushup Path', 'Grinder', 'Engine', 'Pushup Month', 'Cardio Month', '20K Walk/Run', '40K Ride']) {
+        expect(shown, n).not.toContain(n);
+      }
+      expect(shown.filter((n) => planOnly.has(n))).toEqual([]);
+    });
+
+    it('what a logged workout can move stays visible', () => {
+      const cards = buildBadgeCards(stateWith([run('2026-09-29', 12)]), TODAY);
+      expect(cards.workouts.map((c) => c.name)).toEqual(['Finisher', 'Iron Mover', 'Record Breaker', 'Streak Keeper', 'All-Rounder']);
+      expect(cards.lifetime.map((c) => c.name)).toEqual(['Road Runner', 'Rider', 'Shedding', 'Scale Keeper']);
+      expect(cards.milestones.map((c) => c.name)).toEqual(['Goal Getter']);
+      expect(cards.month.cards.map((c) => c.name)).toEqual(['Weigh-in Month']);
+    });
+
+    it('a person with any legacy plan day sees every one of them', () => {
+      const cards = buildBadgeCards(legacyState, '2026-10-31');
+      expect(hasPlanDays(legacyState)).toBe(true);
+      expect(hasPlanDays(emptyState())).toBe(false);
+      const shown = names(cards);
+      for (const n of planOnly) expect(shown, n).toContain(n);
+    });
+
+    it('one recorded day is enough', () => {
+      const oneDay = { ...emptyState(), days: { '2026-09-26': { items: { s0: { at: '2026-09-26T10:00:00Z' } } } } } as AppState;
+      expect(hasPlanDays(oneDay)).toBe(true);
+      expect(names(buildBadgeCards(oneDay, TODAY))).toContain('Awakening');
+    });
+
+    it('only hides cards: what is earned, and its ids, do not change', () => {
+      const withPlan = allEarnedBadges(legacyState, '2026-10-31').map((b) => b.id);
+      const stripped = { ...legacyState, days: {} } as AppState;
+      // With the days gone the plan badges are simply not earned, and nothing else moves.
+      const rest = allEarnedBadges(stripped, '2026-10-31').map((b) => b.id);
+      expect(withPlan.length).toBeGreaterThan(rest.length);
+      expect(rest.every((id) => withPlan.includes(id))).toBe(true);
+      // The filter never changes what badgeCardsFrom is given: with the flag on it shows everything.
+      const all = badgeCardsFrom(computeBadges(emptyState(), TODAY), TODAY);
+      expect(all.lifetime).toHaveLength(8);
+      expect(all.milestones).toHaveLength(5);
+    });
   });
 });

@@ -12,6 +12,14 @@ import {
   workoutDates,
 } from './progress';
 import type { AppState, Goal } from './progress';
+import { fmtNumber, kgToUnit, kmToUnit } from './units';
+import type { DistanceUnit, WeightUnit } from './units';
+
+export type GoalUnits = { weight: WeightUnit; distance: DistanceUnit };
+const METRIC: GoalUnits = { weight: 'kg', distance: 'km' };
+
+/** A weight in kg as the number to show in the person's unit. Kilograms come back untouched, so the kg wording is exactly what it was. */
+export const goalWeight = (kg: number, unit: WeightUnit): number => (unit === 'lb' ? kgToUnit(kg, 'lb') : kg);
 
 export type GoalStatus = 'active' | 'achieved' | 'failed' | 'expired';
 
@@ -185,7 +193,8 @@ export function goalProgressValue(goal: Goal, state: AppState, today: string): n
   return periodGoalValue(goal, state);
 }
 
-export function goalTitle(goal: Goal): string {
+// Goals are stored in kg and km. The title writes them in the person's units.
+export function goalTitle(goal: Goal, units: GoalUnits = METRIC): string {
   switch (goal.type) {
     case 'streak':
       return `${goal.target} workout days in a row`;
@@ -196,11 +205,12 @@ export function goalTitle(goal: Goal): string {
     case 'cardio-minutes':
       return `${goal.target} cardio minutes`;
     case 'cardio-km':
-      return `${goal.target} km cardio distance`;
+      return `${units.distance === 'km' ? goal.target : fmtNumber(kmToUnit(goal.target, units.distance))} ${units.distance} cardio distance`;
     case 'weight': {
       const dir = goal.direction === 'gain' ? 'Gain' : 'Lose';
-      const amt = goal.baseline !== undefined ? Math.abs(goal.target - goal.baseline).toFixed(1) : goal.target.toFixed(1);
-      return `${dir} ${amt} kg, to ${goal.target.toFixed(1)} kg`;
+      const u = units.weight;
+      const amt = goalWeight(goal.baseline !== undefined ? Math.abs(goal.target - goal.baseline) : goal.target, u).toFixed(1);
+      return `${dir} ${amt} ${u}, to ${goalWeight(goal.target, u).toFixed(1)} ${u}`;
     }
   }
 }

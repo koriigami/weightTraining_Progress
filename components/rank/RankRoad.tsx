@@ -125,7 +125,7 @@ export function RankRoad({ xp, onPreview }: { xp: number; onPreview: (gate: Gate
                 type="button"
                 className="wt-node wt-gate-btn"
                 onClick={() => onPreview(row)}
-                aria-label={`${RANK_TITLES[row.rank]}, ${row.reached ? 'unlocked' : 'locked'}. Preview`}
+                aria-label={`${RANK_TITLES[row.rank]}, ${row.reached ? 'unlocked. Replay rank up' : 'locked. Preview'}`}
               >
                 {row.reached ? (
                   <span className={row.now ? 'wt-pulse' : undefined}>

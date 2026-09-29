@@ -33,7 +33,8 @@ function GoalMenu({ goal, active, onEdit, onDelete }: { goal: Goal; active: bool
  * "New goal" opens the goal sheet, and the dots on a goal open Edit and Delete.
  */
 export function GoalsSection() {
-  const { state, deleteGoal } = useProgress();
+  const { state, deleteGoal, prefs } = useProgress();
+  const units = prefs.units;
   const today = useToday();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editGoal, setEditGoal] = useState<Goal | null>(null);
@@ -70,12 +71,12 @@ export function GoalsSection() {
       ) : (
         <Card>
           {ordered.map(({ goal }) => (
-            <GoalCard key={goal.id} goal={goal} state={state} today={today} onOptions={setMenuGoal} />
+            <GoalCard key={goal.id} goal={goal} state={state} today={today} units={units} onOptions={setMenuGoal} />
           ))}
         </Card>
       )}
 
-      <Sheet open={menuGoal !== null} onClose={() => setMenuGoal(null)} title="Goal" description={menuGoal ? goalTitle(menuGoal) : undefined}>
+      <Sheet open={menuGoal !== null} onClose={() => setMenuGoal(null)} title="Goal" description={menuGoal ? goalTitle(menuGoal, units) : undefined}>
         {menuGoal && <GoalMenu goal={menuGoal} active={menuActive} onEdit={(g) => { setEditGoal(g); setSheetOpen(true); }} onDelete={deleteGoal} />}
       </Sheet>
       <NewGoalSheet open={sheetOpen} onClose={() => setSheetOpen(false)} editGoal={editGoal} />
