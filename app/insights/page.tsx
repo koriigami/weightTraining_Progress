@@ -34,7 +34,7 @@ function NotFound() {
   return (
     <Screen header={<PageHeader title="Not found" narrow />} narrow>
       <Card tone="dashed" className="text-center">
-        <p style={{ margin: 0, color: 'var(--muted)' }}>Not found</p>
+        <p style={{ margin: 0, color: 'var(--muted)' }}>There is nothing at this address.</p>
       </Card>
     </Screen>
   );
