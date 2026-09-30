@@ -1,7 +1,10 @@
 import { Redis } from '@upstash/redis';
-import { emptyState, planDay, strengthKeys, coreKeys } from './progress';
-import type { AppState, DayLog, Goal } from './progress';
-import { defaultPrefs, seedOwnerRoutines } from './routines';
+import { emptyState } from './progress';
+import type { AppState, Goal } from './progress';
+import { defaultPrefs } from './routines';
+import { completionToDayLog, hasLegacyDays, migratePlanDays } from './migrations/planDays';
+import type { LegacyDayLog, LegacyState } from './migrations/planDays';
+import { todayStr } from './date';
 
 const STATE_KEY_V2 = 'wt:state:v2';
 const STATE_KEY_V1 = 'wt:state';
@@ -44,8 +47,9 @@ type V1AppState = {
   goals: V1Goal[];
 };
 
-// A v1 completion becomes a DayLog with every strength, core and cardio item
-// ticked (at = v1 at), cardio minutes = planned minutes, no km. v1 weight goals
+// A v1 completion becomes a plan day log with every strength, core and cardio item
+// ticked (at = v1 at), cardio minutes = planned minutes, no km. It is turned into
+// workouts on read, like any other state that still has plan days. v1 weight goals
 // get direction 'lose' and a baseline (first weight on or after the goal's
 // start, else 110).
 // A goal's createdAt anchors anti-farming: progress only counts from then on.
@@ -55,21 +59,11 @@ function backfillCreatedAt(start: string): string {
   return `${start}T00:00:00Z`;
 }
 
-export function migrateV1ToV2(v1: V1AppState): AppState {
-  const days: Record<string, DayLog> = {};
+export function migrateV1ToV2(v1: V1AppState): LegacyState {
+  const days: Record<string, LegacyDayLog> = {};
   for (const [date, c] of Object.entries(v1.completions)) {
-    const day = planDay(date);
-    if (!day) continue;
-    const items: Record<string, { at: string }> = {};
-    strengthKeys(day).forEach((k) => {
-      items[k] = { at: c.at };
-    });
-    coreKeys(day).forEach((k) => {
-      items[k] = { at: c.at };
-    });
-    const log: DayLog = { items };
-    if (day.cardio) log.cardio = { minutes: day.cardio.minutes, at: c.at };
-    days[date] = log;
+    const log = completionToDayLog(date, c.at);
+    if (log) days[date] = log;
   }
 
   const goals: Goal[] = v1.goals.map((g): Goal => {
@@ -105,7 +99,7 @@ export function migrateV1ToV2(v1: V1AppState): AppState {
 // Fills in createdAt for any goal saved before the field existed (v2 states
 // written before this migration). Idempotent: a goal that already has it is
 // left untouched.
-export function backfillGoalCreatedAt(state: AppState): AppState {
+export function backfillGoalCreatedAt<T extends AppState>(state: T): T {
   if (state.goals.every((g) => typeof g.createdAt === 'string')) return state;
   return {
     ...state,
@@ -113,16 +107,10 @@ export function backfillGoalCreatedAt(state: AppState): AppState {
   };
 }
 
-// Someone new who is not the owner starts with no routines and has not been
-// through onboarding yet.
+// Someone new starts with no routines, has not been through onboarding yet and
+// has no "XP was worked out again" note to see.
 export function newUserState(): AppState {
-  return { ...emptyState(), routines: [], prefs: defaultPrefs() };
-}
-
-// The owner's plan sessions become routines, once: only while routines has never
-// been set. An owner who deletes them all keeps an empty list.
-export function withOwnerRoutines(state: AppState): AppState {
-  return state.routines === undefined ? { ...state, routines: seedOwnerRoutines() } : state;
+  return { ...emptyState(), routines: [], prefs: defaultPrefs(), rulesV2Note: false };
 }
 
 export type Profile = { email: string; name: string; image: string; createdAt: string };
@@ -135,6 +123,8 @@ export type KV = {
 
 const stateKey = (userId: string) => `wt:user:${userId}:state`;
 const profileKey = (userId: string) => `wt:user:${userId}:profile`;
+// The state exactly as it was before the plan days became workouts, kept once.
+const backupKey = (userId: string) => `wt:user:${userId}:backup:v7`;
 
 function isOwner(email: string | undefined | null): boolean {
   const owner = process.env.OWNER_EMAIL?.trim().toLowerCase();
@@ -142,29 +132,37 @@ function isOwner(email: string | undefined | null): boolean {
 }
 
 export function createStore(kv: KV) {
+  // Brings a state read for the first time under v8 up to date. A state that still
+  // has plan days is copied untouched to the v7 backup (only if that key is free),
+  // its days become workouts and the result is saved. A state without the
+  // rulesV2Note flag gets it, once: true when it already had workouts or plan days,
+  // false otherwise. A state with neither is returned as it is, and nothing is
+  // written for a goal that only needed its createdAt filled in.
+  async function upgrade(userId: string, raw: LegacyState): Promise<AppState> {
+    const state = backfillGoalCreatedAt(raw);
+    const hadDays = hasLegacyDays(raw);
+    const noteUnset = raw.rulesV2Note === undefined;
+    if (!hadDays && !('days' in raw) && !noteUnset) return state;
+    if (hadDays && (await kv.get(backupKey(userId))) === null) await kv.set(backupKey(userId), raw);
+    const migrated = migratePlanDays(state, { today: todayStr() });
+    const hadData = hadDays || (raw.workouts ?? []).length > 0;
+    const next: AppState = noteUnset ? { ...migrated, rulesV2Note: hadData } : migrated;
+    await kv.set(stateKey(userId), next);
+    return next;
+  }
+
   return {
     async getState(userId: string, email?: string | null): Promise<AppState> {
-      const existing = await kv.get<AppState>(stateKey(userId));
-      if (existing) {
-        const state = backfillGoalCreatedAt(existing);
-        if (isOwner(email) && state.routines === undefined) {
-          const seeded = withOwnerRoutines(state);
-          await kv.set(stateKey(userId), seeded);
-          return seeded;
-        }
-        return state;
-      }
+      const existing = await kv.get<LegacyState>(stateKey(userId));
+      if (existing) return upgrade(userId, existing);
       if (isOwner(email)) {
         // Copy the legacy single-user progress once. Legacy keys are never written or deleted.
-        const v2 = await kv.get<AppState>(STATE_KEY_V2);
+        const v2 = await kv.get<LegacyState>(STATE_KEY_V2);
         const v1 = v2 ? null : await kv.get<V1AppState>(STATE_KEY_V1);
         const legacy = v2 ?? (v1 ? migrateV1ToV2(v1) : null);
-        if (legacy) {
-          const copied = withOwnerRoutines(backfillGoalCreatedAt(structuredClone(legacy)));
-          await kv.set(stateKey(userId), copied);
-          return copied;
-        }
-        return withOwnerRoutines(emptyState());
+        if (legacy) return upgrade(userId, structuredClone(legacy));
+        // The owner has no prefs of their own, which reads as their setup and skips onboarding.
+        return { ...emptyState(), routines: [], rulesV2Note: false };
       }
       return newUserState();
     },

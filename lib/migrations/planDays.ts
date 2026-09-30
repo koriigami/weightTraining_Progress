@@ -1,11 +1,23 @@
-export type Exercise = {
+// The one-time move from the 6-week plan to logged workouts (v8).
+//
+// Before v8 the app ran a fixed 6-week plan: `state.days` held ticked plan items
+// and cardio per date, scored with their own day rules. v8 removes the plan.
+// migratePlanDays turns every logged plan day into a WorkoutLog, so the person's
+// history stays on the calendar, in the feed and in workout-based badges, and
+// drops `days`. This file holds the only remaining copy of the plan data.
+import { exerciseById } from '../../data/exercises';
+import type { AppState } from '../progress';
+import type { LoggedSet, PlanItem, Routine, WorkoutItem, WorkoutLog } from '../routines';
+import { rescoreWorkouts } from '../workoutScoring';
+
+type Exercise = {
   name: string;
   sets: number;
   reps: string;
   notes?: string;
 };
 
-export type DayType =
+type DayType =
   | 'push-a'
   | 'push-b'
   | 'pull-a'
@@ -15,7 +27,7 @@ export type DayType =
   | 'rest'
   | 'pre-start';
 
-export type WorkoutDay = {
+type WorkoutDay = {
   date: string;
   weekNumber: 1 | 2 | 3 | 4 | 5 | 6;
   dayType: DayType;
@@ -489,4 +501,177 @@ function buildPlan(): WorkoutDay[] {
   return days;
 }
 
-export const plan: WorkoutDay[] = buildPlan();
+const plan: WorkoutDay[] = buildPlan();
+
+// ---------------- Migration ----------------
+
+// Names in the plan mapped to library ids. Names that are not here (the week 5
+// supersets such as "Pushups + DB Shoulder Press") map to no single exercise and
+// are left out of the migrated workouts.
+const PLAN_NAME_TO_ID: Record<string, string> = {
+  Pushups: 'pushup',
+  'DB Chest Flyes (floor)': 'db-fly',
+  'DB Shoulder Press': 'db-ohp',
+  'DB Tricep Overhead Extension': 'db-ohext',
+  'DB Lateral Raises': 'db-lat',
+  'DB Front Raises': 'db-front',
+  'DB Tricep Kickbacks': 'db-kick',
+  'DB Bent-over Rows': 'db-row',
+  'DB Single-arm Rows': 'db-row1',
+  'DB Reverse Flyes': 'db-rear',
+  'DB Bicep Curls': 'db-curl',
+  'DB Hammer Curls': 'db-hammer',
+  'DB Spider Curls': 'db-spider',
+  Supermans: 'superman',
+  'Bodyweight Squats': 'bw-squat',
+  'Sumo Squats': 'sumo-squat',
+  'DB Goblet Squats': 'db-goblet',
+  'DB Sumo Squats': 'db-sumo',
+  'Glute Bridges': 'bridge',
+  'Calf Raises': 'db-calf',
+  Plank: 'plank',
+  Crunches: 'crunch',
+};
+
+// The routine title for each kind of session, and the id its seeded routine had.
+const SESSION_ROUTINES: Record<SessionType, { id: string; title: string }> = {
+  'push-a': { id: 'seed-push-a', title: 'Push A' },
+  'pull-a': { id: 'seed-pull-a', title: 'Pull A' },
+  legs: { id: 'seed-legs', title: 'Legs' },
+  'push-b': { id: 'seed-push-b', title: 'Push B' },
+  'pull-b': { id: 'seed-pull-b', title: 'Pull B' },
+  'full-body': { id: 'seed-full-body', title: 'Full Body' },
+};
+
+// The legacy shape of a day's log. ItemKey is 's0'.. for strength, 'k0'.. for core.
+export type LegacyDayLog = {
+  items: Record<string, { at: string }>;
+  cardio?: { minutes: number; km?: number; at: string };
+};
+
+// A saved state that may still carry the plan log. AppState no longer has `days`.
+export type LegacyState = AppState & { days?: Record<string, LegacyDayLog> };
+
+/** True when the state still holds plan days to migrate. */
+export function hasLegacyDays(state: LegacyState): boolean {
+  return Object.keys(state.days ?? {}).length > 0;
+}
+
+const dayByDate = new Map(plan.map((d) => [d.date, d]));
+
+/**
+ * The day log a pre-v2 completion of `date` stands for: every strength and core
+ * item ticked at `at`, and the planned cardio minutes with no distance. Undefined
+ * for a date that was not a workout day.
+ */
+export function completionToDayLog(date: string, at: string): LegacyDayLog | undefined {
+  const day = dayByDate.get(date);
+  if (!day || day.dayType === 'rest' || day.dayType === 'pre-start') return undefined;
+  const items: LegacyDayLog['items'] = {};
+  day.strength.forEach((_, i) => {
+    items[`s${i}`] = { at };
+  });
+  (day.core ?? []).forEach((_, i) => {
+    items[`k${i}`] = { at };
+  });
+  return { items, ...(day.cardio ? { cardio: { minutes: day.cardio.minutes, at } } : {}) };
+}
+
+// The plan's rep text ('8-10', '10/side', '20 sec') as a target. A range plans
+// its top end and '10/side' is 10. Text with no number ('max reps') gives an
+// empty result, and that item is left out of the migration.
+function parsePlanReps(text: string): { reps?: number; sec?: number } {
+  const secs = text.match(/(\d+)\s*sec/i);
+  if (secs) return { sec: Number(secs[1]) };
+  const nums = text.match(/\d+/g);
+  return nums ? { reps: Number(nums[nums.length - 1]) } : {};
+}
+
+// A plan day as a workout: the ticked items with the plan's sets and reps and the
+// routine's kg, every set done. Returns null when nothing usable was ticked.
+//
+// Times are fixed so the result never depends on the server's time zone: `when`
+// reads 18:00 on the day, startedAt is 18:00 UTC and finishedAt 45 minutes later.
+function workoutFromDay(day: WorkoutDay, log: LegacyDayLog, routines: readonly Routine[]): WorkoutLog | null {
+  const session = SESSION_ROUTINES[day.dayType as SessionType];
+  const routine = routines.find((r) => r.id === session.id);
+  const items: WorkoutItem[] = [];
+  const planned: PlanItem[] = [];
+  const seen = new Set<string>();
+
+  const scheduled = [...day.strength.map((ex, i) => ({ ex, key: `s${i}` })), ...(day.core ?? []).map((ex, i) => ({ ex, key: `k${i}` }))];
+  for (const { ex, key } of scheduled) {
+    const exerciseId = PLAN_NAME_TO_ID[ex.name];
+    const def = exerciseId ? exerciseById(exerciseId) : undefined;
+    if (!exerciseId || !def || seen.has(exerciseId)) continue;
+    const target = parsePlanReps(ex.reps);
+    const usable = def.metric === 'time' ? target.sec !== undefined : target.reps !== undefined;
+    if (!usable) continue;
+    seen.add(exerciseId);
+    planned.push({ exerciseId, sets: ex.sets });
+    if (!log.items[key]) continue;
+
+    const routineKg = routine?.items.find((it) => it.exerciseId === exerciseId)?.sets[0]?.kg;
+    const set: LoggedSet =
+      def.metric === 'time'
+        ? { sec: target.sec, done: true }
+        : def.metric === 'weight_reps'
+          ? { kg: typeof routineKg === 'number' ? routineKg : 0, reps: target.reps, done: true }
+          : { reps: target.reps, done: true };
+    items.push({ exerciseId, sets: Array.from({ length: ex.sets }, () => ({ ...set })) });
+  }
+
+  // Cardio: the plan's block is one set. It is logged when minutes were saved,
+  // and keeps its distance only when one was recorded (0 or none means no distance).
+  if (day.cardio) {
+    const exerciseId = day.cardio.modality === 'treadmill' ? 'treadmill' : 'bike';
+    planned.push({ exerciseId, sets: 1 });
+    const c = log.cardio;
+    if (c && Number.isFinite(c.minutes) && c.minutes > 0) {
+      const km = typeof c.km === 'number' && Number.isFinite(c.km) && c.km > 0 ? c.km : undefined;
+      items.push({ exerciseId, sets: [{ min: c.minutes, ...(km !== undefined ? { km } : {}), done: true }] });
+    }
+  }
+
+  if (items.length === 0) return null;
+  const routineId = routine ? session.id : undefined;
+  return {
+    id: `w-plan-${day.date}`,
+    date: day.date,
+    when: `${day.date}T18:00`,
+    title: session.title,
+    ...(routineId ? { routineId } : {}),
+    startedAt: `${day.date}T18:00:00.000Z`,
+    finishedAt: `${day.date}T18:45:00.000Z`,
+    items,
+    xp: 0,
+    plan: planned,
+  };
+}
+
+/**
+ * Turns the plan days in `state.days` into workouts and removes `days`.
+ *
+ * Every date that was a workout day in the plan and has a ticked item or logged
+ * cardio becomes the workout `w-plan-{date}`. A date that already has that
+ * workout is skipped, and so is one that has nothing usable, so running it again
+ * changes nothing (and once `days` is gone there is nothing to do). Workouts are
+ * appended after the existing ones and everything is scored again with
+ * rescoreWorkouts. Weigh-ins, goals and routines are untouched: goals already
+ * count workouts, so they keep working on the migrated ones.
+ */
+export function migratePlanDays(state: LegacyState, opts: { today: string }): AppState {
+  const { days, ...rest } = state;
+  const existing = rest.workouts ?? [];
+  const have = new Set(existing.map((w) => w.id));
+  const added: WorkoutLog[] = [];
+  for (const date of Object.keys(days ?? {}).sort()) {
+    if (have.has(`w-plan-${date}`)) continue;
+    const day = dayByDate.get(date);
+    if (!day || day.dayType === 'rest' || day.dayType === 'pre-start') continue;
+    const w = workoutFromDay(day, days![date], rest.routines ?? []);
+    if (w) added.push(w);
+  }
+  if (added.length === 0) return rest;
+  return { ...rest, workouts: rescoreWorkouts(rest, [...existing, ...added], opts.today) };
+}
