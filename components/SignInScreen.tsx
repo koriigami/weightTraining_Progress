@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Field, Input } from '@/components/ui/Field';
 
-const waitlistUrl = process.env.NEXT_PUBLIC_WAITLIST_URL;
+import { WAITLIST_URL as waitlistUrl } from '@/lib/waitlist';
 
-/** The invite-only note and the waitlist button. Rendered only when NEXT_PUBLIC_WAITLIST_URL is set. */
+/** The invite-only note and the waitlist button. Hidden when the waitlist URL is empty. */
 export function Waitlist({ url }: { url: string }) {
   return (
     <div className="space-y-2 pt-1">

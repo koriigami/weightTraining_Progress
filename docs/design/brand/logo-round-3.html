@@ -1,0 +1,134 @@
+<title>Levl Logo Round 3</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;700;800;900&display=swap">
+<style>
+/* Layout: one column of option rows; each row shows the mark where it will actually live. Single light look on purpose. */
+:root{
+  --cream:#FFF6E2; --card:#FFFDF6; --line:#E2CB98; --ink:#2E1F0C; --muted:#795F3F;
+  --green:#1E7A28; --gold:#C98A0C; --wood:linear-gradient(180deg,#6e4722,#4a2e13);
+  --sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:light;
+}
+body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:32px 64px;display:flex;flex-direction:column;gap:28px}
+header h1{font-size:34px;font-weight:900;letter-spacing:-.02em;margin:0;text-wrap:balance}
+header p{margin:6px 0 0;color:var(--muted);max-width:68ch}
+.notes{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.notes span{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:13px;font-weight:700}
+.opt{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:18px}
+.opt.rec{border:2px solid var(--green)}
+.oh{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.oh h2{margin:0;font-size:22px;font-weight:900;letter-spacing:-.01em}
+.oh .tag{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#fff;background:var(--green);border-radius:6px;padding:2px 8px}
+.oh p{margin:0;color:var(--muted);flex-basis:100%;max-width:70ch}
+.grid{display:grid;grid-template-columns:180px 1fr;gap:22px;align-items:start}
+.hero-mark{width:180px}
+.uses{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.use{display:flex;flex-direction:column;gap:6px;min-width:0}
+.use small{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.phone{height:130px;border-radius:14px;background:linear-gradient(170deg,#4AA8F5,#1D5FBF);display:flex;align-items:center;justify-content:center;gap:18px}
+.app{display:flex;flex-direction:column;align-items:center;gap:4px;color:#fff;font-size:11px;font-weight:700}
+.app .ic{width:58px;height:58px;border-radius:14px;overflow:hidden;box-shadow:0 4px 10px rgba(0,0,0,.25)}
+.app .ic.pad{background:var(--cream);display:grid;place-items:center}
+.app .ic.pad > div{width:46px}
+.dummy{width:58px;height:58px;border-radius:14px;background:rgba(255,255,255,.22)}
+.tabs{height:130px;border-radius:14px;background:#DEE3EA;padding:12px;display:flex;flex-direction:column;gap:8px}
+.tab{background:#fff;border-radius:8px 8px 0 0;padding:6px 10px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#333;width:max-content;max-width:100%}
+.tab .f16{width:16px;flex:none}.tab .f32{width:32px;flex:none}
+.side{height:130px;border-radius:14px;background:var(--wood);display:flex;align-items:center;padding:0 18px}
+.lock{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:-.03em;color:#fff;font-size:30px}
+.lock .m{width:38px;flex:none}
+.lock.dark{color:var(--ink)} .lock.dark i{color:var(--green);font-style:normal}
+.og{width:100%;aspect-ratio:1200/630;max-width:100%;border-radius:12px;overflow:hidden;position:relative;container-type:inline-size}
+.og .in{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 7cqw;gap:4cqw}
+.og .t{display:flex;flex-direction:column;gap:1.4cqw;min-width:0}
+.og .w{display:flex;align-items:center;gap:2cqw;font-weight:900;letter-spacing:-.04em;color:#fff;font-size:11cqw;line-height:1}
+.og .tl{color:rgba(255,255,255,.9);font-weight:700;font-size:3cqw;line-height:1.25;max-width:44cqw}
+.og .rk{display:flex;gap:.9cqw;margin-top:1.2cqw}
+.og .rk b{width:4.2cqw;height:4.2cqw;border-radius:1cqw;border:.25cqw solid rgba(255,255,255,.45);color:rgba(255,255,255,.85);display:grid;place-items:center;font-size:2.2cqw;font-weight:900}
+.og .rk b:last-child{border-color:#FFD35A;color:#1A1106;background:linear-gradient(180deg,#FFE88F,#D29512)}
+.og .big{width:28cqw;flex:none;filter:drop-shadow(0 1.5cqw 2.5cqw rgba(0,0,0,.3))}
+.og .rule{position:absolute;inset:1.6cqw;border:.25cqw solid rgba(255,211,90,.55);border-radius:2cqw;pointer-events:none}
+.ogrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:center}
+.lk{display:flex;flex-direction:column;gap:14px;padding:12px}
+.lk .lock{font-size:40px}.lk .lock .m{width:48px}
+footer{color:var(--muted);font-size:14px;max-width:70ch}
+@media (max-width:760px){.grid{grid-template-columns:1fr}.hero-mark{width:140px}.uses{grid-template-columns:1fr}.ogrow{grid-template-columns:1fr}}
+</style>
+<style>
+.og.light .w{color:#2E1F0C}.og.light .tl{color:#4A3212}
+.og.light .rk b{border-color:rgba(46,31,12,.35);color:#4A3212}
+.og.light .rule{border-color:rgba(46,31,12,.25)}
+.ba{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.ba figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.ba figure div{width:84px}
+.ba .arrow{font-size:22px;color:var(--muted)}
+.swatch{display:flex;gap:6px;flex-wrap:wrap}
+.swatch span{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--muted);background:var(--cream);border:1px solid var(--line);border-radius:999px;padding:2px 10px 2px 4px}
+.swatch i{width:14px;height:14px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.12)}
+</style>
+<div class="wrap">
+<header>
+  <h1>Levl logo, round 3</h1>
+  <p>The rank chevrons from round 2, now with round caps and round joins so they match the soft corners of the app's cards and buttons. The tile corners are rounder too. Five colourways, each taken from a colour the app already uses.</p>
+  <div class="ba">
+    <figure><div id="sharp"></div>Round 2</figure><span class="arrow" aria-hidden="true">→</span>
+    <figure><div id="soft"></div>Round 3</figure>
+  </div>
+</header>
+<div id="opts"></div>
+<footer>Pick one (or a mix, say "field green with the wood ring"). I'll then make the favicon, app icons, the link preview image and the sidebar and sign-in logos from it.</footer>
+</div>
+<script>
+// Round 3: the rank chevrons with round caps and joins, in five app colourways.
+const LG = (id, stops, y1=0, y2=1) => `<linearGradient id="${id}" x1="0" y1="${y1}" x2="0" y2="${y2}">${stops.map(([o,c])=>`<stop offset="${o}" stop-color="${c}"/>`).join('')}</linearGradient>`;
+const CH = (y) => `M34 ${y+20} L60 ${y} L86 ${y+20}`;
+window.WAYS = {
+  wood:  { name:'Wood and gold', tile:[[0,'#4E3517'],[1,'#170E05']], chev:[[0,'#FFEBA3'],[1,'#D29512']], top:null, ring:'#E9B949', ringO:.45, bevel:null, fade:[1,.6,.3],
+           og:'linear-gradient(160deg,#4A3216 0%,#2A1B0A 60%,#160E05 100%)', from:'The one you picked, with softened corners. Nav bar wood, XP gold.' },
+  green: { name:'Field green', tile:[[0,'#5FD24A'],[.5,'#2BA438'],[1,'#1E8A2E']], chev:[[0,'#FFFFFF'],[1,'#F2FFE9']], top:[[0,'#FFF2A6'],[1,'#FFC21A']], ring:null, bevel:'#186A20', fade:[1,.85,.5],
+           og:'linear-gradient(160deg,#2BA438 0%,#1E8A2E 55%,#125E1C 100%)', from:'The primary Start button: the same green, the same bottom bevel, white ink. The top chevron turns gold.' },
+  gold:  { name:'Rank gold', tile:[[0,'#FFF0A8'],[.55,'#FFC933'],[1,'#E0A316']], chev:[[0,'#5A3A14'],[1,'#3A230C']], top:null, ring:null, bevel:'#B8862E', fade:[1,.55,.28],
+           og:'linear-gradient(160deg,#FFD65A 0%,#E9A91C 55%,#B47A0A 100%)', ogInk:'#3A230C', from:'The gold rank badge and the secondary button. Dark wood chevrons on gold.' },
+  sky:   { name:'Deep sky', tile:[[0,'#4AA8F5'],[.45,'#2F8FE8'],[1,'#1D5FBF']], chev:[[0,'#FFFFFF'],[1,'#FFF6E2']], top:[[0,'#FFF2A6'],[1,'#FFC21A']], ring:null, bevel:'#0E3A7A', fade:[1,.8,.45],
+           og:'linear-gradient(160deg,#4AA8F5 0%,#2F8FE8 45%,#1D5FBF 100%)', from:'The Home header sky. Cream chevrons with a gold top chevron.' },
+  dawn:  { name:'Daybreak', tile:[[0,'#86CCFF'],[.5,'#CDEEFF'],[1,'#FFF6E2']], chev:[[0,'#34AE40'],[1,'#186A20']], top:[[0,'#FFD65A'],[1,'#C98A0C']], ring:'#E2CB98', ringO:1, bevel:null, fade:[1,.8,.5],
+           og:'linear-gradient(180deg,#86CCFF 0%,#CDEEFF 45%,#FFF6E2 100%)', ogInk:'#2E1F0C', from:'The page background itself: sky fading to cream. Green chevrons, gold on top.' },
+};
+window.CHEV = (k, u, opts={}) => {
+  const w = WAYS[k], id = k + u, sw = opts.sw || 11;
+  const topG = w.top ? `url(#t${id})` : `url(#c${id})`;
+  const rows = [30, 50, 70];
+  return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><defs>${LG('b'+id, w.tile)}${LG('c'+id, w.chev.map(([o,c])=>[o,c]), 0, 1)}${w.top?LG('t'+id,w.top):''}</defs>
+  ${w.bevel?`<rect x="4" y="8" width="112" height="108" rx="30" fill="${w.bevel}"/>`:''}
+  <rect x="4" y="4" width="112" height="${w.bevel?108:112}" rx="30" fill="url(#b${id})"/>
+  ${w.ring?`<rect x="10.5" y="10.5" width="99" height="${w.bevel?95:99}" rx="24" fill="none" stroke="${w.ring}" stroke-opacity="${w.ringO}" stroke-width="1.5"/>`:''}
+  ${rows.map((y,i)=>`<path d="${CH(y + (w.bevel?-2:0))}" fill="none" stroke="${i===0?topG:`url(#c${id})`}" stroke-opacity="${w.fade[i]}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}
+</svg>`;
+};
+const SHARP=`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sf" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#3E2A12"/><stop offset="1" stop-color="#1A1106"/></linearGradient><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFEBA3"/><stop offset="1" stop-color="#C98A0C"/></linearGradient></defs><rect x="4" y="4" width="112" height="112" rx="28" fill="url(#sf)"/><rect x="10" y="10" width="100" height="100" rx="22" fill="none" stroke="url(#sg)" stroke-opacity=".45" stroke-width="1.5"/><path d="M60 28 L88 47 V59 L60 40 L32 59 V47 Z" fill="url(#sg)"/><path d="M60 48 L88 67 V79 L60 60 L32 79 V67 Z" fill="url(#sg)" opacity=".6"/><path d="M60 68 L88 87 V93 L60 80 L32 93 V87 Z" fill="url(#sg)" opacity=".25"/></svg>`;
+let u=0;const M=(k,o)=>CHEV(k,u++,o);
+document.getElementById('sharp').innerHTML=SHARP;
+document.getElementById('soft').innerHTML=M('wood');
+const REC='green';
+const SW={wood:[['#4E3517','Nav wood'],['#FFC21A','XP gold']],green:[['#2BA438','Primary green'],['#186A20','Button bevel'],['#FFC21A','XP gold']],gold:[['#FFC933','Rank gold'],['#B8862E','Gold bevel'],['#3A230C','Ink']],sky:[['#2F8FE8','Hero sky'],['#0E3A7A','Hero stroke'],['#FFC21A','XP gold']],dawn:[['#86CCFF','Page sky'],['#FFF6E2','Page cream'],['#2BA438','Primary green']]};
+const NOTE={green:' It stands out on a blue phone wallpaper, on the wood sidebar and on cream, which none of the others do all three of.',wood:' Very close second. It blends into the wood sidebar, so it needs the thin gold ring.',sky:' It blends into the sky wallpaper most phones and the Home header use.',dawn:' The softest. At 16 px the light tile fades on a white browser tab.',gold:' Loud and very "reward". Dark chevrons keep it readable at 16 px.'};
+document.getElementById('opts').outerHTML=Object.keys(WAYS).map((k,i)=>{const o=WAYS[k];const light=!!o.ogInk;return `
+<section class="opt${k===REC?' rec':''}">
+ <div class="oh"><h2>${String.fromCharCode(65+i)} · ${o.name}</h2>${k===REC?'<span class="tag">My pick</span>':''}<p>${o.from}${NOTE[k]}</p>
+ <div class="swatch">${SW[k].map(([c,n])=>`<span><i style="background:${c}"></i>${n}</span>`).join('')}</div></div>
+ <div class="grid">
+  <div class="hero-mark">${M(k)}</div>
+  <div class="uses">
+   <div class="use"><small>Home screen</small><div class="phone"><div class="app"><div class="dummy"></div>Photos</div><div class="app"><div class="ic">${M(k)}</div>Levl</div><div class="app"><div class="dummy"></div>Notes</div></div></div>
+   <div class="use"><small>Browser tab, 16 and 32 px</small><div class="tabs"><div class="tab"><span class="f16">${M(k,{sw:14})}</span>Levl · Workout tracker</div><div class="tab"><span class="f32">${M(k)}</span>Levl</div></div></div>
+   <div class="use"><small>Sidebar</small><div class="side"><div class="lock"><span class="m">${M(k)}</span>Levl</div></div></div>
+  </div>
+ </div>
+ <div class="ogrow">
+  <div class="use"><small>Link preview (OG image)</small>
+   <div class="og${light?' light':''}" style="background:${o.og}"><div class="rule"></div><div class="in"><div class="t"><div class="w">Levl</div><div class="tl">Log workouts. Beat last time. Climb from E to S rank.</div><div class="rk"><b>E</b><b>D</b><b>C</b><b>B</b><b>A</b><b>S</b></div></div><div class="big">${M(k)}</div></div></div>
+  </div>
+  <div class="use"><small>On cream (sign-in)</small><div class="lk"><div class="lock dark"><span class="m">${M(k)}</span><span>Le<i>v</i>l</span></div></div></div>
+ </div>
+</section>`}).join('');
+</script>

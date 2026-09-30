@@ -53,7 +53,7 @@ v8 is built on the branch `claude/home-workout-nutrition-plan-kuyhvx` and is not
 - Google OAuth consent screen: set the app name and logo to Levl.
 - Rename the Vercel project to Levl.
 - A privacy policy page and a terms page. A public waitlist and Google OAuth verification both need them.
-- Put the Tally waitlist link in `NEXT_PUBLIC_WAITLIST_URL`.
+- Done: the Tally waitlist form (`https://tally.so/r/kdMyYM`) is the default in `lib/waitlist.ts`.
 - A trademark and name check for "Levl" before public launch.
 - App store style screenshots.
 - An OG image per shared workout (image share cards, already possible in Next).

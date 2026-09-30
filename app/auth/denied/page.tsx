@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Waitlist } from '@/components/SignInScreen';
 
-const waitlistUrl = process.env.NEXT_PUBLIC_WAITLIST_URL;
+import { WAITLIST_URL as waitlistUrl } from '@/lib/waitlist';
 
 export default function DeniedPage() {
   return (

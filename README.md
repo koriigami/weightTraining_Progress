@@ -199,9 +199,10 @@ owner signs in. The old keys are never changed or deleted.
    - `ALLOWED_EMAILS`: comma-separated Google emails that may sign in.
    - `OWNER_EMAIL`: the owner's Google email. Their older progress is copied over
      on first sign-in, and only they can open Insights.
-   - `NEXT_PUBLIC_WAITLIST_URL` (optional): a waitlist form link, for example a
-     Tally form. When set, the sign-in screen and the "Invite only" page show a
-     "Join the waitlist" button that opens it in a new tab.
+   - `NEXT_PUBLIC_WAITLIST_URL` (optional): the waitlist form behind the "Join the
+     waitlist" button on the sign-in screen and the "Invite only" page. Defaults
+     to the Levl Tally form (`https://tally.so/r/kdMyYM`). Set it to an empty
+     value to hide the button.
    - `NEXT_PUBLIC_SITE_URL` (optional): the public site URL, used for the
      metadata base, social share images, `robots.txt` and the sitemap. Defaults
      to `https://weight-training-progress.vercel.app`.
