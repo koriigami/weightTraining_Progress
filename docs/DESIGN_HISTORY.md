@@ -224,9 +224,7 @@ on purpose. Screenshots of each stage are in `docs/screenshots/` (`stage2-*`,
   is cut off, and a short confetti pop lands with the shield or medal.
 - **No photo control on Victory.** The board has one. It needs file storage, so
   it waits for Vercel Blob. The workout keeps a small optional `photo` field.
-- **Share sends text, not an image.** The sheet previews the card (title, stats,
-  rank shield, XP) and shares its text with the Web Share API, or copies it. The
-  board's picture of the card, with "Save image", is not built yet.
+- **Share sends text, not an image.** Replaced in v9: see "Share card (v9)" below.
 - **Goals and volumes follow the person's units.** The board is metric only.
   Goals are stored in kg and km and typed in kg, lb, km or mi. A total of 1,000 kg
   or more reads in tonnes (5.7 t), and for pounds as thousands of pounds (12.6k
@@ -304,6 +302,34 @@ b to f). The Rulebook itself is `docs/design/xp-reference.html`, and the code fo
 - The wordmark is Lilita One, the app's heading face, so "Levl" matches every other heading and label.
 - `node docs/design/brand/build.js` rebuilds every asset from the one mark: `public/logo.svg` (in-app), `public/favicon.svg` (heavier strokes for 16 px), the PNG favicon, `public/favicon.ico` (16, 32 and 48 px, for Vercel and older crawlers), the app icons (rounded, maskable and the full-bleed Apple icon) and `public/og.jpg`.
 - Link previews are cached by WhatsApp, LinkedIn, Facebook and X. When the OG image changes, give it a new file name (the `ogImage` constant in `app/layout.tsx`), and share the link with a query such as `?v=2` to get a fresh preview in chats that already cached the old one.
+
+## Share card (v9)
+
+Board: `docs/design/07-share-card-board.html` (two rounds). The reference card
+code and the measured Lilita One widths are in `docs/design/share-card/`.
+
+- **Share sends a picture now.** Before v9 it sent a text line and the card was
+  only a preview. The card is one SVG, 1080 by 1350, used both for the preview
+  and for the PNG that is shared or saved, so what you see is what gets sent.
+- **Split layout.** Round 1 showed Stacked, Split and a 9:16 Story. Split won:
+  the body figure is big on the left, the stats stack on the right. Story waits.
+- **No rank line.** "E-Rank Hunter · LV 4" was dropped because the shield says it.
+- **One-line title.** It shrinks through four sizes, then stops at the last whole
+  word with an ellipsis.
+- **Centred lockups.** The logo, "Levl" and the date share one centre line, and
+  the title is centred on the shield. Both fonts have a letter height of 0.71 em,
+  so a line is centred on y when its baseline is y + 0.355 times the size.
+- **Random sky.** The app's two cloud shapes, placed at random in a far and a near
+  layer, seeded by the workout id and a roll. The same workout always opens with
+  the same sky; the gold dice on the preview's corner rolls a new one. The dice
+  lives on the sheet, never on the picture.
+- **Muscles.** Two-tone like the workout page. The body lights every muscle
+  worked; chips show the three with the most sets, then "+N more muscles".
+- **Cardio.** A cardio-only card has no body: the distance is the big number,
+  with time and pace, or speed for rides. Before v9 a run shared as "Sets 1".
+- **XP** is the workout's own XP everywhere. Victory used to add badge XP.
+- **Buttons.** Share image (green) and Save image (gold). No Copy text. Where a
+  browser can't share pictures, only Save image shows.
 
 ## Where the chat lives
 

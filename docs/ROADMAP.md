@@ -39,8 +39,9 @@ v8 is built on the branch `claude/home-workout-nutrition-plan-kuyhvx` and is not
 4. **Photo storage with Vercel Blob.** Victory has no photo control yet. Upstash Redis cannot hold
    images, so photos go to Vercel Blob (free tier) and the workout keeps only a URL in `photo`. A
    photo stays optional.
-5. **Image share cards.** Render the Share card to a canvas on the client, then share it as a file
-   with the Web Share API, or offer "Save image". Today Share sends text.
+5. **Image share cards.** Done in v9: Share sends the card as a 1080 by 1350 picture with a random
+   sky, the muscles worked and the right stats for cardio, or Save image downloads it. Next: a 9:16
+   Story size as a Post / Story switch.
 6. **Google Health sync.** Weight first, then workouts. Health Connect is an on-device Android
    API, so a web app goes through the Google Health cloud API. Verify that before building.
 7. **Rename the app.** Done: the app is now Levl (name, logo, metadata, manifest and icons).

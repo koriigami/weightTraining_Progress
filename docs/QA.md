@@ -272,3 +272,14 @@ in as each, then log a workout or send `saveWorkout` to `/api/state`).
 - [ ] `npm test`, `npx tsc --noEmit` and `npm run build` pass, and the routes are
       still listed as static.
 - [ ] A search for the em dash character (U+2014) over `app components lib data tests docs README.md` finds nothing.
+
+## Share card on real phones
+
+Automated checks run in desktop Chromium only, so check these by hand after a deploy:
+
+- iPhone Safari and the iPhone home-screen app: open a finished workout, tap Share, tap Share image. The share menu opens at once (not "Tap Share again").
+- Share to WhatsApp, to an Instagram story and to Photos (Save Image in the share menu). The picture arrives whole, with the rounded title font.
+- Android Chrome: the same three targets.
+- Tap the dice, then Share image: the new sky is the one that gets sent.
+- Save image on a laptop downloads `levl-<title>-<date>.png`, 1080 by 1350.
+- A run shows the distance, time and pace, and no body figure.

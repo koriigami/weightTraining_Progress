@@ -190,6 +190,25 @@ first time `getState` reads a state that still has a `days` log (`upgrade` in
 `rulesV2Note` is set in the same pass. `tests/planMigration.test.ts` and
 `tests/store.test.ts` cover the migration, the backup and idempotence.
 
+### The share card
+
+`lib/shareCard.ts` turns a workout into a `ShareCard` (fitted title, stats or a
+cardio hero, muscle chips, file name, fallback text). One builder serves the
+Victory screen and the workout page. `components/share/ShareCardSvg.tsx` lays it
+out as one self-contained SVG, 1080 by 1350: literal colours from
+`components/share/cardTheme.ts`, fonts named 'Levl Display' and 'Levl Body'
+(`public/fonts/`, declared in `globals.css`, because next/font names are
+hashed), ids from an `idPrefix`. The sky comes from `lib/sky.ts`, a seeded
+PRNG, so the same seed always gives the same clouds.
+
+`components/share/useShareImage.ts` makes the PNG as soon as the sheet opens and
+after each new sky: `lib/shareImage.ts` serialises the SVG, packs both fonts
+inside as data URIs, draws it on a canvas and returns a `File`. It is made ahead
+of time because iPhones only allow `navigator.share` straight from the tap. The
+finished picture is shown over the SVG, so the preview is the exact file and a
+long press saves it. Share image appears only when `navigator.canShare({ files })`
+says yes; Save image always does.
+
 ## Insights (owner only)
 
 `/insights` is a static page like every other. It shows nothing until the
