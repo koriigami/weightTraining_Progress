@@ -25,6 +25,7 @@ export const ROUTINE_ACTIONS = [
   'deleteWorkout',
   'savePrefs',
   'addCustomExercise',
+  'setRulesNote',
 ] as const;
 
 export type RoutineAction = (typeof ROUTINE_ACTIONS)[number];
@@ -61,10 +62,14 @@ export function applyRoutineAction(
     case 'saveRoutine': {
       const parsed = parseRoutine(body.routine, lookup);
       if (!parsed.ok) return fail(parsed.error);
+      // `after` places a new routine right after another (Duplicate). An unknown id just appends.
+      if (body.after !== undefined && !isValidId(body.after)) return fail('invalid id');
       const routines = state.routines ?? [];
       const at = routines.findIndex((r) => r.id === parsed.value.id);
       if (at === -1 && routines.length >= LIMITS.routines) return fail('too many routines');
-      const next = at === -1 ? [...routines, parsed.value] : routines.map((r, i) => (i === at ? parsed.value : r));
+      if (at !== -1) return { ok: true, state: { ...state, routines: routines.map((r, i) => (i === at ? parsed.value : r)) } };
+      const anchor = body.after === undefined ? -1 : routines.findIndex((r) => r.id === body.after);
+      const next = anchor === -1 ? [...routines, parsed.value] : [...routines.slice(0, anchor + 1), parsed.value, ...routines.slice(anchor + 1)];
       return { ok: true, state: { ...state, routines: next } };
     }
     case 'deleteRoutine': {
@@ -131,6 +136,11 @@ export function applyRoutineAction(
       const name = e.name.toLowerCase();
       if (custom.some((c) => c.name.toLowerCase() === name) || isLibraryName(name)) return fail('an exercise with that name already exists');
       return { ok: true, state: { ...state, customExercises: [...custom, e] } };
+    }
+    case 'setRulesNote': {
+      // The note can only be put away here. Only the migration raises it.
+      if (body.value !== false) return fail('invalid note flag');
+      return { ok: true, state: { ...state, rulesV2Note: false } };
     }
     default:
       return fail('unknown action');

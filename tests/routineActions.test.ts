@@ -382,3 +382,37 @@ describe('validation helpers', () => {
     expect(parseWorkoutInput(w, lookup).ok).toBe(true);
   });
 });
+
+describe('saveRoutine after', () => {
+  const three = () => ({ ...emptyState(), routines: ['a', 'b', 'c'].map((id) => ({ id, title: id, items: [{ exerciseId: 'pushup', sets: [{ reps: 10 }] }] })) });
+
+  it('puts a new routine right after the one named', () => {
+    const next = expectOk(run(three(), { action: 'saveRoutine', routine: routine({ id: 'a2', title: 'a copy' }), after: 'a' }));
+    expect(next.routines?.map((r) => r.id)).toEqual(['a', 'a2', 'b', 'c']);
+  });
+
+  it('appends when there is no anchor or it is unknown, and leaves an existing routine where it is', () => {
+    expect(expectOk(run(three(), { action: 'saveRoutine', routine: routine({ id: 'd' }) })).routines?.map((r) => r.id)).toEqual(['a', 'b', 'c', 'd']);
+    expect(expectOk(run(three(), { action: 'saveRoutine', routine: routine({ id: 'd' }), after: 'zzz' })).routines?.map((r) => r.id)).toEqual(['a', 'b', 'c', 'd']);
+    expect(expectOk(run(three(), { action: 'saveRoutine', routine: routine({ id: 'b', title: 'renamed' }), after: 'c' })).routines?.map((r) => r.title)).toEqual(['a', 'renamed', 'c']);
+  });
+
+  it('rejects an anchor that is not an id', () => {
+    expectFail(run(three(), { action: 'saveRoutine', routine: routine({ id: 'd' }), after: { $ne: 1 } }), 'invalid id');
+  });
+});
+
+describe('setRulesNote', () => {
+  it('puts the note away', () => {
+    const next = expectOk(run({ ...emptyState(), rulesV2Note: true }, { action: 'setRulesNote', value: false }));
+    expect(next.rulesV2Note).toBe(false);
+  });
+
+  it('is harmless when the note is already gone', () => {
+    expect(expectOk(run(emptyState(), { action: 'setRulesNote', value: false })).rulesV2Note).toBe(false);
+  });
+
+  it('cannot raise the note, and only takes a boolean false', () => {
+    for (const value of [true, 'false', 0, null, undefined]) expectFail(run(emptyState(), { action: 'setRulesNote', value }), 'invalid note flag');
+  });
+});

@@ -4,7 +4,9 @@ import {
   addExercises,
   addSet,
   blankRoutine,
+  copyTitle,
   draftFrom,
+  duplicateRoutine,
   moveItem,
   newItemSets,
   newRoutineId,
@@ -200,5 +202,28 @@ describe('validation uses the API words', () => {
   it('compares routines by content', () => {
     expect(sameRoutine(base, draftFrom(base))).toBe(true);
     expect(sameRoutine(base, setTitle(base, 'Push B'))).toBe(false);
+  });
+});
+
+describe('duplicate', () => {
+  const base = { id: 'r1', title: 'Push A', timesPerWeek: 2, items: [{ exerciseId: 'pushup', sets: [{ reps: 10 }] }] };
+
+  it('titles the copy "<title> copy"', () => {
+    expect(copyTitle('Push A')).toBe('Push A copy');
+    expect(copyTitle('  Push A ')).toBe('Push A copy');
+  });
+
+  it('keeps a long title within 60 characters', () => {
+    const t = copyTitle('x'.repeat(60));
+    expect(t.length).toBe(60);
+    expect(t.endsWith(' copy')).toBe(true);
+  });
+
+  it('copies everything under a new id without sharing sets', () => {
+    const copy = duplicateRoutine(base, 'r2');
+    expect(copy).toEqual({ ...base, id: 'r2', title: 'Push A copy' });
+    copy.items[0].sets[0].reps = 99;
+    expect(base.items[0].sets[0].reps).toBe(10);
+    expect(validateRoutine(duplicateRoutine(base, 'r2'))).toBeNull();
   });
 });

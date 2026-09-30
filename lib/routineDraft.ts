@@ -26,6 +26,18 @@ export function draftFrom(routine: Routine): Routine {
   return structuredClone(routine);
 }
 
+// "Push A" as "Push A copy". Titles stop at 60 characters, so a long one is cut to fit.
+export function copyTitle(title: string): string {
+  const suffix = ' copy';
+  const base = title.trim();
+  return base.length + suffix.length > 60 ? `${base.slice(0, 60 - suffix.length).trimEnd()}${suffix}` : `${base}${suffix}`;
+}
+
+// A copy of a saved routine under a new id, ready to save.
+export function duplicateRoutine(routine: Routine, id: string): Routine {
+  return { ...structuredClone(routine), id, title: copyTitle(routine.title) };
+}
+
 // New exercises start with three sets, or one for a single cardio session.
 export function newItemSets(e: ExerciseDef): SetPlan[] {
   const count = e.metric === 'distance_time' ? 1 : 3;

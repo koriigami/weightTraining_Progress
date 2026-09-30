@@ -73,13 +73,16 @@ type ProgressContextValue = {
   /** Finds an exercise by id: the library first, then the user's own. */
   lookup: ExerciseLookup;
   /** Every routine, workout, prefs and custom exercise action updates the screen at once and resolves to an error message, or null when it saved. */
-  saveRoutine: (routine: Routine) => Promise<string | null>;
+  /** `after` puts a new routine right after that one instead of at the end. */
+  saveRoutine: (routine: Routine, opts?: { after?: string }) => Promise<string | null>;
   deleteRoutine: (id: string) => Promise<string | null>;
   /** celebrate: false holds back the level-up and badge overlays (they come back in `events`). */
   saveWorkout: (workout: WorkoutInput, opts?: { celebrate?: boolean }) => Promise<SaveWorkoutResult>;
   updateWorkout: (patch: WorkoutPatchInput) => Promise<WorkoutChange>;
   deleteWorkout: (id: string) => Promise<WorkoutChange>;
   savePrefs: (prefs: Prefs) => Promise<string | null>;
+  /** Puts the "XP was worked out again" note on Home away for good. */
+  dismissRulesNote: () => Promise<string | null>;
   addCustomExercise: (exercise: CustomExerciseInput) => Promise<AddCustomExerciseResult>;
   logWeight: (date: string, kg: number) => void;
   addGoal: (goal: Omit<Goal, 'id' | 'createdAt'>) => Promise<string | null>;
@@ -430,8 +433,8 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   );
 
   const saveRoutine = useCallback(
-    async (routine: Routine): Promise<string | null> => {
-      const r = await runRoutineAction({ action: 'saveRoutine', routine });
+    async (routine: Routine, opts?: { after?: string }): Promise<string | null> => {
+      const r = await runRoutineAction({ action: 'saveRoutine', routine, ...(opts?.after ? { after: opts.after } : {}) });
       return r.ok ? null : r.error;
     },
     [runRoutineAction]
@@ -492,6 +495,11 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     [runRoutineAction]
   );
 
+  const dismissRulesNote = useCallback(async (): Promise<string | null> => {
+    const r = await runRoutineAction({ action: 'setRulesNote', value: false });
+    return r.ok ? null : r.error;
+  }, [runRoutineAction]);
+
   const addCustomExercise = useCallback(
     async (exercise: CustomExerciseInput): Promise<AddCustomExerciseResult> => {
       // The id is picked here so the optimistic copy and the server's agree.
@@ -543,6 +551,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     updateWorkout,
     deleteWorkout,
     savePrefs,
+    dismissRulesNote,
     addCustomExercise,
     logWeight,
     addGoal,
