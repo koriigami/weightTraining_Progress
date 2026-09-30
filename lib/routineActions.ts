@@ -81,7 +81,7 @@ export function applyRoutineAction(
       return { ok: true, state: withWorkouts([...workouts, w]) };
     }
     case 'updateWorkout': {
-      const parsed = parseWorkoutPatch(body);
+      const parsed = parseWorkoutPatch(body, lookup);
       if (!parsed.ok) return fail(parsed.error);
       const patch = parsed.value;
       const existing = workouts.find((w) => w.id === patch.id);
@@ -91,6 +91,18 @@ export function applyRoutineAction(
       const when = patch.when ?? `${date}${existing.when.slice(10)}`;
       if (date > maxDate) return fail('date is in the future');
       const updated: WorkoutLog = { ...existing, date, when, title: patch.title ?? existing.title };
+      // An edit can change the length: the finish must still come after the start, within a day.
+      const startedAt = patch.startedAt ?? existing.startedAt;
+      const finishedAt = patch.finishedAt ?? existing.finishedAt;
+      const span = Date.parse(finishedAt) - Date.parse(startedAt);
+      if (span < 0 || span > 24 * 3600 * 1000) return fail('finish must be after the start, within a day');
+      updated.startedAt = startedAt;
+      updated.finishedAt = finishedAt;
+      if (patch.items) updated.items = patch.items;
+      if (patch.plan) {
+        if (patch.plan.length > 0) updated.plan = patch.plan;
+        else delete updated.plan;
+      }
       for (const key of ['notes', 'photo'] as const) {
         if (patch[key] === undefined) continue;
         if (patch[key] === null) delete updated[key];

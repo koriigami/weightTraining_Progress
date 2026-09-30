@@ -7,14 +7,14 @@ import type { AppState, FullProgress, Goal, GoalDirection, Rank } from '@/lib/pr
 import type { CustomExercise } from '@/data/exercises';
 import { applyRoutineAction } from '@/lib/routineActions';
 import { resolvePrefs, stateLookup } from '@/lib/routines';
-import type { ExerciseLookup, Prefs, Routine, WorkoutLog } from '@/lib/routines';
+import type { ExerciseLookup, PlanItem, Prefs, Routine, WorkoutItem, WorkoutLog } from '@/lib/routines';
 import type { WorkoutInput } from '@/lib/session';
 import { allEarnedBadges } from '@/lib/badges';
 import { todayStr } from '@/lib/date';
 import { useToday } from '@/lib/useToday';
 import * as feedback from '@/lib/feedback';
 import { useCelebration } from '@/components/celebrate/CelebrationProvider';
-import { orderEvents } from '@/lib/celebrations';
+import { growSeen, orderEvents, unseenEvents } from '@/lib/celebrations';
 import type { CelebrationEvent } from '@/lib/celebrations';
 import { Toast } from '@/components/ui/Toast';
 import type { ToastState } from '@/components/ui/Toast';
@@ -37,7 +37,8 @@ export type SaveWorkoutResult =
     }
   | { ok: false; error: string };
 
-// A workout as edited on the Victory screen. Only these fields can change.
+// A workout as edited on the Victory screen or the Edit workout screen. Only these
+// fields can change. The server works XP, marks and the plan result out again.
 export type WorkoutPatchInput = {
   id: string;
   title?: string;
@@ -45,7 +46,14 @@ export type WorkoutPatchInput = {
   when?: string;
   notes?: string | null;
   photo?: string | null;
+  items?: WorkoutItem[];
+  plan?: PlanItem[];
+  startedAt?: string;
+  finishedAt?: string;
 };
+
+/** Where the level stood before and after an edit or a delete, so the caller can say so. */
+export type WorkoutChange = { ok: true; before: XpSnapshot; after: XpSnapshot } | { ok: false; error: string };
 
 export type CustomExerciseInput = Omit<CustomExercise, 'id' | 'custom'> & { id?: string };
 export type AddCustomExerciseResult = { ok: true; exercise: CustomExercise } | { ok: false; error: string };
@@ -69,8 +77,8 @@ type ProgressContextValue = {
   deleteRoutine: (id: string) => Promise<string | null>;
   /** celebrate: false holds back the level-up and badge overlays (they come back in `events`). */
   saveWorkout: (workout: WorkoutInput, opts?: { celebrate?: boolean }) => Promise<SaveWorkoutResult>;
-  updateWorkout: (patch: WorkoutPatchInput) => Promise<string | null>;
-  deleteWorkout: (id: string) => Promise<string | null>;
+  updateWorkout: (patch: WorkoutPatchInput) => Promise<WorkoutChange>;
+  deleteWorkout: (id: string) => Promise<WorkoutChange>;
   savePrefs: (prefs: Prefs) => Promise<string | null>;
   addCustomExercise: (exercise: CustomExerciseInput) => Promise<AddCustomExerciseResult>;
   logWeight: (date: string, kg: number) => void;
@@ -117,15 +125,7 @@ function writeSeen(userId: string, seen: Seen) {
 // record, re-crossing the same threshold later would look "new" again and
 // replay its celebration.
 function updateSeen(userId: string, level: number, badgeIds: string[]) {
-  const prev = readSeen(userId);
-  if (!prev) {
-    writeSeen(userId, { level, badgeIds });
-    return;
-  }
-  writeSeen(userId, {
-    level: Math.max(prev.level, level),
-    badgeIds: Array.from(new Set([...prev.badgeIds, ...badgeIds])),
-  });
+  writeSeen(userId, growSeen(readSeen(userId), level, badgeIds));
 }
 
 // The moment for going from one level to a higher one: a rank up when the rank
@@ -279,7 +279,9 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     (before: AppState, after: AppState, celebrate = true) => {
       setState(after);
       const now = todayStr();
-      const events = celebrate ? diffCelebrations(before, after, now) : [];
+      // Only what is new to this person: a level lost to a delete or an edit is not celebrated again on the way back.
+      const seen = userIdRef.current ? readSeen(userIdRef.current) : null;
+      const events = celebrate ? unseenEvents(diffCelebrations(before, after, now), seen) : [];
       if (events.length) celebration.enqueue(events);
       const level = levelForXp(totalXp(after, now));
       const badgeIds = allEarnedBadges(after, now).map((b) => b.id);
@@ -445,6 +447,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
   const saveWorkout = useCallback(
     async (workout: WorkoutInput, opts?: { celebrate?: boolean }): Promise<SaveWorkoutResult> => {
+      const seen = userIdRef.current ? readSeen(userIdRef.current) : null;
       const r = await runRoutineAction({ action: 'saveWorkout', workout }, opts);
       if (!r.ok) return r;
       const now = todayStr();
@@ -455,24 +458,28 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         workout: saved,
         before: xpSnapshot(r.before, now),
         after: xpSnapshot(r.after, now),
-        events: diffCelebrations(r.before, r.after, now),
+        events: unseenEvents(diffCelebrations(r.before, r.after, now), seen),
       };
     },
     [runRoutineAction]
   );
 
   const updateWorkout = useCallback(
-    async (patch: WorkoutPatchInput): Promise<string | null> => {
+    async (patch: WorkoutPatchInput): Promise<WorkoutChange> => {
       const r = await runRoutineAction({ action: 'updateWorkout', ...patch });
-      return r.ok ? null : r.error;
+      if (!r.ok) return r;
+      const now = todayStr();
+      return { ok: true, before: xpSnapshot(r.before, now), after: xpSnapshot(r.after, now) };
     },
     [runRoutineAction]
   );
 
   const deleteWorkout = useCallback(
-    async (id: string): Promise<string | null> => {
+    async (id: string): Promise<WorkoutChange> => {
       const r = await runRoutineAction({ action: 'deleteWorkout', id });
-      return r.ok ? null : r.error;
+      if (!r.ok) return r;
+      const now = todayStr();
+      return { ok: true, before: xpSnapshot(r.before, now), after: xpSnapshot(r.after, now) };
     },
     [runRoutineAction]
   );

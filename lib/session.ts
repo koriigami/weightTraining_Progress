@@ -370,11 +370,11 @@ export type BuildResult = { ok: true; workout: WorkoutInput } | { ok: false; err
 // The saveWorkout payload. Needs at least one ticked set. Unticked sets are
 // dropped, and so is any exercise left with no ticked set. Dates come from the
 // device clock at the moment of finishing, and `when` is local time.
-export function buildWorkoutInput(session: Session, opts: { now: Date; lookup?: ExerciseLookup; id?: string }): BuildResult {
-  const lookup = opts.lookup ?? exerciseById;
+// The ticked sets of each exercise, cleaned. An exercise left with none is dropped.
+function cleanItems(source: WorkoutItem[], lookup: ExerciseLookup): { items: WorkoutItem[]; ticked: number } {
   const items: WorkoutItem[] = [];
   let ticked = 0;
-  for (const item of session.items) {
+  for (const item of source) {
     const e = lookup(item.exerciseId);
     const sets = item.sets.filter((s) => s.done).map((s) => cleanSet(e, s));
     if (sets.length === 0) continue;
@@ -382,6 +382,12 @@ export function buildWorkoutInput(session: Session, opts: { now: Date; lookup?: 
     const notes = item.notes?.trim();
     items.push({ exerciseId: item.exerciseId, ...(notes ? { notes: notes.slice(0, 300) } : {}), sets });
   }
+  return { items, ticked };
+}
+
+export function buildWorkoutInput(session: Session, opts: { now: Date; lookup?: ExerciseLookup; id?: string }): BuildResult {
+  const lookup = opts.lookup ?? exerciseById;
+  const { items, ticked } = cleanItems(session.items, lookup);
   if (ticked === 0) return { ok: false, error: 'Tick at least one set first.' };
   if (ticked > LIMITS.setsPerWorkout) return { ok: false, error: `A workout can have up to ${LIMITS.setsPerWorkout} sets.` };
 
@@ -414,6 +420,81 @@ export function buildWorkoutInput(session: Session, opts: { now: Date; lookup?: 
       ...(session.plan && session.plan.length > 0 ? { plan: session.plan } : {}),
     },
   };
+}
+
+// ---------------- Editing a saved workout ----------------
+// The Edit workout screen works on a Session that is never stored as the running
+// workout. It has no clock: the length is a number of minutes, moved in steps.
+
+export const DURATION_STEP_MIN = 5;
+const MAX_DURATION_MIN = 24 * 60 - 1;
+
+// A saved workout as an editable session. An old workout with no plan freezes its own
+// exercises as the plan, so an exercise added in the editor does not become part of it.
+export function sessionFromWorkout(w: WorkoutLog): Session {
+  const plan = w.plan ?? planFromItems(w.items.map((i) => ({ exerciseId: i.exerciseId, sets: i.sets.filter((s) => s.done) })));
+  return {
+    title: w.title,
+    ...(w.routineId ? { routineId: w.routineId } : {}),
+    startedAt: w.startedAt,
+    items: w.items.map((i) => ({ ...i, sets: i.sets.map((s) => ({ ...s })) })),
+    ...(plan.length > 0 ? { plan } : {}),
+  };
+}
+
+// Whole minutes between start and finish, at least one.
+export function durationMinutes(startedAt: string, finishedAt: string): number {
+  const span = Date.parse(finishedAt) - Date.parse(startedAt);
+  return Number.isFinite(span) && span > 0 ? Math.max(1, Math.round(span / 60_000)) : 1;
+}
+
+// The minus and plus of the Duration row: five minutes a step, never under one minute or a day or more.
+export function stepDuration(minutes: number, direction: -1 | 1): number {
+  return Math.min(MAX_DURATION_MIN, Math.max(1, Math.round(minutes) + direction * DURATION_STEP_MIN));
+}
+
+export type EditDraft = { session: Session; when: string; minutes: number; notes: string };
+
+// The instant a local YYYY-MM-DDTHH:mm stands for on this device.
+function instantOf(when: string): string {
+  return new Date(when).toISOString();
+}
+
+// What the updateWorkout action takes. Only what changed moves the times: a new
+// date and time moves the finish, and a new length moves the start back from it.
+export type WorkoutEdit = {
+  title: string;
+  when: string;
+  date: string;
+  notes: string | null;
+  items: WorkoutItem[];
+  plan?: PlanItem[];
+  startedAt?: string;
+  finishedAt?: string;
+};
+
+export type PatchResult = { ok: true; patch: WorkoutEdit } | { ok: false; error: string };
+
+export function buildWorkoutPatch(original: WorkoutLog, draft: EditDraft, lookup: ExerciseLookup = exerciseById): PatchResult {
+  const { items, ticked } = cleanItems(draft.session.items, lookup);
+  if (ticked === 0) return { ok: false, error: 'Tick at least one set first.' };
+  if (ticked > LIMITS.setsPerWorkout) return { ok: false, error: `A workout can have up to ${LIMITS.setsPerWorkout} sets.` };
+  const title = draft.session.title.trim().slice(0, 80);
+  if (!title) return { ok: false, error: 'Give the workout a title.' };
+
+  const whenChanged = draft.when !== original.when;
+  const lengthChanged = draft.minutes !== durationMinutes(original.startedAt, original.finishedAt);
+  const patch: WorkoutEdit = { title, when: draft.when, date: draft.when.slice(0, 10), notes: draft.notes.trim() || null, items };
+  if (whenChanged || lengthChanged) {
+    const finished = whenChanged ? instantOf(draft.when) : original.finishedAt;
+    patch.finishedAt = finished;
+    patch.startedAt = new Date(Date.parse(finished) - draft.minutes * 60_000).toISOString();
+  }
+  // The plan only moves when an exercise was removed from it.
+  const before = original.plan ?? planFromItems(original.items.map((i) => ({ exerciseId: i.exerciseId, sets: i.sets.filter((s) => s.done) })));
+  const after = draft.session.plan ?? [];
+  if (JSON.stringify(before) !== JSON.stringify(after)) patch.plan = after;
+  return { ok: true, patch };
 }
 
 // ---------------- Saving to localStorage ----------------

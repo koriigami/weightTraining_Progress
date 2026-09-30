@@ -1,7 +1,7 @@
 // Strict input checks for the routine, workout and prefs API actions. Pure, so
 // the API route and the tests use the same code. Each parser returns either the
 // clean value (only known fields, trimmed strings) or an error message.
-import { AVOID_TAGS, EQUIPMENT_ORDER, JOINTS, MUSCLE_ORDER } from '../data/exercises';
+import { AVOID_TAGS, EQUIPMENT_ORDER, JOINTS, MUSCLE_ORDER, exerciseById } from '../data/exercises';
 import type { AvoidTag, CustomExercise, Equipment, Joint, Metric, Muscle } from '../data/exercises';
 import { LIMITS, findDuplicateExercise } from './routines';
 import type { ExerciseLookup, LoggedSet, PlanItem, Prefs, Routine, RoutineItem, SetPlan, WorkoutItem, WorkoutLog } from './routines';
@@ -165,6 +165,32 @@ function parsePlan(raw: unknown, lookup: ExerciseLookup): Parsed<PlanItem[] | un
   return ok(plan);
 }
 
+// The exercises of a finished workout: 1 to 40, each with sets, at least one ticked, none twice.
+function parseWorkoutItems(rawItems: unknown, lookup: ExerciseLookup): Parsed<WorkoutItem[]> {
+  if (!Array.isArray(rawItems) || rawItems.length < 1 || rawItems.length > LIMITS.itemsPerList) {
+    return fail('a workout needs 1 to 40 exercises');
+  }
+  const items: WorkoutItem[] = [];
+  let sets = 0;
+  let done = 0;
+  for (const it of rawItems) {
+    if (!isObj(it) || typeof it.exerciseId !== 'string') return fail('invalid exercise');
+    const e = lookup(it.exerciseId);
+    if (!e) return fail('unknown exercise');
+    const itemNotes = optText(it.notes, 300);
+    if (!itemNotes.ok) return fail('exercise notes are too long');
+    const parsed = parseLoggedSets(e.metric, it.sets);
+    if (!parsed.ok) return parsed;
+    sets += parsed.value.length;
+    done += parsed.value.filter((s) => s.done).length;
+    items.push({ exerciseId: it.exerciseId, ...(itemNotes.value ? { notes: itemNotes.value } : {}), sets: parsed.value });
+  }
+  if (sets > LIMITS.setsPerWorkout) return fail('too many sets');
+  if (findDuplicateExercise(items)) return fail('an exercise can only be in a workout once');
+  if (done === 0) return fail('tick at least one set');
+  return ok(items);
+}
+
 // A finished workout as sent by the client. xp, marks and the plan result are not
 // read: the server works them out. The plan snapshot is.
 export function parseWorkoutInput(raw: unknown, lookup: ExerciseLookup): Parsed<WorkoutLog> {
@@ -183,27 +209,9 @@ export function parseWorkoutInput(raw: unknown, lookup: ExerciseLookup): Parsed<
   if (!notes.ok) return fail('notes are too long');
   const photo = optText(raw.photo, 2000);
   if (!photo.ok) return fail('photo is too large');
-  if (!Array.isArray(raw.items) || raw.items.length < 1 || raw.items.length > LIMITS.itemsPerList) {
-    return fail('a workout needs 1 to 40 exercises');
-  }
-  const items: WorkoutItem[] = [];
-  let sets = 0;
-  let done = 0;
-  for (const it of raw.items) {
-    if (!isObj(it) || typeof it.exerciseId !== 'string') return fail('invalid exercise');
-    const e = lookup(it.exerciseId);
-    if (!e) return fail('unknown exercise');
-    const itemNotes = optText(it.notes, 300);
-    if (!itemNotes.ok) return fail('exercise notes are too long');
-    const parsed = parseLoggedSets(e.metric, it.sets);
-    if (!parsed.ok) return parsed;
-    sets += parsed.value.length;
-    done += parsed.value.filter((s) => s.done).length;
-    items.push({ exerciseId: it.exerciseId, ...(itemNotes.value ? { notes: itemNotes.value } : {}), sets: parsed.value });
-  }
-  if (sets > LIMITS.setsPerWorkout) return fail('too many sets');
-  if (findDuplicateExercise(items)) return fail('an exercise can only be in a workout once');
-  if (done === 0) return fail('tick at least one set');
+  const parsedItems = parseWorkoutItems(raw.items, lookup);
+  if (!parsedItems.ok) return parsedItems;
+  const items = parsedItems.value;
   const plan = parsePlan(raw.plan, lookup);
   if (!plan.ok) return plan;
   return ok({
@@ -229,10 +237,15 @@ export type WorkoutPatch = {
   when?: string;
   notes?: string | null; // null clears
   photo?: string | null; // null clears
+  items?: WorkoutItem[];
+  plan?: PlanItem[];
+  startedAt?: string;
+  finishedAt?: string;
 };
 
-// Only the title, date and time, notes and photo of a finished workout can change.
-export function parseWorkoutPatch(raw: Obj): Parsed<WorkoutPatch> {
+// The title, date and time, notes, photo, exercises and length of a finished
+// workout can change. XP, marks and the plan result never come from the client.
+export function parseWorkoutPatch(raw: Obj, lookup: ExerciseLookup = exerciseById): Parsed<WorkoutPatch> {
   if (!isValidId(raw.id)) return fail('invalid workout id');
   const patch: WorkoutPatch = { id: raw.id };
   if (raw.title !== undefined) {
@@ -256,6 +269,21 @@ export function parseWorkoutPatch(raw: Obj): Parsed<WorkoutPatch> {
     const r = optText(raw[key], key === 'notes' ? 1000 : 2000);
     if (!r.ok) return fail(key === 'notes' ? 'notes are too long' : 'photo is too large');
     patch[key] = r.value ?? null;
+  }
+  if (raw.items !== undefined) {
+    const items = parseWorkoutItems(raw.items, lookup);
+    if (!items.ok) return items;
+    patch.items = items.value;
+  }
+  if (raw.plan !== undefined) {
+    const plan = parsePlan(raw.plan, lookup);
+    if (!plan.ok) return plan;
+    patch.plan = plan.value ?? [];
+  }
+  for (const key of ['startedAt', 'finishedAt'] as const) {
+    if (raw[key] === undefined) continue;
+    if (!isInstant(raw[key])) return fail('invalid start or finish time');
+    patch[key] = raw[key] as string;
   }
   return ok(patch);
 }

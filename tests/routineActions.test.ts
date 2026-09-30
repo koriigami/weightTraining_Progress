@@ -213,7 +213,7 @@ describe('updateWorkout', () => {
   const base = () => expectOk(run(emptyState(), { action: 'saveWorkout', workout: input('2026-10-09') }));
   const id = 'in-2026-10-09-db-ohp';
 
-  it('changes only the title, date, time, notes and photo', () => {
+  it('never takes xp or the routine from the client', () => {
     const s = expectOk(
       run(base(), {
         action: 'updateWorkout',
@@ -221,7 +221,6 @@ describe('updateWorkout', () => {
         title: 'Renamed',
         notes: 'Felt strong',
         photo: 'p1',
-        items: [],
         xp: 9999,
         routineId: 'other',
       })

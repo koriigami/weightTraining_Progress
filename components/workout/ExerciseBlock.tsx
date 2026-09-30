@@ -31,7 +31,8 @@ export type ExerciseBlockProps = {
   cardio?: { follow: boolean; onChange: (patch: SetPatch) => void };
 };
 
-function MarkChip({ mark }: { mark: LiveMark }) {
+/** The gold Record or green Beat last time chip, with its XP. */
+export function MarkChip({ mark }: { mark: Pick<LiveMark, 'kind' | 'xp'> }) {
   return mark.kind === 'record' ? (
     <span className="wt-mk rec" data-testid="mark-chip">
       <Crown size={14} aria-hidden="true" />

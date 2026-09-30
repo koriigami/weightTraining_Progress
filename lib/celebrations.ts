@@ -91,3 +91,26 @@ export function momentCopy(e: CelebrationEvent): MomentCopy {
     announce: `New badge. ${b.name}, ${b.ribbon}. ${b.what}.${!e.replay && b.xp > 0 ? ` Plus ${b.xp} XP.` : ''} ${TAP}`,
   };
 }
+
+/** What the person has already seen: the highest level ever reached, and every badge celebrated. It only grows. */
+export type SeenMoments = { level: number; badgeIds: string[] };
+
+/**
+ * Drops the moments for things already seen. Deleting or editing a workout can
+ * lower the level, and a later workout can climb back over it: that is not a new
+ * level up. Nothing here ever creates a moment for a level that goes down.
+ */
+export function unseenEvents(events: CelebrationEvent[], seen: SeenMoments | null): CelebrationEvent[] {
+  if (!seen) return events;
+  return events.filter((e) => {
+    if (e.kind === 'badge') return !seen.badgeIds.includes(e.badge.id);
+    if (e.kind === 'levelup') return e.to > seen.level && e.to > e.from;
+    return e.level > seen.level && (e.from === undefined || e.level > e.from);
+  });
+}
+
+/** The record after a new snapshot: the level is the highest ever reached and the badges are a union, so it never shrinks. */
+export function growSeen(prev: SeenMoments | null, level: number, badgeIds: string[]): SeenMoments {
+  if (!prev) return { level, badgeIds };
+  return { level: Math.max(prev.level, level), badgeIds: Array.from(new Set([...prev.badgeIds, ...badgeIds])) };
+}

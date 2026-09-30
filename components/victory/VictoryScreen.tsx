@@ -2,19 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Crown, Share2 } from 'lucide-react';
-import { addDaysStr } from '@/lib/date';
+import { Calendar, ChevronRight, Crown, Share2 } from 'lucide-react';
+import { formatWhen } from '@/lib/date';
 import { workoutTotals } from '@/lib/routines';
 import type { Routine } from '@/lib/routines';
 import { RANK_TITLES, rankForLevel } from '@/lib/progress';
 import { routineWouldChange, updateRoutineFromWorkout } from '@/lib/routineUpdate';
 import { fmtVolume } from '@/lib/units';
-import { formatDateShort } from '@/lib/date';
 import { useCountUp } from '@/lib/useCountUp';
 import { useDesktopLayout } from '@/lib/useMediaQuery';
 import { useToday } from '@/lib/useToday';
 import { xpLines, xpTotal } from '@/lib/victory';
-import { scoreState } from '@/lib/workoutScoring';
+import { maxWorkoutDate, scoreState } from '@/lib/workoutScoring';
 import { useCelebration } from '@/components/celebrate/CelebrationProvider';
 import { VICTORY_HOLD_MS } from '@/lib/celebrations';
 import { useProgress } from '@/components/ProgressProvider';
@@ -23,6 +22,7 @@ import { RankShield } from '@/components/RankShield';
 import { useWorkoutSession } from '@/components/WorkoutSessionProvider';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHead } from '@/components/ui/Card';
+import { DateTimeModal } from '@/components/ui/DatePicker';
 import { Field, Input, Textarea } from '@/components/ui/Field';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Screen } from '@/components/ui/Screen';
@@ -92,6 +92,7 @@ function Victory({ finished }: { finished: Finished }) {
   // ---- what is in the details card, saved as you type ----
   const [title, setTitle] = useState(saved.title);
   const [when, setWhen] = useState(saved.when);
+  const [dateOpen, setDateOpen] = useState(false);
   const [notes, setNotes] = useState(saved.notes ?? '');
   const [status, setStatus] = useState<Status>('idle');
   const [errors, setErrors] = useState<Partial<Record<keyof Patch, string>>>({});
@@ -106,8 +107,9 @@ function Victory({ finished }: { finished: Finished }) {
     pending.current = {};
     if (Object.keys(patch).length === 0) return true;
     setStatus('saving');
-    const error = await updateWorkout({ id: savedId, ...patch });
-    if (error) {
+    const result = await updateWorkout({ id: savedId, ...patch });
+    if (!result.ok) {
+      const error = result.error;
       setStatus('error');
       const key: keyof Patch = /title/i.test(error) ? 'title' : /notes/i.test(error) ? 'notes' : 'when';
       setErrors((e) => ({ ...e, [key]: error }));
@@ -191,11 +193,10 @@ function Victory({ finished }: { finished: Finished }) {
   const crowns = Math.min(MAX_CROWNS, totals.exercises);
   const leveled = to.level > from.level;
   const ranked = leveled && rankForLevel(to.level) !== rankForLevel(from.level);
-  const maxWhen = `${addDaysStr(today, 1)}T23:59`;
 
   const shareData = {
     title: title.trim() || live.title,
-    dateLabel: formatDateShort(live.date),
+    dateLabel: formatWhen(live.when),
     sets: totals.sets,
     minutes,
     volumeKg: totals.volume,
@@ -333,18 +334,32 @@ function Victory({ finished }: { finished: Finished }) {
             }}
           />
         </Field>
-        <Field label="Date and time" error={errors.when}>
-          <Input
-            type="datetime-local"
-            value={when}
-            max={maxWhen}
-            onChange={(e) => {
-              const v = e.target.value;
-              setWhen(v);
-              if (v) edit({ when: v }, true);
-            }}
-          />
-        </Field>
+        <div className="wt-stack" style={{ gap: 6 }}>
+          <button type="button" className="wt-frow" aria-haspopup="dialog" onClick={() => setDateOpen(true)}>
+            <Calendar size={20} aria-hidden="true" />
+            <span className="grow">
+              <small>Date and time</small>
+              {formatWhen(when)}
+            </span>
+            <ChevronRight size={18} aria-hidden="true" />
+          </button>
+          {errors.when && (
+            <span className="wt-field-error" role="alert">
+              {errors.when}
+            </span>
+          )}
+        </div>
+        <DateTimeModal
+          open={dateOpen}
+          value={when}
+          max={maxWorkoutDate(today)}
+          onCancel={() => setDateOpen(false)}
+          onDone={(v) => {
+            setDateOpen(false);
+            setWhen(v);
+            edit({ when: v }, true);
+          }}
+        />
         {/* A photo for the workout comes with file storage (Vercel Blob) in the next version, so there is no photo control here yet. */}
         <Field label="Notes">
           <Textarea
