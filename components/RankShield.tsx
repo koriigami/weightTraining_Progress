@@ -28,14 +28,17 @@ export type RankShieldProps = {
   className?: string;
 };
 
-export function RankShield({ rank, level, size = 96, className }: RankShieldProps) {
-  const rawId = useId().replace(/:/g, '');
-  const id = `shield-${rawId}`;
+/**
+ * The shield's defs and shapes as a `<g>` on a 120 x 132 canvas, for any SVG that
+ * needs one (the app's badge, the share card). Ids are `${idPrefix}-a`, `-f`, `-c`,
+ * `-g` and `-t`, so the caller picks a prefix that is unique in its document and
+ * passes a font (a CSS variable in the app, literal names for an exported image).
+ */
+export function RankShieldArt({ rank, level, idPrefix: id, fontFamily }: { rank: Rank; level?: number; idPrefix: string; fontFamily: string }) {
   const mat = RANK_MATERIALS[rank];
-  const label = level != null ? `${RANK_TITLES[rank]}, level ${level}` : RANK_TITLES[rank];
 
   return (
-    <svg viewBox="0 0 120 132" width={size} height={size} role="img" aria-label={label} className={className}>
+    <g>
       <defs>
         <linearGradient id={`${id}-a`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor={mat.rim[0]} />
@@ -69,7 +72,7 @@ export function RankShield({ rank, level, size = 96, className }: RankShieldProp
         x={60 + (LETTER_DX[rank] ?? 0)}
         y={level != null ? 69 : 83}
         textAnchor="middle"
-        fontFamily="var(--font-display, 'Arial Rounded MT Bold')"
+        fontFamily={fontFamily}
         fontSize={level != null ? 54 : 60}
         fill="#fff"
         filter={`url(#${id}-t)`}
@@ -77,10 +80,21 @@ export function RankShield({ rank, level, size = 96, className }: RankShieldProp
         {rank}
       </text>
       {level != null && (
-        <text x="60" y="93" textAnchor="middle" fontFamily="var(--font-display, 'Arial Rounded MT Bold')" fontSize="15" fill="#fff" opacity=".92">
+        <text x="60" y="93" textAnchor="middle" fontFamily={fontFamily} fontSize="15" fill="#fff" opacity=".92">
           LV {level}
         </text>
       )}
+    </g>
+  );
+}
+
+export function RankShield({ rank, level, size = 96, className }: RankShieldProps) {
+  const id = `shield-${useId().replace(/[^A-Za-z0-9_-]/g, '')}`;
+  const label = level != null ? `${RANK_TITLES[rank]}, level ${level}` : RANK_TITLES[rank];
+
+  return (
+    <svg viewBox="0 0 120 132" width={size} height={size} role="img" aria-label={label} className={className}>
+      <RankShieldArt rank={rank} level={level} idPrefix={id} fontFamily="var(--font-display, 'Arial Rounded MT Bold')" />
     </svg>
   );
 }

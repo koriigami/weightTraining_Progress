@@ -101,6 +101,20 @@
   --pill-ink: #4a3212;
 }
 
+/* The share card's fonts, under fixed names: next/font's family names are hashed, and an SVG drawn to an image needs to name them. */
+@font-face {
+  font-family: 'Levl Display';
+  src: url('/fonts/lilita.woff2') format('woff2');
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'Levl Body';
+  src: url('/fonts/figtree.woff2') format('woff2');
+  font-weight: 300 900;
+  font-display: block;
+}
+
 html {
   -webkit-tap-highlight-color: transparent;
   background: var(--bg-solid);

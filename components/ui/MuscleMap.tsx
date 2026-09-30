@@ -62,9 +62,9 @@ const BODY: Record<'front' | 'back', View> = {
   },
 };
 
-function shape(s: Raw, fill: string, key: string): ReactNode {
+function shape(s: Raw, fill: string, key: string, stroke: string, strokeWidth: number): ReactNode {
   const [, t, ...a] = s;
-  const common = { fill, stroke: 'var(--bodyline, var(--surface))', strokeWidth: 1.2 };
+  const common = { fill, stroke, strokeWidth };
   if (t === 'e') return <ellipse key={key} cx={a[0] as number} cy={a[1] as number} rx={a[2] as number} ry={a[3] as number} {...common} />;
   if (t === 'c') return <circle key={key} cx={a[0] as number} cy={a[1] as number} r={a[2] as number} {...common} />;
   if (t === 'r') return <rect key={key} x={a[0] as number} y={a[1] as number} width={a[2] as number} height={a[3] as number} rx={a[4] as number} {...common} />;
@@ -72,6 +72,36 @@ function shape(s: Raw, fill: string, key: string): ReactNode {
 }
 
 export type MuscleFill = (muscle: Muscle) => string;
+
+/**
+ * The shapes of one body view as a `<g>` on a 100 x 200 canvas. The defaults are
+ * the app's CSS variables; the share card passes literal colours, because an SVG
+ * drawn to an image cannot read them.
+ */
+export function BodyShapes({
+  view,
+  fillFor,
+  skin = 'var(--skin)',
+  line = 'var(--bodyline, var(--surface))',
+  strokeWidth = 1.2,
+}: {
+  view: 'front' | 'back';
+  fillFor: MuscleFill;
+  skin?: string;
+  line?: string;
+  strokeWidth?: number;
+}) {
+  const b = BODY[view];
+  const fill = (s: Raw) => (s[0] ? fillFor(s[0]) : skin);
+  return (
+    <g>
+      <path d={b.base} fill={skin} />
+      {b.left.map((s, i) => shape(s, fill(s), `l${i}`, line, strokeWidth))}
+      <g transform="matrix(-1 0 0 1 100 0)">{b.left.map((s, i) => shape(s, fill(s), `r${i}`, line, strokeWidth))}</g>
+      {b.center.map((s, i) => shape(s, fill(s), `c${i}`, line, strokeWidth))}
+    </g>
+  );
+}
 
 /** One body view as an SVG. `fillFor` picks the colour per muscle. */
 export function BodySvg({
@@ -89,14 +119,9 @@ export function BodySvg({
   height?: number;
   label?: string;
 }) {
-  const b = BODY[view];
-  const fill = (s: Raw) => (s[0] ? fillFor(s[0]) : 'var(--skin)');
   return (
     <svg viewBox={viewBox} width={width} height={height} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
-      <path d={b.base} fill="var(--skin)" />
-      {b.left.map((s, i) => shape(s, fill(s), `l${i}`))}
-      <g transform="matrix(-1 0 0 1 100 0)">{b.left.map((s, i) => shape(s, fill(s), `r${i}`))}</g>
-      {b.center.map((s, i) => shape(s, fill(s), `c${i}`))}
+      <BodyShapes view={view} fillFor={fillFor} />
     </svg>
   );
 }
