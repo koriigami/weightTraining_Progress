@@ -10,6 +10,8 @@ export { Switch } from './Switch';
 export type { SegmentedOption } from './Segmented';
 export { Field, Input, Select, Textarea, SearchField } from './Field';
 export { XpBar } from './XpBar';
+export { DatePicker, DateTimeModal } from './DatePicker';
+export type { DatePickerProps, PickerTime } from './DatePicker';
 export { GameModal } from './GameModal';
 export type { GameModalProps } from './GameModal';
 export { Sheet, SheetMenu, SheetMenuItem, useSheet } from './Sheet';

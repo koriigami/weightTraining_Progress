@@ -72,3 +72,48 @@ export function monthRibbon(monthKeyStr: string): string {
   const yr = String(d.getUTCFullYear()).slice(2);
   return `${mon} ${yr}`;
 }
+
+// ---------------- The one date format ----------------
+// "Tue 29 Sep · 6:40 pm" everywhere a workout's date is shown. The year is added
+// only when it is not the current year. Written by hand so every device reads the same.
+
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// "6:40 pm" from 24 hour numbers.
+export function fmtClock(hour: number, minute: number): string {
+  const h12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${h12}:${String(minute).padStart(2, '0')} ${hour < 12 ? 'am' : 'pm'}`;
+}
+
+// "Tue 29 Sep", plus the year when it is not this year.
+export function formatDay(date: string, now: Date = new Date()): string {
+  const [y, m, d] = date.slice(0, 10).split('-').map(Number);
+  if (!y || !m || !d) return date;
+  const wd = WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  return `${wd} ${d} ${MONTHS_SHORT[m - 1]}${y !== now.getFullYear() ? ` ${y}` : ''}`;
+}
+
+// "Tue 29 Sep · 6:40 pm" from YYYY-MM-DDTHH:mm. A bare date has no time part.
+export function formatWhen(when: string, now: Date = new Date()): string {
+  const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/.exec(when);
+  if (!m) return formatDay(when, now);
+  return `${formatDay(m[1], now)} · ${fmtClock(Number(m[2]), Number(m[3]))}`;
+}
+
+// YYYY-MM-DDTHH:mm apart and back together.
+export function splitWhen(when: string): { date: string; hour: number; minute: number } {
+  const m = /^(\d{4}-\d{2}-\d{2})(?:T(\d{2}):(\d{2}))?/.exec(when);
+  return { date: m?.[1] ?? todayStr(), hour: Number(m?.[2] ?? 0), minute: Number(m?.[3] ?? 0) };
+}
+
+export function joinWhen(date: string, hour: number, minute: number): string {
+  return `${date}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
+// "Tuesday 29 September 2026", for screen readers.
+export function formatDayLong(date: string): string {
+  const [y, m, d] = date.slice(0, 10).split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return `${dt.toLocaleDateString('en-GB', { weekday: 'long', timeZone: 'UTC' })} ${d} ${dt.toLocaleDateString('en-GB', { month: 'long', timeZone: 'UTC' })} ${y}`;
+}

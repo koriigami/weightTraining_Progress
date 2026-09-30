@@ -11,8 +11,8 @@ import { useDialog } from './useDialog';
 export type GameModalProps = {
   open: boolean;
   title: string;
-  /** One plain sentence. */
-  children: ReactNode;
+  /** One plain sentence. Leave it out when the body is all in `extra`. */
+  children?: ReactNode;
   /** Medallion colour: red for destructive, green for finishing, neutral gold otherwise. */
   tone?: 'red' | 'green' | 'neutral';
   /** The icon inside the medallion. */
@@ -34,6 +34,8 @@ export type GameModalProps = {
   /** Leave it out for a one-button dialog ("Got it") that closes with onCancel. */
   onConfirm?: () => void;
   confirmLoading?: boolean;
+  /** Extra class on the panel, for a modal that needs its own width. */
+  className?: string;
 };
 
 /**
@@ -56,6 +58,7 @@ export function GameModal({
   onCancel,
   onConfirm,
   confirmLoading,
+  className,
 }: GameModalProps) {
   const ref = useRef<HTMLDivElement>(null);
   const uid = useId();
@@ -87,11 +90,11 @@ export function GameModal({
       />
       <div
         ref={ref}
-        className="wt-gmodal"
+        className={cn('wt-gmodal', className)}
         role={strict ? 'alertdialog' : 'dialog'}
         aria-modal="true"
         aria-labelledby={titleId}
-        aria-describedby={bodyId}
+        aria-describedby={children ? bodyId : undefined}
         tabIndex={-1}
         onAnimationEnd={(e) => e.currentTarget.classList.remove('shake')}
       >
@@ -103,7 +106,7 @@ export function GameModal({
         {art ? <div className="wt-gm-art">{art}</div> : icon ? <div className={cn('wt-gm-med', tone)}>{icon}</div> : null}
         {badge && <div style={{ textAlign: 'center', marginBottom: 10 }}>{badge}</div>}
         <div className="wt-gm-body">
-          <p id={bodyId}>{children}</p>
+          {children && <p id={bodyId}>{children}</p>}
           {extra}
           <div className={cn('wt-gm-btns', single && 'one')}>
             {single ? (
