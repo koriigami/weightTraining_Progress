@@ -4124,6 +4124,13 @@ textarea.wt-input {
   gap: 2px;
 }
 .wt-goal-reward {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 800;
+}
+.wt-goal-reward b {
   font-family: var(--font-num);
   font-size: 19px;
   color: var(--xp-ink);

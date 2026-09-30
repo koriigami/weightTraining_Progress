@@ -1,40 +1,34 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentType } from 'react';
 import { Flame, Dumbbell, ChevronsUp, Timer, Route, Scale } from 'lucide-react';
 import { useProgress } from '@/components/ProgressProvider';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
-import { Input } from '@/components/ui/Field';
+import { DatePicker } from '@/components/ui/DatePicker';
 import { Segmented } from '@/components/ui/Segmented';
 import { Sheet, useSheet } from '@/components/ui/Sheet';
 import { Stepper } from '@/components/ui/Stepper';
 import { useToday } from '@/lib/useToday';
-import { addDaysStr, formatDateMed } from '@/lib/date';
-import { WEIGHT_GOAL_STEP, goalDistanceKm, goalReward, periodEnd, streakDeadline, weightGoalTarget, weightPaceLabel, weightPaceLabelFull } from '@/lib/goals';
+import { addDaysStr, formatDay } from '@/lib/date';
+import { END_PRESETS, WEIGHT_GOAL_STEP, endPresetDate, endsLabel, goalDistanceKm, goalHint, goalReward, recentNumbers, streakDeadline, weightGoalTarget, weightPaceLabel, weightPaceLabelFull } from '@/lib/goals';
 import { fmtNumber, kgToUnit, kmToUnit, unitToKg } from '@/lib/units';
-import type { PeriodPreset } from '@/lib/goals';
+import type { EndPreset } from '@/lib/goals';
 import type { Goal, GoalType } from '@/lib/progress';
 
 const TYPES: { id: GoalType; label: string; Icon: ComponentType<{ size?: number }> }[] = [
-  { id: 'streak', label: 'Streak', Icon: Flame },
   { id: 'workouts', label: 'Workouts', Icon: Dumbbell },
-  { id: 'pushups', label: 'Push-ups', Icon: ChevronsUp },
-  { id: 'cardio-minutes', label: 'Cardio time', Icon: Timer },
+  { id: 'streak', label: 'Weekly streak', Icon: Flame },
+  { id: 'cardio-minutes', label: 'Cardio minutes', Icon: Timer },
   { id: 'cardio-km', label: 'Distance', Icon: Route },
+  { id: 'pushups', label: 'Push-ups', Icon: ChevronsUp },
   { id: 'weight', label: 'Weight', Icon: Scale },
 ];
 
-const PERIOD_PRESETS: { id: PeriodPreset; label: string }[] = [
-  { id: 'this-week', label: 'This week' },
-  { id: '2-weeks', label: '2 weeks' },
-  { id: 'this-month', label: 'This month' },
-  { id: '3-months', label: '3 months' },
-  { id: 'custom', label: 'Pick date' },
-];
-
-const STREAK_CHIPS = [2, 4, 8, 12, 26];
+const ANTI_FARM = 'Only workouts logged after you create the goal count.';
+const WEEKS_MIN = 1;
+const WEEKS_MAX = 26;
 const WEIGHT_DEADLINE_CHIPS: { label: string; weeks: number }[] = [
   { label: '2 weeks', weeks: 2 },
   { label: '1 month', weeks: 4.3 },
@@ -75,7 +69,7 @@ function GoalActions({ step, isEdit, canSave, saving, onContinue, onBack, onSave
           if (await onSave()) close();
         }}
       >
-        {isEdit ? 'Save changes' : 'Save goal'}
+        {isEdit ? 'Save goal' : 'Create goal'}
       </Button>
     </>
   );
@@ -86,7 +80,7 @@ function GoalActions({ step, isEdit, canSave, saving, onContinue, onBack, onSave
  * the numbers, with the XP reward shown before you save. Editing skips step 1.
  */
 export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClose: () => void; editGoal?: Goal | null }) {
-  const { progress, addGoal, updateGoal, prefs } = useProgress();
+  const { progress, state, addGoal, updateGoal, prefs } = useProgress();
   // Goals are stored in kg and km. Everything typed and shown here is in the person's own units.
   const wu = prefs.units.weight;
   const du = prefs.units.distance;
@@ -101,7 +95,8 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
   const [saving, setSaving] = useState(false);
 
   const [streakN, setStreakN] = useState(4);
-  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('this-week');
+  const [periodPreset, setPeriodPreset] = useState<EndPreset | 'custom'>('1-month');
+  const pickerRef = useRef<HTMLDivElement>(null);
   const [customEnd, setCustomEnd] = useState('');
   const [amountOverride, setAmountOverride] = useState<number | null>(null);
   const [weightDir, setWeightDir] = useState<'lose' | 'gain'>('lose');
@@ -113,7 +108,7 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
     setType(null);
     setError(null);
     setStreakN(4);
-    setPeriodPreset('this-week');
+    setPeriodPreset('1-month');
     setCustomEnd('');
     setAmountOverride(null);
     setWeightDir('lose');
@@ -160,7 +155,8 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
   const streakStart = editGoal?.start ?? today;
   const streakDl = streakDeadline(streakStart, streakN);
 
-  const periodEndDate = periodPreset === 'custom' ? customEnd || tomorrow : periodEnd(periodPreset, today);
+  const periodEndDate = periodPreset === 'custom' ? customEnd || tomorrow : endPresetDate(periodPreset, today);
+  const recent = useMemo(() => recentNumbers(state, today), [state, today]);
   const defaultAmount: Record<string, number> = {
     workouts: 8,
     pushups: 300,
@@ -218,7 +214,7 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
   }
 
   const typeMeta = TYPES.find((t) => t.id === type);
-  const title = isEdit ? `Edit ${(typeMeta?.label ?? '').toLowerCase()} goal` : step === 1 ? 'New goal' : `${typeMeta?.label ?? ''} goal`;
+  const title = isEdit ? 'Edit goal' : 'New goal';
 
   const rewardCandidate: Goal | null = (() => {
     if (!type) return null;
@@ -249,7 +245,12 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
     <div className="wt-goal-foot">
       {showNote && (
         <div className="wt-goal-note">
-          {reward !== null && <span className="wt-goal-reward">Reward +{reward} XP</span>}
+          {reward !== null && (
+            <div className="wt-goal-reward">
+              <span>Reward</span>
+              <b>+{reward} XP</b>
+            </div>
+          )}
           {error && (
             <span role="alert" className="wt-field-error">
               {error}
@@ -275,7 +276,7 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
   );
 
   return (
-    <Sheet open={open} onClose={handleClose} title={title} footer={footer}>
+    <Sheet open={open} onClose={handleClose} title={title} description={type && (step === 2 || isEdit) ? TYPES.find((t) => t.id === type)?.label : undefined} footer={footer}>
       {!isEdit && step === 1 ? (
         <div>
           <p className="wt-sheet-desc" style={{ marginLeft: 0 }}>
@@ -294,21 +295,15 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
         <div>
           {type === 'streak' && (
             <>
-              <Group label="How many weeks in a row?">
-                <div className="wt-chips">
-                  {STREAK_CHIPS.map((n) => (
-                    <Chip key={n} pressed={streakN === n} onClick={() => setStreakN(n)}>
-                      {n}
-                    </Chip>
-                  ))}
-                </div>
+              <Group label="Weeks in a row">
+                <Stepper label="Weeks" value={streakN} min={WEEKS_MIN} max={WEEKS_MAX} onChange={setStreakN} format={(v) => `${v} ${v === 1 ? 'week' : 'weeks'}`} />
+                <span className="wt-field-hint">{goalHint('streak', recent)}</span>
               </Group>
               <div className="wt-goal-summary">
-                <b>{streakN} weeks in a row</b>
-                <span>
-                  {isEdit ? `Starts ${formatDateMed(streakStart)}` : 'Starts today'}, ends {formatDateMed(streakDl)}. Any workout keeps a week alive.
-                </span>
+                <b>{endsLabel(streakDl)}</b>
+                <span>{isEdit ? `Started ${formatDay(streakStart)}` : 'Starts this week'}. Any workout keeps a week alive.</span>
               </div>
+              <span className="wt-field-hint">{ANTI_FARM}</span>
             </>
           )}
 
@@ -363,24 +358,35 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
 
           {type && type !== 'streak' && type !== 'weight' && (
             <>
-              <Group label="Period">
+              <Group label="Ends">
                 <div className="wt-chips">
-                  {PERIOD_PRESETS.map((p) => (
+                  {END_PRESETS.map((p) => (
                     <Chip key={p.id} pressed={periodPreset === p.id} onClick={() => setPeriodPreset(p.id)}>
                       {p.label}
                     </Chip>
                   ))}
+                  <Chip
+                    pressed={periodPreset === 'custom'}
+                    onClick={() => {
+                      setPeriodPreset('custom');
+                      setTimeout(() => pickerRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 0);
+                    }}
+                  >
+                    Pick end date
+                  </Chip>
                 </div>
-                {periodPreset === 'custom' && <Input type="date" aria-label="Goal end date" value={customEnd} min={tomorrow} onChange={(e) => setCustomEnd(e.target.value)} />}
+                {periodPreset === 'custom' ? (
+                  <div ref={pickerRef}>
+                    <DatePicker label="Goal end date" value={customEnd || null} min={tomorrow} today={today} onChange={setCustomEnd} footer={customEnd ? endsLabel(customEnd) : 'Pick a day'} />
+                  </div>
+                ) : (
+                  <span className="wt-field-hint">{endsLabel(periodEndDate)}</span>
+                )}
               </Group>
               <Group label={type === 'workouts' ? 'Workouts' : type === 'pushups' ? 'Push-ups' : type === 'cardio-minutes' ? 'Cardio minutes' : du === 'mi' ? 'Miles' : 'Kilometres'}>
                 <Stepper label="Amount" value={amount} min={1} max={100000} onChange={setAmountOverride} />
-                <span className="wt-field-hint">
-                  {type === 'workouts' && 'A workout counts once you tick a set.'}
-                  {type === 'pushups' && 'Reps on push-up exercises.'}
-                  {type === 'cardio-minutes' && 'Minutes of cardio in your workouts.'}
-                  {type === 'cardio-km' && 'Distance from cardio in your workouts.'}
-                </span>
+                <span className="wt-field-hint">{goalHint(type, recent, 4, `${fmtNumber(kmToUnit(recent.km, du))} ${du}`)}</span>
+                <span className="wt-field-hint">{ANTI_FARM}</span>
               </Group>
             </>
           )}

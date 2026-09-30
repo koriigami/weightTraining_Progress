@@ -5,9 +5,11 @@ import { Plus } from 'lucide-react';
 import { useProgress } from '@/components/ProgressProvider';
 import { Button } from '@/components/ui/Button';
 import { Card, SectionLabel } from '@/components/ui/Card';
+import { Chip } from '@/components/ui/Chip';
+import { DatePicker } from '@/components/ui/DatePicker';
 import { Field, Input } from '@/components/ui/Field';
 import { Sheet, useSheet } from '@/components/ui/Sheet';
-import { formatMonthDay as shortDate } from '@/lib/date';
+import { formatDay, formatMonthDay as shortDate } from '@/lib/date';
 import { weightSummary } from '@/lib/profileStats';
 import { fmtNumber, kgToUnit, unitToKg } from '@/lib/units';
 import type { WeightUnit } from '@/lib/units';
@@ -58,11 +60,15 @@ function LogWeightSheet({ open, onClose, unit, initialKg }: { open: boolean; onC
   const today = useToday();
   const [text, setText] = useState('');
   const [touched, setTouched] = useState(false);
+  const [date, setDate] = useState(today);
+  const [pickDate, setPickDate] = useState(false);
 
   useEffect(() => {
     if (open) {
       setText(initialKg !== null ? String(kgToUnit(initialKg, unit)) : '');
       setTouched(false);
+      setDate(today);
+      setPickDate(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -79,14 +85,23 @@ function LogWeightSheet({ open, onClose, unit, initialKg }: { open: boolean; onC
         onSubmit={(close) => {
           setTouched(true);
           if (!valid || kg === null) return;
-          logWeight(today, kg);
+          logWeight(date, kg);
           showToast(`Weight logged: ${fmtNumber(kgToUnit(kg, unit))} ${unit}`);
           close();
         }}
       >
-        <Field label={`Weight today (${unit})`} error={touched && !valid ? `Enter a weight between ${lo} and ${hi} ${unit}.` : undefined} hint="Logging again today replaces today's weight.">
+        <Field label={`Weight (${unit})`} error={touched && !valid ? `Enter a weight between ${lo} and ${hi} ${unit}.` : undefined} hint="Logging again for the same day replaces it.">
           <Input type="number" inputMode="decimal" step="0.1" name="weight" value={text} onChange={(e) => setText(e.target.value)} placeholder={unit === 'kg' ? '75.0' : '165.0'} data-autofocus />
         </Field>
+        <div className="wt-field">
+          <span className="wt-field-label">Date</span>
+          <div className="wt-chips">
+            <Chip pressed={pickDate} onClick={() => setPickDate((v) => !v)}>
+              {date === today ? 'Today' : formatDay(date)}
+            </Chip>
+          </div>
+          {pickDate && <DatePicker label="Weigh-in date" value={date} max={today} today={today} onChange={setDate} footer={formatDay(date)} />}
+        </div>
       </SheetForm>
     </Sheet>
   );
