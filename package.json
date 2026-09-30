@@ -7,7 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:related": "vitest related --run",
+    "typecheck": "tsc --noEmit",
+    "check:dashes": "node scripts/check-dashes.mjs",
+    "verify": "npm run typecheck && npm test && npm run check:dashes",
+    "verify:full": "npm run verify && npm run build",
+    "qa": "node scripts/qa/run.mjs"
   },
   "dependencies": {
     "@upstash/redis": "^1.34.0",

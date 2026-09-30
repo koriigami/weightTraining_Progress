@@ -259,5 +259,16 @@ session says `isOwner`, then fetches `GET /api/insights?range=4w|12w|all`.
 cards, the rank road, goals and units, the session, routine actions and
 validation, the celebration queue, the plan migration, Insights (including the
 5 person rule and the owner gate), and the store with an in-memory KV. There is
-no component or browser test suite. Screens are checked by hand with
-`docs/QA.md`.
+no component test suite. Screens are checked two ways:
+
+- `npm run qa` (`scripts/qa/`): starts the dev server, signs in over HTTP with
+  the dev provider, seeds a known state through `/api/state` (workouts
+  `qa-strength`, `qa-run`, `qa-ride`, `qa-mixed`, weights, a goal, a routine),
+  screenshots the given routes at 390 and 1440 px, and reports console errors
+  and horizontal overflow. `withApp` in `scripts/qa/lib.mjs` gives a signed-in
+  page for flows such as finishing a workout.
+- `docs/QA.md` for what only a person or a real phone can judge.
+
+The test policy (related tests while coding, `npm run verify` before every
+commit, the build before a push, screenshots only for touched screens) is in
+`CLAUDE.md`. CI runs `verify` and the build on every push.

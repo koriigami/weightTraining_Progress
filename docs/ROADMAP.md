@@ -47,6 +47,9 @@ v8 is built on the branch `claude/home-workout-nutrition-plan-kuyhvx` and is not
 7. **Rename the app.** Done: the app is now Levl (name, logo, metadata, manifest and icons).
 8. Smaller: a real ESLint setup (`npm run lint` is not configured), and a component test layer for
    the reward moments.
+9. **Dev tooling.** Done: `CLAUDE.md`, `npm run verify`, the QA harness (`npm run qa`), the
+   `levl-builder` and `levl-ui-check` agents, the `levl-release` and `levl-board` skills, and CI on
+   every push. What to add later and when: `docs/AGENTS.md`.
 
 ## Brand and launch essentials
 

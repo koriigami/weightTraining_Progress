@@ -18,6 +18,14 @@ gives a clean slate. Use two people:
 
 Free the port with `fuser -k 3311/tcp`. Do not use `pkill -f`.
 
+For screenshots without signing in by hand, use the harness: it starts the
+server, signs in as `qa@example.com` (or the owner with `--owner`), seeds
+workouts, weights, a goal and a routine, and prints console errors and overflow:
+
+```bash
+npm run qa -- --routes "/,/profile,/workout/view?id=@strength,/workout/view?id=@run" --widths 390,1440 --out /tmp/levl-qa
+```
+
 ## Every screen, every width
 
 Tick these on each screen below, at 390 px and at 1440 px.

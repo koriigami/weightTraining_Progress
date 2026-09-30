@@ -151,12 +151,15 @@ workouts, the v7 backup, and that reading it twice changes nothing.
 
 ```bash
 npm install
-npm test            # vitest over tests/ (pure logic: scoring, badges, rank road, units, sessions, migration, insights)
-npx tsc --noEmit    # type check
-npm run lint        # next lint
-npm run build       # production build; the routes stay static
-npm run dev         # http://localhost:3000
+npm run verify        # type check, the full unit suite and the em dash check (about 10 s)
+npm run verify:full   # verify, then the production build; the routes stay static
+npm run test:related -- lib/feed.ts   # only the tests that import a changed file
+npm run qa -- --routes "/,/workout/view?id=@run" --widths 390,1440   # screenshots with seeded data
+npm run dev           # http://localhost:3000
 ```
+
+CI (`.github/workflows/ci.yml`) runs `verify` and the build on every push. The
+test policy, the QA harness and the conventions are in `CLAUDE.md`.
 
 With no Google env vars set, the sign-in screen shows a "Dev sign-in" email
 form (development only, never in production). With no Redis env vars, progress
