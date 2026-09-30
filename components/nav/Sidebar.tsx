@@ -122,7 +122,7 @@ export function Sidebar({ onStart, onSignOut }: { onStart: () => void; onSignOut
     <aside className="wt-side" data-testid="sidebar" aria-label="Sidebar">
       <Link href="/" className="wt-logo" aria-label="Levl, home">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/favicon.svg" alt="" width={30} height={30} aria-hidden="true" />
+        <img src="/logo.svg" alt="" width={36} height={36} aria-hidden="true" />
         <span className="gt">Levl</span>
       </Link>
       <Button size="lg" onClick={onStart}>

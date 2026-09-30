@@ -37,7 +37,7 @@ export function SignInScreen({ hasGoogle, hasDev }: { hasGoogle: boolean; hasDev
     <div className="flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-sm space-y-4 text-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/favicon.svg" alt="" width={72} height={72} className="mx-auto" aria-hidden="true" />
+        <img src="/logo.svg" alt="" width={76} height={76} className="mx-auto" aria-hidden="true" />
         <h1 className="gt text-4xl" style={{ fontSize: 38, lineHeight: 1.1 }}>
           Levl
         </h1>

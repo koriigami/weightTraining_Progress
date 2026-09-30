@@ -1982,9 +1982,18 @@ textarea.wt-input {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 21px;
-  padding: 0 8px 16px;
+  font-size: 27px;
+  padding: 2px 8px 18px;
   text-decoration: none;
+}
+.wt-logo img {
+  flex: none;
+  display: block;
+}
+/* Trim the text box to the letter height so the mark centres on the letters, not on the line box. */
+.wt-logo .gt {
+  line-height: 1;
+  text-box: trim-both cap alphabetic;
 }
 .wt-side .wt-btn {
   margin: 0 4px 14px;
