@@ -82,7 +82,7 @@ function TimeBox({ label, value, min, max, onCommit }: { label: string; value: n
 export function DatePicker({ value, onChange, min, max, today: todayProp, time, onTimeChange, footer, flat, className, label = 'Calendar' }: DatePickerProps) {
   const uid = useId();
   const today = todayProp ?? todayStr();
-  const [view, setView] = useState(() => monthOf(value ?? today));
+  const [view, setView] = useState(() => monthOf(value ?? (min && min > today ? min : today)));
   const [focusDate, setFocusDate] = useState<string | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 

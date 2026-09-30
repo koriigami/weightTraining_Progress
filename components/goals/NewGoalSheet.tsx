@@ -177,6 +177,7 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
   function canSaveStep2(): boolean {
     if (saving) return false;
     if (!type) return false;
+    if (type === 'streak') return true;
     if (type === 'weight') return baselineForCalc !== null;
     if (periodPreset === 'custom' && !customEnd) return false;
     return amount > 0;
