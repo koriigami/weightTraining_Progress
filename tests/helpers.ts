@@ -23,7 +23,6 @@ export function workout(date: string, items: ItemSpec[], over: Partial<WorkoutLo
       sets: it.sets.map((s, i) => ({ ...s, done: !it.undone?.includes(i) })),
     })),
     xp: 0,
-    prs: [],
     ...over,
   };
 }

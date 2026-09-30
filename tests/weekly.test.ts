@@ -26,10 +26,10 @@ describe('weeklySeries', () => {
   });
 
   it('adds XP, sets and volume of logged workouts to their week', () => {
-    // 2 sets of 20 kg x 10: 10 XP for the sets and 50 for finishing.
+    // 2 sets of 20 kg x 10: 10 XP for the sets and 10 for finishing (the finish bonus is the XP of the planned sets).
     const s = weeklySeries(stateWith([bench('2026-09-30'), bench('2026-08-12', 3)]), TODAY);
-    expect(s[7]).toMatchObject({ xp: 60, sets: 2, volumeKg: 400 });
-    expect(s[0]).toMatchObject({ xp: 65, sets: 3, volumeKg: 600 });
+    expect(s[7]).toMatchObject({ xp: 20, sets: 2, volumeKg: 400 });
+    expect(s[0]).toMatchObject({ xp: 30, sets: 3, volumeKg: 600 });
     expect(s[3]).toMatchObject({ xp: 0, sets: 0, volumeKg: 0 });
   });
 
@@ -71,7 +71,7 @@ describe('weeklySeries', () => {
     const log: DayLog = { items: { s0: { at: '2026-09-28T08:00:00.000Z' } } };
     const state = stateWith([bench('2026-09-29')], { days: { '2026-09-28': log } });
     const p = weeklySeries(state, TODAY)[7];
-    expect(p.xp).toBe(60 + 15);
+    expect(p.xp).toBe(20 + 15);
   });
 
   it('metricValue picks the value for a metric', () => {

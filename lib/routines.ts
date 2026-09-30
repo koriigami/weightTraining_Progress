@@ -49,9 +49,24 @@ export type WorkoutItem = {
   sets: LoggedSet[];
 };
 
-// A personal record set in one workout: the best set for the exercise beat the
-// best set of every earlier workout (heavier, or the same weight for more reps).
-export type WorkoutPr = { exerciseId: string; kg: number; reps: number };
+// One exercise of the plan a workout set out to do: the sets it aimed for.
+export type PlanItem = { exerciseId: string; sets: number };
+
+// A bonus earned for one exercise in one workout. A record is an all-time best,
+// a beat is a better set than last time. The fields that apply depend on the
+// exercise's metric, and hold the set that earned it.
+export type WorkoutMark = {
+  exerciseId: string;
+  kind: 'record' | 'beat';
+  kg?: number;
+  reps?: number;
+  sec?: number;
+  km?: number;
+  min?: number;
+};
+
+// Where a workout's XP came from, worked out by rescoreWorkouts.
+export type XpParts = { sets: number; cardio: number; beat: number; record: number; finish: number; weekly: number };
 
 export type WorkoutLog = {
   id: string;
@@ -65,7 +80,16 @@ export type WorkoutLog = {
   xp: number; // snapshot of what this workout earned, kept in step by rescoreWorkouts
   notes?: string;
   photo?: string; // small string only. Photo storage is planned for a later version
-  prs: WorkoutPr[];
+  // What the workout set out to do, taken at Start. Workouts saved before v8 have
+  // none: their own items and ticked sets stand in as the plan.
+  plan?: PlanItem[];
+  // The results below are derived: rescoreWorkouts writes them, and the server
+  // ignores whatever the client sends.
+  marks?: WorkoutMark[];
+  xpParts?: XpParts;
+  planComplete?: boolean;
+  planMissing?: string[]; // exerciseIds of plan items not done
+  prs?: { exerciseId: string; kg: number; reps: number }[]; // stored before v8, read by nothing
 };
 
 export type Prefs = {
@@ -98,10 +122,17 @@ export const WORKOUT_XP = {
   strengthSet: 5,
   cardioMinuteCap: 30,
   cardioDistanceBonus: 10,
-  finish: 50,
-  pr: 25,
+  intervalCap: 30,
+  finishCap: 50,
+  finishPerDay: 2,
+  beat: 10,
+  record: 25,
   weeklyGoal: 50,
 };
+
+// A ticked strength set only earns XP with something behind it: a rep, or a
+// five second hold.
+export const MIN_SET_SECONDS = 5;
 
 export function defaultPrefs(): Prefs {
   return {
@@ -202,21 +233,30 @@ export function pace(min: number | undefined, km: number | undefined, unit: 'km'
 
 const num = (v: number | undefined): number => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
 
-// XP for one ticked set. Strength is a flat 5. Cardio is a minute for a minute,
-// capped at 30 a set, plus 10 when a distance is logged. An interval set is its
-// work plus easy minutes.
+// XP for one ticked set. Strength is a flat 5, but only with a rep (or five
+// seconds for a hold). Cardio is a minute for a minute, capped at 30 a set, plus
+// 10 when a distance is logged, and needs a minute. An interval set is its work
+// plus easy minutes, also capped at 30.
 export function setXp(e: ExerciseDef, s: SetPlan): number {
-  if (e.metric === 'distance_time') {
-    return Math.min(WORKOUT_XP.cardioMinuteCap, Math.round(num(s.min))) + (num(s.km) > 0 ? WORKOUT_XP.cardioDistanceBonus : 0);
+  switch (e.metric) {
+    case 'distance_time': {
+      const min = num(s.min);
+      if (min <= 0) return 0;
+      return Math.min(WORKOUT_XP.cardioMinuteCap, Math.round(min)) + (num(s.km) > 0 ? WORKOUT_XP.cardioDistanceBonus : 0);
+    }
+    case 'intervals':
+      return Math.min(WORKOUT_XP.intervalCap, Math.round(num(s.on) + num(s.off)));
+    case 'time':
+      return num(s.sec) >= MIN_SET_SECONDS ? WORKOUT_XP.strengthSet : 0;
+    default:
+      return num(s.reps) >= 1 ? WORKOUT_XP.strengthSet : 0;
   }
-  if (e.metric === 'intervals') return Math.round(num(s.on) + num(s.off));
-  return WORKOUT_XP.strengthSet;
 }
 
 export type WorkoutTotals = {
   sets: number; // ticked sets
   volume: number; // kg lifted, weight_reps only
-  xp: number; // set XP only, without finish, PR or weekly bonuses
+  xp: number; // set XP only, without beat, record, finish or weekly bonuses
   exercises: number; // exercises with at least one ticked set
   cardioMinutes: number;
   km: number;

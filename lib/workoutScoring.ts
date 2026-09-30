@@ -1,23 +1,27 @@
-// XP, personal records and weekly streaks for logged workouts. Pure functions.
+// XP, records and weekly streaks for logged workouts. Pure functions.
 //
-// Rules:
-//   +5 XP per ticked strength set. Cardio is 1 XP a minute (30 at most a set)
-//   plus 10 when a distance is logged. An interval set is its work plus easy
-//   minutes. See setXp in lib/routines.ts.
-//   +50 for finishing a workout.
-//   +25 per personal record: the best set (heaviest, then most reps) for an
-//   exercise beats the best set of every earlier workout. The first time an
-//   exercise shows up there is nothing to beat, so it is never a PR.
-//   +50 the first time the weekly goal count is reached in a Monday to Sunday week.
+// Rules (v2):
+//   +5 XP per ticked strength set that has a rep (or a 5 second hold). Cardio is
+//   1 XP a minute (30 at most a set) plus 10 when a distance is logged. An
+//   interval set is its work plus easy minutes, also capped at 30. See setXp in
+//   lib/routines.ts.
+//   +10 for beating last time and +25 for an all-time record, once per exercise
+//   per workout. A record replaces the beat. The first time an exercise shows up
+//   there is nothing to beat, so it earns neither.
+//   +50 at most for finishing the plan: every planned exercise done for its
+//   planned sets. It pays the XP of the sets that fill the plan, capped at 50,
+//   and at most twice a day.
+//   +50 the workout that makes the Monday to Sunday week's count of finished
+//   plans reach the weekly goal.
 //
 // Everything is derived from the workouts, in date order, so deleting or moving
 // a workout re-scores the rest. A workout with no ticked sets scores nothing,
 // and a workout dated after tomorrow is ignored (tomorrow allows for time zones).
 import { exerciseById } from '../data/exercises';
-import type { Muscle } from '../data/exercises';
+import type { ExerciseDef, Muscle } from '../data/exercises';
 import { addDaysStr, mondayOf } from './date';
 import { WORKOUT_XP, setXp, stateLookup, weeklyGoalOf, workoutTotals } from './routines';
-import type { ExerciseLookup, LoggedSet, WorkoutLog, WorkoutPr } from './routines';
+import type { ExerciseLookup, LoggedSet, PlanItem, WorkoutItem, WorkoutLog, WorkoutMark, XpParts } from './routines';
 import type { AppState } from './progress';
 
 export { setXp };
@@ -55,18 +59,183 @@ export function isBetterSet(a: Best, b: Best): boolean {
   return a.kg > b.kg || (a.kg === b.kg && a.reps > b.reps);
 }
 
+// ---------------- One exercise in one workout ----------------
+
+// The workout's best set of an exercise, as far as beat and record care. Which
+// fields are set depends on the metric: weight_reps kg and reps, reps reps,
+// time sec, distance_time km and min.
+type Perf = { kg: number; reps: number; sec: number; km: number; min: number };
+
+const NO_PERF: Perf = { kg: 0, reps: 0, sec: 0, km: 0, min: 0 };
+
+// A ticked set that earns XP. This is what "done" means for a plan item.
+function qualifies(e: ExerciseDef, s: LoggedSet): boolean {
+  return s.done && setXp(e, s) > 0;
+}
+
+// Cardio: the most distance wins, then the fewest minutes for it. With no
+// distance anywhere, the most minutes.
+function betterCardio(a: Perf, b: Perf): boolean {
+  if (a.km !== b.km) return a.km > b.km;
+  if (a.km > 0) return a.min < b.min;
+  return a.min > b.min;
+}
+
+function perfOf(e: ExerciseDef, sets: LoggedSet[]): Perf | null {
+  let best: Perf | null = null;
+  for (const s of sets) {
+    if (!qualifies(e, s)) continue;
+    const cand: Perf = { ...NO_PERF };
+    let better: boolean;
+    switch (e.metric) {
+      case 'weight_reps':
+        cand.kg = num(s.kg);
+        cand.reps = num(s.reps);
+        better = best === null || isBetterSet(cand, best);
+        break;
+      case 'reps':
+        cand.reps = num(s.reps);
+        better = best === null || cand.reps > best.reps;
+        break;
+      case 'time':
+        cand.sec = num(s.sec);
+        better = best === null || cand.sec > best.sec;
+        break;
+      case 'distance_time':
+        cand.km = num(s.km);
+        cand.min = num(s.min);
+        better = best === null || betterCardio(cand, best);
+        break;
+      default:
+        return null; // intervals have no beat or record
+    }
+    if (better) best = cand;
+  }
+  return best;
+}
+
+// Beat last time: better than the most recent earlier workout with the exercise.
+function beatsLast(e: ExerciseDef, cur: Perf, last: Perf): boolean {
+  switch (e.metric) {
+    case 'weight_reps':
+      return (cur.kg > last.kg && cur.reps >= last.reps) || (cur.kg === last.kg && cur.reps > last.reps);
+    case 'reps':
+      return cur.reps > last.reps;
+    case 'time':
+      return cur.sec > last.sec;
+    case 'distance_time':
+      if (cur.km > last.km) return true;
+      if (cur.km >= last.km && cur.km > 0) return cur.min < last.min;
+      if (cur.km === 0 && last.km === 0) return cur.min > last.min;
+      return false;
+    default:
+      return false;
+  }
+}
+
+// Record: better than every earlier workout. Cardio records are about distance only.
+function isRecord(e: ExerciseDef, cur: Perf, best: Perf): boolean {
+  switch (e.metric) {
+    case 'weight_reps':
+      return isBetterSet(cur, best);
+    case 'reps':
+      return cur.reps > best.reps;
+    case 'time':
+      return cur.sec > best.sec;
+    case 'distance_time':
+      return cur.km > 0 && cur.km > best.km;
+    default:
+      return false;
+  }
+}
+
+// The best of two workouts' efforts, for the all-time best. Cardio keeps the
+// longest distance (minutes come from the same effort).
+function bestOf(e: ExerciseDef, a: Perf | undefined, b: Perf): Perf {
+  if (!a) return b;
+  switch (e.metric) {
+    case 'weight_reps':
+      return isBetterSet(b, a) ? b : a;
+    case 'reps':
+      return b.reps > a.reps ? b : a;
+    case 'time':
+      return b.sec > a.sec ? b : a;
+    default:
+      return b.km > a.km ? b : a;
+  }
+}
+
+function markOf(e: ExerciseDef, exerciseId: string, kind: WorkoutMark['kind'], p: Perf): WorkoutMark {
+  switch (e.metric) {
+    case 'weight_reps':
+      return { exerciseId, kind, kg: p.kg, reps: p.reps };
+    case 'reps':
+      return { exerciseId, kind, reps: p.reps };
+    case 'time':
+      return { exerciseId, kind, sec: p.sec };
+    default:
+      return { exerciseId, kind, km: p.km, min: p.min };
+  }
+}
+
+// ---------------- The plan ----------------
+
+// The plan a workout is judged against: the snapshot taken at Start, or for
+// older workouts what they ticked.
+export function planOf(w: Pick<WorkoutLog, 'plan' | 'items'>): PlanItem[] {
+  if (w.plan) return w.plan.filter((p) => p.sets >= 1);
+  return w.items
+    .map((item) => ({ exerciseId: item.exerciseId, sets: item.sets.filter((s) => s.done).length }))
+    .filter((p) => p.sets >= 1);
+}
+
+type PlanResult = { complete: boolean; missing: string[]; xp: number };
+
+// Done means at least `sets` qualifying sets of that exercise. xp is what the
+// sets that fill the plan earned, best sets first, before the 50 cap.
+function checkPlan(plan: PlanItem[], items: WorkoutItem[], lookup: ExerciseLookup): PlanResult {
+  const missing: string[] = [];
+  let xp = 0;
+  for (const p of plan) {
+    const e = lookup(p.exerciseId);
+    const item = items.find((i) => i.exerciseId === p.exerciseId);
+    const xps = e && item ? item.sets.filter((s) => qualifies(e, s)).map((s) => setXp(e, s)).sort((a, b) => b - a) : [];
+    if (xps.length < p.sets) missing.push(p.exerciseId);
+    xp += xps.slice(0, p.sets).reduce((sum, x) => sum + x, 0);
+  }
+  return { complete: plan.length > 0 && missing.length === 0, missing, xp };
+}
+
+// Push-up variations, for the Pushup Path badge, the Pushup Month badge and goals.
+export function isPushup(e: ExerciseDef | undefined): boolean {
+  return Boolean(e && /push[ -]?up/i.test(e.name));
+}
+
+// ---------------- Scoring ----------------
+
 export type WorkoutScore = {
   id: string;
   date: string;
-  sets: number;
+  routineId?: string;
+  finishedAt: string;
+  sets: number; // ticked sets
   volume: number; // kg
-  setXp: number;
+  setXp: number; // sets and cardio, before any bonus
+  beatXp: number;
+  recordXp: number;
   finishXp: number;
-  prXp: number;
   weeklyXp: number;
   xp: number;
-  prs: WorkoutPr[];
+  parts: XpParts;
+  marks: WorkoutMark[];
+  records: number; // marks that are records
+  planComplete: boolean;
+  planMissing: string[];
+  cleanSweep: boolean; // a routine's own plan, every planned set ticked
   muscles: Muscle[]; // primary muscles of the exercises trained
+  cardioMinutes: number;
+  pushupReps: number;
+  km: number; // all distance cardio
   runKm: number; // distance on foot
   rideKm: number; // distance by bike
 };
@@ -80,8 +249,10 @@ export type ScoreOptions = {
 // Scores the workouts that count, oldest first.
 export function scoreWorkouts(workouts: WorkoutLog[], opts: ScoreOptions): WorkoutScore[] {
   const lookup = opts.lookup ?? exerciseById;
-  const bestByExercise = new Map<string, Best>();
+  const lastByExercise = new Map<string, Perf>();
+  const bestByExercise = new Map<string, Perf>();
   const weekCounts = new Map<string, number>();
+  const finishesByDate = new Map<string, number>();
   const scores: WorkoutScore[] = [];
 
   for (const w of chronological(workouts)) {
@@ -89,52 +260,88 @@ export function scoreWorkouts(workouts: WorkoutLog[], opts: ScoreOptions): Worko
     const totals = workoutTotals(w.items, lookup);
     if (totals.sets === 0) continue;
 
-    // Best set per exercise in this workout, then compare with earlier workouts.
-    const inWorkout = new Map<string, Best>();
     const muscles = new Set<Muscle>();
+    const inWorkout = new Map<string, { e: ExerciseDef; perf: Perf }>();
+    const parts: XpParts = { sets: 0, cardio: 0, beat: 0, record: 0, finish: 0, weekly: 0 };
+    const marks: WorkoutMark[] = [];
     let runKm = 0;
     let rideKm = 0;
+    let pushupReps = 0;
     for (const item of w.items) {
       const e = lookup(item.exerciseId);
       if (!e) continue;
       if (item.sets.some((s) => s.done)) muscles.add(e.primary);
+      for (const s of item.sets) {
+        if (!s.done) continue;
+        const xp = setXp(e, s);
+        if (e.metric === 'distance_time' || e.metric === 'intervals') parts.cardio += xp;
+        else parts.sets += xp;
+        if (isPushup(e) && xp > 0) pushupReps += num(s.reps);
+      }
       if (e.metric === 'distance_time') {
         const km = item.sets.reduce((sum, s) => sum + (s.done ? num(s.km) : 0), 0);
         if (e.cardioKind === 'ride') rideKm += km;
         else if (e.cardioKind === 'run') runKm += km;
       }
-      if (e.metric !== 'weight_reps') continue;
-      const top = bestSet(item.sets);
-      if (!top) continue;
-      const prev = inWorkout.get(item.exerciseId);
-      if (!prev || isBetterSet(top, prev)) inWorkout.set(item.exerciseId, top);
-    }
-    const prs: WorkoutPr[] = [];
-    for (const [exerciseId, top] of inWorkout) {
-      const before = bestByExercise.get(exerciseId);
-      if (before && isBetterSet(top, before)) prs.push({ exerciseId, kg: top.kg, reps: top.reps });
-      if (!before || isBetterSet(top, before)) bestByExercise.set(exerciseId, top);
+      const perf = perfOf(e, item.sets);
+      if (perf) inWorkout.set(item.exerciseId, { e, perf });
     }
 
-    const week = mondayOf(w.date);
-    const count = (weekCounts.get(week) ?? 0) + 1;
-    weekCounts.set(week, count);
+    // Beat last time or record, once per exercise. Then this workout becomes the
+    // new "last time" and may raise the all-time best.
+    for (const [exerciseId, { e, perf }] of inWorkout) {
+      const last = lastByExercise.get(exerciseId);
+      const best = bestByExercise.get(exerciseId);
+      if (last && best) {
+        if (isRecord(e, perf, best)) {
+          marks.push(markOf(e, exerciseId, 'record', perf));
+          parts.record += WORKOUT_XP.record;
+        } else if (beatsLast(e, perf, last)) {
+          marks.push(markOf(e, exerciseId, 'beat', perf));
+          parts.beat += WORKOUT_XP.beat;
+        }
+      }
+      lastByExercise.set(exerciseId, perf);
+      bestByExercise.set(exerciseId, bestOf(e, best, perf));
+    }
 
-    const finishXp = WORKOUT_XP.finish;
-    const prXp = prs.length * WORKOUT_XP.pr;
-    const weeklyXp = count === opts.weeklyGoal ? WORKOUT_XP.weeklyGoal : 0;
+    const plan = planOf(w);
+    const check = checkPlan(plan, w.items, lookup);
+    if (check.complete) {
+      const done = finishesByDate.get(w.date) ?? 0;
+      if (done < WORKOUT_XP.finishPerDay) {
+        finishesByDate.set(w.date, done + 1);
+        parts.finish = Math.min(WORKOUT_XP.finishCap, check.xp);
+      }
+      const week = mondayOf(w.date);
+      const count = (weekCounts.get(week) ?? 0) + 1;
+      weekCounts.set(week, count);
+      if (count === opts.weeklyGoal) parts.weekly = WORKOUT_XP.weeklyGoal;
+    }
+
     scores.push({
       id: w.id,
       date: w.date,
+      ...(w.routineId ? { routineId: w.routineId } : {}),
+      finishedAt: w.finishedAt,
       sets: totals.sets,
       volume: totals.volume,
-      setXp: totals.xp,
-      finishXp,
-      prXp,
-      weeklyXp,
-      xp: totals.xp + finishXp + prXp + weeklyXp,
-      prs,
+      setXp: parts.sets + parts.cardio,
+      beatXp: parts.beat,
+      recordXp: parts.record,
+      finishXp: parts.finish,
+      weeklyXp: parts.weekly,
+      xp: parts.sets + parts.cardio + parts.beat + parts.record + parts.finish + parts.weekly,
+      parts,
+      marks,
+      records: marks.filter((m) => m.kind === 'record').length,
+      planComplete: check.complete,
+      planMissing: check.missing,
+      cleanSweep: Boolean(w.routineId) && w.plan !== undefined && check.complete,
       muscles: [...muscles],
+      cardioMinutes: totals.cardioMinutes,
+      pushupReps,
+      km: totals.km,
       runKm,
       rideKm,
     });
@@ -151,8 +358,8 @@ export function scoreState(state: AppState, today?: string): WorkoutScore[] {
   });
 }
 
-// The workouts with xp and prs brought up to date. A workout that does not
-// count keeps its place with zero XP.
+// The workouts with xp, marks and the plan result brought up to date. A workout
+// that does not count keeps its place with zero XP.
 export function rescoreWorkouts(state: AppState, workouts: WorkoutLog[], today?: string): WorkoutLog[] {
   const scores = scoreWorkouts(workouts, {
     weeklyGoal: weeklyGoalOf(state),
@@ -161,8 +368,13 @@ export function rescoreWorkouts(state: AppState, workouts: WorkoutLog[], today?:
   });
   const byId = new Map(scores.map((s) => [s.id, s]));
   return workouts.map((w) => {
+    const { prs: _old, ...rest } = w;
+    void _old;
     const s = byId.get(w.id);
-    return { ...w, xp: s ? s.xp : 0, prs: s ? s.prs : [] };
+    if (!s) {
+      return { ...rest, xp: 0, marks: [], xpParts: { sets: 0, cardio: 0, beat: 0, record: 0, finish: 0, weekly: 0 }, planComplete: false, planMissing: [] };
+    }
+    return { ...rest, xp: s.xp, marks: s.marks, xpParts: s.parts, planComplete: s.planComplete, planMissing: s.planMissing };
   });
 }
 
@@ -173,7 +385,7 @@ export function workoutXpTotal(state: AppState, today?: string): number {
 
 // ---------------- Weekly streak ----------------
 
-// Consecutive Monday to Sunday weeks with at least one finished workout. A week
+// Consecutive Monday to Sunday weeks with at least one workout that has a ticked set. A week
 // that has not had a workout yet keeps the streak alive until it ends.
 export function weeklyStreaks(dates: string[], today: string): { current: number; best: number } {
   const weeks = new Set(dates.map(mondayOf));
@@ -203,7 +415,7 @@ export type WorkoutStats = {
   workouts: number;
   sets: number;
   volumeKg: number;
-  prs: number;
+  records: number;
   weeklyStreak: number;
   bestWeeklyStreak: number;
   thisWeek: number; // finished workouts this Monday to Sunday week
@@ -227,7 +439,7 @@ export function computeWorkoutStats(state: AppState, today: string): WorkoutStat
     workouts: scores.length,
     sets: 0,
     volumeKg: 0,
-    prs: 0,
+    records: 0,
     weeklyStreak: streaks.current,
     bestWeeklyStreak: streaks.best,
     thisWeek: 0,
@@ -240,7 +452,7 @@ export function computeWorkoutStats(state: AppState, today: string): WorkoutStat
   for (const s of scores) {
     stats.sets += s.sets;
     stats.volumeKg += s.volume;
-    stats.prs += s.prs.length;
+    stats.records += s.records;
     stats.runKm += s.runKm;
     stats.rideKm += s.rideKm;
     stats.xp += s.xp;

@@ -33,7 +33,7 @@ const routine = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
-// A workout as the client sends it: no xp, no prs.
+// A workout as the client sends it: no xp, no marks.
 function input(date: string, over: Record<string, unknown> = {}, exerciseId = 'db-ohp') {
   return {
     id: `in-${date}-${exerciseId}`,
@@ -126,19 +126,21 @@ describe('deleteRoutine', () => {
 });
 
 describe('saveWorkout', () => {
-  it('works out xp and prs on the server, ignoring what the client sends', () => {
-    const s = expectOk(run(emptyState(), { action: 'saveWorkout', workout: input('2026-10-09', { xp: 99999, prs: [{ exerciseId: 'x', kg: 1, reps: 1 }] }) }));
+  it('works out xp and marks on the server, ignoring what the client sends', () => {
+    const s = expectOk(run(emptyState(), { action: 'saveWorkout', workout: input('2026-10-09', { xp: 99999, marks: [{ exerciseId: 'x', kind: 'record' }], planComplete: false, xpParts: { sets: 999 } }) }));
     expect(s.workouts).toHaveLength(1);
-    expect(s.workouts![0].xp).toBe(5 + 50);
-    expect(s.workouts![0].prs).toEqual([]);
+    expect(s.workouts![0].xp).toBe(5 + 5);
+    expect(s.workouts![0].marks).toEqual([]);
+    expect(s.workouts![0].planComplete).toBe(true);
+    expect(s.workouts![0].xpParts).toEqual({ sets: 5, cardio: 0, beat: 0, record: 0, finish: 5, weekly: 0 });
   });
 
-  it('marks a PR against an earlier workout and pays for it', () => {
+  it('marks a record against an earlier workout and pays for it', () => {
     let s = expectOk(run(emptyState(), { action: 'saveWorkout', workout: input('2026-10-08') }));
     const heavier = input('2026-10-09', { items: [{ exerciseId: 'db-ohp', sets: [{ kg: 12, reps: 10, done: true }] }] });
     s = expectOk(run(s, { action: 'saveWorkout', workout: heavier }));
-    expect(s.workouts![1].prs).toEqual([{ exerciseId: 'db-ohp', kg: 12, reps: 10 }]);
-    expect(s.workouts![1].xp).toBe(5 + 50 + 25);
+    expect(s.workouts![1].marks).toEqual([{ exerciseId: 'db-ohp', kind: 'record', kg: 12, reps: 10 }]);
+    expect(s.workouts![1].xp).toBe(5 + 5 + 25);
   });
 
   it('rejects a duplicate id', () => {
@@ -202,7 +204,7 @@ describe('saveWorkout', () => {
     for (const d of ['2026-10-05', '2026-10-06', '2026-10-07', '2026-10-08']) {
       s = expectOk(run(s, { action: 'saveWorkout', workout: input(d) }));
     }
-    expect(s.workouts!.map((w) => w.xp)).toEqual([55, 55, 105, 55]);
+    expect(s.workouts!.map((w) => w.xp)).toEqual([10, 10, 60, 10]);
   });
 });
 
@@ -224,7 +226,7 @@ describe('updateWorkout', () => {
       })
     );
     const w = s.workouts![0];
-    expect(w).toMatchObject({ title: 'Renamed', notes: 'Felt strong', photo: 'p1', xp: 55 });
+    expect(w).toMatchObject({ title: 'Renamed', notes: 'Felt strong', photo: 'p1', xp: 10 });
     expect(w.items).toHaveLength(1);
     expect(w.routineId).toBeUndefined();
   });
@@ -239,10 +241,10 @@ describe('updateWorkout', () => {
   it('re-scores the others when the order changes', () => {
     let s = expectOk(run(emptyState(), { action: 'saveWorkout', workout: input('2026-10-06') }));
     s = expectOk(run(s, { action: 'saveWorkout', workout: input('2026-10-07', { items: [{ exerciseId: 'db-ohp', sets: [{ kg: 20, reps: 5, done: true }] }] }) }));
-    expect(s.workouts!.map((w) => w.prs.length)).toEqual([0, 1]);
+    expect(s.workouts!.map((w) => w.marks!.length)).toEqual([0, 1]);
     // Moving the lighter one after the heavier one turns the heavy one into the baseline.
     s = expectOk(run(s, { action: 'updateWorkout', id: 'in-2026-10-06-db-ohp', date: '2026-10-08' }));
-    expect(s.workouts!.map((w) => w.prs.length)).toEqual([0, 0]);
+    expect(s.workouts!.map((w) => w.marks!.length)).toEqual([0, 0]);
   });
 
   it('clears notes and photo with an empty string', () => {
@@ -286,9 +288,9 @@ describe('savePrefs', () => {
   it('re-scores workouts when the weekly goal changes', () => {
     let s = emptyState();
     for (const d of ['2026-10-05', '2026-10-06']) s = expectOk(run(s, { action: 'saveWorkout', workout: input(d) }));
-    expect(s.workouts!.map((w) => w.xp)).toEqual([55, 55]);
+    expect(s.workouts!.map((w) => w.xp)).toEqual([10, 10]);
     s = expectOk(run(s, { action: 'savePrefs', prefs: prefs() }));
-    expect(s.workouts!.map((w) => w.xp)).toEqual([55, 105]);
+    expect(s.workouts!.map((w) => w.xp)).toEqual([10, 60]);
   });
 
   it('rejects bad input', () => {
@@ -318,7 +320,7 @@ describe('addCustomExercise', () => {
     expect(s.customExercises).toEqual([{ id: 'custom-made-id', name: 'Sled Push', equipment: 'machine', primary: 'quads', secondary: ['glutes'], metric: 'weight_reps', custom: true }]);
     s = expectOk(run(s, { action: 'saveRoutine', routine: routine({ items: [{ exerciseId: 'custom-made-id', sets: [{ kg: 50, reps: 10 }] }] }) }));
     s = expectOk(run(s, { action: 'saveWorkout', workout: input('2026-10-09', {}, 'custom-made-id') }));
-    expect(s.workouts![0].xp).toBe(55);
+    expect(s.workouts![0].xp).toBe(10);
   });
 
   it('accepts a client id that starts with custom-', () => {

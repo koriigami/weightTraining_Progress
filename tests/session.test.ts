@@ -310,7 +310,14 @@ describe('finishing', () => {
     if (!saved.ok) throw new Error(saved.error);
     const w = saved.state.workouts![0];
     expect(w.id).toBe(r.workout.id);
-    expect(w.xp).toBeGreaterThanOrEqual(10 + 50);
+    // The routine planned 2 push-ups and 3 presses, so 2 ticked sets do not finish it.
+    expect(r.workout.plan).toEqual([
+      { exerciseId: 'pushup', sets: 2 },
+      { exerciseId: 'db-ohp', sets: 3 },
+    ]);
+    expect(w.xp).toBe(10);
+    expect(w.planComplete).toBe(false);
+    expect(w.planMissing).toEqual(['pushup', 'db-ohp']);
   });
 
   it('a payload with a routine id and custom title still parses', () => {

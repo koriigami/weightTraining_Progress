@@ -9,19 +9,20 @@ import { exerciseById } from '../data/exercises';
 import type { ExerciseDef } from '../data/exercises';
 import { SET_FIELDS } from './routineValidation';
 import { LIMITS, blankSet, findDuplicateExercise, workoutItemsFromRoutine, workoutTotals } from './routines';
-import type { ExerciseLookup, LoggedSet, Routine, SetPlan, WorkoutItem, WorkoutLog, WorkoutTotals } from './routines';
+import type { ExerciseLookup, LoggedSet, PlanItem, Routine, SetPlan, WorkoutItem, WorkoutLog, WorkoutTotals } from './routines';
 
 export type Session = {
   title: string;
   routineId?: string;
   startedAt: string; // ISO instant
   items: WorkoutItem[];
+  plan?: PlanItem[]; // what the workout set out to do, taken at Start
 };
 
 export type SessionResult = { ok: true; session: Session } | { ok: false; error: string };
 
-// What the saveWorkout action takes. The server works out xp and prs itself.
-export type WorkoutInput = Omit<WorkoutLog, 'xp' | 'prs'>;
+// What the saveWorkout action takes. The server works out xp, marks and the plan result itself.
+export type WorkoutInput = Omit<WorkoutLog, 'xp' | 'marks' | 'xpParts' | 'planComplete' | 'planMissing' | 'prs'>;
 
 export type CardioKind = 'run' | 'walk' | 'ride';
 
@@ -67,18 +68,24 @@ export function formatElapsed(ms: number): string {
 
 // ---------------- Starting ----------------
 
-export function newSession(now: Date, opts: { title?: string; routineId?: string; items?: WorkoutItem[] } = {}): Session {
+export function newSession(now: Date, opts: { title?: string; routineId?: string; items?: WorkoutItem[]; plan?: PlanItem[] } = {}): Session {
   return {
     title: opts.title ?? defaultTitle(now),
     ...(opts.routineId ? { routineId: opts.routineId } : {}),
     startedAt: now.toISOString(),
     items: opts.items ?? [],
+    ...(opts.plan ? { plan: opts.plan } : {}),
   };
+}
+
+// The plan a set of items stands for: each exercise with its number of sets.
+export function planFromItems(items: { exerciseId: string; sets: unknown[] }[]): PlanItem[] {
+  return items.filter((i) => i.sets.length > 0).map((i) => ({ exerciseId: i.exerciseId, sets: i.sets.length }));
 }
 
 // Sets come prefilled from the routine, none ticked.
 export function sessionFromRoutine(routine: Routine, now: Date): Session {
-  return newSession(now, { title: routine.title, routineId: routine.id, items: workoutItemsFromRoutine(routine) });
+  return newSession(now, { title: routine.title, routineId: routine.id, items: workoutItemsFromRoutine(routine), plan: planFromItems(routine.items) });
 }
 
 // A quick log of a run, walk or ride: one distance exercise with one set to fill in.
@@ -293,6 +300,7 @@ export function buildWorkoutInput(session: Session, opts: { now: Date; lookup?: 
       startedAt: new Date(started).toISOString(),
       finishedAt: finishedAt.toISOString(),
       items,
+      ...(session.plan && session.plan.length > 0 ? { plan: session.plan } : {}),
     },
   };
 }
@@ -316,6 +324,14 @@ export function parseStoredSession(raw: string | null): Session | null {
   }
   if (!isObj(data) || typeof data.title !== 'string' || typeof data.startedAt !== 'string' || !Array.isArray(data.items)) return null;
   if (Number.isNaN(Date.parse(data.startedAt)) || data.items.length > LIMITS.itemsPerList) return null;
+  const plan: PlanItem[] = [];
+  if (Array.isArray(data.plan)) {
+    for (const p of data.plan.slice(0, LIMITS.itemsPerList)) {
+      if (isObj(p) && typeof p.exerciseId === 'string' && Number.isInteger(p.sets) && (p.sets as number) >= 1 && (p.sets as number) <= LIMITS.setsPerItem) {
+        plan.push({ exerciseId: p.exerciseId, sets: p.sets as number });
+      }
+    }
+  }
   const items: WorkoutItem[] = [];
   for (const it of data.items) {
     if (!isObj(it) || typeof it.exerciseId !== 'string' || !Array.isArray(it.sets) || it.sets.length > LIMITS.setsPerItem) return null;
@@ -336,5 +352,6 @@ export function parseStoredSession(raw: string | null): Session | null {
     ...(typeof data.routineId === 'string' && ID_RE.test(data.routineId) ? { routineId: data.routineId } : {}),
     startedAt: data.startedAt,
     items,
+    ...(plan.length > 0 ? { plan } : {}),
   };
 }

@@ -51,7 +51,7 @@ export function applyRoutineAction(
   const maxDate = addDaysStr(ctx.today, 1);
   const lookup = stateLookup(state);
   const workouts = state.workouts ?? [];
-  // The state with fresh workouts: XP and PRs are worked out again for all of them.
+  // The state with fresh workouts: XP, marks and the plan result are worked out again for all of them.
   const withWorkouts = (next: WorkoutLog[], base: AppState = state): AppState => ({
     ...base,
     workouts: rescoreWorkouts(base, next, ctx.today),

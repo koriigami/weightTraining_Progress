@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { shareText, xpLines, xpTotal } from '../lib/victory';
+import { markText, shareText, xpLines, xpTotal } from '../lib/victory';
 import { scoreState } from '../lib/workoutScoring';
 import { stateWith, workout } from './helpers';
 
@@ -10,7 +10,7 @@ describe('victory XP lines', () => {
     const lines = xpLines(state.workouts![0], score);
     expect(lines.map((l) => [l.title, l.xp])).toEqual([
       ['4 sets done', 20],
-      ['Workout finished', 50],
+      ['Workout finished', 20],
     ]);
     expect(lines[0].sub).toBe('5 XP a set');
     expect(xpTotal(lines, score.xp)).toEqual({ total: score.xp, other: 0 });
@@ -25,16 +25,16 @@ describe('victory XP lines', () => {
     expect(xpTotal(lines, score.xp).total).toBe(score.xp);
   });
 
-  it('adds a line for each personal record and for the weekly goal', () => {
-    // Three workouts in one week reach the default goal of 3. The last one is a PR.
+  it('adds a line for each record and for the weekly goal', () => {
+    // Three workouts in one week reach the default goal of 3. The last one is a record.
     const w1 = workout('2026-10-05', [{ id: 'db-ohp', sets: [{ kg: 5, reps: 10 }] }]);
     const w2 = workout('2026-10-06', [{ id: 'db-ohp', sets: [{ kg: 5, reps: 10 }] }]);
     const w3 = workout('2026-10-07', [{ id: 'db-ohp', sets: [{ kg: 7.5, reps: 8 }] }, { id: 'pushup', sets: [{ reps: 10 }] }]);
     const state = stateWith([w1, w2, w3]);
     const score = scoreState(state).find((s) => s.id === w3.id)!;
     const lines = xpLines(w3, score, undefined, 3);
-    expect(lines.map((l) => l.key)).toEqual(['sets', 'finish', 'pr-db-ohp', 'weekly']);
-    expect(lines.find((l) => l.key === 'pr-db-ohp')).toMatchObject({ title: 'New personal record', xp: 25, sub: 'Shoulder Press (Dumbbell): 7.5 kg × 8' });
+    expect(lines.map((l) => l.key)).toEqual(['sets', 'record-db-ohp', 'finish', 'weekly']);
+    expect(lines.find((l) => l.key === 'record-db-ohp')).toMatchObject({ title: 'New record', xp: 25, sub: 'Shoulder Press (Dumbbell): 7.5 kg × 8' });
     expect(lines.find((l) => l.key === 'weekly')).toMatchObject({ title: 'Weekly goal hit', xp: 50, sub: '3 workouts this week' });
     expect(xpTotal(lines, score.xp).total).toBe(score.xp);
   });
@@ -43,7 +43,44 @@ describe('victory XP lines', () => {
     const w1 = workout('2026-10-05', [{ id: 'db-ohp', sets: [{ kg: 5, reps: 10 }] }]);
     const w2 = workout('2026-10-06', [{ id: 'db-ohp', sets: [{ kg: 10, reps: 8 }] }]);
     const score = scoreState(stateWith([w1, w2])).find((s) => s.id === w2.id)!;
-    expect(xpLines(w2, score, undefined, 3, 'lb').find((l) => l.key.startsWith('pr-'))!.sub).toBe('Shoulder Press (Dumbbell): 22 lb × 8');
+    expect(xpLines(w2, score, undefined, 3, 'lb').find((l) => l.key.startsWith('record-'))!.sub).toBe('Shoulder Press (Dumbbell): 22 lb × 8');
+  });
+
+  it('shows a beat as its own line, worth 10, and a record instead of it when both hold', () => {
+    const w1 = workout('2026-10-05', [{ id: 'db-ohp', sets: [{ kg: 10, reps: 8 }] }, { id: 'pushup', sets: [{ reps: 10 }] }]);
+    const w2 = workout('2026-10-06', [{ id: 'db-ohp', sets: [{ kg: 12, reps: 8 }] }, { id: 'pushup', sets: [{ reps: 12 }] }]);
+    const w3 = workout('2026-10-07', [{ id: 'db-ohp', sets: [{ kg: 10, reps: 10 }] }, { id: 'pushup', sets: [{ reps: 13 }] }]);
+    const scores = scoreState(stateWith([w1, w2, w3]));
+    const l2 = xpLines(w2, scores[1]);
+    expect(l2.map((l) => [l.key, l.xp])).toEqual([['sets', 10], ['record-db-ohp', 25], ['record-pushup', 25], ['finish', 10]]);
+    // Ten kilos for 10 reps is not heavier than 12 kg, so no record. Fewer kilos than last time is no beat either.
+    const l3 = xpLines(w3, scores[2]);
+    expect(l3.map((l) => l.key)).toEqual(['sets', 'record-pushup', 'finish', 'weekly']); // the third finished workout of the week
+    const beat = xpLines(w3, { ...scores[2], marks: [{ exerciseId: 'pushup', kind: 'beat', reps: 13 }], beatXp: 10 });
+    expect(beat.find((l) => l.key === 'beat-pushup')).toMatchObject({ title: 'Beat last time', xp: 10, sub: 'Push Up: 13 reps' });
+  });
+
+  it('says what was missed, with no XP, when the plan is not finished', () => {
+    const w = workout('2026-10-05', [{ id: 'pushup', sets: [{ reps: 10 }] }], { plan: [{ exerciseId: 'pushup', sets: 2 }, { exerciseId: 'plank', sets: 1 }] });
+    const score = scoreState(stateWith([w]))[0];
+    const lines = xpLines(w, score);
+    expect(lines.map((l) => [l.key, l.xp])).toEqual([['sets', 5], ['missed', 0]]);
+    expect(lines[1].title).toBe('Missed: Push Up, Plank not done');
+  });
+
+  it('shows a finish line worth 0 once the day already paid two', () => {
+    const day = (h: string) => workout('2026-10-05', [{ id: 'pushup', sets: [{ reps: 10 }] }], { when: `2026-10-05T${h}:00`, startedAt: `2026-10-05T${h}:00:00.000Z` });
+    const ws = [day('08'), day('12'), day('18')];
+    const scores = scoreState(stateWith(ws));
+    expect(xpLines(ws[1], scores[1]).find((l) => l.key === 'finish')!.xp).toBe(5);
+    expect(xpLines(ws[2], scores[2]).find((l) => l.key === 'finish')).toMatchObject({ xp: 0 });
+  });
+
+  it('describes a mark by its metric', () => {
+    expect(markText({ exerciseId: 'a', kind: 'beat', sec: 45 })).toBe('45 s');
+    expect(markText({ exerciseId: 'a', kind: 'record', km: 5, min: 28 })).toBe('5 km in 28 min');
+    expect(markText({ exerciseId: 'a', kind: 'beat', km: 0, min: 30 })).toBe('30 min');
+    expect(markText({ exerciseId: 'a', kind: 'record', kg: 10, reps: 5 }, 'lb')).toBe('22 lb × 5');
   });
 
   it('shows only the set lines when there is no score', () => {

@@ -10,7 +10,7 @@ import { trainedDates } from './week';
 export type ProfileTiles = {
   workouts: number; // sessions: logged workouts plus days of the 6-week plan with something ticked
   volumeKg: number; // lifted in logged workouts
-  prs: number;
+  prs: number; // records
   cardioKm: number; // logged distance of every kind, plus the km of the 6-week plan
 };
 
@@ -28,7 +28,7 @@ export function profileTiles(state: AppState, today: string): ProfileTiles {
   return {
     workouts: trainedDates(state).length,
     volumeKg: w.volumeKg,
-    prs: w.prs,
+    prs: w.records,
     cardioKm: km + legacy.treadmillKm + legacy.cycleKm,
   };
 }

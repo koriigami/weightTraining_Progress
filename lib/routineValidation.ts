@@ -4,7 +4,7 @@
 import { AVOID_TAGS, EQUIPMENT_ORDER, JOINTS, MUSCLE_ORDER } from '../data/exercises';
 import type { AvoidTag, CustomExercise, Equipment, Joint, Metric, Muscle } from '../data/exercises';
 import { LIMITS, findDuplicateExercise } from './routines';
-import type { ExerciseLookup, LoggedSet, Prefs, Routine, RoutineItem, SetPlan, WorkoutItem, WorkoutLog } from './routines';
+import type { ExerciseLookup, LoggedSet, PlanItem, Prefs, Routine, RoutineItem, SetPlan, WorkoutItem, WorkoutLog } from './routines';
 
 export type Parsed<T> = { ok: true; value: T } | { ok: false; error: string };
 
@@ -151,8 +151,22 @@ export function parseRoutine(raw: unknown, lookup: ExerciseLookup): Parsed<Routi
 
 // ---------------- Workouts ----------------
 
-// A finished workout as sent by the client. xp and prs are not read: the server
-// works them out.
+// The plan snapshot taken at Start: up to 40 exercises, each with 1 to 30 sets.
+function parsePlan(raw: unknown, lookup: ExerciseLookup): Parsed<PlanItem[] | undefined> {
+  if (raw === undefined || raw === null) return ok(undefined);
+  if (!Array.isArray(raw) || raw.length > LIMITS.itemsPerList) return fail('invalid plan');
+  const plan: PlanItem[] = [];
+  for (const p of raw) {
+    if (!isObj(p) || typeof p.exerciseId !== 'string' || !lookup(p.exerciseId)) return fail('invalid plan');
+    if (!Number.isInteger(p.sets) || !inRange(p.sets, 1, LIMITS.setsPerItem)) return fail('invalid plan');
+    plan.push({ exerciseId: p.exerciseId, sets: p.sets as number });
+  }
+  if (findDuplicateExercise(plan)) return fail('invalid plan');
+  return ok(plan);
+}
+
+// A finished workout as sent by the client. xp, marks and the plan result are not
+// read: the server works them out. The plan snapshot is.
 export function parseWorkoutInput(raw: unknown, lookup: ExerciseLookup): Parsed<WorkoutLog> {
   if (!isObj(raw)) return fail('invalid workout');
   if (!isValidId(raw.id)) return fail('invalid workout id');
@@ -190,6 +204,8 @@ export function parseWorkoutInput(raw: unknown, lookup: ExerciseLookup): Parsed<
   if (sets > LIMITS.setsPerWorkout) return fail('too many sets');
   if (findDuplicateExercise(items)) return fail('an exercise can only be in a workout once');
   if (done === 0) return fail('tick at least one set');
+  const plan = parsePlan(raw.plan, lookup);
+  if (!plan.ok) return plan;
   return ok({
     id: raw.id,
     date: raw.date,
@@ -202,7 +218,7 @@ export function parseWorkoutInput(raw: unknown, lookup: ExerciseLookup): Parsed<
     xp: 0,
     ...(notes.value ? { notes: notes.value } : {}),
     ...(photo.value ? { photo: photo.value } : {}),
-    prs: [],
+    ...(plan.value ? { plan: plan.value } : {}),
   });
 }
 
