@@ -56,6 +56,8 @@ h2{font-size:26px}
 .chip{border:1px solid var(--line);background:var(--calm);border-radius:999px;min-height:36px;padding:0 14px;display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:13px;color:var(--ink);cursor:pointer;font-family:var(--body)}
 .textbtn{background:none;border:0;font-family:var(--body);font-weight:800;font-size:14px;color:#1e7a28;min-height:36px;display:inline-flex;align-items:center;gap:6px;justify-content:center;cursor:pointer}
 .btn.block{width:100%}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.pair .btn{padding:0 10px;font-size:16px}
 .btn.busy{opacity:.75;cursor:progress}
 .spin{width:18px;height:18px;border-radius:50%;border:3px solid rgba(255,255,255,.45);border-top-color:#fff;animation:sp 0.9s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -78,82 +80,68 @@ h2{font-size:26px}
 </style>
 <div class="wrap">
 <header>
-  <h1>Share card, round 1</h1>
-  <p class="lede">Today <b>Share sends only text</b>. The card in the sheet is a preview that never leaves the phone. In the new version, Share sends <b>this card as a picture</b> (1080 by 1350, the 4:5 size WhatsApp, Instagram and X all show in full). It now has a random sky and the body figure with the muscles you worked. The picture is drawn from one SVG, so the preview is exactly what gets sent.</p>
+  <h1>Share card, round 2</h1>
+  <p class="lede">Your choices from round 1 are in: the <b>Split</b> layout, no rank line (the shield already says it), a title that always stays on one line, the logo and date centred on one line, two-tone muscles, the dice for a new sky, the workout's own XP, and <b>Share image</b> or <b>Save image</b>. Share now sends <b>this picture</b> (1080 by 1350), not text. I'm building this now; tell me if anything here should change.</p>
 </header>
 
-<section class="sec" id="layouts">
-  <h2>1. Layout</h2>
-  <p>Same workout in each: Full Body, 19 sets, 45 min, 900 kg, +238 XP, E rank, level 4. Chips show the three muscles with the most sets (a secondary muscle counts half a set).</p>
+<section class="sec" id="card">
+  <h2>1. The card</h2>
+  <p>Full Body: 19 sets, 45 min, 900 kg, +238 XP, E rank, level 4. The Levl logo, the wordmark and the date sit on one centre line, and the title is centred on the shield. The sky is random per workout; the dice rolls a new one.</p>
   <div class="row">
-    <div class="fig w-post"><div class="card" data-card="full" data-o='{"layout":"A"}'></div><div class="cap"><b>A · Stacked</b>Centred like today's card: shield, title, three stat plaques, then the body with chips. Familiar, calm.</div></div>
-    <div class="fig w-post"><div class="card" data-card="full" data-o='{"layout":"B"}'></div><div class="cap"><b>B · Split <span class="tag">My pick</span></b>The body figure is twice the size, so the muscles are the first thing you see. The stats stack on the right, the title and rank sit together at the top.</div></div>
-    <div class="fig w-story"><div class="card" data-card="full" data-o='{"layout":"C"}'></div><div class="cap"><b>C · Story (9:16)</b>For Instagram and WhatsApp status. A with more room, and the top and bottom kept clear for the story buttons. It would be a Post / Story switch in the sheet.</div></div>
+    <div class="fig w-post"><div class="card" data-card="full" data-o='{"seed":"w-full#0"}'></div><div class="cap"><b>First open</b>The same workout always opens with this sky.</div></div>
+    <div class="fig w-post"><div class="card" data-card="full" id="liveSky" data-o='{"seed":"w-full#1"}'></div><div class="cap"><b>Roll it yourself</b><button class="btn gold" id="rollBtn" type="button" style="margin-top:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>New sky</button></div></div>
   </div>
 </section>
 
-<section class="sec" id="sky">
-  <h2>2. Random sky</h2>
-  <p>The clouds are the app's own two cloud shapes, placed at random in two layers: small faint ones far away, big bright ones close by, some cut by the edge. The randomness comes from the workout, so the same workout always opens with the same sky, and <b>New sky</b> rolls a fresh one. Clouds never sit behind the date or the rank line, the only plain white text.</p>
+<section class="sec" id="muscles">
+  <h2>2. Four or more muscles</h2>
+  <p>The body always lights up every muscle the workout used, main ones dark green and "also works" light green. The chips list the three that got the most sets (an "also works" muscle counts as half a set), and a line under them counts the rest. With three muscles or fewer the line is not there.</p>
   <div class="row">
-    <div class="fig w-sm"><div class="card" data-card="full" data-o='{"layout":"B","sky":"tiled"}'></div><div class="cap"><b>Today: tiled</b>One tile repeated, so the clouds line up in columns.</div></div>
-    <div class="fig w-sm"><div class="card" data-card="full" data-o='{"layout":"B","seed":"w-full#0"}'></div><div class="cap"><b>Random, roll 1</b></div></div>
-    <div class="fig w-sm"><div class="card" data-card="full" data-o='{"layout":"B","seed":"w-full#1"}'></div><div class="cap"><b>Random, roll 2</b></div></div>
-    <div class="fig w-sm"><div class="card" data-card="full" id="liveSky" data-o='{"layout":"B","seed":"w-full#2"}'></div><div class="cap"><b>Roll it yourself</b><button class="btn gold" id="rollBtn" type="button" style="margin-top:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>New sky</button></div></div>
-  </div>
-</section>
-
-<section class="sec" id="fill">
-  <h2>3. Muscle colours</h2>
-  <p>Two ways to colour the body. Two-tone matches the workout page (main muscles dark green, "also works" light green). Heat shades each muscle by how many sets it got, like the Statistics body map.</p>
-  <div class="row">
-    <div class="fig w-post"><div class="card" data-card="full" data-o='{"layout":"B","fill":"two"}'></div><div class="cap"><b>Two-tone <span class="tag">My pick</span></b>Same colours as the workout page, and the chips already carry the numbers.</div></div>
-    <div class="fig w-post"><div class="card" data-card="full" data-o='{"layout":"B","fill":"heat"}'></div><div class="cap"><b>Heat</b>Shoulders (5 sets) is darkest, forearms (1 set) palest. Richer, but the light greens are close to each other at phone size.</div></div>
+    <div class="fig w-sm"><div class="card" data-card="full"></div><div class="cap"><b>13 muscles</b>Top 3, then "+10 more muscles".</div></div>
+    <div class="fig w-sm"><div class="card" data-card="bodyweight"></div><div class="cap"><b>4 muscles</b>"+1 more muscle".</div></div>
+    <div class="fig w-sm"><div class="card" data-card="arms"></div><div class="cap"><b>3 muscles</b>No extra line.</div></div>
   </div>
 </section>
 
 <section class="sec" id="variants">
-  <h2>4. Every kind of workout</h2>
-  <div class="toolbar"><span class="note">Show in layout</span><div class="seg" role="group" aria-label="Layout for the variants"><button type="button" data-l="A" aria-pressed="false">A Stacked</button><button type="button" data-l="B" aria-pressed="true">B Split</button></div></div>
-  <p>Cardio-only workouts drop the body (there are no muscles to light up) and make the distance the big number, with pace for runs and walks or speed for rides, in both layouts. Today a run shares as "Sets 1".</p>
-  <div class="row" id="varRow">
-    <div class="fig w-sm"><div class="card" data-card="run" data-var></div><div class="cap"><b>Run</b>Distance, time, pace.</div></div>
-    <div class="fig w-sm"><div class="card" data-card="ride" data-var></div><div class="cap"><b>Ride</b>Speed instead of pace.</div></div>
-    <div class="fig w-sm"><div class="card" data-card="mixed" data-var></div><div class="cap"><b>Strength and cardio</b>A fourth stat: distance.</div></div>
-    <div class="fig w-sm"><div class="card" data-card="bodyweight" data-var></div><div class="cap"><b>Bodyweight only</b>No volume, so two stats.</div></div>
-    <div class="fig w-sm"><div class="card" data-card="long" data-var></div><div class="cap"><b>Long title</b>Wraps to two lines, then shrinks.</div></div>
-    <div class="fig w-sm"><div class="card" data-card="srank" data-var></div><div class="cap"><b>S rank</b>The shield glows.</div></div>
+  <h2>3. Every kind of workout</h2>
+  <p>Cardio-only workouts have no muscles to light up, so the distance becomes the big number, with pace for runs and walks or speed for rides. Today a run shares as "Sets 1". A title that doesn't fit shrinks first, then stops at the last whole word.</p>
+  <div class="row">
+    <div class="fig w-sm"><div class="card" data-card="run"></div><div class="cap"><b>Run</b>Distance, time, pace.</div></div>
+    <div class="fig w-sm"><div class="card" data-card="ride"></div><div class="cap"><b>Ride</b>Speed instead of pace.</div></div>
+    <div class="fig w-sm"><div class="card" data-card="mixed"></div><div class="cap"><b>Strength and cardio</b>A fourth stat: distance.</div></div>
+    <div class="fig w-sm"><div class="card" data-card="long"></div><div class="cap"><b>Long title</b>"Upper Body Power and Conditioning Day" becomes "Upper Body Power and…".</div></div>
+    <div class="fig w-sm"><div class="card" data-card="srank"></div><div class="cap"><b>S rank</b>The shield glows.</div></div>
   </div>
 </section>
 
 <section class="sec" id="modal">
-  <h2>5. The share sheet</h2>
-  <p>The picture is made as soon as the sheet opens, so tapping Share opens the phone's share menu straight away (iPhones refuse a share that starts late). <b>Share image</b> is the main button on phones. Where a browser can't share pictures, <b>Save image</b> takes its place. <b>Copy text</b> stays, as a quiet text button. Long-pressing the picture also saves it.</p>
+  <h2>4. The share sheet</h2>
+  <p>The picture is made as soon as the sheet opens, so Share opens the phone's share menu straight away (iPhones refuse a share that starts late). <b>Share image</b> is green, <b>Save image</b> is gold. Where a browser can't share pictures, only Save image shows. The dice sits on the sheet, not on the card, so it's never in the picture.</p>
   <div class="row">
-    <div class="fig"><div class="phone"><div class="screen"><div class="dim"></div><div class="sheet" data-sheet="ready"></div></div></div><div class="cap"><b>Ready, New sky on the corner <span class="tag">My pick</span></b>A gold dice button sits on the picture's corner.</div></div>
-    <div class="fig"><div class="phone"><div class="screen"><div class="dim"></div><div class="sheet" data-sheet="busy"></div></div></div><div class="cap"><b>Making the picture</b>About half a second after the sheet opens. Share waits with a spinner.</div></div>
-    <div class="fig"><div class="phone"><div class="screen"><div class="dim"></div><div class="sheet" data-sheet="save"></div></div></div><div class="cap"><b>Browser can't share pictures</b>Save image becomes the main button.</div></div>
-    <div class="fig"><div class="phone"><div class="screen"><div class="dim"></div><div class="sheet" data-sheet="chips"></div></div></div><div class="cap"><b>Or: a chip row</b>New sky, plus a Post / Story switch if you want Story (C).</div></div>
+    <div class="fig"><div class="phone"><div class="screen"><div class="dim"></div><div class="sheet" data-sheet="ready"></div></div></div><div class="cap"><b>Ready</b>Share or save. Long-pressing the picture also saves it.</div></div>
+    <div class="fig"><div class="phone"><div class="screen"><div class="dim"></div><div class="sheet" data-sheet="busy"></div></div></div><div class="cap"><b>Making the picture</b>About half a second after opening, and after each new sky. Share waits with a spinner.</div></div>
+    <div class="fig"><div class="phone"><div class="screen"><div class="dim"></div><div class="sheet" data-sheet="save"></div></div></div><div class="cap"><b>Browser can't share pictures</b>Only Save image.</div></div>
   </div>
-  <div class="fig"><div class="desk"><div class="dim"></div><div class="dlg" id="desk"></div></div><div class="cap" style="max-width:80ch"><b>Desktop (1440 px)</b>A dialog: the picture on the left, actions on the right. Save image first, then Copy image (paste straight into WhatsApp Web or Slack), then Copy text.</div></div>
+  <div class="fig"><div class="desk"><div class="dim"></div><div class="dlg" id="desk"></div></div><div class="cap" style="max-width:80ch"><b>Desktop (1440 px)</b>A dialog: the picture on the left, Share image and Save image on the right. Chrome on Windows and Mac and Safari on Mac can share pictures; other desktop browsers show Save image only.</div></div>
 </section>
 
 <section class="sec" id="export">
-  <h2>6. Try the real picture</h2>
-  <p>This runs the same steps the app will: the card SVG gets the two fonts packed inside, is drawn on a canvas, and comes out as a PNG. Open this page on your phone, tap the button, then long-press the picture and check the fonts look like the app (rounded Lilita titles, Figtree labels).</p>
+  <h2>5. Try the real picture</h2>
+  <p>This runs the same steps the app will: the card gets the two fonts packed inside, is drawn on a canvas, and comes out as a PNG. On your phone, tap the button, then long-press the picture to save it and check the fonts look like the app.</p>
   <div class="toolbar"><div class="seg" role="group" aria-label="Card to export" id="expPick"><button type="button" data-k="full" aria-pressed="true">Full Body</button><button type="button" data-k="run" aria-pressed="false">Morning Run</button></div><button class="btn" id="makeBtn" type="button">Make PNG</button></div>
   <div class="out" id="expOut"><p class="note">The PNG shows here with its size and how long it took.</p></div>
 </section>
 
 <section class="sec" id="decide">
-  <h2>7. What I need from you</h2>
+  <h2>6. Signed off</h2>
   <ol class="decide">
-    <li><b>Layout:</b> A Stacked or B Split. <span class="pick">My pick: B</span>, because it puts the body figure first.</li>
-    <li><b>Story size:</b> add the 9:16 Story card as a Post / Story switch, or post size only for now. <span class="pick">My pick: post only now</span>, Story later.</li>
-    <li><b>Muscle colours:</b> two-tone or heat. <span class="pick">My pick: two-tone.</span></li>
-    <li><b>New sky button:</b> dice on the picture's corner, or a chip row under it. <span class="pick">My pick: the corner dice.</span></li>
-    <li><b>XP on the card:</b> today the Victory screen's card adds XP from a badge you just earned, and the workout page doesn't, so the same workout can show two numbers. <span class="pick">My pick: the workout's own XP everywhere.</span></li>
-    <li><b>What Share sends:</b> only the picture, or the picture plus the text line. Some apps (WhatsApp on iPhone) drop one of the two or send two messages. <span class="pick">My pick: picture only</span>, with Copy text still in the sheet.</li>
+    <li><b>Layout:</b> Split, post size (1080 by 1350). Story later.</li>
+    <li><b>Header:</b> no rank line; logo, wordmark and date on one centre line; title centred on the shield, one line, cut at the last whole word.</li>
+    <li><b>Muscles:</b> two-tone; top 3 chips, then "+N more muscles".</li>
+    <li><b>New sky:</b> the dice on the picture's corner, never in the picture.</li>
+    <li><b>XP:</b> the workout's own XP everywhere.</li>
+    <li><b>Buttons:</b> Share image (green) and Save image (gold). Share sends the picture only.</li>
   </ol>
 </section>
 </div>
@@ -210,6 +198,20 @@ function tiledSky(p, H) {
 }
 
 // ---------------- text helpers ----------------
+// Lilita One advance widths per 1000 em, measured in Chromium. Unknown characters count as 'M'-ish.
+const LILITA = {"0": 639, "1": 406, "2": 525, "3": 528, "4": 598, "5": 524, "6": 575, "7": 500, "8": 570, "9": 565, " ": 188, "!": 287, "\"": 460, "#": 833, "$": 531, "%": 798, "&": 667, "'": 301, "(": 430, ")": 422, "*": 557, "+": 602, ",": 305, "-": 525, ".": 229, "/": 573, ":": 277, ";": 277, "<": 484, "=": 580, ">": 450, "?": 584, "@": 867, "A": 655, "B": 594, "C": 561, "D": 616, "E": 493, "F": 472, "G": 621, "H": 644, "I": 429, "J": 462, "K": 620, "L": 435, "M": 907, "N": 648, "O": 696, "P": 570, "Q": 706, "R": 590, "S": 531, "T": 502, "U": 628, "V": 661, "W": 953, "X": 683, "Y": 615, "Z": 563, "[": 385, "\\": 587, "]": 385, "^": 687, "_": 636, "`": 350, "a": 517, "b": 520, "c": 424, "d": 565, "e": 486, "f": 375, "g": 516, "h": 501, "i": 273, "j": 271, "k": 531, "l": 272, "m": 788, "n": 551, "o": 513, "p": 555, "q": 511, "r": 396, "s": 450, "t": 368, "u": 544, "v": 521, "w": 752, "x": 557, "y": 537, "z": 454, "{": 362, "|": 628, "}": 362, "~": 459, "…": 909, "·": 309};
+const textW = (s, size) => ([...s].reduce((a, ch) => a + (LILITA[ch] ?? 620), 0) / 1000) * size * 1.02;
+// Letter height of both fonts is 0.71 em, so a line of text is centred on cy when its baseline is cy + 0.355 * size.
+const baseFor = (cy, size) => cy + 0.355 * size;
+// One line, always: shrink through the steps, then cut at the last whole word that fits and add an ellipsis.
+function fitOne(title, max, steps = [88, 80, 72, 64]) {
+  const t = title.trim().replace(/\s+/g, ' ');
+  for (const size of steps) if (textW(t, size) <= max) return { size, text: t };
+  const size = steps[steps.length - 1], words = t.split(' ');
+  for (let n = words.length - 1; n >= 1; n--) { const c = words.slice(0, n).join(' ') + '\u2026'; if (textW(c, size) <= max) return { size, text: c }; }
+  let c = words[0]; while (c.length > 1 && textW(c + '\u2026', size) > max) c = c.slice(0, -1);
+  return { size, text: c + '\u2026' };
+}
 // Lilita One averages about 0.5 em per character, digits a little more.
 const estW = (s, size, k = 0.52) => [...s].reduce((w, ch) => w + (ch === ' ' ? 0.26 : /[mwMW]/.test(ch) ? 0.78 : /[il.,:'1]/.test(ch) ? 0.3 : k), 0) * size;
 function fitTitle(title, max, steps = [96, 84, 72]) {
@@ -296,8 +298,9 @@ function plaque(x, y, w, h, r = 30) {
   return `<rect x="${x}" y="${y + 8}" width="${w}" height="${h}" rx="${r}" fill="${C.bevel}"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${C.cream}"/><rect x="${x + 3}" y="${y + 3}" width="${w - 6}" height="${h - 6}" rx="${r - 3}" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="3"/>`;
 }
 function statPlaque(x, y, w, h, label, value, base = 70) {
-  const size = Math.min(base, Math.floor((w - 48) / (estW(value, 1, 0.56))));
-  return `${plaque(x, y, w, h)}<text x="${x + w / 2}" y="${y + h * 0.36}" text-anchor="middle" font-family="${FB}" font-weight="800" font-size="26" letter-spacing="3" fill="${C.muted}">${esc(label.toUpperCase())}</text><text x="${x + w / 2}" y="${y + h * 0.36 + size * 0.95 + 8}" text-anchor="middle" font-family="${FD}" font-size="${size}" fill="${C.ink}">${esc(value)}</text>`;
+  const size = Math.min(base, Math.floor((w - 48) / textW(value, 1)));
+  const block = 26 * 0.71 + 22 + size * 0.71, top = y + (h - block) / 2;
+  return `${plaque(x, y, w, h)}<text x="${x + w / 2}" y="${(top + 26 * 0.71).toFixed(1)}" text-anchor="middle" font-family="${FB}" font-weight="800" font-size="26" letter-spacing="3" fill="${C.muted}">${esc(label.toUpperCase())}</text><text x="${x + w / 2}" y="${(top + block).toFixed(1)}" text-anchor="middle" font-family="${FD}" font-size="${size}" fill="${C.ink}">${esc(value)}</text>`;
 }
 function statsRow(x, y, w, h, stats) {
   const gap = 24, n = stats.length, pw = (w - gap * (n - 1)) / n;
@@ -311,8 +314,10 @@ function bodies(x, y, fw, fill, gap = 22) {
   const k = fw / 100;
   return `<g transform="translate(${x} ${y}) scale(${k})">${bodyArt('front', fill)}</g><g transform="translate(${x + fw + gap} ${y}) scale(${k})">${bodyArt('back', fill)}</g>`;
 }
+// The mark's face (y 4..112 of 120) is centred on cy, and so are the letters of "Levl" and the date.
 function topBar(p, y, date) {
-  return `<g transform="translate(76 ${y - 44}) scale(.58)">${markArt(p + 'm')}</g>${gameText(160, y + 18, 'Levl', 50, { anchor: 'start', drop: 0.07, sw: 0.14 })}<text x="1004" y="${y + 14}" text-anchor="end" font-family="${FB}" font-weight="700" font-size="32" fill="#fff" fill-opacity=".94">${esc(date)}</text>`;
+  const cy = y - 4;
+  return `<g transform="translate(76 ${(cy - 58 * 0.58).toFixed(1)}) scale(.58)">${markArt(p + 'm')}</g>${gameText(160, baseFor(cy, 50).toFixed(1), 'Levl', 50, { anchor: 'start', drop: 0.07, sw: 0.14 })}<text x="1004" y="${baseFor(cy, 32).toFixed(1)}" text-anchor="end" font-family="${FB}" font-weight="700" font-size="32" fill="#fff" fill-opacity=".94">${esc(date)}</text>`;
 }
 function frame(H) {
   return `<rect x="22" y="22" width="1036" height="${H - 44}" rx="44" fill="none" stroke="${C.frame}" stroke-width="10"/><rect x="36" y="36" width="1008" height="${H - 72}" rx="32" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="3"/>`;
@@ -354,28 +359,36 @@ ${t.lines.map((l, i) => gameText(540, titleY + i * t.size * 1.08, l, t.size)).jo
 <g data-part="xp">${gameText(540, Y.xp, `+${d.xp} XP`, story ? 150 : 128, { fill: C.xp })}</g>
 <text x="540" y="${Y.foot}" text-anchor="middle" font-family="${FB}" font-weight="800" font-size="32" fill="#fff" fill-opacity=".94">${esc(d.rankTitle)} · LV ${d.level}</text></svg>`;
 }
-// B Split, 4:5: big body pair on the left, stats down the right.
+// B Split, 4:5. Round 2: no rank line, one-line title centred on the shield, top 3 chips and "+N more".
 function layoutB(d, o) {
-  const H = 1350, p = o.idp, t = fitTitle(d.title, 740, [88, 80, 72]);
-  const ty = t.lines.length === 2 ? 222 : 262;
-  const keepOut = [{ x: 560, y: 56, w: 470, h: 70 }, { x: 230, y: ty + (t.lines.length - 1) * t.size * 1.06 + 20, w: 520, h: 56 }];
-  let mid = '';
-  if (d.kind === 'cardio') return layoutA(d, { ...o, layout: 'A' });
-  const fw = 190;
-  mid += `${plaque(80, 360, 500, 740, 36)}<g data-part="body">${bodies(104, 392, fw, fillFor(d.muscles, o.fill), 22)}</g>`;
-  const chips = topChips(d.muscles);
-  mid += chips.map((c, i) => chipRow(106, 800 + i * 92, 448, c)).join('');
-  const n = d.stats.length, gap = 26, ph = (740 - gap * (n - 1)) / n;
-  mid += d.stats.map(([l, v], i) => statPlaque(610, 360 + i * (ph + gap), 390, ph, l, v, 80)).join('');
+  const H = 1350, p = o.idp;
+  const SHIELD_Y = 150, SHIELD_K = 1.12, cy = SHIELD_Y + 66 * SHIELD_K;
+  const t = fitOne(d.title, 1000 - 236);
+  let mid = '', keepOut = [{ x: 560, y: 56, w: 470, h: 70 }];
+  if (d.kind === 'cardio') {
+    const big = d.hero, bigH = 430;
+    mid += `${plaque(80, 360, 920, bigH, 36)}<text x="540" y="440" text-anchor="middle" font-family="${FB}" font-weight="800" font-size="28" letter-spacing="3" fill="${C.muted}">${esc(big[0].toUpperCase())}</text><text x="540" y="${360 + bigH / 2 + 100}" text-anchor="middle" font-family="${FD}" font-size="${Math.min(200, Math.floor(820 / (textW(big[1], 1))))}" fill="${C.ink}">${esc(big[1])}</text>`;
+    mid += statsRow(80, 360 + bigH + 34, 920, 1100 - (360 + bigH + 34), d.stats);
+  } else {
+    const fw = 180, pairW = fw * 2 + 22, bx = 80 + (500 - pairW) / 2;
+    mid += `${plaque(80, 360, 500, 740, 36)}<g data-part="body">${bodies(bx, 386, fw, fillFor(d.muscles, o.fill), 22)}</g>`;
+    const all = topChips(d.muscles, 99), chips = all.slice(0, 3), more = all.length - chips.length;
+    mid += chips.map((c, i) => chipRow(106, 772 + i * 88, 448, c)).join('');
+    if (more > 0) {
+      const y = 772 + 3 * 88 + 36;
+      mid += `<text x="330" y="${y}" text-anchor="middle" font-family="${FB}" font-weight="700" font-size="30" fill="${C.muted}">+${more} more ${more === 1 ? 'muscle' : 'muscles'}</text>`;
+    }
+    const n = d.stats.length, gap = 26, ph = (740 - gap * (n - 1)) / n;
+    mid += d.stats.map(([l, v], i) => statPlaque(610, 360 + i * (ph + gap), 390, ph, l, v, n > 3 ? 70 : 80)).join('');
+  }
   return `${svgOpen(H, `${d.title} workout card`)}${background(p, H, o.sky, o.seed, keepOut)}${frame(H)}${topBar(p, 96, d.date)}
-<g transform="translate(78 150) scale(1.12)">${shieldArt(p + 's', d.rank, d.level)}</g>
-${t.lines.map((l, i) => gameText(236, ty + i * t.size * 1.06, l, t.size, { anchor: 'start' })).join('')}
-<text x="240" y="${ty + (t.lines.length - 1) * t.size * 1.06 + 58}" font-family="${FB}" font-weight="800" font-size="32" fill="#fff" fill-opacity=".94">${esc(d.rankTitle)} · LV ${d.level}</text>
+<g transform="translate(78 ${SHIELD_Y}) scale(${SHIELD_K})">${shieldArt(p + 's', d.rank, d.level)}</g>
+${gameText(236, baseFor(cy, t.size).toFixed(1), t.text, t.size, { anchor: 'start' })}
 <g data-part="stats">${mid}</g>
 <g data-part="xp">${gameText(540, 1236, `+${d.xp} XP`, 132, { fill: C.xp })}</g></svg>`;
 }
 function renderCard(d, o) {
-  o = { layout: 'A', fill: 'two', sky: 'random', seed: d.id + '#0', idp: 'lvc', ...o };
+  o = { layout: 'B', fill: 'two', sky: 'random', seed: d.id + '#0', idp: 'lvc', ...o };
   return o.layout === 'B' ? layoutB(d, o) : layoutA(d, o);
 }
 
@@ -391,8 +404,10 @@ const SAMPLES = {
     muscles: { sets: { quads: 6, glutes: 5, hamstrings: 4, calves: 3, abs: 1 }, primary: ['quads', 'hamstrings', 'calves'], secondary: ['glutes', 'abs'] } },
   bodyweight: { id: 'w-bw', title: 'Push-up Ladder', date: 'Fri 2 Oct · 7:30 am', kind: 'strength', stats: [['Sets', '8'], ['Time', '18 min']], xp: 70, rank: 'E', level: 4,
     muscles: { sets: { chest: 8, triceps: 4, shoulders: 4, abs: 2 }, primary: ['chest'], secondary: ['triceps', 'shoulders', 'abs'] } },
-  long: { id: 'w-long', title: 'Upper Body Power and Conditioning', date: 'Sat 3 Oct · 9:00 am', kind: 'strength', stats: [['Sets', '22'], ['Time', '1 h 5 min'], ['Volume', '3,450 kg']], xp: 262, rank: 'C', level: 12,
+  long: { id: 'w-long', title: 'Upper Body Power and Conditioning Day', date: 'Sat 3 Oct · 9:00 am', kind: 'strength', stats: [['Sets', '22'], ['Time', '1 h 5 min'], ['Volume', '3,450 kg']], xp: 262, rank: 'C', level: 12,
     muscles: { sets: { chest: 6, upperback: 6, shoulders: 5, lats: 4, triceps: 4, biceps: 3 }, primary: ['chest', 'upperback', 'shoulders', 'lats'], secondary: ['triceps', 'biceps'] } },
+  arms: { id: 'w-arms', title: 'Arms', date: 'Mon 5 Oct · 6:10 pm', kind: 'strength', stats: [['Sets', '12'], ['Time', '32 min'], ['Volume', '1,020 kg']], xp: 150, rank: 'D', level: 6,
+    muscles: { sets: { biceps: 6, triceps: 6, forearms: 3 }, primary: ['biceps', 'triceps'], secondary: ['forearms'] } },
   srank: { id: 'w-s', title: 'Pull A', date: 'Sun 4 Oct · 6:20 pm', kind: 'strength', stats: [['Sets', '24'], ['Time', '52 min'], ['Volume', '6,820 kg']], xp: 244, rank: 'S', level: 31,
     muscles: { sets: { upperback: 9, lats: 8, biceps: 6, traps: 4, forearms: 3, lowerback: 2 }, primary: ['upperback', 'lats', 'biceps'], secondary: ['traps', 'forearms', 'lowerback'] } },
 };
@@ -407,44 +422,28 @@ if (typeof module !== 'undefined') module.exports = { renderCard, SAMPLES, skyCl
   const ICON = {
     share: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>',
     save: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>',
-    copy: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
-    img: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>',
     x: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
     dice: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>',
   };
   function fill(el, key, o) { el.innerHTML = renderCard(SAMPLES[key], { ...o, idp: uid() }); }
-  document.querySelectorAll('.card[data-card]:not([data-var])').forEach((el) => fill(el, el.dataset.card, JSON.parse(el.dataset.o || '{}')));
+  document.querySelectorAll('.card[data-card]').forEach((el) => fill(el, el.dataset.card, JSON.parse(el.dataset.o || '{}')));
 
-  // Variants follow the layout switch.
-  let varLayout = 'B';
-  const drawVariants = () => document.querySelectorAll('.card[data-var]').forEach((el) => fill(el, el.dataset.card, { layout: varLayout }));
-  drawVariants();
-  document.querySelectorAll('#variants .seg button').forEach((b) => b.addEventListener('click', () => {
-    varLayout = b.dataset.l;
-    document.querySelectorAll('#variants .seg button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-    drawVariants();
-  }));
-
-  // New sky on the live card.
-  let roll = 2;
+  let roll = 1;
   const live = document.getElementById('liveSky');
-  document.getElementById('rollBtn').addEventListener('click', () => { roll++; fill(live, 'full', { layout: 'B', seed: 'w-full#' + roll }); });
+  document.getElementById('rollBtn').addEventListener('click', () => { roll++; fill(live, 'full', { seed: 'w-full#' + roll }); });
 
-  // Sheet mocks.
-  const card = (o) => `<div class="pv">${renderCard(SAMPLES.full, { layout: 'B', idp: uid(), ...o })}${o.dice ? `<button class="dice" type="button" aria-label="New sky">${ICON.dice}</button>` : ''}</div>`;
+  const card = () => `<div class="pv">${renderCard(SAMPLES.full, { idp: uid() })}<button class="dice" type="button" aria-label="New sky">${ICON.dice}</button></div>`;
   const head = `<div class="grab"></div><div class="sh-head"><span class="sh-title">Share workout</span><span class="x" aria-hidden="true">${ICON.x}</span></div>`;
-  const copy = `<button class="textbtn" type="button">${ICON.copy}Copy text</button>`;
+  const pair = (busy) => `<div class="pair">${busy ? `<button class="btn busy" type="button" aria-busy="true"><span class="spin" aria-hidden="true"></span>Share image</button>` : `<button class="btn" type="button">${ICON.share}Share image</button>`}<button class="btn gold${busy ? ' busy' : ''}" type="button"${busy ? ' aria-disabled="true"' : ''}>${ICON.save}Save image</button></div>`;
   const SHEETS = {
-    ready: head + card({ dice: true }) + `<button class="btn block" type="button" style="margin-top:6px">${ICON.share}Share image</button>` + copy,
-    busy: head + card({ dice: true }) + `<button class="btn block busy" type="button" style="margin-top:6px" aria-busy="true"><span class="spin" aria-hidden="true"></span>Making picture</button>` + copy,
-    save: head + card({ dice: true }) + `<button class="btn block" type="button" style="margin-top:6px">${ICON.save}Save image</button>` + copy,
-    chips: head + card({}) + `<div class="chiprow"><button class="chip" type="button">${ICON.dice}New sky</button><span class="seg" role="group" aria-label="Size"><button type="button" aria-pressed="true">Post</button><button type="button" aria-pressed="false">Story</button></span></div><button class="btn block" type="button">${ICON.share}Share image</button>` + copy,
+    ready: head + card() + pair(false),
+    busy: head + card() + pair(true),
+    save: head + card() + `<button class="btn gold block" type="button" style="margin-top:6px">${ICON.save}Save image</button>`,
   };
   document.querySelectorAll('.sheet[data-sheet]').forEach((el) => (el.innerHTML = SHEETS[el.dataset.sheet]));
-  document.getElementById('desk').innerHTML = `<div class="pv">${renderCard(SAMPLES.full, { layout: 'B', idp: uid() })}<button class="dice" type="button" aria-label="New sky">${ICON.dice}</button></div>
-    <div class="side"><span class="sh-title" style="font-size:26px">Share workout</span><p>Save the picture, or copy it and paste it into a chat.</p>
-    <button class="btn" type="button">${ICON.save}Save image</button><button class="btn gold" type="button">${ICON.img}Copy image</button>${copy}</div>`;
-
+  document.getElementById('desk').innerHTML = `${card()}
+    <div class="side"><span class="sh-title" style="font-size:26px">Share workout</span><p>Share the picture to any app, or save it.</p>
+    <button class="btn" type="button">${ICON.share}Share image</button><button class="btn gold" type="button">${ICON.save}Save image</button></div>`;
   // The real export: SVG with the fonts inside, drawn on a canvas, out as a PNG.
   const fontCss = document.getElementById('fontcss').textContent;
   let expKey = 'full';
@@ -473,7 +472,7 @@ if (typeof module !== 'undefined') module.exports = { renderCard, SAMPLES, skyCl
     btn.classList.add('busy'); btn.setAttribute('aria-busy', 'true');
     const t0 = performance.now();
     try {
-      const svg = renderCard(SAMPLES[expKey], { layout: 'B', idp: 'exp_' });
+      const svg = renderCard(SAMPLES[expKey], { idp: 'exp_' });
       const blob = await makePng(svg, 1080, 1350);
       if (!blob) throw new Error('The canvas gave no picture');
       if (lastUrl) URL.revokeObjectURL(lastUrl);

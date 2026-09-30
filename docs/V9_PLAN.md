@@ -1,158 +1,171 @@
 # v9 plan: Share card redesign (random sky, body figure, a real image)
 
-(v8 is done and merged; its spec lives in `docs/V8_PLAN.md`.)
+(v8 is done and merged; its spec lives in `docs/V8_PLAN.md`. Round 1 board: `docs/design/07-share-card-board.html`, https://claude.ai/artifact/3zHX1DagsD4FT6mSJuyYVo)
 
 ## Context
-- The user shared a screenshot of the "Share workout" sheet (from the workout page) and finds it rudimentary:
-  - the clouds sit in rigid columns;
-  - the card lacks the body figure with the muscles worked.
-- They want:
-  - random cloud placement;
-  - the front and back body figure, next to the existing title, date, sets, time, volume, XP and "Levl · E-Rank Hunter";
-  - a better modal;
-  - a design board with a few iterations first, then the build (the usual flow).
-- Research showed a bigger gap. **Share sends only text today** (`navigator.share({ title, text })`), and no image is ever made. So the redesigned card must also become the thing that is shared, as a PNG. This is ROADMAP item 5 ("Image share cards").
-- Other bugs to fix along the way:
-  - Cardio-only workouts share as "Sets 1", with no distance or pace.
-  - The Victory screen and the workout page build the share data separately. Victory's XP includes badge XP; the workout page uses current rank.
+- The user finds the "Share workout" sheet rudimentary:
+  - the clouds sit in tiled columns;
+  - there is no body figure.
+- **Today Share sends only text.** No image exists; the card is a preview that never leaves the phone.
+- v9 makes the card the thing that is shared, as a 1080x1350 PNG, with:
+  - a random sky;
+  - the muscles worked;
+  - correct cardio stats (today a run shares as "Sets 1").
+
+## Signed-off decisions (round 1 review)
+1. **Layout B Split.** The body figure is big on the left; stats are stacked on the right.
+2. **No rank line.** Drop "E-Rank Hunter · LV 4"; the shield already shows it.
+3. **Title always fits on one line:**
+   - shrink it through 88, 80, 72 and 64 px;
+   - if it still doesn't fit, cut it at the last whole word that fits and add "…";
+   - if a single word is too long, cut that word and add "…".
+4. **Centre-aligned lockups:**
+   - the Levl mark and "Levl" wordmark are centred on each other, using the letters' height, not the bottom edge;
+   - the date sits on the same centre line;
+   - the shield and the title are centred on each other.
+5. **Post size only.** No Story format for now.
+6. **Two-tone muscle colours:** main muscles `--hi`, "also works" `--sec`, the rest `--muscle`.
+7. **New sky is a dice button** on the preview's corner. It lives in the sheet, never in the SVG, so it never appears in the shared picture.
+8. **XP:** the workout's own XP everywhere (`w.xp`). Victory stops adding badge XP to the card.
+9. **4 or more muscles:**
+   - the body lights every muscle worked;
+   - chips show the top 3 by sets (a secondary muscle counts as 0.5 set);
+   - then a line "+N more muscles" (or "+1 more muscle"), shown only when N > 0.
+10. **Buttons, image only:**
+    - **Share image** is the primary green button.
+    - **Save image** is the secondary gold button.
+    - No Copy text and no Copy image.
+    - Where the browser can't share files (`navigator.canShare({ files })` is false), only Save image shows.
+    - If making the picture fails, a toast reads "Couldn't make the picture. Try again." and Share falls back to the text line through `navigator.share({ text })` where it is available.
 
 ## Approach
-The card becomes one self-contained SVG, 1080x1350 (4:5). The same SVG is the on-screen preview and the export source.
+The card is one self-contained SVG, 1080x1350. The same SVG is the on-screen preview and the export source.
 
 **Export pipeline:**
 1. Serialize the SVG.
 2. Inject both fonts as base64 `@font-face`.
-3. Load it into an `Image` and draw it on a canvas.
-4. Make a PNG `File`, then share it through `navigator.share({ files })`, or save or copy it.
+3. Load it into an `Image`.
+4. Draw it on a canvas.
+5. Make a PNG `File`, then share it (`navigator.share({ files })`) or save it.
 
-**Rules the card must follow:**
-- All colours are literal: no CSS vars, `currentColor`, `foreignObject` or external hrefs.
-- Text outlines use `stroke` + `paint-order="stroke"`.
-- Fonts use fixed family names:
-  - Copy `lilita.woff2` and `figtree.woff2` to `public/fonts/`, with `OFL.txt`.
-  - Add `@font-face` rules named 'Levl Display' and 'Levl Body' in `globals.css`. next/font uses hashed names, so they can't be referenced.
-- Ids are fixed through an `idPrefix` prop, not `useId`, and must match `^[A-Za-z0-9_-]+$`.
+The round 1 board already proved this pipeline in Chromium: 826 KB, about 0.2 s, correct fonts.
+
+**Card rules:**
+- Colours are literal. No CSS vars, `currentColor`, `foreignObject` or external hrefs.
+- Outlines use `stroke` + `paint-order="stroke"`.
+- Fonts:
+  - Copy `docs/design/brand/lilita.woff2` and `docs/design/brand/figtree.woff2` to `public/fonts/`, with `OFL.txt`.
+  - Add `@font-face` rules for 'Levl Display' and 'Levl Body' in `globals.css`. next/font's family names are hashed, so they can't be used.
+- Ids come from an `idPrefix` prop and match `^[A-Za-z0-9_-]+$`.
 - Never hide the source SVG with `display:none`.
 - The export is full-bleed, with the gold frame inset.
 
-**iOS rule: pre-render.**
-- Render the PNG when the sheet opens (about 300 ms after its slide-up) and after each "New sky".
-- The Share button shows `loading` until the file is ready.
+**iOS: pre-render.**
+- Render the PNG about 300 ms after the sheet opens, and after each New sky (debounced 150 ms).
+- Share image shows `loading` until the file is ready.
 - The tap handler calls `navigator.share` before any `await`:
   - `NotAllowedError` shows a toast, "Tap Share again".
   - `AbortError` is ignored.
-  - A busy flag prevents a second share while one is open.
-- Once the PNG is ready, show it as an `<img>` over the live SVG, so the preview matches the file pixel for pixel. Long-press works as a fallback.
-
-**Buttons:**
-- **Phone:** Share image is the primary button. If files can't be shared, Save image is primary instead.
-- **Desktop:** Save image is primary. Copy image appears when `ClipboardItem` supports PNG.
-- **Copy text:** a low-weight button that stays in both.
-- The share sends the image only, not image plus text. A single constant controls this, so it can be flipped after the real-device test.
+  - A busy flag blocks a second share while one is open.
+- Once the PNG is ready, it shows as an `<img>` over the live SVG, so the preview is pixel-exact and long-press saves it.
 
 **Random sky:**
-- Pure and seeded. The seed is `${workout.id}#${roll}`.
-- `roll` resets to 0 when the sheet opens, so reopening gives the same sky. "New sky" increments it.
-- Two cloud stamps come from the brand `--cloud` art, in two layers (far and near).
-- Clouds may cross the card edges.
-- Clouds are placed by rejection sampling that avoids keep-out rectangles over the text and plaques.
+- A seeded PRNG (FNV-1a `hashSeed` + `mulberry32`). The seed is `${workout.id}#${roll}`.
+- `roll` resets to 0 when the sheet opens; the dice adds one.
+- It uses the two brand `--cloud` stamps, in a far and a near layer, and clouds may cross the edges.
+- Clouds stay out of two keep-out rectangles: the date and the "+N more" line, the plain white or muted text.
+- The board's `skyClouds` code is the reference implementation.
 
-**Body figure:**
-- Extract `BodyShapes` (a `<g>`) from `BodySvg`, taking literal skin and line colours. `BodySvg` keeps its CSS-var defaults.
-- Muscle set counts per workout come from a new `workoutMuscleSets`, reusing `add()` in `lib/muscleStats.ts`.
-- Chips show the top 3 muscles, for example "Chest 8 sets".
-- The fill is two-tone (`musclesOfExercises`) or heat (`muscleRows` + `heatPercent`), whichever the board picks.
-- Cardio-only cards have no body figure. Distance is the big number, with Time and Pace, or Speed for rides.
+**Card B coordinates:** the reference is `renderCard` in the board (`layoutB`, updated in stage 0b).
+- **Strength and mixed:**
+  - top bar at y 96;
+  - shield (scale 1.12) with the one-line title to its right, both centred on the shield;
+  - body panel at x 80, y 360, 500x740: the front and back pair, then 3 chips, then the "+N more" line;
+  - stat plaques at x 610, width 390, stacked in the same 740 px. Mixed gets 4 plaques; bodyweight gets 2.
+  - XP at y 1236.
+- **Cardio only:**
+  - the same top bar and title row;
+  - a big Distance plaque;
+  - 2 plaques below it: Time, and Pace (or Speed for rides);
+  - XP.
 
-**Rank shield:** extract `RankShieldArt` (a `<g>`, taking `idPrefix` and `fontFamily`) from `components/RankShield.tsx`. `RankShield` wraps it, and its output doesn't change.
+**Reuse:**
+- `workoutSummary` and `feedTiles` in `lib/feed.ts` (tiles, including cardio pace and speed).
+- `formatWhen`.
+- `musclesOfExercises` in `lib/muscles.ts`.
+- `add()` in `lib/muscleStats.ts`, through a new `workoutMuscleSets(items, lookup)`. The output of `muscleSets(state)` stays the same.
+- `SHIELD` and `RANK_MATERIALS`, via an extracted `RankShieldArt` `<g>` that takes `idPrefix` and `fontFamily`. `RankShield` wraps it and renders exactly as before.
+- `BODY`, via an extracted `BodyShapes` `<g>` that takes literal skin and line colours. `BodySvg` wraps it and keeps its CSS var defaults.
+- The `mark()` markup in `docs/design/brand/build.js` for the Levl mark.
+- `shareText` in `lib/victory.ts` gains cardio and mixed wording for the fallback only. The strength text stays byte for byte.
 
-**One data builder:** `lib/shareCard.ts` `shareCardData({ workout, lookup, units, xp, rank, level })` is used by both `VictoryScreen.tsx` and `WorkoutView.tsx`.
-- It reuses `workoutSummary` and `feedTiles` (`lib/feed.ts`), `formatWhen`, `musclesOfExercises` (`lib/muscles.ts`) and `RANK_TITLES`.
-- It also provides:
-  - `fitTitle`: font size steps of 96, 84, 72 and 64, at most 2 lines, then an ellipsis;
-  - `shareFileName`: `levl-<slug>-<YYYY-MM-DD>.png`;
-  - the keep-out rectangles.
-- `shareText` in `lib/victory.ts` gains cardio and mixed wording. The strength text stays byte for byte, so the existing tests pass.
+**One builder:** `lib/shareCard.ts` `shareCardData({ workout, lookup, units, rank, level })` is used by both `VictoryScreen.tsx` and `WorkoutView.tsx`. It returns:
+- `seedBase`, `title` and `titleSize` (from `fitTitle`), `dateLabel`, `kind`;
+- `stats`, and `hero` (cardio only);
+- `xp` (always `w.xp`), `rank`, `level`;
+- `muscles`: `{ primary, secondary, chips, moreCount }` or null;
+- `text`, and `fileName` (`levl-<slug>-<YYYY-MM-DD>.png`).
 
-## Stages (one Sonnet subagent each; Opus verifies, commits land on `claude/home-workout-nutrition-plan-kuyhvx`, Opus pushes)
-- **0. Design board** `docs/design/07-share-card-board.html`, published as an artifact for sign-off.
-  - **Setup:** the fonts are embedded as base64, and the board runs the real `skyClouds` and `mulberry32` code inline.
-  - **Sample:** Full Body, Tue 29 Sep, 19 sets, 45 min, 900 kg, +238 XP, rank E, LV 4.
-  - **Layouts:**
-    - A Stacked (4:5): mark and date, shield and title, 3 cream stat plaques, a body pair with chips, big gold XP, and the footer.
-    - B Split (4:5): a large body pair on the left and the stats column on the right.
-    - C Story (9:16, 1080x1920).
-  - **Sky:** the old tiled sky next to the new random one, three seeds side by side, and a live "New sky" button.
-  - **Muscle fill:** two-tone against heat.
-  - **Variants:** run, ride, mixed, bodyweight (no Volume), a long title on 2 lines, and E rank against S rank.
-  - **The modal:**
-    - Phone at 390 px: rendering, ready, and no file sharing.
-    - "New sky" placement: a dice button on the corner, or a chip row.
-    - Desktop at 1440 px.
-  - **Export test:** a "Make PNG" button that runs the real serialize, canvas and PNG steps, so the user can check fonts on an iPhone before the build.
-  - **Decisions to collect:**
-    1. Layout A or B.
-    2. Story switch: yes or no.
-    3. Muscle fill: two-tone or heat.
-    4. "New sky" placement.
-    5. XP on the card: the workout's own XP everywhere (recommended), or Victory keeps badge XP.
-    6. Share the image only (recommended), or image plus text.
+## Stages (Sonnet subagents one at a time; Opus verifies and pushes to `claude/home-workout-nutrition-plan-kuyhvx`)
+- **0b. Board round 2.** Update `docs/design/07-share-card-board.html` and republish it to the same URL. Then continue straight to stage 1 without waiting.
+  - B only, with all ten decisions applied.
+  - Variants: run, ride, mixed, bodyweight, a long title truncated to one line, and S rank. Full Body shows "+10 more muscles".
+  - The sheet:
+    - phone: ready, making the picture, and can't share (Save only);
+    - desktop: Share image and Save image.
+  - The export test stays.
 - **1. Pure logic:**
-  - `lib/sky.ts`: `hashSeed` (FNV-1a), `mulberry32`, `CLOUD_STAMPS`, `skyClouds`.
-  - `lib/shareCard.ts`.
-  - `workoutMuscleSets` in `lib/muscleStats.ts`; `muscleSets` output stays the same.
+  - `lib/sky.ts`.
+  - `lib/shareCard.ts`: `fitTitle`, `shareFileName`, the chips with `moreCount`, and `mixHex` only if needed.
+  - `workoutMuscleSets`.
   - The cardio and mixed `shareText`.
-  - Tests: `tests/sky.test.ts`, `tests/shareCard.test.ts`, plus additions to `tests/muscleStats.test.ts` and `tests/victory.test.ts`.
+  - Tests:
+    - `tests/sky.test.ts`: seed determinism, bounds, keep-out, the attempt budget.
+    - `tests/shareCard.test.ts`: strength, mixed, bodyweight, run, ride, cardio with no km, lb and mi, chips and more-count, one-line truncation at a word or mid-word, file names, and no em dashes.
+    - Additions to `tests/muscleStats.test.ts` and `tests/victory.test.ts`.
 - **2. SVG art:**
   - `RankShieldArt` and `BodyShapes` extracted.
-  - `components/share/cardTheme.ts`: literal colours and font stacks. A test checks them against the `globals.css` tokens.
-  - `components/share/ShareCardSvg.tsx`: its parts carry `data-part="sky|body|stats|xp"`.
+  - `components/share/cardTheme.ts`: literal colours, with a test against the `globals.css` tokens.
+  - `components/share/ShareCardSvg.tsx`: layout B and cardio, with `data-part` set to sky, body, stats or xp.
   - `public/fonts/*` and the `@font-face` rules.
-  - `tests/shareCardSvg.test.ts`, rendered with `renderToStaticMarkup`, checks for:
+  - `tests/shareCardSvg.test.ts`, using `renderToStaticMarkup`, checks for:
     - no `var(`, no `foreignObject`, no `http`;
-    - safe ids, with every `url(#x)` pointing to an existing id;
+    - safe ids, with every `url(#x)` resolving;
     - titles escaped;
     - no body part on a cardio card;
     - a 1080x1350 root.
   - If vitest can't import `.tsx`, add `oxc: { jsx: { runtime: 'automatic' } }` to `vitest.config.mts`.
-- **3. Modal wiring (still text share):**
-  - `ShareSheet.tsx` takes a `ShareCard`, shows the SVG preview and the "New sky" button.
+- **3. Sheet wiring:**
+  - `ShareSheet.tsx` takes a `ShareCard`. It shows the SVG preview with the corner dice (New sky) and the two buttons, both disabled until stage 4.
   - Both call sites build the card with `useMemo(shareCardData(...))`.
-  - Remove the `.wt-sharecard` and `.sc-stats` CSS, and add `.wt-share-preview` (`aspect-ratio: 4/5; max-height: min(56dvh, 560px)`).
+  - CSS: remove `.wt-sharecard` and `.sc-stats`; add `.wt-share-preview` (`aspect-ratio: 4/5; max-height: min(56dvh, 560px)`) and `.wt-share-dice`.
+  - Desktop is a dialog: preview on the left, actions on the right.
 - **4. Image export:**
-  - `lib/shareImage.ts`:
-    - the cached font data URIs;
-    - `finalizeSvg`, which adds the style right after the root tag, plus width, height and `xmlns`;
-    - `rasterize`: `onload`, then `img.decode()`, a warm-up draw, 2 animation frames, `toBlob`, and a zeroed canvas;
-    - `saveImage` and `copyImage`.
-  - `components/share/useShareImage.ts`: a generation counter, a 150 ms debounce and object-URL cleanup.
-  - The button logic by layout, the `<img>` overlay, and the toasts:
-    - "Image saved"
-    - "Image copied"
-    - "Couldn't make the picture. Copy the text instead."
+  - `lib/shareImage.ts`: the cached font data URIs, `finalizeSvg`, `rasterize` (onload, decode, a warm-up draw, 2 frames, `toBlob`, then zero the canvas) and `saveImage`.
+  - `components/share/useShareImage.ts`: a generation counter, the debounce, and object-URL cleanup.
+  - Button logic: Share image shows only when `canShare({ files })` is true; Save image always shows. The `<img>` overlay. Toasts: "Image saved" and the failure message.
   - `tests/shareImage.test.ts`.
-- **5. Story format:** only if chosen at sign-off. A `format` prop and a Post / Story `Segmented` control.
-- **6. Docs:**
+- **5. Docs:**
   - ROADMAP item 5 marked done.
-  - DESIGN_HISTORY and ARCHITECTURE updated.
-  - A Share section in `docs/QA.md`, and `docs/screenshots/share-*`.
-  - A real-device checklist for the user: iPhone Safari and the home-screen app, and Android Chrome, sharing to WhatsApp, Instagram Story and Photos.
+  - DESIGN_HISTORY and ARCHITECTURE.
+  - A Share section in `docs/QA.md`.
+  - `docs/screenshots/share-*`.
+  - A real-device checklist for the user: iPhone Safari, the iPhone home-screen app and Android Chrome, sharing to WhatsApp and Instagram and saving to Photos.
 
 ## Verification (each stage)
 - `npm test`, `npx tsc --noEmit` and `npm run build` (pages stay static), and the em dash grep over app, components, lib, docs and tests.
-- Playwright, using Chromium at `/opt/pw-browsers/chromium`, a dev server on port 3311, and Dev sign-in with `ALLOWED_EMAILS` set, at 390x844 and 1440x900:
+- Playwright, using Chromium at `/opt/pw-browsers/chromium`, a dev server on port 3311, and Dev sign-in with `ALLOWED_EMAILS=dev@example.com`, at 390x844 and 1440x900:
   - **Stage 3:**
-    - Sheet screenshots for a strength workout and a Run.
-    - "New sky" changes `[data-part=sky]`, and reopening brings back the first sky.
-    - A 40-character title fits inside the frame (`getBBox`).
+    - Sheet screenshots for strength and for a Run.
+    - The dice changes `[data-part=sky]`, and reopening brings back the first sky.
+    - A 40-character title stays on one line inside the frame (`getBBox`).
+    - The dice is not inside the SVG.
     - No console errors.
   - **Stage 4:**
-    - **Share stub.** Stub `navigator.share` and `canShare` with an init script. Check:
-      - `navigator.userActivation.isActive` is true at call time;
-      - exactly one PNG is shared, named `levl-*.png`, larger than 50 KB.
-    - **Rapid taps.** 5 quick "New sky" taps, then Share, give exactly one call with the latest file.
-    - **Download at desktop size.** The file's PNG header reads 1080x1350.
-    - **Fonts by eye.** Screenshot the exported PNG to `docs/screenshots/share-export-*.png` and check the fonts.
-    - **No file sharing.** With `canShare` false, the primary button reads Save image.
+    - **Share stub.** Stub `navigator.share` and `canShare`. Check `userActivation.isActive` at call time, and exactly one `levl-*.png` shared, larger than 50 KB.
+    - **Rapid taps.** 5 quick dice taps, then Share, give exactly one call with the latest file.
+    - **Save at desktop size.** The saved file's PNG header reads 1080x1350.
+    - **Fonts by eye.** Screenshot the exported PNG.
+    - **No file sharing.** With `canShare` false, only Save image shows.
 - Real-device checks by the user; iOS can't be automated here.
 - Merge to main only after the user says so.
