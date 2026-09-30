@@ -98,6 +98,8 @@ export type Prefs = {
   weeklyGoal: number;
   sound: boolean;
   haptic: boolean;
+  keepAwake: boolean; // keep the screen on while a workout is running
+  prefillLast: boolean; // new sets start with last time's numbers
   onboarded: boolean;
 };
 
@@ -141,6 +143,8 @@ export function defaultPrefs(): Prefs {
     weeklyGoal: DEFAULT_WEEKLY_GOAL,
     sound: true,
     haptic: true,
+    keepAwake: true,
+    prefillLast: true,
     onboarded: false,
   };
 }
@@ -165,7 +169,10 @@ export function ownerPrefs(): Prefs {
 // migrated progress. They read as the owner's setup and count as onboarded, so
 // the app never sends them through the first-run flow.
 export function resolvePrefs(state: Pick<AppState, 'prefs'>): Prefs {
-  return state.prefs ?? ownerPrefs();
+  const p = state.prefs;
+  if (!p) return ownerPrefs();
+  // Prefs saved before v8 have no keepAwake or prefillLast: both default on.
+  return { ...p, keepAwake: p.keepAwake ?? true, prefillLast: p.prefillLast ?? true };
 }
 
 export function weeklyGoalOf(state: Pick<AppState, 'prefs'>): number {

@@ -293,6 +293,10 @@ export function parsePrefs(raw: unknown): Parsed<Prefs> {
   if (typeof raw.sound !== 'boolean' || typeof raw.haptic !== 'boolean' || typeof raw.onboarded !== 'boolean') {
     return fail('invalid settings');
   }
+  // keepAwake and prefillLast came later. A client that does not send them gets the defaults (on).
+  if ((raw.keepAwake !== undefined && typeof raw.keepAwake !== 'boolean') || (raw.prefillLast !== undefined && typeof raw.prefillLast !== 'boolean')) {
+    return fail('invalid settings');
+  }
   return ok({
     units: { weight: units.weight, distance: units.distance },
     equipment: { kind: eq.kind, has, dumbbellKg: [...(eq.dumbbellKg as number[])] },
@@ -301,6 +305,8 @@ export function parsePrefs(raw: unknown): Parsed<Prefs> {
     weeklyGoal: raw.weeklyGoal,
     sound: raw.sound,
     haptic: raw.haptic,
+    keepAwake: raw.keepAwake ?? true,
+    prefillLast: raw.prefillLast ?? true,
     onboarded: raw.onboarded,
   });
 }

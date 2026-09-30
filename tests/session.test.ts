@@ -86,12 +86,14 @@ describe('starting', () => {
     expect(routine.items[1].sets[0]).toEqual({ kg: 5, reps: 10 });
   });
 
-  it('quick logs a run, walk or ride as one distance exercise', () => {
-    expect(cardioSession('run', NOW).items[0].exerciseId).toBe('run');
-    expect(cardioSession('walk', NOW).title).toBe('Walk');
-    const ride = cardioSession('ride', NOW);
-    expect(ride.items[0].exerciseId).toBe('cycle');
-    expect(ride.items[0].sets).toEqual([{ min: 20, done: false }]);
+  it('starts a cardio workout as one distance exercise with a blank set', () => {
+    expect(must(cardioSession('run', NOW)).items[0].exerciseId).toBe('run');
+    expect(must(cardioSession('walk', NOW)).title).toBe('Walk');
+    const ride = must(cardioSession('cycle', NOW));
+    expect(ride.title).toBe('Ride');
+    expect(ride.items[0].sets).toEqual([{ done: false }]);
+    expect(ride.plan).toEqual([{ exerciseId: 'cycle', sets: 1 }]);
+    expect(ride.follow).toEqual(['cycle']);
   });
 });
 

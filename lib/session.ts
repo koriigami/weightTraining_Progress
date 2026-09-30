@@ -5,9 +5,10 @@
 // A Session is a workout that has not been finished: a title, when it started,
 // and exercises whose sets carry a done flag. finish turns it into the payload
 // of the saveWorkout API action, keeping only the ticked sets.
-import { exerciseById } from '../data/exercises';
+import { exerciseById, isCardioExercise } from '../data/exercises';
 import type { ExerciseDef } from '../data/exercises';
 import { SET_FIELDS } from './routineValidation';
+import { lastWorkoutSets } from './exerciseHistory';
 import { LIMITS, blankSet, findDuplicateExercise, workoutItemsFromRoutine, workoutTotals } from './routines';
 import type { ExerciseLookup, LoggedSet, PlanItem, Routine, SetPlan, WorkoutItem, WorkoutLog, WorkoutTotals } from './routines';
 
@@ -17,6 +18,7 @@ export type Session = {
   startedAt: string; // ISO instant
   items: WorkoutItem[];
   plan?: PlanItem[]; // what the workout set out to do, taken at Start
+  follow?: string[]; // cardio exercises whose Time still follows the clock (until it is typed in)
 };
 
 export type SessionResult = { ok: true; session: Session } | { ok: false; error: string };
@@ -24,10 +26,17 @@ export type SessionResult = { ok: true; session: Session } | { ok: false; error:
 // What the saveWorkout action takes. The server works out xp, marks and the plan result itself.
 export type WorkoutInput = Omit<WorkoutLog, 'xp' | 'marks' | 'xpParts' | 'planComplete' | 'planMissing' | 'prs'>;
 
-export type CardioKind = 'run' | 'walk' | 'ride';
+// The six activities of the Cardio picker. `title` names the workout.
+export const CARDIO_CHOICES = [
+  { id: 'run', label: 'Run', title: 'Run' },
+  { id: 'walk', label: 'Walk', title: 'Walk' },
+  { id: 'cycle', label: 'Ride outside', title: 'Ride' },
+  { id: 'bike', label: 'Stationary bike', title: 'Stationary bike' },
+  { id: 'treadmill', label: 'Treadmill', title: 'Treadmill' },
+  { id: 'rower', label: 'Rowing', title: 'Rowing' },
+] as const;
 
-export const CARDIO_EXERCISE: Record<CardioKind, string> = { run: 'run', walk: 'walk', ride: 'cycle' };
-const CARDIO_TITLE: Record<CardioKind, string> = { run: 'Run', walk: 'Walk', ride: 'Ride' };
+export type CardioId = (typeof CARDIO_CHOICES)[number]['id'];
 
 export const sessionKey = (userId: string) => `wt:session:${userId}`;
 
@@ -68,13 +77,17 @@ export function formatElapsed(ms: number): string {
 
 // ---------------- Starting ----------------
 
-export function newSession(now: Date, opts: { title?: string; routineId?: string; items?: WorkoutItem[]; plan?: PlanItem[] } = {}): Session {
+const ok = (session: Session): SessionResult => ({ ok: true, session });
+const fail = (error: string): SessionResult => ({ ok: false, error });
+
+export function newSession(now: Date, opts: { title?: string; routineId?: string; items?: WorkoutItem[]; plan?: PlanItem[]; follow?: string[] } = {}): Session {
   return {
     title: opts.title ?? defaultTitle(now),
     ...(opts.routineId ? { routineId: opts.routineId } : {}),
     startedAt: now.toISOString(),
     items: opts.items ?? [],
     ...(opts.plan ? { plan: opts.plan } : {}),
+    ...(opts.follow && opts.follow.length > 0 ? { follow: opts.follow } : {}),
   };
 }
 
@@ -88,55 +101,116 @@ export function sessionFromRoutine(routine: Routine, now: Date): Session {
   return newSession(now, { title: routine.title, routineId: routine.id, items: workoutItemsFromRoutine(routine), plan: planFromItems(routine.items) });
 }
 
-// A quick log of a run, walk or ride: one distance exercise with one set to fill in.
-export function cardioSession(kind: CardioKind, now: Date, lookup: ExerciseLookup = exerciseById): Session {
-  const e = lookup(CARDIO_EXERCISE[kind]);
-  const items: WorkoutItem[] = e ? [{ exerciseId: e.id, sets: [{ ...blankSet(e), done: false }] }] : [];
-  return newSession(now, { title: CARDIO_TITLE[kind], items });
+// A blank set for a new exercise. Distance cardio has no time yet: Time is what
+// makes it count, and it follows the clock or is typed in.
+function blankFor(e: ExerciseDef): LoggedSet {
+  return e.metric === 'distance_time' ? { done: false } : { ...blankSet(e), done: false };
+}
+
+// The sets a newly added exercise starts with: last time's, none ticked, or one blank set.
+function startingSets(e: ExerciseDef, prefill?: SetPlan[] | null): LoggedSet[] {
+  if (prefill && prefill.length > 0) return prefill.slice(0, LIMITS.setsPerItem).map((s) => ({ ...s, done: false }));
+  return [blankFor(e)];
+}
+
+export type Prefill = (exerciseId: string, e: ExerciseDef) => SetPlan[] | null;
+
+// Prefill from saved workouts: the sets of the most recent workout with the exercise.
+export function prefillFrom(workouts: readonly WorkoutLog[]): Prefill {
+  return (exerciseId, e) => lastWorkoutSets(workouts, exerciseId, e.metric);
+}
+
+// A custom workout: the exercises picked before Start workout, each with its
+// sets (last time's when a prefill is given, else one). The plan is a snapshot of
+// exactly that. A lone distance exercise has its Time follow the clock.
+export function customSession(now: Date, exerciseIds: string[], lookup: ExerciseLookup = exerciseById, opts: { prefill?: Prefill; title?: string } = {}): SessionResult {
+  const ids = exerciseIds.filter((id, i) => exerciseIds.indexOf(id) === i);
+  if (ids.length === 0) return fail('Pick at least one exercise.');
+  if (ids.length > LIMITS.itemsPerList) return fail(`A workout can have up to ${LIMITS.itemsPerList} exercises.`);
+  const items: WorkoutItem[] = [];
+  const follow: string[] = [];
+  for (const id of ids) {
+    const e = lookup(id);
+    if (!e) return fail('That exercise is not available.');
+    const lone = ids.length === 1 && e.metric === 'distance_time';
+    if (lone) follow.push(id);
+    items.push({ exerciseId: id, sets: startingSets(e, lone ? null : opts.prefill?.(id, e)) });
+  }
+  return ok(newSession(now, { ...(opts.title ? { title: opts.title } : {}), items, plan: planFromItems(items), follow }));
+}
+
+// The Cardio picker's Start: one distance exercise with one set to fill in.
+export function cardioSession(exerciseId: string, now: Date, lookup: ExerciseLookup = exerciseById): SessionResult {
+  const choice = CARDIO_CHOICES.find((c) => c.id === exerciseId);
+  return customSession(now, [exerciseId], lookup, { title: choice?.title });
 }
 
 // ---------------- Editing ----------------
-
-const ok = (session: Session): SessionResult => ({ ok: true, session });
-const fail = (error: string): SessionResult => ({ ok: false, error });
 
 function within(items: WorkoutItem[], index: number): boolean {
   return Number.isInteger(index) && index >= 0 && index < items.length;
 }
 
 function freshSets(e: ExerciseDef, count: number): LoggedSet[] {
-  return Array.from({ length: Math.max(1, count) }, () => ({ ...blankSet(e), done: false }));
+  return Array.from({ length: Math.max(1, count) }, () => blankFor(e));
 }
 
-// No exercise twice in one workout.
-export function addExercise(session: Session, exerciseId: string, lookup: ExerciseLookup = exerciseById): SessionResult {
+// No exercise twice in one workout. Adding one does not change the plan.
+export function addExercise(session: Session, exerciseId: string, lookup: ExerciseLookup = exerciseById, prefill?: Prefill): SessionResult {
   const e = lookup(exerciseId);
   if (!e) return fail('That exercise is not available.');
-  const items = [...session.items, { exerciseId, sets: freshSets(e, 1) }];
+  const items = [...session.items, { exerciseId, sets: startingSets(e, prefill?.(exerciseId, e)) }];
   if (findDuplicateExercise(items)) return fail(`${e.name} is already in ${session.title.trim() || 'this workout'}.`);
   if (items.length > LIMITS.itemsPerList) return fail(`A workout can have up to ${LIMITS.itemsPerList} exercises.`);
   return ok({ ...session, items });
 }
 
-export type Removal = { session: Session; removed: WorkoutItem; index: number };
+// Where the removed exercise sat in the plan, so an Undo can put it back.
+export type Removal = { session: Session; removed: WorkoutItem; index: number; planSlot?: { index: number; item: PlanItem } };
 
-// The removed item comes back so the caller can offer an Undo.
+const without = (list: string[] | undefined, id: string): string[] | undefined => {
+  const next = list?.filter((x) => x !== id);
+  return next && next.length > 0 ? next : undefined;
+};
+
+// Drops a key whose value became undefined, so the stored session stays small.
+function tidy(session: Session): Session {
+  const { plan, follow, ...rest } = session;
+  return { ...rest, ...(plan && plan.length > 0 ? { plan } : {}), ...(follow && follow.length > 0 ? { follow } : {}) };
+}
+
+// The removed item comes back so the caller can offer an Undo. Removing an
+// exercise removes it from the plan too.
 export function removeExercise(session: Session, index: number): Removal | null {
   if (!within(session.items, index)) return null;
   const removed = session.items[index];
-  return { session: { ...session, items: session.items.filter((_, i) => i !== index) }, removed, index };
+  const planIndex = session.plan?.findIndex((p) => p.exerciseId === removed.exerciseId) ?? -1;
+  const planSlot = planIndex >= 0 && session.plan ? { index: planIndex, item: session.plan[planIndex] } : undefined;
+  const next: Session = {
+    ...session,
+    items: session.items.filter((_, i) => i !== index),
+    ...(session.plan ? { plan: session.plan.filter((p) => p.exerciseId !== removed.exerciseId) } : {}),
+    follow: without(session.follow, removed.exerciseId),
+  };
+  return { session: tidy(next), removed, index, ...(planSlot ? { planSlot } : {}) };
 }
 
 // Undo of removeExercise. If the same exercise has been added since, nothing changes.
-export function restoreExercise(session: Session, removed: WorkoutItem, index: number): Session {
+export function restoreExercise(session: Session, removed: WorkoutItem, index: number, planSlot?: Removal['planSlot']): Session {
   if (session.items.some((i) => i.exerciseId === removed.exerciseId)) return session;
   const at = Math.max(0, Math.min(index, session.items.length));
   const items = [...session.items];
   items.splice(at, 0, removed);
-  return { ...session, items };
+  let plan = session.plan;
+  if (planSlot && !plan?.some((p) => p.exerciseId === planSlot.item.exerciseId)) {
+    plan = [...(plan ?? [])];
+    plan.splice(Math.max(0, Math.min(planSlot.index, plan.length)), 0, planSlot.item);
+  }
+  return { ...session, items, ...(plan ? { plan } : {}) };
 }
 
-// Swap an exercise for another. It keeps the number of sets, with fresh blank sets.
+// Swap an exercise for another. It keeps the number of sets, with fresh blank
+// sets, and takes over the old one's slot in the plan.
 export function replaceExercise(session: Session, index: number, exerciseId: string, lookup: ExerciseLookup = exerciseById): SessionResult {
   if (!within(session.items, index)) return fail('That exercise is no longer in the workout.');
   const old = session.items[index];
@@ -147,7 +221,8 @@ export function replaceExercise(session: Session, index: number, exerciseId: str
     return fail(`${e.name} is already in ${session.title.trim() || 'this workout'}.`);
   }
   const items = session.items.map((it, k) => (k === index ? { exerciseId, sets: freshSets(e, old.sets.length) } : it));
-  return ok({ ...session, items });
+  const plan = session.plan?.map((p) => (p.exerciseId === old.exerciseId ? { ...p, exerciseId } : p));
+  return ok(tidy({ ...session, items, ...(plan ? { plan } : {}), follow: without(session.follow, old.exerciseId) }));
 }
 
 export function moveExercise(session: Session, index: number, direction: -1 | 1): Session {
@@ -206,6 +281,34 @@ export function toggleSet(session: Session, index: number, setIndex: number): Se
       k === index ? { ...it, sets: it.sets.map((s, j) => (j === setIndex ? { ...s, done: !s.done } : s)) } : it
     ),
   };
+}
+
+// The cardio card's fields. Time above zero counts as done (a ticked set), and
+// typing a Time takes it off the clock.
+export function updateCardio(session: Session, index: number, patch: SetPatch): Session {
+  const updated = updateSet(session, index, 0, patch);
+  const item = updated.items[index];
+  const first = item?.sets[0];
+  if (!item || !first) return session;
+  const done = (first.min ?? 0) > 0;
+  const items = updated.items.map((it, k) => (k === index ? { ...it, sets: [{ ...first, done }, ...it.sets.slice(1)] } : it));
+  return tidy({ ...updated, items, ...('min' in patch ? { follow: without(updated.follow, item.exerciseId) } : {}) });
+}
+
+// Time on a cardio card that follows the clock: whole minutes since Start, and
+// done once there is one. The same session comes back when nothing changed.
+export function syncFollow(session: Session, now: Date): Session {
+  if (!session.follow || session.follow.length === 0) return session;
+  const minutes = Math.floor((now.getTime() - Date.parse(session.startedAt)) / 60_000);
+  if (!(minutes >= 1)) return session;
+  let changed = false;
+  const items = session.items.map((it) => {
+    const first = it.sets[0];
+    if (!session.follow?.includes(it.exerciseId) || !first || (first.min === minutes && first.done)) return it;
+    changed = true;
+    return { ...it, sets: [{ ...first, min: minutes, done: true }, ...it.sets.slice(1)] };
+  });
+  return changed ? { ...session, items } : session;
 }
 
 export function setTitle(session: Session, title: string): Session {
@@ -285,6 +388,14 @@ export function buildWorkoutInput(session: Session, opts: { now: Date; lookup?: 
   const finishedAt = opts.now;
   let started = Date.parse(session.startedAt);
   if (!Number.isFinite(started) || started > finishedAt.getTime()) started = finishedAt.getTime();
+  // A cardio-only workout lasts at least as long as the minutes logged on it.
+  if (items.every((i) => {
+    const e = lookup(i.exerciseId);
+    return e ? isCardioExercise(e) : false;
+  })) {
+    const logged = workoutTotals(items, lookup).cardioMinutes * 60_000;
+    if (logged > finishedAt.getTime() - started) started = finishedAt.getTime() - logged;
+  }
   // The API takes a workout up to a day long. One left open longer is cut to fit.
   if (finishedAt.getTime() - started >= DAY_MS) started = finishedAt.getTime() - (DAY_MS - 60_000);
 
@@ -332,6 +443,7 @@ export function parseStoredSession(raw: string | null): Session | null {
       }
     }
   }
+  const follow = Array.isArray(data.follow) ? data.follow.filter((id): id is string => typeof id === 'string').slice(0, LIMITS.itemsPerList) : [];
   const items: WorkoutItem[] = [];
   for (const it of data.items) {
     if (!isObj(it) || typeof it.exerciseId !== 'string' || !Array.isArray(it.sets) || it.sets.length > LIMITS.setsPerItem) return null;
@@ -353,5 +465,6 @@ export function parseStoredSession(raw: string | null): Session | null {
     startedAt: data.startedAt,
     items,
     ...(plan.length > 0 ? { plan } : {}),
+    ...(follow.length > 0 ? { follow } : {}),
   };
 }

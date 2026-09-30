@@ -206,6 +206,63 @@ function checkPlan(plan: PlanItem[], items: WorkoutItem[], lookup: ExerciseLooku
   return { complete: plan.length > 0 && missing.length === 0, missing, xp };
 }
 
+// How far a plan is along, for the live popover. `done` counts plan items with
+// enough qualifying sets, `bonus` is what the finish bonus would pay: the XP of
+// the sets that fill the plan (an unticked set counts as if it were ticked, and
+// a planned strength set with nothing typed yet as the flat strength XP), capped.
+export type PlanProgress = { total: number; done: number; missing: string[]; complete: boolean; bonus: number };
+
+export function planProgress(plan: PlanItem[], items: WorkoutItem[], lookup: ExerciseLookup = exerciseById): PlanProgress {
+  const check = checkPlan(plan, items, lookup);
+  let potential = 0;
+  for (const p of plan) {
+    const e = lookup(p.exerciseId);
+    if (!e) continue;
+    const item = items.find((i) => i.exerciseId === p.exerciseId);
+    const xps = (item?.sets ?? []).map((s) => setXp(e, s)).sort((a, b) => b - a);
+    const flat = e.metric === 'distance_time' || e.metric === 'intervals' ? 0 : WORKOUT_XP.strengthSet;
+    for (let k = 0; k < p.sets; k++) potential += xps[k] || flat;
+  }
+  return {
+    total: plan.length,
+    done: plan.length - check.missing.length,
+    missing: check.missing,
+    complete: check.complete,
+    bonus: Math.min(WORKOUT_XP.finishCap, check.complete ? check.xp : potential),
+  };
+}
+
+// ---------------- Live marks ----------------
+
+export type LiveMark = { exerciseId: string; kind: WorkoutMark['kind']; xp: number };
+
+// The "Beat last time" and "Record" chips of a workout still in progress: the
+// same rules as scoreWorkouts, judged against the saved workouts. An exercise
+// with no earlier workout earns neither.
+export function liveMarks(items: WorkoutItem[], history: readonly WorkoutLog[], lookup: ExerciseLookup = exerciseById): LiveMark[] {
+  const marks: LiveMark[] = [];
+  const ordered = chronological([...history]);
+  for (const item of items) {
+    const e = lookup(item.exerciseId);
+    if (!e) continue;
+    const perf = perfOf(e, item.sets);
+    if (!perf) continue;
+    let last: Perf | undefined;
+    let best: Perf | undefined;
+    for (const w of ordered) {
+      const before = w.items.find((i) => i.exerciseId === item.exerciseId);
+      const p = before ? perfOf(e, before.sets) : null;
+      if (!p) continue;
+      last = p;
+      best = bestOf(e, best, p);
+    }
+    if (!last || !best) continue;
+    if (isRecord(e, perf, best)) marks.push({ exerciseId: item.exerciseId, kind: 'record', xp: WORKOUT_XP.record });
+    else if (beatsLast(e, perf, last)) marks.push({ exerciseId: item.exerciseId, kind: 'beat', xp: WORKOUT_XP.beat });
+  }
+  return marks;
+}
+
 // Push-up variations, for the Pushup Path badge, the Pushup Month badge and goals.
 export function isPushup(e: ExerciseDef | undefined): boolean {
   return Boolean(e && /push[ -]?up/i.test(e.name));

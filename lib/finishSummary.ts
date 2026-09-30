@@ -32,3 +32,12 @@ export function untickedSentence(count: number): string {
   if (count === 1) return "1 set is not ticked. It won't be saved.";
   return `${count} sets are not ticked. They won't be saved.`;
 }
+
+// "Treadmill isn't done, so this workout won't get the finish bonus." Up to two names, then "and N more".
+export function missedPlanSentence(names: string[]): string {
+  const shown = names.slice(0, 2);
+  const more = names.length - shown.length;
+  const list = more > 0 ? `${shown.join(', ')} and ${more} more` : shown.join(' and ');
+  return `${list} ${names.length === 1 ? "isn't" : "aren't"} done, so this workout won't get the finish bonus.`;
+}
+

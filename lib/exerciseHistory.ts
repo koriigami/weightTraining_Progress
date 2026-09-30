@@ -4,7 +4,8 @@
 import type { Metric } from '../data/exercises';
 import { fmtDistance, fmtNumber, fmtWeight } from './units';
 import type { DistanceUnit, WeightUnit } from './units';
-import { bestSet } from './workoutScoring';
+import { bestSet, chronological } from './workoutScoring';
+import { SET_FIELDS } from './routineValidation';
 import type { SetPlan, WorkoutLog } from './routines';
 
 const num = (v: number | undefined): number => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
@@ -68,6 +69,29 @@ export function fmtPreviousBest(metric: Metric, set: SetPlan | null, units: { we
     default:
       return 'New';
   }
+}
+
+// The sets of the most recent workout that has a ticked set of the exercise,
+// with only the fields its metric uses and none ticked. Null when there is none.
+// Used to prefill a new exercise with last time's numbers.
+export function lastWorkoutSets(workouts: readonly WorkoutLog[], exerciseId: string, metric: Metric): SetPlan[] | null {
+  const fields = SET_FIELDS[metric];
+  const ordered = chronological([...workouts]);
+  for (let i = ordered.length - 1; i >= 0; i--) {
+    const item = ordered[i].items.find((it) => it.exerciseId === exerciseId && it.sets.some((s) => s.done));
+    if (!item) continue;
+    return item.sets
+      .filter((s) => s.done)
+      .map((s) => {
+        const out: SetPlan = {};
+        for (const key of Object.keys(fields) as (keyof SetPlan)[]) {
+          const v = s[key];
+          if (typeof v === 'number' && Number.isFinite(v)) out[key] = v;
+        }
+        return out;
+      });
+  }
+  return null;
 }
 
 export type ExerciseHistory = {
