@@ -3345,6 +3345,7 @@ textarea.wt-input {
 }
 /* Only this wrapper clips (the rounded corners). The dice is its sibling, so it is never clipped. */
 .wt-share-card {
+  position: relative;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 8px 20px -12px rgba(40, 25, 5, 0.55);
@@ -3353,6 +3354,14 @@ textarea.wt-input {
   display: block;
   width: 100%;
   height: auto;
+}
+/* The finished picture, over the live SVG (which stays underneath): the preview is the exact file, and a long press saves it. */
+.wt-share-img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 /* New sky: a round gold button, like the secondary button, on the preview's bottom-right corner. */
 .wt-share-dice {
@@ -3385,6 +3394,10 @@ textarea.wt-input {
 .wt-share-actions .wt-btn {
   padding: 0 10px;
   font-size: 16px;
+}
+/* Save image alone (a browser that cannot share files) takes the whole row. */
+.wt-share-actions > :only-child {
+  grid-column: 1 / -1;
 }
 @media (min-width: 768px) {
   /* The desktop dialog is wider than the others: the picture on the left, the actions on the right. */

@@ -149,7 +149,22 @@ Tick these on each screen below, at 390 px and at 1440 px.
       shows on the card. The dice on the card's corner rolls a new sky; closing
       and reopening the sheet brings back the first sky. Share image (green) and
       Save image (gold) sit below the card on a phone and to the right of it on
-      desktop. (Both stay disabled until the picture export is built.)
+      desktop.
+- [ ] The picture is made when the sheet opens (and again after each dice tap).
+      Until it is ready, Share image shows a spinner and Save image is disabled.
+      Then the card turns into the exact picture that will be sent: long-press
+      it on a phone to save it from there.
+- [ ] Share image opens the phone's share menu with the picture (and nothing
+      else, no text). Closing the menu shows no message. Tapping Share image
+      while the menu is open does nothing.
+- [ ] Save image downloads `levl-<title>-<date>.png`, 1080 x 1350, and shows
+      "Image saved." The fonts in the file are the rounded Lilita One titles and
+      Figtree labels, not a fallback font.
+- [ ] A browser that cannot share files (most desktop browsers) shows only Save
+      image, and the copy beside the card says to save the picture.
+- [ ] If the picture cannot be made, Save image and Share image show "Couldn't
+      make the picture. Try again." and Share image shares the text line where
+      the browser can. Tapping the dice makes a new try.
 - [ ] Done is pinned at the bottom. Reload the page: no celebration replays.
 
 ## Reward moments
