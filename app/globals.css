@@ -5339,3 +5339,367 @@ button.wt-frow:focus-visible {
 .wt-dpm .wt-gm-btns {
   margin-top: 14px;
 }
+
+/* ------------------------------------------------------------------
+   Stage v8 D: Home (Resource bar, Today card, Done today), pinned tabs
+   and collapsing titles. Every class is wt- prefixed and scoped, so a
+   generic name can never meet a day cell's own "today" state.
+   ------------------------------------------------------------------ */
+
+/* ---- Resource bar: the phone's Home top bar ---- */
+.wt-rbar-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
+  background: linear-gradient(180deg, rgba(200, 234, 255, 0.94), rgba(214, 240, 255, 0.86));
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.wt-rbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.wt-rbar:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 16px;
+}
+.wt-rbar-badge {
+  flex: none;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  margin-right: -22px;
+  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.25));
+}
+.wt-rbar-xp {
+  position: relative;
+  display: block;
+  flex: 1;
+  min-width: 0;
+  height: 26px;
+  border-radius: 13px;
+  background: rgba(42, 24, 6, 0.82);
+  border: 2px solid #2a1806;
+  box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.35), 0 2px 0 rgba(255, 255, 255, 0.35);
+  overflow: hidden;
+}
+.wt-rbar-xp i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  display: block;
+  border-radius: 0 10px 10px 0;
+  background: linear-gradient(180deg, var(--xp-hi), var(--xp) 55%, var(--xp-deep));
+}
+.wt-rbar-xp em {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding-left: 18px;
+  font-style: normal;
+  font-family: var(--font-num);
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 0 #2a1806, 1px 0 0 #2a1806, -1px 0 0 #2a1806, 0 -1px 0 #2a1806;
+}
+.wt-rbar-pill {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 10px 0 6px;
+  border-radius: 16px;
+  background: rgba(42, 24, 6, 0.82);
+  border: 2px solid #2a1806;
+  box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.35), 0 2px 0 rgba(255, 255, 255, 0.35);
+  font-family: var(--font-num);
+  font-size: 17px;
+  text-shadow: 0 1px 0 #000;
+}
+.wt-rbar-pill .fl {
+  display: grid;
+  color: #ff9a3c;
+}
+.wt-rbar-pill .db {
+  display: grid;
+  color: #9ee67e;
+}
+
+/* ---- Today card ---- */
+.wt-tcard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wt-tc-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.wt-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.wt-eyebrow.ok {
+  color: var(--ok);
+}
+.wt-tc-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.wt-tc-main .wt-btn {
+  flex: none;
+}
+.wt-tc-t {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.wt-tc-t h3,
+.wt-tc-empty h3 {
+  margin: 0;
+  font-family: var(--font-num);
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+}
+.wt-tc-t small {
+  color: var(--muted);
+  font-weight: 600;
+}
+.wt-tc-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wt-tc-sep {
+  height: 1px;
+  background: var(--line);
+  margin: 2px 0;
+}
+.wt-tc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.wt-tc-empty p {
+  margin: 0;
+  color: var(--muted);
+}
+.wt-tcard .wt-rrow {
+  padding: 6px 10px;
+}
+.wt-tc-alt {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.wt-tc-alt button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 64px;
+  margin-bottom: 3px;
+  padding: 6px 4px;
+  border-radius: 14px;
+  border: 1.5px solid var(--s-line);
+  background: var(--s-grad);
+  color: var(--s-ink);
+  box-shadow: 0 3px 0 var(--s-bevel);
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1.15;
+  text-align: center;
+  touch-action: manipulation;
+}
+.wt-tc-alt button:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--s-bevel);
+}
+.wt-wk.ok {
+  background: var(--ok-soft);
+  color: var(--ok-deep);
+}
+.wt-donechip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 11px;
+  background: var(--ok-soft);
+  color: var(--ok-deep);
+  border: 1.5px solid #9ed88a;
+  font-family: var(--font-ui);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0;
+  vertical-align: 4px;
+}
+.wt-rrow .rs.ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ok);
+  font-weight: 800;
+}
+/* View: a low-weight text link, no fill and no bevel, about 32px tall. */
+.wt-viewbtn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 32px;
+  padding: 0 4px;
+  border-radius: 8px;
+  color: var(--link);
+  font-weight: 800;
+  font-size: 14px;
+  text-decoration: none;
+}
+.wt-viewbtn:hover {
+  background: rgba(43, 164, 56, 0.1);
+}
+.wt-viewbtn:focus-visible {
+  outline: 2px solid var(--xp);
+  outline-offset: 2px;
+}
+.wt-upcard-meta {
+  color: var(--muted);
+}
+.wt-upcard.done {
+  border-color: #9ed88a;
+  background: linear-gradient(180deg, #f4ffee, #fff8e8 60%);
+}
+.wt-upcard-foot {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-start;
+}
+.wt-upcard h3 .wt-donechip {
+  margin-left: 4px;
+}
+
+/* ---- This week card as a link ---- */
+.wt-weekcard {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.wt-weekcard:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.wt-linkhint {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--link);
+  font-weight: 800;
+  font-size: 14px;
+}
+
+/* ---- Rules note ---- */
+.wt-rnote {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+.wt-rnote .ic {
+  flex: none;
+  color: var(--xp-ink);
+}
+.wt-rnote .grow {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: 14px;
+}
+.wt-rnote .wt-textbtn {
+  padding: 2px 0;
+  min-height: 0;
+}
+
+/* ---- Pinned tabs (PageHeader sub) and the collapsing title ---- */
+.wt-ph-sub .wt-seg {
+  margin: 0;
+}
+/* The tabs of a page: padded like the page body, and pinned with the header. */
+.wt-ph-tabs {
+  padding: 0 16px 10px;
+}
+@media (max-width: 767px) {
+  .wt-ph.collapsible {
+    --ph-row: 60px;
+    transition: top 0.2s ease;
+  }
+  .wt-ph.collapsible.collapsed {
+    top: calc(-1 * var(--ph-row));
+  }
+  .wt-ph.collapsible .wt-ph-in {
+    height: var(--ph-row);
+    transition: opacity 0.15s ease;
+  }
+  .wt-ph.collapsible.collapsed .wt-ph-in {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wt-ph.collapsible,
+  .wt-ph.collapsible .wt-ph-in {
+    transition: none;
+  }
+}
+
+/* ---- Routine card menu ---- */
+.wt-rc-head-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.wt-rc-head-row .wt-rc-head {
+  flex: 1;
+  min-width: 0;
+}
+.wt-rc-head-row .wt-iconbtn {
+  flex: none;
+}
+
+/* ---- Onboarding: Skip lives in the top bar ---- */
+.wt-ob-skip {
+  flex: none;
+  min-height: 36px;
+  padding: 6px 4px;
+}
+.wt-ob-skip:disabled {
+  opacity: 0.5;
+}

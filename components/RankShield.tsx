@@ -4,7 +4,7 @@ import { useId } from 'react';
 import type { Rank } from '@/lib/progress';
 import { RANK_TITLES } from '@/lib/progress';
 
-const SHIELD = 'M60 4 C80 12 98 12 112 10 V58 C112 92 90 116 60 128 C30 116 8 92 8 58 V10 C22 12 40 12 60 4 Z';
+export const SHIELD = 'M60 4 C80 12 98 12 112 10 V58 C112 92 90 116 60 128 C30 116 8 92 8 58 V10 C22 12 40 12 60 4 Z';
 
 // Optical nudges: the letter and level are treated as one group, centered in
 // the shield's upper-weighted silhouette. Applied to the letter glyph only.

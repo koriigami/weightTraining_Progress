@@ -3,9 +3,11 @@
 import { useMemo, useState } from 'react';
 import { HeroLevel } from '@/components/HeroLevel';
 import { WeekCard } from '@/components/home/WeekCard';
-import { UpNextCard, UpNextRow } from '@/components/home/UpNext';
+import { DesktopToday } from '@/components/home/DesktopToday';
+import { ResourceBar } from '@/components/home/ResourceBar';
+import { RulesNote } from '@/components/home/RulesNote';
+import { TodayCard } from '@/components/home/TodayCard';
 import { WorkoutCard } from '@/components/home/WorkoutCard';
-import { useShell } from '@/components/nav/ShellContext';
 import { useProgress } from '@/components/ProgressProvider';
 import { Button } from '@/components/ui/Button';
 import { Card, SectionLabel } from '@/components/ui/Card';
@@ -14,19 +16,20 @@ import { Screen } from '@/components/ui/Screen';
 import { buildFeed } from '@/lib/feed';
 import { useDesktopLayout } from '@/lib/useMediaQuery';
 import { useToday } from '@/lib/useToday';
-import { upNextRoutines, weekSummary } from '@/lib/week';
+import { routinesDue, todayModel } from '@/lib/todayCard';
+import { weekSummary } from '@/lib/week';
 
 const PAGE = 10;
 
 export default function HomePage() {
   const { state, routines, workouts, lookup, prefs } = useProgress();
-  const { openStart } = useShell();
   const desktop = useDesktopLayout();
   const today = useToday();
   const [shown, setShown] = useState(PAGE);
 
   const week = useMemo(() => weekSummary(state, today), [state, today]);
-  const upNext = useMemo(() => upNextRoutines(routines, workouts, today, 2), [routines, workouts, today]);
+  const model = useMemo(() => todayModel(state, today, prefs.units), [state, today, prefs.units]);
+  const due = useMemo(() => routinesDue(routines, workouts, today, 2), [routines, workouts, today]);
   const feed = useMemo(() => buildFeed(state, lookup), [state, lookup]);
 
   const feedBlock = (
@@ -54,22 +57,22 @@ export default function HomePage() {
   if (desktop) {
     return (
       <Screen header={<PageHeader title="Home" large />}>
+        <RulesNote />
         <div className="wt-homegrid">
           <HeroLevel />
           <WeekCard week={week} />
         </div>
-        <SectionLabel>Up next</SectionLabel>
-        <UpNextRow items={upNext.items} allDone={upNext.allDone} hasRoutines={routines.length > 0} onSomethingElse={openStart} />
+        <DesktopToday model={model} routines={due} hasRoutines={routines.length > 0} />
         {feedBlock}
       </Screen>
     );
   }
 
   return (
-    <Screen header={<PageHeader title="Home" large />}>
-      <HeroLevel />
+    <Screen header={<ResourceBar week={week} />}>
+      <RulesNote />
+      <TodayCard model={model} />
       <WeekCard week={week} />
-      <UpNextCard items={upNext.items} allDone={upNext.allDone} hasRoutines={routines.length > 0} />
       {feedBlock}
     </Screen>
   );

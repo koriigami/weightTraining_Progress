@@ -1,17 +1,23 @@
 'use client';
 
-import { Check, Flame, Target } from 'lucide-react';
+import Link from 'next/link';
+import { Check, ChevronRight, Flame } from 'lucide-react';
 import type { WeekSummary } from '@/lib/week';
-import { Card, CardHead } from '@/components/ui/Card';
 import { cn } from '@/components/ui/cn';
 
 const weekday = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long' });
 
-/** This week: M to S dots with today ringed, "N of goal workouts", the weekly streak and the goal. */
+/** This week: M to S dots with today ringed, the weekly streak and "N of goal this week". The whole card opens the calendar. */
 export function WeekCard({ week }: { week: WeekSummary }) {
   return (
-    <Card aria-label="This week">
-      <CardHead title="This week" right={<span style={{ color: 'var(--muted)' }}>{week.count} of {week.goal} workouts</span>} />
+    <Link href="/calendar" className="wt-card wt-weekcard">
+      <div className="wt-cardhead">
+        <b>This week</b>
+        <span className="wt-linkhint">
+          Calendar
+          <ChevronRight size={16} aria-hidden="true" />
+        </span>
+      </div>
       <div className="wt-weekrow" role="list" aria-label="Days this week">
         {week.dots.map((d) => (
           <div key={d.date} role="listitem" className={cn('wt-wd', d.done && 'done', d.today && 'today')} aria-label={`${weekday(d.date)} ${d.day}${d.done ? ', trained' : ''}${d.today ? ', today' : ''}`}>
@@ -28,10 +34,9 @@ export function WeekCard({ week }: { week: WeekSummary }) {
           {week.streak} week streak
         </span>
         <span style={{ color: 'var(--muted)' }}>
-          <Target size={18} aria-hidden="true" />
-          Goal {week.goal} a week
+          {week.count} of {week.goal} this week
         </span>
       </div>
-    </Card>
+    </Link>
   );
 }
