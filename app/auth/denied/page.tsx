@@ -1,4 +1,7 @@
 import Link from 'next/link';
+import { Waitlist } from '@/components/SignInScreen';
+
+const waitlistUrl = process.env.NEXT_PUBLIC_WAITLIST_URL;
 
 export default function DeniedPage() {
   return (
@@ -13,6 +16,7 @@ export default function DeniedPage() {
         <p className="text-sm" style={{ color: 'var(--muted)' }}>
           This app is invite only. Ask the owner to add your Google account.
         </p>
+        {waitlistUrl && <Waitlist url={waitlistUrl} />}
         <Link
           href="/"
           className="inline-flex min-h-11 items-center justify-center rounded-full border px-5 text-sm font-semibold"

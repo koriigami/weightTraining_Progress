@@ -1,6 +1,6 @@
-# Home Workout
+# Levl
 
-A routine-first workout tracker with a game layer. Build your own routines or
+Levl (formerly called Home Workout) is a routine-first workout tracker with a game layer. Build your own routines or
 start from ready-made ones, log every set, and earn XP, levels, hunter ranks (E
 to S), badges and a Rank Road. Built with Next.js 15 (App Router), TypeScript,
 Tailwind and Motion. Sign-in is Google only, with an invite list. Each person's
@@ -199,6 +199,12 @@ owner signs in. The old keys are never changed or deleted.
    - `ALLOWED_EMAILS`: comma-separated Google emails that may sign in.
    - `OWNER_EMAIL`: the owner's Google email. Their older progress is copied over
      on first sign-in, and only they can open Insights.
+   - `NEXT_PUBLIC_WAITLIST_URL` (optional): a waitlist form link, for example a
+     Tally form. When set, the sign-in screen and the "Invite only" page show a
+     "Join the waitlist" button that opens it in a new tab.
+   - `NEXT_PUBLIC_SITE_URL` (optional): the public site URL, used for the
+     metadata base, social share images, `robots.txt` and the sitemap. Defaults
+     to `https://weight-training-progress.vercel.app`.
 5. Redeploy.
 
 ## Deploying to Vercel

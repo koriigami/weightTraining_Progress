@@ -43,9 +43,20 @@ v8 is built on the branch `claude/home-workout-nutrition-plan-kuyhvx` and is not
    with the Web Share API, or offer "Save image". Today Share sends text.
 6. **Google Health sync.** Weight first, then workouts. Health Connect is an on-device Android
    API, so a web app goes through the Google Health cloud API. Verify that before building.
-7. **Rename the app.** It is still called Home Workout.
+7. **Rename the app.** Done: the app is now Levl (name, logo, metadata, manifest and icons).
 8. Smaller: a real ESLint setup (`npm run lint` is not configured), and a component test layer for
    the reward moments.
+
+## Brand and launch essentials
+
+- Custom domain (for example a Levl app domain), then update `metadataBase` (or set `NEXT_PUBLIC_SITE_URL`).
+- Google OAuth consent screen: set the app name and logo to Levl.
+- Rename the Vercel project to Levl.
+- A privacy policy page and a terms page. A public waitlist and Google OAuth verification both need them.
+- Put the Tally waitlist link in `NEXT_PUBLIC_WAITLIST_URL`.
+- A trademark and name check for "Levl" before public launch.
+- App store style screenshots.
+- An OG image per shared workout (image share cards, already possible in Next).
 
 The generated plan (the Trainer) was rejected and is not on the list. See `docs/DESIGN_HISTORY.md`.
 

@@ -87,5 +87,5 @@ export function shareText(s: ShareInput, weight: WeightUnit = 'kg'): string {
   const parts = [`${s.sets} ${s.sets === 1 ? 'set' : 'sets'}`];
   if (s.volumeKg > 0) parts.push(`${fmtVolume(s.volumeKg, weight)} lifted`);
   if (s.minutes !== null) parts.push(`${s.minutes} min`);
-  return `${s.title}: ${parts.join(', ')}. +${s.xp} XP. Home Workout, ${s.rankTitle}.`;
+  return `${s.title}: ${parts.join(', ')}. +${s.xp} XP. Levl, ${s.rankTitle}.`;
 }

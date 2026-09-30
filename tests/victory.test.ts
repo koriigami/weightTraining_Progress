@@ -109,11 +109,11 @@ describe('share text', () => {
   const s = { title: 'Push A', sets: 12, volumeKg: 505.4, minutes: 46, xp: 135, rankTitle: 'D-Rank Hunter' };
 
   it('is one plain sentence with the stats and the XP', () => {
-    expect(shareText(s)).toBe('Push A: 12 sets, 505 kg lifted, 46 min. +135 XP. Home Workout, D-Rank Hunter.');
+    expect(shareText(s)).toBe('Push A: 12 sets, 505 kg lifted, 46 min. +135 XP. Levl, D-Rank Hunter.');
   });
 
   it('leaves out what is missing and follows the unit', () => {
-    expect(shareText({ ...s, volumeKg: 0, minutes: null, sets: 1 })).toBe('Push A: 1 set. +135 XP. Home Workout, D-Rank Hunter.');
+    expect(shareText({ ...s, volumeKg: 0, minutes: null, sets: 1 })).toBe('Push A: 1 set. +135 XP. Levl, D-Rank Hunter.');
     expect(shareText(s, 'lb')).toContain('1,114 lb lifted');
   });
 

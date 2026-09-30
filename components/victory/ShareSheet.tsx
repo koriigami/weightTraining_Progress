@@ -121,7 +121,7 @@ export function ShareSheet({ open, onClose, data }: { open: boolean; onClose: ()
         <div className="gt gold" style={{ fontSize: 24 }}>
           +{data.xp} XP
         </div>
-        <small style={{ fontWeight: 800, color: 'var(--hero-sub)' }}>Home Workout · {RANK_TITLES[data.rank]}</small>
+        <small style={{ fontWeight: 800, color: 'var(--hero-sub)' }}>Levl · {RANK_TITLES[data.rank]}</small>
       </Hero>
     </Sheet>
   );

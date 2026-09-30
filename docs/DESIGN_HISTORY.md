@@ -295,7 +295,13 @@ b to f). The Rulebook itself is `docs/design/xp-reference.html`, and the code fo
 - Progress from the original 6-week plan is kept exactly. Legacy XP rules do
   not change. New workouts add XP under the new rules.
 - Sign-in is Google only, with an invite list. Data is stored per user.
-- The app keeps the name Home Workout for now.
+- The app is now called Levl (see "Brand: Levl" below).
+
+## Brand: Levl
+
+- The name is a playful respelling of "level", the way Hevy respells "heavy".
+- The logo is a shield with an L, taken from the level badge: a gold-rimmed green shield with a white L.
+- Source files and the render script for the PNG assets are in `docs/design/brand/`.
 
 ## Where the chat lives
 

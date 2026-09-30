@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { BarChart3, EllipsisVertical, LogOut, Settings, User } from 'lucide-react';
-import { RankShield } from '@/components/RankShield';
 import { onRetap } from '@/lib/rankRetap';
 import { useProgress } from '@/components/ProgressProvider';
 import { useElapsed, useWorkoutSession } from '@/components/WorkoutSessionProvider';
@@ -121,9 +120,10 @@ export function Sidebar({ onStart, onSignOut }: { onStart: () => void; onSignOut
 
   return (
     <aside className="wt-side" data-testid="sidebar" aria-label="Sidebar">
-      <Link href="/" className="wt-logo" aria-label="Home Workout, home">
-        <RankShield rank={progress.rank} size={28} />
-        <span className="gt">Home Workout</span>
+      <Link href="/" className="wt-logo" aria-label="Levl, home">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/favicon.svg" alt="" width={30} height={30} aria-hidden="true" />
+        <span className="gt">Levl</span>
       </Link>
       <Button size="lg" onClick={onStart}>
         + Workout
