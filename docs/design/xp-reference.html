@@ -118,7 +118,7 @@ ul.plain li::marker{color:var(--xp-deep)}
     <div class="principles">
       <div class="card"><b>Effort, not load</b><span>A set earns the same 5 XP at 2 kg or 200 kg. How heavy you lift never scales XP.</span></div>
       <div class="card"><b>Beat yourself</b><span>Extra XP comes from doing better than your own last time, or your own best ever. Nobody is compared with anybody else.</span></div>
-      <div class="card"><b>A real session counts</b><span>The +50 finish bonus needs about 20 minutes of work, so logging a single set doesn't pay like a workout.</span></div>
+      <div class="card"><b>Finish what you planned</b><span>The finish bonus pays when every planned exercise is done. It's worth the XP of the planned sets, up to 50, so a tiny plan can't farm it.</span></div>
     </div>
   </section>
 
@@ -133,12 +133,12 @@ ul.plain li::marker{color:var(--xp-deep)}
         <tr><td><b>Distance</b></td><td class="xp">+10</td><td>A cardio set that logs a distance above 0.</td><td><span class="tag same">Unchanged</span></td></tr>
         <tr><td><b>Beat last time</b></td><td class="xp">+10</td><td>Once per exercise per workout, when your best set beats the last workout that had that exercise. See the table below.</td><td><span class="tag new">New</span></td></tr>
         <tr><td><b>Record</b></td><td class="xp">+25</td><td>Once per exercise per workout, when your best set beats every earlier workout. Paid instead of the +10, never both.</td><td><span class="tag chg">Changed</span><small>Now every kind of exercise</small></td></tr>
-        <tr><td><b>Finish bonus</b></td><td class="xp">+50</td><td>A workout with 20 work minutes: each ticked strength set counts as 3 minutes, and cardio counts its minutes. At most 2 a day.</td><td><span class="tag chg">Changed</span><small>Was any workout</small></td></tr>
-        <tr><td><b>Weekly goal</b></td><td class="xp">+50</td><td>The first time in a Monday to Sunday week that your count of workouts with a finish bonus reaches your weekly goal.</td><td><span class="tag chg">Changed</span><small>Only full workouts count</small></td></tr>
+        <tr><td><b>Finish bonus</b></td><td class="xp">up to +50</td><td>Every exercise and set you planned is ticked. The plan is the routine, or what you picked before Start workout. Exercises you add on top don't count against you. It's worth the XP of the planned sets, up to 50: a 15-set routine pays 50, 3 sets of curls pay 15, a planned 30-minute ride with distance pays 40. At most 2 a day.</td><td><span class="tag chg">Changed</span><small>Was any workout</small></td></tr>
+        <tr><td><b>Weekly goal</b></td><td class="xp">+50</td><td>The first time in a Monday to Sunday week that your count of workouts that finished their plan reaches your weekly goal.</td><td><span class="tag chg">Changed</span><small>Only finished plans count</small></td></tr>
         <tr><td><b>Weigh-in</b></td><td class="xp">+10</td><td>Each day you log your weight.</td><td><span class="tag same">Unchanged</span></td></tr>
         <tr><td><b>Badges</b></td><td class="xp">25 to 500</td><td>Each badge tier: Bronze 25, Silver 50, Gold 100, Diamond 200, Master 350, Legend 500. Monthly badges 75, special badges 50.</td><td><span class="tag same">Unchanged</span><small>The catalogue changes</small></td></tr>
         <tr><td><b>Goals</b></td><td class="xp">25 to 1000</td><td>Paid when a goal is achieved. See the goals table.</td><td><span class="tag chg">Changed</span><small>Counts workouts now</small></td></tr>
-        <tr><td><b>How long a workout lasts</b></td><td class="xp">0</td><td>The clock itself never gives XP. The finish bonus uses sets and cardio minutes, not the clock.</td><td><span class="tag same">Unchanged</span></td></tr>
+        <tr><td><b>How long a workout lasts</b></td><td class="xp">0</td><td>The clock itself never gives XP.</td><td><span class="tag same">Unchanged</span></td></tr>
       </tbody>
     </table></div>
   </section>
@@ -175,7 +175,7 @@ ul.plain li::marker{color:var(--xp-deep)}
 
   <section aria-labelledby="calc">
     <h2 class="gt" id="calc">Try a workout</h2>
-    <p class="lede">Change the numbers to see what a workout earns. The finish bonus needs 20 work minutes: each set counts as 3, since a set plus its rest takes 1.5 to 3 minutes.</p>
+    <p class="lede">Change the numbers to see what a workout earns. The finish bonus needs every planned set ticked, and is worth the planned sets' XP, up to 50.</p>
     <div class="calc">
       <div class="card" id="controls"></div>
       <div class="result" aria-live="polite" id="result"></div>
@@ -220,7 +220,7 @@ ul.plain li::marker{color:var(--xp-deep)}
     <div class="tbl"><table>
       <thead><tr><th>Lifetime badge</th><th>Counts</th><th class="num">Bronze</th><th class="num">Silver</th><th class="num">Gold</th><th class="num">Diamond</th><th class="num">Master</th><th class="num">Legend</th><th>Status</th></tr></thead>
       <tbody>
-        <tr><td><b>Finisher</b></td><td>Workouts with a finish bonus</td><td class="num">1</td><td class="num">10</td><td class="num">25</td><td class="num">50</td><td class="num">100</td><td class="num">250</td><td><span class="tag chg">Changed</span></td></tr>
+        <tr><td><b>Finisher</b></td><td>Workouts that finished their plan</td><td class="num">1</td><td class="num">10</td><td class="num">25</td><td class="num">50</td><td class="num">100</td><td class="num">250</td><td><span class="tag chg">Changed</span></td></tr>
         <tr><td><b>Iron Mover</b></td><td>Sets logged</td><td class="num">50</td><td class="num">250</td><td class="num">500</td><td class="num">1,000</td><td class="num">2,500</td><td class="num">5,000</td><td><span class="tag chg">Changed</span><small>Was tonnes</small></td></tr>
         <tr><td><b>Record Breaker</b></td><td>Records</td><td class="num">1</td><td class="num">5</td><td class="num">15</td><td class="num">30</td><td class="num">60</td><td class="num">100</td><td><span class="tag same">Unchanged</span></td></tr>
         <tr><td><b>Streak Keeper</b></td><td>Weeks in a row with a workout</td><td class="num">2</td><td class="num">4</td><td class="num">8</td><td class="num">12</td><td class="num">26</td><td class="num">52</td><td><span class="tag same">Unchanged</span></td></tr>
@@ -259,7 +259,7 @@ ul.plain li::marker{color:var(--xp-deep)}
 
   <section aria-labelledby="gl">
     <h2 class="gt" id="gl">Goals</h2>
-    <p class="lede">Goals now count your logged workouts. Only progress logged after you create a goal counts. The reward is rounded to the nearest 5 and kept between 25 and 1,000.</p>
+    <p class="lede">Goals now count your logged workouts. Only progress logged after you create a goal counts, and once a goal is achieved it stays achieved. The reward is rounded to the nearest 5 and kept between 25 and 1,000.</p>
     <div class="tbl"><table>
       <thead><tr><th>Goal</th><th>Reward</th><th>Example</th></tr></thead>
       <tbody>
@@ -278,14 +278,32 @@ ul.plain li::marker{color:var(--xp-deep)}
     <div class="tbl"><table>
       <thead><tr><th>Screen</th><th>What it shows</th></tr></thead>
       <tbody>
-        <tr><td><b>Log workout</b></td><td>+5 pops as you tick sets, Beat last time and Record chips on each exercise, the finish bonus chip, live XP in the stats row</td></tr>
+        <tr><td><b>Log workout</b></td><td>+5 pops as you tick sets, Beat last time and Record chips on each exercise, live XP in the stats row. Tap XP to see what you have so far and what's left of the plan.</td></tr>
         <tr><td><b>Victory</b></td><td>The XP lines for the workout that just finished, then level up, rank up and badge moments</td></tr>
-        <tr><td><b>Workout page</b></td><td>Where the XP came from, line by line. It updates after an edit.</td></tr>
+        <tr><td><b>Workout page</b></td><td>The eye on the XP tile opens where the XP came from, line by line. It updates after an edit.</td></tr>
         <tr><td><b>Home and Rank</b></td><td>Your level, XP bar and rank. The Rank Road with every gate.</td></tr>
         <tr><td><b>Profile</b></td><td>XP per week on the chart, goals and their rewards</td></tr>
         <tr><td><b>Insights (owner only)</b></td><td>How fast the group climbs, to check the pace</td></tr>
       </tbody>
     </table></div>
+  </section>
+
+  <section aria-labelledby="down">
+    <h2 class="gt" id="down">When XP can go down</h2>
+    <p class="lede">XP is worked out from your data, so removing data removes its XP. A level or rank can drop. There is never a demotion animation.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>What happened</th><th>How it shows</th></tr></thead>
+      <tbody>
+        <tr><td><b>You delete a workout</b></td><td>The confirm names the XP, and adds "You'll go back to level 6" only when a level or rank drops. After it, a toast: XP updated · Level 6.</td></tr>
+        <tr><td><b>You edit a workout</b><small>Fewer sets, a lower weight, a removed exercise</small></td><td>The same toast after Save, only when the level changes.</td></tr>
+        <tr><td><b>You move a workout's date</b><small>Records and beat last time follow the order of dates</small></td><td>The same toast.</td></tr>
+        <tr><td><b>You change your weekly goal</b><small>Past weeks are checked again</small></td><td>The weekly goal editor says so before you save. The same toast after.</td></tr>
+        <tr><td><b>You delete a weigh-in</b></td><td>The same toast.</td></tr>
+        <tr><td><b>Badge tiers are lost</b><small>Only through the deletes above</small></td><td>The badge shows as not earned again, with no moment.</td></tr>
+        <tr><td><b>v2 goes live</b></td><td>One note on Home the first time: "XP was worked out again with the new rules."</td></tr>
+      </tbody>
+    </table></div>
+    <div class="note"><span>Goals no longer drop: once achieved, a goal keeps its XP and badge. Reaching a level again after a drop doesn't replay its level up moment.</span></div>
   </section>
 
   <section aria-labelledby="ch">
@@ -313,18 +331,20 @@ let rows='';for(let n=1;n<=35;n++){const r=rankFor(n),gate=GATES.some(g=>g[0]===
 document.getElementById('levels').innerHTML=rows;
 
 /* calculator */
-const S={sets:15,min:0,km:0,beats:2,recs:0,prior:0};
-const F=[['sets','Strength sets ticked','5 XP each, 3 work minutes each',0,40,1],['min','Cardio minutes','1 XP a minute, 30 at most per set',0,90,5],['km','Distance logged','Adds 10 XP when above 0',0,1,1],['beats','Exercises that beat last time','10 XP each',0,8,1],['recs','Exercises with a record','25 XP each, instead of 10',0,8,1]];
+const S={plan:15,sets:15,min:0,km:0,beats:2,recs:0,prior:0};
+const F=[['plan','Strength sets in the plan','From the routine, or what you picked',0,40,1],['sets','Strength sets ticked','5 XP each',0,40,1],['min','Cardio minutes (planned and done)','1 XP a minute, 30 at most per set',0,90,5],['km','Distance logged','Adds 10 XP when above 0',0,1,1],['beats','Exercises that beat last time','10 XP each',0,8,1],['recs','Exercises with a record','25 XP each, instead of 10',0,8,1]];
 function ctrlHTML(){return F.map(([k,l,s,lo,hi,st])=>k==='km'?`<div class="ctrl"><label>${l}<small>${s}</small></label><div class="seg" role="group" aria-label="${l}"><button aria-pressed="${!S.km}" data-k="km" data-v="0">No</button><button aria-pressed="${!!S.km}" data-k="km" data-v="1">Yes</button></div></div>`:`<div class="ctrl"><label for="o-${k}">${l}<small>${s}</small></label><div class="step"><button aria-label="Less" data-k="${k}" data-d="-${st}">−</button><output id="o-${k}">${S[k]}</output><button aria-label="More" data-k="${k}" data-d="${st}">+</button></div></div>`).join('')+`<div class="ctrl"><label>Finish bonuses already earned today<small>2 a day at most</small></label><div class="seg" role="group" aria-label="Finish bonuses already earned today">${[0,1,2].map(v=>`<button aria-pressed="${S.prior===v}" data-k="prior" data-v="${v}">${v}</button>`).join('')}</div></div>`;}
 function calc(){
   const cx=S.min>0?Math.min(30,S.min)+(S.km?10:0):0, setXp=S.sets*5, beats=Math.max(0,S.beats), recs=Math.max(0,S.recs);
-  const work=S.sets*3+S.min, ok=work>=20, capped=S.prior>=2, fin=ok&&!capped?50:0;
+  const planXp=S.plan*5+cx, done=S.sets>=S.plan&&(S.plan>0||S.min>0), capped=S.prior>=2, fin=done&&!capped?Math.min(50,planXp):0;
   const total=setXp+cx+beats*10+recs*25+fin;
-  const lines=[['Sets',`${S.sets} × 5`,setXp],['Cardio',S.min>0?`${Math.min(30,S.min)} min${S.min>30?' (30 cap)':''}${S.km?' + distance':''}`:'none',cx],['Beat last time',`${beats} × 10`,beats*10],['Records',`${recs} × 25`,recs*25],['Finish bonus',!ok?`${work} of 20 work min`:capped?'2 already today':'earned',fin]];
-  document.getElementById('result').innerHTML=`<div style="font-weight:800;opacity:.9">This workout earns</div><div class="big">+${total} XP</div><div class="fb ${ok?'ready':''}"><span>${ok?(capped?'Enough work, but the daily limit is reached':'Finish bonus earned'):'Finish bonus'}</span></div><div class="fb ${ok?'ready':''}" style="margin-top:6px"><span class="tr"><i style="width:${Math.min(100,work/20*100)}%"></i></span><span style="font-variant-numeric:tabular-nums">${Math.min(work,99)} / 20 min</span></div><div class="lines">${lines.map(([a,b,c])=>`<div class="ex-row"><span>${a}<small style="display:block;opacity:.85;font-weight:600">${b}</small></span><b>+${c}</b></div>`).join('')}</div>`;
+  const finTxt=!done?`${Math.min(S.sets,S.plan)} of ${S.plan} planned sets ticked`:capped?'2 already today':`the plan's XP is ${planXp}, capped at 50`;
+  const lines=[['Sets',`${S.sets} × 5`,setXp],['Cardio',S.min>0?`${Math.min(30,S.min)} min${S.min>30?' (30 cap)':''}${S.km?' + distance':''}`:'none',cx],['Beat last time',`${beats} × 10`,beats*10],['Records',`${recs} × 25`,recs*25],['Finish bonus',finTxt,fin]];
+  const pct=S.plan>0?Math.min(100,S.sets/S.plan*100):(S.min>0?100:0);
+  document.getElementById('result').innerHTML=`<div style="font-weight:800;opacity:.9">This workout earns</div><div class="big">+${total} XP</div><div class="fb ${done?'ready':''}"><span>${done?(capped?'Plan finished, but the daily limit is reached':'Plan finished: finish bonus earned'):'Finish the plan for the bonus'}</span></div><div class="fb ${done?'ready':''}" style="margin-top:6px"><span class="tr"><i style="width:${pct}%"></i></span><span style="font-variant-numeric:tabular-nums">${Math.min(S.sets,S.plan)} / ${S.plan} sets</span></div><div class="lines">${lines.map(([a,b,c])=>`<div class="ex-row"><span>${a}<small style="display:block;opacity:.85;font-weight:600">${b}</small></span><b>+${c}</b></div>`).join('')}</div>`;
 }
 function draw(){document.getElementById('controls').innerHTML=ctrlHTML();calc();}
-document.getElementById('controls').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k;if(b.dataset.v!==undefined)S[k]=+b.dataset.v;else{const f=F.find(x=>x[0]===k);S[k]=Math.max(f[3],Math.min(f[4],S[k]+(+b.dataset.d)));}if(S.recs+S.beats>8){if(k==='recs')S.beats=8-S.recs;else S.recs=8-S.beats;}draw();});
+document.getElementById('controls').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k;if(b.dataset.v!==undefined)S[k]=+b.dataset.v;else{const f=F.find(x=>x[0]===k);S[k]=Math.max(f[3],Math.min(f[4],S[k]+(+b.dataset.d)));}if(S.recs+S.beats>8){if(k==='recs')S.beats=8-S.recs;else S.recs=8-S.beats;}if(k==='plan'&&S.sets>S.plan)S.sets=S.plan;if(k==='sets'&&S.sets>S.plan)S.plan=S.sets;draw();});
 draw();
 })();
 </script>

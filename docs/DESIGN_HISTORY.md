@@ -118,18 +118,41 @@ with a phone and a desktop. Decisions:
 - An owner-only Insights page shows the group, never a person, and hides groups under 5 people.
 - Button words: one or two plain words and an icon (Create routine, Start workout, Keep logging).
 
+### Board 06, round 2
+
+The user's review of round 1 changed these, all at the same board link:
+
+- Home on the phone leads with logging. Level, XP and streak shrink to a compact strip at the top,
+  like the player bar on Clash Royale's home screen. Desktop keeps the big level card. The Today
+  card says "Today's workout", and In progress is a slim green bar.
+- "Empty workout" is now Custom workout. The center button stays Workout with a +, on a wider
+  button. The picker shows Start workout only after an exercise is picked, with no caption.
+- Exercises done before start with last time's weight and reps filled in.
+- The finish bonus chip, the "Where the XP came from" card and Add lap are gone. Tapping XP opens a
+  small popover in the log, and an eye on the workout page's XP tile opens the breakdown.
+- The log ends with Settings and Discard side by side, like Hevy. Workout settings has four
+  switches: Sounds, Vibration, Keep screen on, Fill in last time's numbers.
+- The finish bonus means finishing the plan. The Finish dialog says when it will be missed.
+- The edit date opens in a modal. Dates read "Tue 29 Sep · 6:40 pm" everywhere.
+- A level drop gets one quiet line in the delete confirm and a toast, never an animation.
+- Big titles on Routines and Rank slide away on scroll down and return on scroll up.
+- Profile stays as v7. The goal sheet goes back to the v7 layout with the calendar inside it and
+  Pick end date.
+
 ## XP Rulebook (rules v2)
 
 `docs/design/xp-reference.html`
 
 The scoring rules in one page, with a calculator. The ideas: XP comes from effort and from
-beating yourself, never from how heavy you lift, and a real session is needed for the finish
-bonus.
+beating yourself, never from how heavy you lift, and the finish bonus is for finishing what
+you planned.
 
 - +5 a set, whatever the weight. Cardio 1 XP a minute, 30 at most a set, +10 with distance.
 - New: +10 per exercise for beating last time. A record (best ever) pays +25 instead.
-- The +50 finish bonus needs 20 work minutes, with a set counting as 3 minutes. At most 2 a day.
-- The weekly goal counts only workouts with a finish bonus.
+- The finish bonus pays when every planned exercise and set is ticked, and is worth the planned
+  sets' XP, up to 50. At most 2 a day.
+- The weekly goal counts only workouts that finished their plan.
+- Goals stay achieved once reached. XP can still drop after a delete or edit, shown quietly.
 - Iron Mover counts sets, not tonnes. Month Clear needs 25 training days. New: Goal Month and
   Clean Sweep. Plan-only badges retire.
 - The level curve stays at 50 × n × (n − 1) until the testers' data says otherwise.

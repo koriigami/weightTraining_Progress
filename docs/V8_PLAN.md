@@ -29,6 +29,78 @@ v7 is live on `main` (304f149). Using the app surfaced these problems:
 
 Everything below is agreed with the user. Photos, image share cards, Google Health, renaming the app, and plans/Trainer come later.
 
+## Board v6 feedback, round 2 (overrides anything below that conflicts)
+
+**Home**
+- On the phone, the level card shrinks to a compact top strip in the Clash Royale home style: level shield, XP bar and rank. Logging becomes the hero. The user is sending Clash Royale screenshots as a reference. Desktop keeps the big level card.
+- The Today card copy says "Today's workout" instead of "Up next".
+- The in-progress state is a slim bar, not a big green card with a big Resume, on phone and desktop. Other pages keep the Resume bar above the tabs.
+
+**Starting a workout**
+- "Empty workout" becomes **Custom workout**.
+- The center button stays **Workout +**, on a wider button with side padding so the label never touches the edge.
+- Picker:
+  - No caption line.
+  - The pinned Start workout button is hidden until at least one exercise is picked, then appears at full height.
+- Exercises logged before are prefilled with last time's sets, kg and reps, editable. Routine starts keep using the routine's values, which follow last time through Victory's "Save weights to routine".
+
+**Logging**
+- The finish bonus chip is removed on phone and desktop. An ⓘ on the XP stat explains XP in a small popover.
+- The log's end gets a row of two equal buttons, **Settings** and **Discard workout**, like Hevy.
+- Settings opens a minimal **Workout settings** page (back, title, Done) with four switches:
+  - Sounds
+  - Vibration
+  - Keep screen on (Screen Wake Lock)
+  - Fill in last time's numbers
+- It leaves out Hevy's rest timer, RPE, plate calculator, warm-up calculator and supersets. Units and weekly goal stay in the main Settings.
+- The Finish confirm says when a planned exercise isn't done, so the missed bonus is never a surprise.
+- "Add lap" is removed from cardio. Interval exercises keep their own interval sets.
+- The cardio picker must not re-animate when an activity is picked. In the board this was a redraw artifact.
+
+**Workout page**
+- Remove the "Where the XP came from" card on phone and desktop. An eye icon on the XP tile opens the breakdown in a small modal.
+- The focus goes to muscles, exercises and notes.
+
+**Edit workout**
+- The date and time picker opens as a centered game modal, not inline.
+- One date format everywhere: "Tue 29 Sep · 6:40 pm", with the year only when it isn't this year.
+
+**Level or rank drops (XP is derived, so they can happen)**
+- There is no demotion animation.
+- The delete confirm adds one line only when a boundary is crossed, for example "You'll go back to level 6."
+- After a delete, an edit, a date move, a weekly goal change or a weigh-in delete, a toast says "XP updated · Level 6".
+- Level-up moments don't replay when a level is re-reached, since the seen cache only grows.
+
+**Goals**
+- Once achieved, a goal stays achieved, keeping its XP and badge.
+- The goal sheet goes back to the v7 layout: back button, normal-size buttons, and the "New goal" title, reward line and **Create goal** pinned.
+- The chip reads **Pick end date**. The game calendar opens inside the sheet on the phone and inside the dialog on desktop, with no popover.
+
+**Profile:** revert to the v7 design. It keeps the stats chart, goals, weight, and the This month strip with its streak and workouts this month. The month grid idea is dropped.
+
+**Routines and Rank:** the large title hides on scroll down and returns on scroll up, while the tabs stay pinned.
+
+**Backlog, next plan:**
+- Consider removing page headers entirely, since the tab bar already names the page.
+- Late-stage rewards: coins spent on cosmetics, streak shields, a monthly season road. Rewards never buy XP. Options were given to the user in chat.
+
+**Round 2 is published at the same links** (board 06 and the XP Rulebook, version 2). It waits for sign-off.
+
+**Insights:** approved as designed, and built last in this iteration.
+
+**Finish bonus rule (replaces the 20 work-minutes rule)**
+- It is paid when every exercise and set in the plan is ticked.
+  - The plan is the routine, or what was picked before Start workout.
+  - Exercises added on top don't count against you.
+  - A swapped exercise keeps its slot.
+- The bonus equals the XP of the planned sets, capped at 50.
+  - A 15-set routine pays 50.
+  - A plan of 3 curl sets pays 15.
+  - A planned 30-minute ride pays 40.
+- At most 2 a day.
+- The weekly goal counts workouts that finished their plan.
+- The XP Rulebook's finish-bonus section and calculator get updated. The rest of the Rulebook is accepted for now; the user will review it in depth later.
+
 ## Decisions (signed off in chat)
 
 ### Workout flow
@@ -152,7 +224,9 @@ Everything below is agreed with the user. Photos, image share cards, Google Heal
 
 ## Order of work
 
-1. **Design (Opus):**
+Status: step 1 is done and committed as c91c74c on the branch. Board 06 is at https://claude.ai/artifact/XrqbkePKW7kztpKpebJy7V and the XP Rulebook at https://claude.ai/artifact/QjPR5Tes6iXn9AtQmqWsjX. Both are also in `docs/design/`. The build starts once the user signs off.
+
+1. **Design (Opus), done:**
    - Board v6 as a new artifact and `docs/design/06-ux-fixes-board-v6.html`. It is built from board 05's tokens and components and has a nav-label toggle.
    - The XP and badge reference page as an artifact and `docs/design/xp-reference.html`. It covers the level table 1 to 35 with ranks, every XP source with examples, the beat-last-time and record rules, the finish rule with a small calculator, the badge catalogue with tiers and XP, a college student vs bodybuilder worked example, and where each rule shows in the app.
    - The user signs off, and any feedback round happens here.

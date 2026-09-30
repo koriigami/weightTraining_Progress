@@ -846,32 +846,89 @@ a.cardlink,button.cardlink{display:block;color:inherit;text-decoration:none;text
 .dt-stats .stat b{font-size:15px}
 .bar-sub .seg button{font-size:15px;white-space:nowrap;padding:0 6px}
 .linkhead b{white-space:nowrap}
+/* ============ round 2 ============ */
+.startfab{width:auto;min-width:88px;padding:0 12px;font-size:12px;letter-spacing:.03em}
+.lvstrip{flex:none;position:relative;z-index:2;display:flex;align-items:center;gap:10px;margin:2px 12px 8px;padding:6px 12px 6px 6px;border-radius:18px;background:var(--hero);border:2px solid #F5C542;box-shadow:0 3px 0 #154A94,0 10px 20px -14px rgba(20,60,120,.7);color:#fff;text-align:left;--stroke:var(--hero-stroke);font:inherit;cursor:pointer}
+.wide .lvstrip{margin:0}
+.lv-mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.lv-top{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+.lv-top b{font-family:var(--font-num);font-weight:400;font-size:19px;line-height:1;text-shadow:0 2px 0 var(--hero-stroke)}
+.lv-top small{font-weight:800;font-size:12px;opacity:.92;white-space:nowrap}
+.lvbar{height:18px}
+.lvbar em{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-family:var(--font-num);font-size:12px;color:#fff;z-index:1;text-shadow:0 1px 0 #0E3A7A,1px 0 0 #0E3A7A,-1px 0 0 #0E3A7A,0 -1px 0 #0E3A7A}
+.lv-streak{display:flex;align-items:center;gap:2px;font-family:var(--font-num);font-size:19px;color:#FFE68F;text-shadow:0 2px 0 var(--hero-stroke)}
+.lv-streak .ic{color:#FF9A3C}
+.livebar{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;border:0;border-radius:16px;background:linear-gradient(180deg,var(--p1),var(--p2));color:#fff;padding:8px 14px;box-shadow:0 3px 0 var(--p-bevel),0 10px 20px -10px var(--p-glow);text-align:left;font:inherit;cursor:pointer}
+.livebar .livedot{color:#fff;font-size:18px}
+.livebar .livedot::before{background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.3)}
+.livebar b{display:block;font-family:var(--font-num);font-weight:400;font-size:18px;line-height:1.1;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.livebar small{font-weight:700;opacity:.92}
+.lb-r{display:flex;align-items:center;gap:2px;font-family:var(--font-num);font-size:16px;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.statbtn{border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.statbtn small{display:inline-flex;align-items:center;gap:3px}
+.statbtn small .ic{color:var(--link)}
+.dt-stats .statbtn{background:var(--calm);border:1px solid var(--line);border-radius:14px;padding:8px}
+.xppop{position:absolute;right:12px;top:150px;z-index:25;width:260px;background:linear-gradient(180deg,#FFFDF5,#FFF1CF);border:2.5px solid #E3B03A;border-radius:16px;box-shadow:0 4px 0 #C8932A,0 20px 40px -16px rgba(60,30,0,.55);padding:12px 14px;display:flex;flex-direction:column;gap:6px;font-size:14px;animation:gmin .2s}
+.xp-h{font-family:var(--font-num);font-weight:400;font-size:18px}
+.xl{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.xl small{display:block;color:var(--muted);font-weight:600;font-size:12.5px}
+.xl.total{border-bottom:0;font-weight:800}
+.xppop-f{display:flex;gap:8px;align-items:flex-start;font-weight:700;font-size:13px;color:var(--ok-deep);background:var(--ok-soft);border-radius:10px;padding:8px}
+.xppop .textbtn{align-self:flex-end}
+.end-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-top:16px;border-top:2px dashed rgba(200,50,42,.2)}
+.end-row .btn{width:100%}
+.swrow{display:flex;align-items:center;gap:12px;padding:14px 10px}
+.swrow+.swrow{border-top:1px solid var(--line)}
+.swrow b{display:block;font-weight:800}
+.swrow small{color:var(--muted);font-weight:600;font-size:13px}
+.dp.flat{background:none;border:0;box-shadow:none;padding:0}
+.gmodal.dpm{width:min(340px,100%)}
+.gsheet{display:flex;flex-direction:column;padding:0;max-height:88%;overflow:hidden}
+.gs-head{flex:none;padding:8px 16px 10px;border-bottom:1px solid var(--line)}
+.gs-head h3{margin:4px 0 0}
+.gs-head small{color:var(--muted);font-weight:700}
+.gs-body{flex:1;min-height:0;overflow:auto;padding:12px 16px 16px}
+.gs-foot{flex:none;padding:10px 16px 14px;border-top:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;gap:8px;box-shadow:0 -10px 20px -14px rgba(120,80,20,.45)}
+.gs-reward{display:flex;justify-content:space-between;align-items:center;font-weight:800}
+.gs-foot .btn{width:100%}
+.wide .gsheet{width:480px;max-height:92%;padding:0}
+.app.phone .bar.lg{transition:height .25s ease,opacity .2s ease;overflow:hidden}
+.app.phone.hide-title .bar.lg{height:0;opacity:0}
+.tabbar{grid-template-columns:repeat(2,minmax(0,1fr)) auto repeat(2,minmax(0,1fr));gap:2px}
+.today-h .eyebrow{white-space:nowrap}
+.livebar small{white-space:nowrap}
+.dpm .gm-body{padding:16px 14px 0}
+.dpm .tp{gap:4px}
+.dpm .tp .cell{width:42px}
+.dpm .segmini button{min-width:34px;padding:0 6px}
+.dt-stats{gap:6px}
+.dt-stats .stat b{font-size:14px}
 </style>
 <div class="page-sky sky" aria-hidden="true"><i></i><i></i><i></i></div>
 <main class="board">
   <header class="intro">
     <h1 class="gt">UX Fixes Board v6</h1>
-    <p>Fixes from using the app day to day. Same Arena Bright look and Deep Sky hero as board 05. Every screen below is a real state you will hit, shown side by side. The ones marked "Try it" respond to taps.</p>
+    <p>Round 2, after your review. Same Arena Bright look as board 05. Every screen below is a real state, shown side by side. The ones marked "Try it" respond to taps.</p>
     <div class="why">
-      <div><b>Nothing starts by accident</b><span>Empty workout and cardio open a picker first. The clock only runs after you tap Start workout.</span></div>
-      <div><b>Home knows about today</b><span>One Today card: what's up next, what's in progress, or what you already did. This week opens the calendar.</span></div>
-      <div><b>Every workout has a page</b><span>Tap any workout to see it, edit anything in it, or delete it. Cards show the routine it came from.</span></div>
+      <div><b>Logging leads Home</b><span>Level and XP shrink to a strip at the top, Clash Royale style. Today's workout is the big thing on screen.</span></div>
+      <div><b>Less on screen</b><span>No finish bonus chip, no XP card on the workout page, no Add lap. Tap XP when you want the detail.</span></div>
+      <div><b>Finish what you planned</b><span>The finish bonus now means every planned exercise done. Custom workout replaces Empty workout, and Settings joins the log.</span></div>
     </div>
-    <div class="navpick" id="navPick"><span>Center button</span></div>
+    
   </header>
 
   <section>
-    <div class="sec-h"><h2 class="gt">Home</h2><p>The Today card replaces Up next and the yellow Empty workout block. It has three states. Start the suggested routine in one tap, or pick something else right under it.</p></div>
+    <div class="sec-h"><h2 class="gt">Home</h2><p>A compact level strip on top, then Today's workout with one big Start. In progress is a slim bar. The desktop keeps the big level card.</p></div>
     <div class="shots" data-sec="home"></div>
   </section>
 
   <section>
-    <div class="sec-h"><h2 class="gt">Starting a workout</h2><p>The center button says what it does. Its sheet lists your routines, cardio, and Empty workout, each with a line that explains it.</p></div>
+    <div class="sec-h"><h2 class="gt">Starting a workout</h2><p>The Workout button opens your routines, cardio and Custom workout. Custom workout picks exercises first and shows Start workout once one is picked.</p></div>
     <div class="shots" data-sec="start"></div>
   </section>
 
   <section>
-    <div class="sec-h"><h2 class="gt">Logging</h2><p>The stats row shows what matters for what you're logging. A chip shows how close you are to the finish bonus, and exercises show when you beat last time or set a record.</p></div>
+    <div class="sec-h"><h2 class="gt">Logging</h2><p>The stats row fits what you're logging, and XP opens a small popover. Exercises still show Beat last time and Record. Settings sits next to Discard.</p></div>
     <div class="shots" data-sec="log"></div>
     <div class="panel stripes" style="margin-top:28px">
       <b>The stats row adapts</b>
@@ -882,17 +939,17 @@ a.cardlink,button.cardlink{display:block;color:inherit;text-decoration:none;text
   </section>
 
   <section>
-    <div class="sec-h"><h2 class="gt">Past workouts</h2><p>Cards open a workout page. Everything can be edited there with the same layout as logging, just without a running clock. Delete asks first.</p></div>
+    <div class="sec-h"><h2 class="gt">Past workouts</h2><p>The workout page leads with muscles, exercises and notes. XP detail sits behind the eye on the XP tile. The date opens in a modal. A level drop gets one quiet line, never an animation.</p></div>
     <div class="shots" data-sec="past"></div>
   </section>
 
   <section>
-    <div class="sec-h"><h2 class="gt">Routines and Rank</h2><p>Tabs sit in the pinned header, so they never scroll away. Scroll these phones to check.</p></div>
+    <div class="sec-h"><h2 class="gt">Routines and Rank</h2><p>The big title slides away as you scroll down and comes back when you scroll up. The tabs never move.</p></div>
     <div class="shots" data-sec="nav"></div>
   </section>
 
   <section>
-    <div class="sec-h"><h2 class="gt">Profile, onboarding and dates</h2><p>A real month on Profile, Skip moved out of Continue's way, and one date picker in the game style that opens inside the sheet you're in.</p></div>
+    <div class="sec-h"><h2 class="gt">Onboarding and goals</h2><p>Profile stays exactly as it is in the app today. The goal sheet goes back to today's layout, with the game calendar inside it.</p></div>
     <div class="shots" data-sec="misc"></div>
   </section>
 
@@ -915,10 +972,10 @@ a.cardlink,button.cardlink{display:block;color:inherit;text-decoration:none;text
       <table>
         <thead><tr><th>Before</th><th>After</th><th>Where</th></tr></thead>
         <tbody>
-          <tr><td>START</td><td>Workout, with a + icon (or Train, see the toggle at the top)</td><td>Phone nav center button, desktop sidebar</td></tr>
+          <tr><td>START</td><td>Workout, with a + icon, on a wider button</td><td>Phone nav center button, desktop sidebar</td></tr>
           <tr><td>New routine</td><td>Create routine, with a + icon</td><td>Routines tab and desktop header</td></tr>
-          <tr><td>Empty workout (yellow block on Home)</td><td>Empty workout, with "Pick exercises, then start"</td><td>Start sheet and the Today card</td></tr>
-          <tr><td>Something else?</td><td>Other routine, Cardio, Empty workout</td><td>Today card</td></tr>
+          <tr><td>Empty workout</td><td>Custom workout, with "Pick exercises, then start"</td><td>Start sheet, the Today card and the picker title</td></tr><tr><td>Up next</td><td>Today's workout</td><td>Home</td></tr><tr><td>Pick date</td><td>Pick end date</td><td>New goal</td></tr><tr><td>(none)</td><td>Settings, next to Discard workout</td><td>End of the log</td></tr>
+          <tr><td>Something else?</td><td>Other routine, Cardio, Custom workout</td><td>Today card</td></tr>
           <tr><td>Quick log</td><td>Cardio</td><td>Start sheet</td></tr>
           <tr><td>Add N exercises (when starting empty)</td><td>Start workout</td><td>Exercise picker for a new workout</td></tr>
           <tr><td>Try now</td><td>Start</td><td>Explore routine preview</td></tr>
@@ -938,7 +995,7 @@ a.cardlink,button.cardlink{display:block;color:inherit;text-decoration:none;text
     <div class="panel">
       <ul>
         <li>The 6-week plan: its calendar page, the "6-week plan" button on Calendar, the link on Home and the tag on workout cards. Days you logged on the plan become normal past workouts.</li>
-        <li>The Up next card's yellow Empty workout block and the desktop "Something else?" card. The Today card covers both.</li>
+        <li>The Up next card's yellow Empty workout block and the desktop "Something else?" card. The Today card covers both.</li><li>The finish bonus chip, the "Where the XP came from" card and Add lap. XP detail is one tap away instead.</li><li>The month grid on Profile. Profile stays as it is today.</li>
         <li>The Resume bar above the tabs while you're on Home, since the Today card already shows the workout in progress. It stays on every other tab.</li>
       </ul>
     </div>
@@ -1142,20 +1199,24 @@ const BEST = { 'db-row': [10, 12], 'db-1row': [12.5, 8], 'db-rfly': [4, 10], 'db
 function hero() {
   return `<section class="hero"><div class="hero-row">${shield('D', 54, 7)}<div><div class="lvl gt">Level 7</div><div class="hero-t">D-Rank Hunter</div></div></div><div class="xpbar"><i style="width:55%"></i></div><div class="hero-xp"><span>2,485 / 2,800 XP</span><span>315 to level 8</span></div></section>`;
 }
+function levelStrip() {
+  return `<button class="lvstrip" aria-label="Level 7, 2,485 of 2,800 XP, 3 week streak. Open Rank">${shield('D', 44, 7)}<span class="lv-mid"><span class="lv-top"><b>Level 7</b><small>D-Rank Hunter</small></span><span class="xpbar lvbar"><i style="width:55%"></i><em>2,485 / 2,800 XP</em></span></span><span class="lv-streak" title="3 week streak">${ic('flame', 18)}3</span></button>`;
+}
+const liveBar = () => `<button class="livebar" aria-label="Resume Pull A"><span class="livedot">31:08</span><span class="flex1"><b>Pull A</b><small>7 of 13 sets done</small></span><span class="lb-r">Resume${ic('chevR', 16)}</span></button>`;
 function weekCard(doneToday) {
   const days = [[28, 1], [29, doneToday], [30], [1], [2], [3], [4]], L = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   return `<a class="card cardlink" href="#cal" data-a="noop" aria-label="This week, open the calendar"><div class="linkhead"><b>This week</b><span>Calendar${ic('chevR', 16)}</span></div><div class="weekrow">${days.map(([d, dn], i) => `<div class="wd ${dn ? 'done' : ''} ${i === 1 ? 'today' : ''}">${L[i]}<i>${dn ? ic('check', 16) : d}</i></div>`).join('')}</div><div class="streakrow"><span><span class="flame">${ic('flame', 18)}</span>3 week streak</span><span>${doneToday ? 2 : 1} of 5 this week</span></div></a>`;
 }
 const thumbs = ids => `<div class="tm-thumbs">${ids.map(id => thumb(byId[id], 38)).join('')}</div>`;
 function todayCard(state, w) {
-  if (state === 'live') return `<section class="card today live" aria-label="Today"><div class="today-h"><span class="eyebrow ok">In progress</span><span class="livedot">31:08</span></div><div class="today-main"><div class="tm-t"><h3>Pull A</h3><small>7 of 13 sets · 2 of 5 exercises</small></div>${w ? thumbs(['db-row', 'db-1row', 'db-rfly', 'db-curl']) : ''}</div><div class="xpbar mb thin"><i style="width:54%"></i></div>${B('p', 'Resume', { lg: 1, block: 1, icon: 'play' })}</section>`;
+  if (state === 'live') return liveBar();
   if (state === 'done') {
-    const rows = [`<button class="dn-row">${thumb(byId['db-row'], 44)}<div class="flex1"><b>Pull A</b><small>52 min · 12 sets · +155 XP</small></div>${ic('chevR', 18)}</button>`];
-    if (w) rows.push(`<button class="dn-row"><span class="dn-ic">${ic('bike', 22)}</span><div class="flex1"><b>Evening ride</b><small>32 min · 11.2 km · +100 XP</small></div>${ic('chevR', 18)}</button>`);
-    return `<section class="card today" aria-label="Today"><div class="today-h"><span class="eyebrow ok">${ic('check', 14)} Done today</span><b class="xpv">+${w ? 255 : 155} XP</b></div><div class="dn-list">${rows.join('')}</div>${w ? '' : `<div class="gentle"><span class="chev">${ic('bike', 20)}</span><div class="flex1">Treadmill from Pull A isn't logged yet.</div><button class="textbtn sm">Log it</button></div>`}<div class="today-next"><div class="flex1"><small>Next time</small><b>Legs</b><small>4 exercises · 12 sets</small></div>${B('t', 'Start', { sm: 1, icon: 'play' })}</div></section>`;
+    const rows = [`<button class="dn-row">${thumb(byId['db-row'], 44)}<div class="flex1"><b>Pull A</b><small>52 min · 12 sets · +105 XP</small></div>${ic('chevR', 18)}</button>`];
+    if (w) rows.push(`<button class="dn-row"><span class="dn-ic">${ic('bike', 22)}</span><div class="flex1"><b>Evening ride</b><small>32 min · 11.2 km · +90 XP</small></div>${ic('chevR', 18)}</button>`);
+    return `<section class="card today" aria-label="Today"><div class="today-h"><span class="eyebrow ok">${ic('check', 14)} Done today</span><b class="xpv">+${w ? 195 : 105} XP</b></div><div class="dn-list">${rows.join('')}</div>${w ? '' : `<div class="gentle"><span class="chev">${ic('bike', 20)}</span><div class="flex1">Treadmill from Pull A isn't logged yet.</div><button class="textbtn sm">Log it</button></div>`}<div class="today-next"><div class="flex1"><small>Next time</small><b>Legs</b><small>4 exercises · 12 sets</small></div>${B('t', 'Start', { sm: 1, icon: 'play' })}</div></section>`;
   }
-  const main = `<div class="today-h"><span class="eyebrow">Up next</span><span class="wk">0 of 1 this week</span></div><div class="today-main"><div class="tm-t"><h3>Pull A</h3><small>5 exercises · about 50 min</small></div>${thumbs(['db-row', 'db-1row', 'db-rfly', 'db-curl'])}</div>`;
-  const alts = `<div class="today-alt"><button class="alt">${ic('clipboard', 20)}Other routine</button><button class="alt">${ic('bike', 20)}Cardio</button><button class="alt">${ic('plus', 20)}Empty workout</button></div>`;
+  const main = `<div class="today-h"><span class="eyebrow">Today's workout</span><span class="wk">0 of 1 this week</span></div><div class="today-main"><div class="tm-t"><h3>Pull A</h3><small>5 exercises · about 50 min</small></div>${thumbs(['db-row', 'db-1row', 'db-rfly', 'db-curl'])}</div>`;
+  const alts = `<div class="today-alt"><button class="alt">${ic('clipboard', 20)}Other routine</button><button class="alt">${ic('bike', 20)}Cardio</button><button class="alt">${ic('plus', 20)}Custom workout</button></div>`;
   return `<section class="card today" aria-label="Today">${main}${B('p', 'Start Pull A', { lg: 1, block: 1, icon: 'play' })}${alts}</section>`;
 }
 function wline(id, text, tag = '') { return `<div class="wc-line">${thumb(byId[id], 32)}<span class="flex1">${text}</span>${tag}</div>`; }
@@ -1196,10 +1257,11 @@ function speedOrPace(kind, min, km) {
   const p = min / km, m = Math.floor(p), s = Math.round((p - m) * 60);
   return ['Pace', `${m}:${String(s).padStart(2, '0')} /km`];
 }
+function xpStat(v) { return `<button class="stat statbtn" ${v.shot ? `data-a="xpinfo" data-shot="${v.shot}"` : ''} aria-label="XP so far: ${v.xp}. What counts"><small>XP ${ic('info', 12)}</small><b class="xpv">${v.xp}</b></button>`; }
 function statsRow(kind, v) {
-  if (kind === 'cardio') { const [l, x] = speedOrPace(v.ck, v.cmin, v.km); return stat('Time', `${v.cmin || 0} min`) + stat('Distance', `${v.km || 0} km`) + stat(l, x) + stat('XP', v.xp, 'xpv'); }
-  if (kind === 'mixed') return stat('Duration', v.dur) + stat('Volume', `${fmt(Math.round(v.vol))} kg`) + (v.km > 0 ? stat('Distance', `${v.km} km`) : stat('Cardio', `${v.cmin} min`)) + stat('XP', v.xp, 'xpv');
-  return stat('Duration', v.dur) + stat('Volume', `${fmt(Math.round(v.vol))} kg`) + stat('Sets', v.sets) + stat('XP', v.xp, 'xpv');
+  if (kind === 'cardio') { const [l, x] = speedOrPace(v.ck, v.cmin, v.km); return stat('Time', `${v.cmin || 0} min`) + stat('Distance', `${v.km || 0} km`) + stat(l, x) + xpStat(v); }
+  if (kind === 'mixed') return stat('Duration', v.dur) + stat('Volume', `${fmt(Math.round(v.vol))} kg`) + (v.km > 0 ? stat('Distance', `${v.km} km`) : stat('Cardio', `${v.cmin} min`)) + xpStat(v);
+  return stat('Duration', v.dur) + stat('Volume', `${fmt(Math.round(v.vol))} kg`) + stat('Sets', v.sets) + xpStat(v);
 }
 const GRID = 'grid-template-columns:34px minmax(0,1fr) 54px 50px 42px';
 function exBlock(shot, idx, it, o = {}) {
@@ -1212,10 +1274,14 @@ function cardioBlock(shot, c) {
   const [l, x] = speedOrPace(c.kind, +c.min, +c.km);
   let m = '';
   if (logged && c.last) { if (+c.km > c.best) m = mkHTML({ k: 'rec', t: 'Longest ride +25' }); else if (+c.km > c.last) m = mkHTML({ k: 'beat', t: 'Further than last time +10' }); }
-  return `<div class="exblock cc"><div class="eb-top">${thumb(e, 40)}<button class="eb-name">${e.n}</button><span class="logged ${logged ? '' : 'no'}">${logged ? ic('check', 13) + 'Logged' : 'Add a time'}</span></div><div class="bigf"><div class="bf"><label for="${shot}-min">Time</label><div class="in"><input id="${shot}-min" inputmode="decimal" value="${c.min}" placeholder="0" data-a="cc" data-shot="${shot}" data-k="min"><span class="u">min</span></div></div><div class="bf"><label for="${shot}-km">Distance</label><div class="in"><input id="${shot}-km" inputmode="decimal" value="${c.km}" placeholder="0" data-a="cc" data-shot="${shot}" data-k="km"><span class="u">km</span></div></div></div><div class="cc-meta"><span class="muted">${l}</span><b>${x}</b></div>${c.follow ? `<div class="follow">${ic('clock', 16)}Time follows the clock until you type in it.</div>` : ''}<div class="eb-mk">${m}</div>${B('g', 'Add lap', { block: 1, icon: 'plus' })}</div>`;
+  return `<div class="exblock cc"><div class="eb-top">${thumb(e, 40)}<button class="eb-name">${e.n}</button><span class="logged ${logged ? '' : 'no'}">${logged ? ic('check', 13) + 'Logged' : 'Add a time'}</span></div><div class="bigf"><div class="bf"><label for="${shot}-min">Time</label><div class="in"><input id="${shot}-min" inputmode="decimal" value="${c.min}" placeholder="0" data-a="cc" data-shot="${shot}" data-k="min"><span class="u">min</span></div></div><div class="bf"><label for="${shot}-km">Distance</label><div class="in"><input id="${shot}-km" inputmode="decimal" value="${c.km}" placeholder="0" data-a="cc" data-shot="${shot}" data-k="km"><span class="u">km</span></div></div></div><div class="cc-meta"><span class="muted">${l}</span><b>${x}</b></div>${c.follow ? `<div class="follow">${ic('clock', 16)}Time follows the clock until you type in it.</div>` : ''}<div class="eb-mk">${m}</div></div>`;
 }
-function logEnd() { return `<div class="log-end">${B('t', 'Add exercise', { block: 1, icon: 'plus' })}<div class="danger-zone">${B('ds', 'Discard workout', { sm: 1, icon: 'trash' })}</div></div>`; }
-
+function logEnd(shot) { return `<div class="log-end">${B('t', 'Add exercise', { block: 1, icon: 'plus' })}<div class="end-row">${B('t', 'Settings', { sm: 1, icon: 'settings', a: shot ? `data-a="settings" data-shot="${shot}"` : '' })}${B('ds', 'Discard workout', { sm: 1, icon: 'trash' })}</div></div>`; }
+function settingsPage(shot) {
+  const S = ST.wset;
+  const row = (t, s, k) => `<div class="swrow"><div class="flex1"><b>${t}</b><small>${s}</small></div><button class="switch" role="switch" aria-checked="${!!S[k]}" aria-label="${t}" data-a="sw" data-shot="${shot}" data-k="${k}"><i></i></button></div>`;
+  return bar(`<button class="backbtn" aria-label="Back to the workout" data-a="setback" data-shot="${shot}">${ic('chevL', 20)}</button>`, 'Workout settings', `<button class="textbtn" data-a="setback" data-shot="${shot}">Done</button>`) + scr(`<div class="card setpanel">${row('Sounds', 'A sound when you tick a set, finish or level up', 'sounds')}${row('Vibration', 'A short buzz when you tick a set', 'vib')}${row('Keep screen on', 'Your phone stays awake while a workout is running', 'awake')}${row('Fill in last time\'s numbers', 'New sets start with the weight and reps from your last workout', 'fill')}</div><div class="info">${ic('info', 16)}<span>These apply to every workout. Units and your weekly goal are in Settings.</span></div>`);
+}
 /* ---------- date picker ---------- */
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const iso = (y, m, d) => `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -1228,17 +1294,20 @@ function dpHTML(shot, st, o = {}) {
     const k = iso(st.y, st.m, d), dis = (o.min && k < o.min) || (o.max && k > o.max);
     cells += `<button class="dd ${k === TODAY ? 'today' : ''} ${k === st.sel ? 'sel' : ''}" ${dis ? 'disabled' : ''} aria-pressed="${k === st.sel}" aria-label="${d} ${MONTHS[st.m]}" data-a="dp-day" data-shot="${shot}" data-d="${k}">${d}</button>`;
   }
-  const selTxt = st.sel ? (() => { const [y, m, d] = st.sel.split('-').map(Number); const wd = new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' }); return `${wd} ${d} ${MONTHS[m - 1].slice(0, 3)} ${y}`; })() : 'Pick a day';
-  return `<div class="dp ${o.pop ? 'popover' : ''}" ${o.style ? `style="${o.style}"` : ''}><div class="dp-h"><button class="backbtn" aria-label="Previous month" data-a="dp-prev" data-shot="${shot}">${ic('chevL', 18)}</button><b>${MONTHS[st.m]} ${st.y}</b><button class="backbtn" aria-label="Next month" data-a="dp-next" data-shot="${shot}">${ic('chevR', 18)}</button></div><div class="dp-g">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(x => `<span class="dow">${x}</span>`).join('')}${cells}</div>${o.time ? `<div class="dp-foot"><span>Time</span><span class="tp"><input class="cell" aria-label="Hour" value="6"><b>:</b><input class="cell" aria-label="Minutes" value="40"><span class="segmini"><button aria-pressed="false">am</button><button aria-pressed="true">pm</button></span></span></div>` : `<div class="dp-foot"><span class="muted">Ends</span><span>${selTxt}</span></div>`}</div>`;
+  const selTxt = st.sel ? (() => { const [y, m, d] = st.sel.split('-').map(Number); const wd = new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' }); return `${wd} ${d} ${MONTHS[m - 1].slice(0, 3)}${y !== 2026 ? ' ' + y : ''}`; })() : 'Pick a day';
+  return `<div class="dp ${o.flat ? 'flat' : ''}"><div class="dp-h"><button class="backbtn" aria-label="Previous month" data-a="dp-prev" data-shot="${shot}">${ic('chevL', 18)}</button><b>${MONTHS[st.m]} ${st.y}</b><button class="backbtn" aria-label="Next month" data-a="dp-next" data-shot="${shot}">${ic('chevR', 18)}</button></div><div class="dp-g">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(x => `<span class="dow">${x}</span>`).join('')}${cells}</div>${o.time ? `<div class="dp-foot"><span>Time</span><span class="tp"><input class="cell" aria-label="Hour" value="6"><b>:</b><input class="cell" aria-label="Minutes" value="40"><span class="segmini"><button aria-pressed="false">am</button><button aria-pressed="true">pm</button></span></span></div>` : `<div class="dp-foot"><span class="muted">Ends</span><span>${selTxt}</span></div>`}</div>`;
 }
-
 /* ---------- shots ---------- */
 const ST = {
   picker: { sel: [] },
   cpick: { act: null },
   ride: { min: '32', km: '11.2', kind: 'ride', id: 'bike', last: 9, best: 12, follow: 1 },
-  pull: { items: PULL_A.map(([id, n, kg, reps], i) => ({ id, sets: Array.from({ length: n }, (_, j) => ({ kg, reps, done: (i === 0 && j < 2) || (i === 1 && j === 0) })) })), tread: { min: '', km: '', kind: 'run', id: 'treadmill' } },
-  edit: { dp: { y: 2026, m: 8, sel: '2026-09-29' } },
+  pull: { settings: false, items: PULL_A.map(([id, n, kg, reps], i) => ({ id, sets: Array.from({ length: n }, (_, j) => ({ kg, reps, done: (i === 0 && j < 2) || (i === 1 && j === 0) })) })), tread: { min: '', km: '', kind: 'run', id: 'treadmill' } },
+  wset: { sounds: true, vib: true, awake: true, fill: true },
+  pop: { pull: false, ride: false },
+  detail: { xp: false },
+  xpm: {},
+  edit: { modal: true, dp: { y: 2026, m: 8, sel: '2026-09-29' } },
   goal: { dp: { y: 2026, m: 9, sel: '2026-10-31' } },
   routines: { list: ['Pull A', 'Push A', 'Legs', 'Push B', 'Pull B', 'Full Body'], menu: null, confirm: false },
   rank: { tab: 'road' },
@@ -1248,80 +1317,98 @@ const R_ITEMS = { 'Pull A': ['db-row', 'db-1row', 'db-rfly', 'db-curl', 'treadmi
 const rrowsFor = ids => `<div class="rrows">${ids.map(id => { const e = byId[id]; const s = e.m === 'dt' ? '15 min' : e.m === 't' ? '3 × 40 s' : '3 × 10'; return `<div class="rrow">${thumb(e, 28)}<span class="rn">${e.n}</span><span class="rs">${s}</span></div>`; }).join('')}</div>`;
 
 function homeScreen(state) {
-  return barLg('Home', rankchip()) + scr(`${hero()}${todayCard(state)}${weekCard(state === 'done')}<div class="sechead"><div class="sec-label">Recent workouts</div><button class="textbtn sm">See all</button></div>${feedCard('pushA')}`) + tabbar('home');
+  return levelStrip() + scr(`${todayCard(state)}${weekCard(state === 'done')}<div class="sechead"><div class="sec-label">Recent workouts</div><button class="textbtn sm">See all</button></div>${feedCard('pushA')}`) + tabbar('home');
 }
 const SHOTS = [
   { id: 'home-ready', sec: 'home', t: 'Ready', s: 'Nothing logged today', b: () => homeScreen('ready'),
-    n: ['The suggested routine gets the big Start. It\'s the least recently done routine still under its weekly count.', 'Other routine, Cardio and Empty workout sit right under it, so the way to log anything is on Home.', 'This week is one big tap target that opens the calendar.'] },
+    n: ['Level, XP and streak sit in one compact strip at the top, like Clash Royale\'s. Tap it for the Rank Road.', 'Today\'s workout is the biggest thing on the screen, with one big Start.', 'Other routine, Cardio and Custom workout sit right under it.', 'This week opens the calendar.'] },
   { id: 'home-live', sec: 'home', t: 'In progress', s: 'A workout is running', b: () => homeScreen('live'),
-    n: ['The same card turns green and shows the clock and sets done.', 'Resume opens the log. The Resume bar above the tabs is hidden on Home, since this card already shows it.'] },
+    n: ['A slim green bar replaces the card: clock, routine, sets done, Resume.', 'Every other tab shows the same kind of bar above the tabs, as the app does today.'] },
   { id: 'home-done', sec: 'home', t: 'Done today', s: 'Pull A finished at the gym', b: () => homeScreen('done'),
-    n: ['What you did today, with its XP. Tap a row to open the workout.', 'The routine had a treadmill block you didn\'t log. A gentle row offers it as its own cardio workout. It goes away once you log cardio today, or tomorrow.', 'Next time shows the next routine without pushing it. Start is secondary here.'] },
-  { id: 'start-sheet', sec: 'start', t: 'Start sheet', s: 'The center button', b: () => homeScreen('ready') + startSheet(),
-    n: ['Routines first, with the one that\'s up next tagged.', 'Cardio tiles open the cardio picker with that activity already chosen.', 'Empty workout explains itself: pick exercises, then start.', 'Use the toggle at the top of the board to compare Workout and Train on the button.'] },
-  { id: 'picker', sec: 'start', t: 'Empty workout', s: 'Try it: pick exercises', b: pickerScreen, tryit: 1,
-    n: ['Start workout stays disabled until you pick at least one exercise.', 'The clock starts only when you tap Start workout. Cancel starts nothing.', 'Once a workout is running, this same picker says Add N exercises instead.'] },
+    n: ['Each workout from today with its XP. Tap a row to open it.', 'Pull A earned no finish bonus, since the treadmill wasn\'t done. The gentle row offers the treadmill as its own cardio workout.', 'Next time shows the next routine, quietly.'] },
+  { id: 'start-sheet', sec: 'start', t: 'Start sheet', s: 'The Workout button', b: () => homeScreen('ready') + startSheet(),
+    n: ['The center button is Workout with a +, on a wider button with room around the word.', 'Your routines first, with today\'s tagged. Then cardio. Then Custom workout: pick exercises, then start.'] },
+  { id: 'picker', sec: 'start', t: 'Custom workout', s: 'Try it: pick exercises', b: pickerScreen, tryit: 1,
+    n: ['No button at the bottom until you pick an exercise. Then Start workout appears, at full height.', 'Nothing starts until you tap it.'] },
   { id: 'started', sec: 'start', t: 'Just started', s: 'After tapping Start workout', b: startedScreen,
-    n: ['The clock reads 0:04, because it started on the tap.', 'The finish bonus chip starts at 0 of 7 sets.'] },
-  { id: 'pull', sec: 'log', t: 'Strength log', s: 'Try it: tick sets, change weights', b: pullScreen, tryit: 1,
-    n: ['Bent Over Row at 12.5 kg beats your best of 10 kg, so it shows Record +25.', 'Single Arm Row: 10 kg for 12 beats last time (10 for 10), so +10. Your best is still 12.5 kg for 8, so it isn\'t a record.', 'Tick 4 more sets to fill the finish bonus chip. Type minutes on the treadmill and the stats row switches to strength and cardio.'] },
+    n: ['Exercises you\'ve done before start with last time\'s weight and reps filled in. Change them as you go.', 'A new exercise starts empty.', 'Settings sits next to Discard at the end, like Hevy.'] },
+  { id: 'pull', sec: 'log', t: 'Strength log', s: 'Try it: tick sets, tap XP, tap Settings', b: pullScreen, tryit: 1,
+    n: ['The finish bonus chip is gone. Tap XP to see what you\'ve earned so far and how many planned exercises are left.', 'Record +25 and Beat last time +10 still show on each exercise.', 'Settings opens Workout settings. Type minutes on the treadmill and the stats row switches to strength and cardio.'] },
+  { id: 'finish', sec: 'log', t: 'Finish', s: 'A planned exercise isn\'t done', b: () => pullScreen() + finishModal(),
+    n: ['The finish bonus needs every planned exercise done. The dialog says so before you finish, so nothing is a surprise.'] },
+  { id: 'wset', sec: 'log', t: 'Workout settings', s: 'Try it: the switches', b: () => settingsPage('wset'), tryit: 1,
+    n: ['Four switches, nothing else. Hevy\'s rest timer, RPE, plate calculator, warm-ups and supersets are left out.', 'Units and weekly goal stay in the main Settings.'] },
   { id: 'cpick', sec: 'log', t: 'Cardio picker', s: 'Try it: choose an activity', b: cardioPickScreen, tryit: 1,
-    n: ['Same rule as Empty workout: nothing starts until you tap Start workout.', 'Opened from a Cardio tile, the tile you tapped is already chosen.'] },
+    n: ['Picking an activity only highlights it. The sheet stays put.', 'Start workout appears once an activity is picked.'] },
   { id: 'ride', sec: 'log', t: 'Cardio log', s: 'Try it: change time or distance', b: rideScreen, tryit: 1,
-    n: ['Time, Distance, Speed and XP. No Volume or Sets on a ride.', 'Two big fields instead of a table. Time follows the clock until you type in it, so a ride you already did takes two numbers.', 'A ride shows speed. A run or walk shows pace per km.', 'More km than last time shows Beat last time +10.'] },
+    n: ['Time, Distance, Speed and XP.', 'Add lap is gone. Interval exercises keep their own interval sets.', 'Time follows the clock until you type in it.'] },
   { id: 'feed', sec: 'past', t: 'Workout cards', s: 'Workouts list', b: feedScreen,
-    n: ['The whole card opens the workout page.', 'The gold chip names the routine it came from, even when you renamed the workout.', '+1 added marks exercises you added on top of the routine. Custom marks exercises you made.', 'Cardio cards show time, distance and speed.'] },
-  { id: 'detail', sec: 'past', t: 'Workout page', s: 'Tap a card', b: detailScreen,
-    n: ['Everything about one workout: stats, where the XP came from, muscles and every set.', 'Edit in the top bar. Delete sits at the bottom, set apart, like Discard in the log.'] },
-  { id: 'edit', sec: 'past', t: 'Edit workout', s: 'Try it: the date picker', b: editScreen, tryit: 1,
-    n: ['The log layout without a clock. Change sets, weights, exercises, date, duration, title and notes.', 'The date opens inside the page, not in a second dialog.', 'Save works out the XP again, including records and the finish bonus.'] },
-  { id: 'delete', sec: 'past', t: 'Delete workout', s: 'Asks first', b: () => detailScreen() + delModal(),
-    n: ['Solid red confirm, like Discard and Sign out. Tapping outside only shakes it.', 'It says exactly what goes: the workout and its XP.'] },
-  { id: 'routines', sec: 'nav', t: 'Routines', s: 'Try it: the ⋯ menu', b: routinesScreen, tryit: 1,
-    n: ['Create routine, with a + icon, sits at the top of the list.', 'The three tabs live in the pinned header. Scroll the list and they stay.', '⋯ on every card: Duplicate and Delete routine. Delete asks first. Workouts logged with it stay.'] },
+    n: ['Unchanged from round 1.'] },
+  { id: 'detail', sec: 'past', t: 'Workout page', s: 'Try it: tap XP', b: detailScreen, tryit: 1,
+    n: ['Muscles, exercises and notes lead. The XP card is gone.', 'The eye on the XP tile opens where the XP came from.'] },
+  { id: 'edit', sec: 'past', t: 'Edit workout', s: 'Try it: the date', b: editScreen, tryit: 1,
+    n: ['The date and time open in a modal. Close it and tap the date row to open it again.', 'Dates read the same everywhere: Tue 29 Sep · 6:40 pm.'] },
+  { id: 'delete', sec: 'past', t: 'Delete workout', s: 'Try it: Delete', b: () => detailScreen() + delModal(), tryit: 1,
+    n: ['When a delete would drop you a level, the dialog says so in one line.', 'After it, a small toast: XP updated · Level 6. No demotion animation.'] },
+  { id: 'routines', sec: 'nav', t: 'Routines', s: 'Try it: scroll down, then up', b: routinesScreen, tryit: 1,
+    n: ['Scroll down and the big title slides away. The tabs stay pinned.', 'Scroll up a little and the title comes back.', '⋯ on each card: Duplicate and Delete routine.'] },
   { id: 'rank', sec: 'nav', t: 'Rank', s: 'Try it: scroll, then tap Rank', b: rankScreen, tryit: 1,
-    n: ['Rank Road and Badges are pinned under the title.', 'It always opens on your level. Tap the Rank tab again and it scrolls back to you, never to level 32.'] },
-  { id: 'month', sec: 'misc', t: 'This month', s: 'Try it: tap a day', b: monthScreen, tryit: 1,
-    n: ['A real month on Profile: weekday headers, dates, trained days filled.', 'A small dot means two workouts that day.', 'Tap a day to see its workouts right under the grid. Calendar opens the full page.'] },
+    n: ['Same title behaviour as Routines.', 'Tapping the Rank tab again scrolls back to your level.'] },
   { id: 'onb', sec: 'misc', t: 'Anything to avoid', s: 'Onboarding step 3', b: onbScreen,
-    n: ['Continue is the only button at the bottom, like every other step.', 'Skip moved to the top bar, so nobody taps it by mistake.'] },
-  { id: 'goal', sec: 'misc', t: 'Goal end date', s: 'Try it: pick a day', b: goalScreen, tryit: 1,
-    n: ['Pick date opens the calendar inside the same sheet. No second dialog on top.', 'Days before tomorrow are greyed out. Today has a green ring.', 'The same picker is used for goals, workout dates and weigh-ins.'] }
+    n: ['Unchanged from round 1: Continue at the bottom, Skip in the top bar.'] },
+  { id: 'goal', sec: 'misc', t: 'New goal', s: 'Try it: pick a day', b: goalScreen, tryit: 1,
+    n: ['Back to the layout the app has today, with normal-size buttons.', 'The title, reward and Create goal stay pinned. Only the middle scrolls.', 'Pick end date opens the calendar inside the sheet.'] }
 ];
 function startSheet() {
-  const row = (id, t, tag, m) => `<div class="startrow">${thumb(byId[id], 40)}<div class="flex1"><b>${t}${tag ? '<span class="uptag">Up next</span>' : ''}</b><small>${m}</small></div>${B('p', 'Start', { sm: 1, icon: 'play' })}</div>`;
+  const row = (id, t, tag, m) => `<div class="startrow">${thumb(byId[id], 40)}<div class="flex1"><b>${t}${tag ? '<span class="uptag">Today</span>' : ''}</b><small>${m}</small></div>${B('p', 'Start', { sm: 1, icon: 'play' })}</div>`;
   const act = (i, t) => `<button class="act"><span class="ib">${ic(i, 22)}</span>${t}</button>`;
-  return `<div class="sheet-wrap"><div class="scrim"></div><div class="sheet" role="dialog" aria-label="Start a workout"><div class="grab"></div><h3 class="gt">Start a workout</h3><div class="st-sec" style="margin-top:4px"><span class="eyebrow">Your routines</span>${row('db-row', 'Pull A', 1, '5 exercises · about 50 min')}${row('db-sumo', 'Legs', 0, '4 exercises · about 40 min')}<button class="textbtn sm">All routines${ic('chevR', 14)}</button></div><div class="st-sec"><span class="eyebrow">Cardio</span><div class="acts">${act('shoe', 'Run')}${act('walk', 'Walk')}${act('bike', 'Ride')}</div></div><div class="st-sec"><button class="startrow go"><span class="dn-ic">${ic('plus', 22)}</span><div class="flex1"><b>Empty workout</b><small>Pick exercises, then start</small></div>${ic('chevR', 18)}</button></div></div></div>`;
+  return `<div class="sheet-wrap"><div class="scrim"></div><div class="sheet" role="dialog" aria-label="Start a workout"><div class="grab"></div><h3 class="gt">Start a workout</h3><div class="st-sec" style="margin-top:4px"><span class="eyebrow">Your routines</span>${row('db-row', 'Pull A', 1, '5 exercises · about 50 min')}${row('db-sumo', 'Legs', 0, '4 exercises · about 40 min')}<button class="textbtn sm">All routines${ic('chevR', 14)}</button></div><div class="st-sec"><span class="eyebrow">Cardio</span><div class="acts">${act('shoe', 'Run')}${act('walk', 'Walk')}${act('bike', 'Ride')}</div></div><div class="st-sec"><button class="startrow go"><span class="dn-ic">${ic('plus', 22)}</span><div class="flex1"><b>Custom workout</b><small>Pick exercises, then start</small></div>${ic('chevR', 18)}</button></div></div></div>`;
 }
 function pickerScreen() {
   const st = ST.picker, n = st.sel.length;
   const grp = (t, ids) => `<div class="grp">${t}<span>${ids.length}</span></div>` + ids.map(id => { const e = byId[id], on = st.sel.includes(id); return `<div class="exrow ${on ? 'sel' : ''}"><button class="exrow-main" aria-pressed="${on}" data-a="pick" data-shot="picker" data-id="${id}">${thumb(e, 40)}<span class="exrow-t"><b>${e.n}</b><small>${MUS[e.p]} · ${EQ[e.eq]}</small></span></button>${on ? `<span class="selmark">${ic('check', 15)}</span>` : ''}</div>`; }).join('');
-  return bar(`<button class="textbtn">Cancel</button>`, 'Pick exercises', '') + `<div class="bar-sub"><div class="search">${ic('search', 18)}<input aria-label="Search exercises" placeholder="Search 112 exercises"></div><div class="filters" style="margin-top:10px"><button class="fbtn">Muscle</button><button class="fbtn">Equipment</button></div></div>` + scr(grp('Back', ['db-row', 'db-1row', 'pulldown', 'pullup']) + grp('Biceps', ['db-curl', 'db-hammer']) + grp('Chest', ['db-bench', 'pushup', 'db-fly']), false) + `<div class="foot col">${B('p', `Start workout${n ? ` · ${n}` : ''}`, { lg: 1, block: 1, icon: 'play', dis: !n })}<span class="cap">${n ? 'The clock starts when you tap Start workout.' : 'Pick at least one exercise to start.'}</span></div>`;
+  return bar(`<button class="textbtn">Cancel</button>`, 'Custom workout', '') + `<div class="bar-sub"><div class="search">${ic('search', 18)}<input aria-label="Search exercises" placeholder="Search 112 exercises"></div><div class="filters" style="margin-top:10px"><button class="fbtn">Muscle</button><button class="fbtn">Equipment</button></div></div>` + scr(grp('Back', ['db-row', 'db-1row', 'pulldown', 'pullup']) + grp('Biceps', ['db-curl', 'db-hammer']) + grp('Chest', ['db-bench', 'pushup', 'db-fly']), false) + (n ? `<div class="foot">${B('p', `Start workout · ${n}`, { lg: 1, block: 1, icon: 'play' })}</div>` : '');
 }
 function startedScreen() {
-  const items = ['db-row', 'db-1row', 'db-curl'].map(id => ({ id, sets: [0, 1, 2].map(() => ({ kg: '', reps: '', done: false })) }));
-  return bar(back('chevD', 'Minimize'), `Log workout`, B('p', 'Finish', { sm: 1 })) + `<div class="logstats">${statsRow('strength', { dur: '0:04', vol: 0, sets: 0, xp: 0 })}</div><div class="fbrow">${fbChip(0, 0)}</div>` + scr(`<input class="title-in" aria-label="Workout title" value="Evening workout">${items.map((it, i) => exBlock('started', i, it)).join('')}${logEnd()}`);
+  const items = ['db-row', 'db-1row', 'db-curl'].map(id => ({ id, sets: [0, 1, 2].map(() => ({ kg: LAST[id][0], reps: LAST[id][1], done: false })) }));
+  return bar(back('chevD', 'Minimize'), `Log workout`, B('p', 'Finish', { sm: 1 })) + `<div class="logstats">${statsRow('strength', { dur: '0:04', vol: 0, sets: 0, xp: 0 })}</div>` + scr(`<input class="title-in" aria-label="Workout title" value="Evening workout">${items.map((it, i) => exBlock('started', i, it)).join('')}${logEnd()}`);
 }
 function pullTotals() {
-  const p = ST.pull; let sets = 0, vol = 0, mk = 0;
-  p.items.forEach(it => { it.sets.forEach(s => { if (s.done && +s.reps >= 1) { sets++; vol += (+s.kg || 0) * +s.reps; } }); const m = markerFor(it.id, it.sets); if (m) mk += m.xp; });
+  const p = ST.pull; let sets = 0, vol = 0, mk = 0, doneEx = 0;
+  p.items.forEach(it => { it.sets.forEach(s => { if (s.done && +s.reps >= 1) { sets++; vol += (+s.kg || 0) * +s.reps; } }); const m = markerFor(it.id, it.sets); if (m) mk += m.xp; if (it.sets.every(s => s.done)) doneEx++; });
   const cmin = +p.tread.min || 0, km = +p.tread.km || 0;
+  if (cmin > 0) doneEx++;
   const cx = cmin > 0 ? Math.min(30, Math.round(cmin)) + (km > 0 ? 10 : 0) : 0;
-  return { sets, vol, cmin, km, xp: sets * 5 + mk + cx, dur: '31:08', ck: 'run' };
+  return { sets, vol, cmin, km, mk, cx, doneEx, xp: sets * 5 + mk + cx, dur: '31:08', ck: 'run', shot: 'pull' };
+}
+function xpPop(shot) {
+  let lines, fin;
+  if (shot === 'ride') {
+    const t = rideTotals(), base = t.cmin > 0 ? Math.min(30, Math.round(t.cmin)) + (t.km > 0 ? 10 : 0) : 0;
+    lines = [['Time and distance', base], ['Beat last time', t.xp - base]];
+    fin = t.cmin > 0 ? `Finish the ride for +${Math.min(50, base)} more.` : 'Add a time to earn the finish bonus.';
+  } else {
+    const t = pullTotals();
+    lines = [['Sets ticked', t.sets * 5], ['Records and beat last time', t.mk], ['Cardio', t.cx]];
+    fin = t.doneEx >= 5 ? 'Every planned exercise is done: +50 when you finish.' : `${t.doneEx} of 5 planned exercises done. Finish them all for +50.`;
+  }
+  return `<div class="xppop" role="dialog" aria-label="XP so far"><b class="xp-h">XP so far</b>${lines.map(([l, v]) => `<div class="xl"><span>${l}</span><b>+${v}</b></div>`).join('')}<div class="xppop-f">${ic('flag', 16)}<span>${fin}</span></div><button class="textbtn sm" data-a="xpinfo" data-shot="${shot}">Got it</button></div>`;
 }
 function pullScreen() {
+  if (ST.pull.settings) return settingsPage('pull');
   const t = pullTotals(), kind = t.cmin > 0 ? (t.sets > 0 ? 'mixed' : 'cardio') : 'strength';
-  return bar(back('chevD', 'Minimize'), 'Log workout', B('p', 'Finish', { sm: 1 })) + `<div class="logstats" data-live="pull">${statsRow(kind, t)}</div><div class="fbrow" data-fb="pull">${fbChip(t.sets, t.cmin)}</div>` + scr(`<input class="title-in" aria-label="Workout title" value="Pull A">${ST.pull.items.map((it, i) => `<div data-block="pull-${i}">${exBlock('pull', i, it, { markers: 1 })}</div>`).join('')}<div data-block="pull-cc">${cardioBlock('pull', ST.pull.tread)}</div>${logEnd()}`);
+  return bar(back('chevD', 'Minimize'), 'Log workout', B('p', 'Finish', { sm: 1 })) + `<div class="logstats" data-live="pull">${statsRow(kind, t)}</div>` + scr(`<input class="title-in" aria-label="Workout title" value="Pull A">${ST.pull.items.map((it, i) => `<div data-block="pull-${i}">${exBlock('pull', i, it, { markers: 1 })}</div>`).join('')}<div data-block="pull-cc">${cardioBlock('pull', ST.pull.tread)}</div>${logEnd('pull')}`) + (ST.pop.pull ? xpPop('pull') : '');
 }
+function finishModal() { return `<div class="gm-wrap"><div class="scrim"></div><div class="gmodal" role="alertdialog" aria-label="Finish workout?"><div class="gm-rib"><span class="gt">Finish workout?</span></div><div class="gm-med green">${ic('flag', 30)}</div><div class="gm-body"><p>Treadmill isn't done, so this workout won't get the finish bonus. You can still log it on its own later.</p><div class="gm-btns">${B('t', 'Keep logging')}${B('p', 'Finish')}</div></div></div></div>`; }
 function cardioPickScreen() {
   const acts = [['run', 'shoe', 'Run'], ['walk', 'walk', 'Walk'], ['cycle', 'bike', 'Ride outside'], ['bike', 'bike', 'Stationary bike'], ['treadmill', 'tread', 'Treadmill'], ['rowing', 'row', 'Rowing']];
   const a = ST.cpick.act;
-  return homeScreen('ready') + `<div class="sheet-wrap"><div class="scrim"></div><div class="sheet" role="dialog" aria-label="Cardio"><div class="grab"></div><h3 class="gt">Cardio</h3><p>Pick an activity. The clock starts when you tap Start workout.</p><div class="acts">${acts.map(([k, i, l]) => `<button class="act" aria-pressed="${a === k}" data-a="act" data-shot="cpick" data-k="${k}"><span class="ib">${ic(i, 22)}</span>${l}</button>`).join('')}</div><div class="sheet-foot">${B('p', 'Start workout', { lg: 1, block: 1, icon: 'play', dis: !a })}</div></div></div>`;
+  return homeScreen('ready') + `<div class="sheet-wrap"><div class="scrim"></div><div class="sheet" role="dialog" aria-label="Cardio"><div class="grab"></div><h3 class="gt">Cardio</h3><p>Pick an activity, then start.</p><div class="acts">${acts.map(([k, i, l]) => `<button class="act" aria-pressed="${a === k}" data-a="act" data-shot="cpick" data-k="${k}"><span class="ib">${ic(i, 22)}</span>${l}</button>`).join('')}</div><div class="sheet-foot" data-cfoot ${a ? '' : 'hidden'}>${B('p', 'Start workout', { lg: 1, block: 1, icon: 'play' })}</div></div></div>`;
 }
-function rideTotals() { const c = ST.ride, cmin = +c.min || 0, km = +c.km || 0; let xp = cmin > 0 ? Math.min(30, Math.round(cmin)) + (km > 0 ? 10 : 0) : 0; if (cmin > 0 && km > c.best) xp += 25; else if (cmin > 0 && km > c.last) xp += 10; return { cmin, km, xp, ck: 'ride', sets: 0 }; }
+function rideTotals() { const c = ST.ride, cmin = +c.min || 0, km = +c.km || 0; let xp = cmin > 0 ? Math.min(30, Math.round(cmin)) + (km > 0 ? 10 : 0) : 0; if (cmin > 0 && km > c.best) xp += 25; else if (cmin > 0 && km > c.last) xp += 10; return { cmin, km, xp, ck: 'ride', sets: 0, shot: 'ride' }; }
 function rideScreen() {
   const t = rideTotals();
-  return bar(back('chevD', 'Minimize'), 'Log workout', B('p', 'Finish', { sm: 1 })) + `<div class="logstats" data-live="ride">${statsRow('cardio', t)}</div><div class="fbrow" data-fb="ride">${fbChip(0, t.cmin)}</div>` + scr(`<input class="title-in" aria-label="Workout title" value="Evening ride"><div data-block="ride-cc">${cardioBlock('ride', ST.ride)}</div>${logEnd()}`);
+  return bar(back('chevD', 'Minimize'), 'Log workout', B('p', 'Finish', { sm: 1 })) + `<div class="logstats" data-live="ride">${statsRow('cardio', t)}</div>` + scr(`<input class="title-in" aria-label="Workout title" value="Evening ride"><div data-block="ride-cc">${cardioBlock('ride', ST.ride)}</div>${logEnd()}`) + (ST.pop.ride ? xpPop('ride') : '');
 }
 function feedScreen() {
   return bar(back(), 'Workouts', '') + scr(['heavy', 'ride', 'pushA', 'empty'].map(feedCard).join('') + `<button class="textbtn" style="align-self:center">Show more</button>`) + tabbar('profile');
@@ -1331,19 +1418,23 @@ function detailBody(w) {
   const ex = PULL_A.map(([id, n, kg, reps]) => { const e = byId[id], m = markerFor(id, Array.from({ length: n }, () => ({ kg, reps, done: true }))); return `<div class="pv-ex"><div class="pv-top">${thumb(e, 40)}<span class="flex1">${e.n}</span>${mkHTML(m)}</div>${setsRO(id, n, kg, reps)}</div>`; }).join('');
   const hi = ['upperback', 'lats', 'biceps', 'shoulders'], sec = ['forearms', 'traps'];
   const fill = m => hi.includes(m) ? 'var(--hi)' : sec.includes(m) ? 'var(--sec)' : 'var(--muscle)';
-  const xp = `<div class="card"><div class="cardhead"><b>Where the XP came from</b></div><div class="xpl"><div>12 sets<small>5 XP a set</small></div><b>+60</b></div><div class="xpl"><div>Record<small>Bent Over Row, 12.5 kg × 10</small></div><b>+25</b></div><div class="xpl"><div>Beat last time<small>Single Arm Row, Bicep Curl</small></div><b>+20</b></div><div class="xpl"><div>Finish bonus<small>36 work minutes (20 needed)</small></div><b>+50</b></div><div class="xpl total"><b>Total</b><b class="xpv">+155 XP</b></div></div>`;
   const mus = `<div class="card"><div class="cardhead"><b>Muscles</b></div><div class="maps">${bodySvg('front', fill, '0 0 100 200', 80, 160, 'Front')}${bodySvg('back', fill, '0 0 100 200', 80, 160, 'Back')}</div></div>`;
   const notes = `<div class="card"><div class="cardhead"><b>Notes</b></div><div>Bumped rows to 12.5 kg. Felt strong.</div></div>`;
-  const head = `<div>${w ? '' : '<h2 class="dt-title">Pull A</h2>'}<div class="metaline" style="margin-top:8px"><span class="rchip">${ic('clipboard', 13)}Pull A</span><small class="muted">Tue 29 Sep · 6:40 pm</small></div></div><div class="dt-stats">${stat('Duration', '52 min')}${stat('Volume', '1,091 kg')}${stat('Sets', '12')}${stat('XP', '+155', 'xpv')}</div>`;
+  const xpTile = `<button class="stat statbtn" data-a="xpeye" data-shot="detail" aria-label="XP earned: 105. See where it came from"><small>XP ${ic('eye', 13)}</small><b class="xpv">+105</b></button>`;
+  const head = `<div>${w ? '' : '<h2 class="dt-title">Pull A</h2>'}<div class="metaline" style="margin-top:8px"><span class="rchip">${ic('clipboard', 13)}Pull A</span><small class="muted">Tue 29 Sep · 6:40 pm</small></div></div><div class="dt-stats">${stat('Duration', '52 min')}${stat('Volume', '1,091 kg')}${stat('Sets', '12')}${xpTile}</div>`;
   const exCard = `<div class="card" style="display:flex;flex-direction:column;gap:14px"><div class="cardhead" style="margin:0"><b>Exercises</b><small class="muted">4</small></div>${ex}</div>`;
   const end = `<div class="log-end">${w ? '' : B('t', 'Share', { block: 1, icon: 'share' })}<div class="danger-zone">${B('ds', 'Delete workout', { sm: 1, icon: 'trash', a: 'data-a="noop"' })}</div></div>`;
-  return w ? { main: head + exCard + end, aside: xp + mus + notes } : { main: head + xp + mus + exCard + notes + end };
+  return w ? { main: head + exCard + end, aside: mus + notes } : { main: head + mus + exCard + notes + end };
 }
-function detailScreen() { return bar(back(), '', B('t', 'Edit', { sm: 1, icon: 'pencil' })) + scr(detailBody(false).main); }
-function delModal() { return `<div class="gm-wrap"><div class="scrim"></div><div class="gmodal" role="alertdialog" aria-label="Delete workout?"><div class="gm-rib"><span class="gt">Delete workout?</span></div><div class="gm-med red">${ic('trash', 30)}</div><div class="gm-body"><p>Pull A from Tue 29 Sep and its 155 XP will be removed. This can't be undone.</p><div class="gm-btns">${B('t', 'Keep it')}${B('dd', 'Delete')}</div></div></div></div>`; }
+function detailScreen() { return bar(back(), '', B('t', 'Edit', { sm: 1, icon: 'pencil' })) + scr(detailBody(false).main) + (ST.detail.xp ? xpModal() : ''); }
+function xpModal() { return `<div class="gm-wrap"><button class="scrim" aria-label="Close" data-a="xpeye" data-shot="detail"></button><div class="gmodal" role="dialog" aria-label="XP earned"><div class="gm-rib"><span class="gt">XP earned</span></div><div class="gm-body" style="text-align:left;padding-top:16px"><div class="xl"><span>12 sets<small>5 XP a set</small></span><b>+60</b></div><div class="xl"><span>Record<small>Bent Over Row, 12.5 kg × 10</small></span><b>+25</b></div><div class="xl"><span>Beat last time<small>Single Arm Row, Bicep Curl</small></span><b>+20</b></div><div class="xl"><span>Finish bonus<small>Missed: Treadmill wasn't done</small></span><b>+0</b></div><div class="xl total"><span>Total</span><b class="xpv">+105 XP</b></div><div class="gm-btns one" style="margin-top:14px">${B('t', 'Close', { a: 'data-a="xpeye" data-shot="detail"' })}</div></div></div></div>`; }
+function delModal() { return `<div class="gm-wrap"><div class="scrim" data-a="shake"></div><div class="gmodal" role="alertdialog" aria-label="Delete workout?"><div class="gm-rib"><span class="gt">Delete workout?</span></div><div class="gm-med red">${ic('trash', 30)}</div><div class="gm-body"><p>Pull A from Tue 29 Sep and its 105 XP will be removed. You'll go back to level 6. This can't be undone.</p><div class="gm-btns">${B('t', 'Keep it')}${B('dd', 'Delete', { a: 'data-a="delgo" data-shot="delete"' })}</div></div></div></div>`; }
 function editScreen() {
   const items = PULL_A.slice(0, 2).map(([id, n, kg, reps]) => ({ id, sets: Array.from({ length: n }, () => ({ kg, reps, done: true })) }));
-  return bar(`<button class="textbtn">Cancel</button>`, 'Edit workout', B('p', 'Save', { sm: 1 })) + scr(`<input class="title-in" aria-label="Workout title" value="Pull A"><button class="field-row" aria-expanded="true">${ic('calendar', 20)}<div class="flex1"><small>Date and time</small>${(() => { const [y, m, d] = ST.edit.dp.sel.split('-').map(Number); return `${new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' })} ${d} ${MONTHS[m - 1].slice(0, 3)} · 6:40 pm`; })()}</div>${ic('chevD', 18)}</button>${dpHTML('edit', ST.edit.dp, { max: '2026-09-30', time: 1 })}<div class="field-row">${ic('clock', 20)}<div class="flex1"><small>Duration</small>52 min</div><button class="backbtn" aria-label="Shorter">${ic('minus', 18)}</button><button class="backbtn" aria-label="Longer">${ic('plus', 18)}</button></div><div class="info">${ic('info', 16)}<span>XP is worked out again when you save.</span></div>${items.map((it, i) => exBlock('edit', i, it)).join('')}<div class="log-end">${B('t', 'Add exercise', { block: 1, icon: 'plus' })}<div class="danger-zone">${B('ds', 'Delete workout', { sm: 1, icon: 'trash' })}</div></div>`);
+  const [y, m, d] = ST.edit.dp.sel.split('-').map(Number);
+  const when = `${new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' })} ${d} ${MONTHS[m - 1].slice(0, 3)}${y !== 2026 ? ' ' + y : ''} · 6:40 pm`;
+  const modal = ST.edit.modal ? `<div class="gm-wrap"><button class="scrim" aria-label="Close" data-a="dateclose" data-shot="edit"></button><div class="gmodal dpm" role="dialog" aria-label="Date and time"><div class="gm-rib"><span class="gt">Date and time</span></div><div class="gm-body" style="padding-top:16px">${dpHTML('edit', ST.edit.dp, { max: '2026-09-30', time: 1, flat: 1 })}<div class="gm-btns" style="margin-top:14px">${B('t', 'Cancel', { a: 'data-a="dateclose" data-shot="edit"' })}${B('p', 'Done', { a: 'data-a="dateclose" data-shot="edit"' })}</div></div></div></div>` : '';
+  return bar(`<button class="textbtn">Cancel</button>`, 'Edit workout', B('p', 'Save', { sm: 1 })) + scr(`<input class="title-in" aria-label="Workout title" value="Pull A"><button class="field-row" data-a="dateopen" data-shot="edit">${ic('calendar', 20)}<div class="flex1"><small>Date and time</small>${when}</div>${ic('chevR', 18)}</button><div class="field-row">${ic('clock', 20)}<div class="flex1"><small>Duration</small>52 min</div><button class="backbtn" aria-label="Shorter">${ic('minus', 18)}</button><button class="backbtn" aria-label="Longer">${ic('plus', 18)}</button></div><div class="info">${ic('info', 16)}<span>XP is worked out again when you save.</span></div>${items.map((it, i) => exBlock('edit', i, it)).join('')}<div class="log-end">${B('t', 'Add exercise', { block: 1, icon: 'plus' })}<div class="danger-zone">${B('ds', 'Delete workout', { sm: 1, icon: 'trash' })}</div></div>`) + modal;
 }
 function routinesScreen() {
   const st = ST.routines;
@@ -1376,19 +1467,28 @@ function onbScreen() {
   const ch = (t, on) => `<button class="chip" aria-pressed="${!!on}">${t}</button>`;
   return `<div class="ob"><div class="ob-top">${back()}<div class="segs"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div><button class="textbtn">Skip</button></div><div class="ob-body"><h2 class="ob-h gt">Anything to avoid?</h2><p class="ob-p">We'll leave these out of suggestions. You can still add them yourself.</p><div class="ob-lab">Moves</div><div class="chips">${ch('Lunges', 1)}${ch('Burpees')}${ch('Jumping')}${ch('Deadlifts')}${ch('Overhead press')}</div><div class="ob-lab">Go easy on</div><div class="chips">${ch('Knees', 1)}${ch('Lower back')}${ch('Shoulders')}${ch('Wrists')}</div></div><div class="ob-foot">${B('p', 'Continue', { lg: 1, block: 1 })}</div></div>`;
 }
-function goalScreen() {
-  return monthScreen() + `<div class="sheet-wrap"><div class="scrim"></div><div class="sheet" role="dialog" aria-label="New goal"><div class="grab"></div><h3 class="gt">New goal</h3><p>Workouts</p><div class="field"><label>Target</label><div class="row"><button class="backbtn" aria-label="Fewer">${ic('minus', 18)}</button><b class="wt-big" style="min-width:52px;text-align:center">12</b><span class="muted" style="font-weight:700">workouts</span><button class="backbtn" aria-label="More">${ic('plus', 18)}</button></div></div><div class="field"><label>By</label><div class="chips"><button class="chip">2 weeks</button><button class="chip">1 month</button><button class="chip">3 months</button><button class="chip" aria-pressed="true">Pick date</button></div></div>${dpHTML('goal', ST.goal.dp, { min: '2026-09-30' })}<div class="kv" style="margin-top:6px"><span>Reward</span><b class="xpv">+300 XP</b></div><div class="sheet-foot">${B('p', 'Create goal', { lg: 1, block: 1 })}</div></div></div>`;
+function goalSheet(desk) {
+  return `<div class="sheet-wrap"><div class="scrim"></div><div class="sheet gsheet" role="dialog" aria-label="New goal"><div class="gs-head">${desk ? '' : '<div class="grab"></div>'}<h3 class="gt">New goal</h3><small>Workouts</small></div><div class="gs-body"><div class="field"><label>Target</label><div class="row"><button class="backbtn" aria-label="Fewer">${ic('minus', 18)}</button><b class="wt-big" style="min-width:52px;text-align:center">12</b><span class="muted" style="font-weight:700">workouts</span><button class="backbtn" aria-label="More">${ic('plus', 18)}</button></div></div><div class="field"><label>Ends</label><div class="chips"><button class="chip">2 weeks</button><button class="chip">1 month</button><button class="chip">3 months</button><button class="chip" aria-pressed="true">Pick end date</button></div></div>${dpHTML('goal', ST.goal.dp, { min: '2026-09-30' })}</div><div class="gs-foot"><div class="gs-reward"><span>Reward</span><b class="xpv">+300 XP</b></div><div class="two">${B('t', 'Back', { icon: 'chevL' })}${B('p', 'Create goal')}</div></div></div></div>`;
 }
-
+function profileBg() {
+  return barLg('Profile', `<button class="backbtn" aria-label="Settings">${ic('settings', 18)}</button>`) + scr(`<div class="sechead"><div class="sec-label">Goals</div>${B('t', 'New goal', { sm: 1, icon: 'plus' })}</div><div class="card"><div class="goal"><div class="goal-top"><b>Lose 3.9 kg, to 104.5 kg</b><small class="muted">by Oct 29</small></div><div class="xpbar thin"><i style="width:20%"></i></div></div><div class="goal"><div class="goal-top"><b>5 workouts</b><small class="muted">by Oct 4</small></div><div class="xpbar thin"><i style="width:40%"></i></div></div></div>`) + tabbar('profile');
+}
+function goalScreen() { return profileBg() + goalSheet(false); }
 /* ---------- render shots ---------- */
 function renderShot(id) {
   const s = SHOTS.find(x => x.id === id), el = document.getElementById('ph-' + id);
   const keep = el.querySelector('[data-scroll]'), top = keep ? keep.scrollTop : 0;
   el.innerHTML = skyH() + sbar() + s.b();
   const sc = el.querySelector('[data-scroll]');
-  if (sc) { sc.scrollTop = top; if (id === 'rank' && !el.dataset.done) { centerCur(el); el.dataset.done = 1; } }
+  if (!sc) return;
+  sc.scrollTop = top;
+  if (id === 'rank' && !el.dataset.done) { centerCur(el); el.dataset.done = 1; }
+  if (id === 'routines' || id === 'rank') {
+    let last = sc.scrollTop;
+    sc.addEventListener('scroll', () => { const t = sc.scrollTop; if (el._quiet && Date.now() < el._quiet) { last = t; return; } if (t > last + 4 && t > 40) el.classList.add('hide-title'); else if (t < last - 4 || t < 10) el.classList.remove('hide-title'); last = t; }, { passive: true });
+  }
 }
-function centerCur(el, smooth) { const sc = el.querySelector('[data-scroll]'), c = sc && sc.querySelector('[data-cur]'); if (!c) return; const r1 = c.getBoundingClientRect(), r0 = sc.getBoundingClientRect(); sc.scrollTo({ top: sc.scrollTop + (r1.top - r0.top) - sc.clientHeight / 2 + r1.height / 2, behavior: smooth ? 'smooth' : 'auto' }); }
+function centerCur(el, smooth) { const sc = el.querySelector('[data-scroll]'), c = sc && sc.querySelector('[data-cur]'); if (!c) return; el._quiet = Date.now() + 900; const r1 = c.getBoundingClientRect(), r0 = sc.getBoundingClientRect(); sc.scrollTo({ top: sc.scrollTop + (r1.top - r0.top) - sc.clientHeight / 2 + r1.height / 2, behavior: smooth ? 'smooth' : 'auto' }); }
 function buildShots() {
   document.querySelectorAll('.shots').forEach(box => {
     box.innerHTML = SHOTS.filter(s => s.sec === box.dataset.sec).map(s => `<figure class="shot" style="margin:0"><figcaption class="shot-l"><b>${s.t}</b><small>${s.tryit ? '<span style="color:var(--link)">Try it.</span> ' : ''}${s.s.replace(/^Try it: /, '')}</small></figcaption><div class="pf"><div class="app phone" id="ph-${s.id}"></div><div class="toast" id="toast-${s.id}" role="status"></div></div><ul>${s.n.map(x => `<li>${x}</li>`).join('')}</ul></figure>`).join('');
@@ -1400,20 +1500,21 @@ function refreshLive(id) {
   const el = document.getElementById('ph-' + id);
   if (id === 'pull') {
     const t = pullTotals(), kind = t.cmin > 0 ? (t.sets > 0 ? 'mixed' : 'cardio') : 'strength';
-    el.querySelector('[data-live]').innerHTML = statsRow(kind, t); el.querySelector('[data-fb]').innerHTML = fbChip(t.sets, t.cmin);
+    el.querySelector('[data-live]').innerHTML = statsRow(kind, t);
     ST.pull.items.forEach((it, i) => { el.querySelector(`[data-block="pull-${i}"] .eb-mk`).innerHTML = mkHTML(markerFor(it.id, it.sets)); });
     const cc = el.querySelector('[data-block="pull-cc"]'); const tc = ST.pull.tread; const [l, x] = speedOrPace('run', +tc.min, +tc.km);
     cc.querySelector('.cc-meta').innerHTML = `<span class="muted">${l}</span><b>${x}</b>`; const lg = cc.querySelector('.logged'); lg.className = 'logged ' + (+tc.min > 0 ? '' : 'no'); lg.innerHTML = +tc.min > 0 ? ic('check', 13) + 'Logged' : 'Add a time';
+    const pop = el.querySelector('.xppop'); if (pop) pop.outerHTML = xpPop('pull');
   }
   if (id === 'ride') {
-    const t = rideTotals(), c = ST.ride; el.querySelector('[data-live]').innerHTML = statsRow('cardio', t); el.querySelector('[data-fb]').innerHTML = fbChip(0, t.cmin);
+    const t = rideTotals(), c = ST.ride; el.querySelector('[data-live]').innerHTML = statsRow('cardio', t);
     const cc = el.querySelector('[data-block="ride-cc"]'); const [l, x] = speedOrPace('ride', +c.min, +c.km); cc.querySelector('.cc-meta').innerHTML = `<span class="muted">${l}</span><b>${x}</b>`;
     let m = ''; if (+c.min > 0) { if (+c.km > c.best) m = mkHTML({ k: 'rec', t: 'Longest ride +25' }); else if (+c.km > c.last) m = mkHTML({ k: 'beat', t: 'Further than last time +10' }); }
     cc.querySelector('.eb-mk').innerHTML = m; const f = cc.querySelector('.follow'); if (f && !c.follow) f.remove();
     const lg = cc.querySelector('.logged'); lg.className = 'logged ' + (+c.min > 0 ? '' : 'no'); lg.innerHTML = +c.min > 0 ? ic('check', 13) + 'Logged' : 'Add a time';
+    const pop = el.querySelector('.xppop'); if (pop) pop.outerHTML = xpPop('ride');
   }
 }
-
 /* ---------- stripes ---------- */
 function stripes() {
   $('#stripeA').innerHTML = statsRow('strength', { dur: '52:10', vol: 1091, sets: 12, xp: 105 });
@@ -1425,11 +1526,11 @@ function stripes() {
 const DESK = [['home', 'Home'], ['detail', 'Workout page'], ['ride', 'Cardio log'], ['goal', 'Goal date'], ['insights', 'Insights (owner only)']];
 let DV = 'home', DHOME = 'done';
 const DNOTES = {
-  home: ['The Today card spans the page under your level and week. Switch its state above the browser.', 'Done today lists each workout with its XP. Next time sits under them, quietly.', 'This week opens the calendar.', 'The sidebar button says Workout, like the phone.'],
-  detail: ['Main column: stats and every set. Side column: where the XP came from, muscles and notes.', 'Share and Edit in the header. Delete workout sits at the bottom of the main column.'],
-  ride: ['Discard and Finish stay pinned in the header. The stats row shows Time, Distance, Speed and XP.', 'The finish bonus chip sits under the stats.'],
-  goal: ['On desktop the goal editor is a centered dialog. Pick date drops the same calendar down under the chip, as a popover in the dialog, not a second dialog.'],
-  insights: ['Only the owner can open this page. It reads everyone\'s data on the server and shows the group only.', 'Any group under 5 people is hidden, so nobody can be picked out.', 'Shown with sample numbers. It fills in as your testers log workouts.']
+  home: ['The big level card stays on desktop, where there is room for it.', 'Switch the Today card\'s state above the browser. In progress is a slim bar now.', 'This week opens the calendar.'],
+  detail: ['Main column: stats and every set. Side column: muscles and notes. The XP card is gone, and the eye on the XP tile opens it.', 'Share and Edit in the header. Delete workout sits at the bottom.'],
+  ride: ['Discard and Finish stay pinned in the header. No finish bonus chip and no Add lap.', 'Settings sits next to Discard at the end, like on the phone.'],
+  goal: ['The goal dialog keeps the calendar inside it, like the phone sheet. Title, reward and buttons stay pinned.'],
+  insights: ['Owner only. Group numbers, never a person. Groups under 5 people are hidden.', 'Built last in this round.']
 };
 function sidebar(on) {
   const items = [['home', 'home', 'Home'], ['routines', 'clipboard', 'Routines'], ['library', 'book', 'Exercises'], ['rank', 'shield', 'Rank'], ['profile', 'user', 'Profile']];
@@ -1439,7 +1540,8 @@ function deskFrame(on, head, main, aside, narrow) {
   return `<div class="shell">${sidebar(on)}<div class="dmain" data-scroll><div class="sky" aria-hidden="true"><i></i><i></i><i></i></div><div class="dtop"><div class="dtop-in ${narrow ? 'narrow' : ''}"><div class="dhead">${head}</div></div></div><div class="dwrap ${narrow ? 'narrow' : ''}">${aside ? `<div class="dgrid"><div class="dcol">${main}</div><div class="dcol">${aside}</div></div>` : `<div class="dcol">${main}</div>`}</div></div></div>`;
 }
 function deskToday(state) {
-  if (state === 'ready') return `<section class="card today" aria-label="Today" style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px;align-items:start"><div style="display:flex;flex-direction:column;gap:10px"><div class="today-h"><span class="eyebrow">Up next</span><span class="wk">0 of 1 this week</span></div><h3>Pull A</h3><small class="m">5 exercises · 13 sets · about 50 min</small>${rrowsFor(R_ITEMS['Pull A'])}</div><div style="display:flex;flex-direction:column;gap:12px">${B('p', 'Start Pull A', { lg: 1, block: 1, icon: 'play' })}<div class="today-alt">${`<button class="alt">${ic('clipboard', 20)}Other routine</button><button class="alt">${ic('bike', 20)}Cardio</button><button class="alt">${ic('plus', 20)}Empty workout</button>`}</div></div></section>`;
+  if (state === 'live') return liveBar();
+  if (state === 'ready') return `<section class="card today" aria-label="Today" style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px;align-items:start"><div style="display:flex;flex-direction:column;gap:10px"><div class="today-h"><span class="eyebrow">Today's workout</span><span class="wk">0 of 1 this week</span></div><h3>Pull A</h3><small class="m">5 exercises · 13 sets · about 50 min</small>${rrowsFor(R_ITEMS['Pull A'])}</div><div style="display:flex;flex-direction:column;gap:12px">${B('p', 'Start Pull A', { lg: 1, block: 1, icon: 'play' })}<div class="today-alt"><button class="alt">${ic('clipboard', 20)}Other routine</button><button class="alt">${ic('bike', 20)}Cardio</button><button class="alt">${ic('plus', 20)}Custom workout</button></div></div></section>`;
   return todayCard(state, true);
 }
 function deskView() {
@@ -1448,11 +1550,8 @@ function deskView() {
     return deskFrame('home', `<h1 class="gt">Home</h1>`, main);
   }
   if (DV === 'detail') { const d = detailBody(true); return deskFrame('profile', `${back()}<h1 class="gt">Pull A</h1>${B('t', 'Share', { sm: 1, icon: 'share' })}${B('t', 'Edit', { sm: 1, icon: 'pencil' })}`, d.main, d.aside); }
-  if (DV === 'ride') { const t = rideTotals(); return deskFrame('home', `${back('chevD', 'Minimize')}<h1 class="gt">Log workout</h1><span class="livedot" style="margin-right:6px">12:40</span>${B('ds', 'Discard', { sm: 1, icon: 'trash' })}${B('p', 'Finish', { sm: 1 })}`, `<div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="logstats" style="padding:0">${statsRow('cardio', t)}</div>${fbChip(0, t.cmin)}</div><input class="title-in" aria-label="Workout title" value="Evening ride">${cardioBlock('ride-d', ST.ride)}${B('t', 'Add exercise', { block: 1, icon: 'plus' })}`, null, true); }
-  if (DV === 'goal') {
-    const prof = `<div class="sechead"><div class="sec-label">Goals</div>${B('t', 'New goal', { sm: 1, icon: 'plus' })}</div><div class="card"><div class="goal"><div class="goal-top"><b>12 workouts by 31 Oct</b><small class="muted">4 of 12</small></div><div class="xpbar thin"><i style="width:33%"></i></div></div></div>`;
-    return deskFrame('profile', `<h1 class="gt">Profile</h1>`, prof) + `<div class="sheet-wrap"><div class="scrim"></div><div class="sheet" role="dialog" aria-label="New goal" style="position:relative;overflow:visible"><h3 class="gt">New goal</h3><p>Workouts</p><div class="field"><label>Target</label><div class="row"><button class="backbtn" aria-label="Fewer">${ic('minus', 18)}</button><b class="wt-big" style="min-width:52px;text-align:center">12</b><span class="muted" style="font-weight:700">workouts</span><button class="backbtn" aria-label="More">${ic('plus', 18)}</button></div></div><div class="field" style="position:relative"><label>By</label><div class="chips"><button class="chip">2 weeks</button><button class="chip">1 month</button><button class="chip">3 months</button><button class="chip" aria-pressed="true">Pick date</button></div>${dpHTML('goal', ST.goal.dp, { min: '2026-09-30', pop: 1, style: 'right:0;top:84px' })}</div><div class="kv"><span>Reward</span><b class="xpv">+300 XP</b></div><div class="sheet-foot">${B('t', 'Cancel', { a: 'style="flex:1"' })}${B('p', 'Create goal', { a: 'style="flex:1"' })}</div></div></div>`;
-  }
+  if (DV === 'ride') { const t = rideTotals(); return deskFrame('home', `${back('chevD', 'Minimize')}<h1 class="gt">Log workout</h1><span class="livedot" style="margin-right:6px">12:40</span>${B('ds', 'Discard', { sm: 1, icon: 'trash' })}${B('p', 'Finish', { sm: 1 })}`, `<div class="card"><div class="logstats" style="padding:0">${statsRow('cardio', t)}</div></div><input class="title-in" aria-label="Workout title" value="Evening ride">${cardioBlock('ride-d', ST.ride)}${logEnd()}`, null, true); }
+  if (DV === 'goal') return deskFrame('profile', `<h1 class="gt">Profile</h1>`, `<div class="sechead"><div class="sec-label">Goals</div>${B('t', 'New goal', { sm: 1, icon: 'plus' })}</div><div class="card"><div class="goal"><div class="goal-top"><b>5 workouts by Oct 4</b><small class="muted">2 of 5</small></div><div class="xpbar thin"><i style="width:40%"></i></div></div></div>`) + goalSheet(true);
   return deskFrame('insights', `<h1 class="gt">Insights</h1><span class="samp">${ic('info', 14)}Sample data</span><div class="segmini"><button aria-pressed="false">4 weeks</button><button aria-pressed="true">12 weeks</button><button aria-pressed="false">All time</button></div>`, insights());
 }
 function vbars(data) {
@@ -1474,24 +1573,34 @@ function renderDesk() {
   $('#deskUrl').textContent = 'weight-training-progress.vercel.app' + ({ home: '', detail: '/workout/w-29-pull-a', ride: '/workout', goal: '/profile', insights: '/insights' }[DV]);
   $('#deskNotes').innerHTML = DNOTES[DV].map(x => `<div>${x}</div>`).join('');
 }
-function renderNavPick() {
-  $('#navPick').innerHTML = `<span>Center button</span>` + [['workout', 'plus', 'Workout'], ['train', 'dumbbell', 'Train']].map(([k, i, l]) => `<button class="chip" aria-pressed="${NAV === k}" data-a="nav" data-k="${k}" style="display:inline-flex;align-items:center;gap:6px">${ic(i, 16)}${l}</button>`).join('');
-}
-
+function renderNavPick() {}
 /* ---------- events ---------- */
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-a]'); if (!t) return;
   const a = t.dataset.a, id = t.dataset.shot;
   if (a === 'noop') { e.preventDefault(); return; }
-  if (a === 'nav') { NAV = t.dataset.k; try { localStorage.setItem('v6-nav', NAV); } catch (err) {} renderNavPick(); SHOTS.forEach(s => renderShot(s.id)); renderDesk(); return; }
   if (a === 'dv') { DV = t.dataset.k; renderDesk(); return; }
   if (a === 'dh') { DHOME = t.dataset.k; renderDesk(); return; }
   if (a === 'pick') { const s = ST.picker.sel, k = t.dataset.id, i = s.indexOf(k); if (i >= 0) s.splice(i, 1); else s.push(k); renderShot('picker'); return; }
-  if (a === 'act') { ST.cpick.act = ST.cpick.act === t.dataset.k ? null : t.dataset.k; renderShot('cpick'); return; }
+  if (a === 'act') {
+    ST.cpick.act = ST.cpick.act === t.dataset.k ? null : t.dataset.k;
+    const el = document.getElementById('ph-cpick');
+    el.querySelectorAll('.act').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.k === ST.cpick.act)));
+    el.querySelector('[data-cfoot]').hidden = !ST.cpick.act;
+    return;
+  }
   if (a === 'tick' && id === 'pull') { const s = ST.pull.items[+t.dataset.i].sets[+t.dataset.j]; s.done = !s.done; t.closest('.srow').classList.toggle('done', s.done); t.setAttribute('aria-pressed', s.done); if (s.done) { const p = document.createElement('span'); p.className = 'pop'; p.textContent = '+5 XP'; t.closest('.srow').appendChild(p); setTimeout(() => p.remove(), 1000); } refreshLive('pull'); return; }
   if (a === 'tick') { const r = t.closest('.srow'); r.classList.toggle('done'); t.setAttribute('aria-pressed', r.classList.contains('done')); return; }
-  if (a === 'dp-prev' || a === 'dp-next') { const st = ST[id === 'ride-d' ? 'ride' : id].dp; st.m += a === 'dp-next' ? 1 : -1; if (st.m < 0) { st.m = 11; st.y--; } if (st.m > 11) { st.m = 0; st.y++; } id === 'goal' ? (renderShot('goal'), DV === 'goal' && renderDesk()) : renderShot(id); return; }
-  if (a === 'dp-day') { ST[id].dp.sel = t.dataset.d; id === 'goal' ? (renderShot('goal'), DV === 'goal' && renderDesk()) : renderShot(id); return; }
+  if (a === 'xpinfo') { ST.pop[id] = !ST.pop[id]; renderShot(id); return; }
+  if (a === 'xpeye') { ST.detail.xp = !ST.detail.xp; renderShot('detail'); return; }
+  if (a === 'settings') { ST.pull.settings = true; renderShot('pull'); return; }
+  if (a === 'setback') { if (id === 'pull') { ST.pull.settings = false; renderShot('pull'); } else ftoast(id, 'Back to the workout'); return; }
+  if (a === 'sw') { ST.wset[t.dataset.k] = !ST.wset[t.dataset.k]; renderShot(id); return; }
+  if (a === 'dateopen') { ST.edit.modal = true; renderShot('edit'); return; }
+  if (a === 'dateclose') { ST.edit.modal = false; renderShot('edit'); return; }
+  if (a === 'delgo') { ftoast('delete', 'XP updated · Level 6'); return; }
+  if (a === 'dp-prev' || a === 'dp-next') { const st = ST[id].dp; st.m += a === 'dp-next' ? 1 : -1; if (st.m < 0) { st.m = 11; st.y--; } if (st.m > 11) { st.m = 0; st.y++; } renderShot(id); if (id === 'goal' && DV === 'goal') renderDesk(); return; }
+  if (a === 'dp-day') { ST[id].dp.sel = t.dataset.d; renderShot(id); if (id === 'goal' && DV === 'goal') renderDesk(); return; }
   if (a === 'rmenu') { ST.routines.menu = t.dataset.t; ST.routines.confirm = false; renderShot('routines'); return; }
   if (a === 'rclose') { ST.routines.menu = null; ST.routines.confirm = false; renderShot('routines'); return; }
   if (a === 'rdup') { const r = ST.routines, n = r.menu + ' copy'; R_ITEMS[n] = R_ITEMS[r.menu]; r.list.splice(r.list.indexOf(r.menu) + 1, 0, n); r.menu = null; renderShot('routines'); ftoast('routines', `Duplicated as ${n}`); return; }
@@ -1499,8 +1608,7 @@ document.addEventListener('click', e => {
   if (a === 'shake') { const m = t.parentElement.querySelector('.gmodal'); m.classList.remove('shake'); void m.offsetWidth; m.classList.add('shake'); return; }
   if (a === 'rgo') { const r = ST.routines, n = r.menu; r.list = r.list.filter(x => x !== n); r.menu = null; r.confirm = false; renderShot('routines'); ftoast('routines', `${n} deleted`); return; }
   if (a === 'rtab') { ST.rank.tab = t.dataset.k; const el = document.getElementById('ph-rank'); renderShot('rank'); if (ST.rank.tab === 'road') centerCur(el); return; }
-  if (a === 'tab' && t.closest('#ph-rank') && t.dataset.to === 'rank') { ST.rank.tab = 'road'; const el = document.getElementById('ph-rank'); renderShot('rank'); centerCur(el, true); ftoast('rank', 'Back to your level'); return; }
-  if (a === 'mday') { ST.month.sel = +t.dataset.d; renderShot('month'); return; }
+  if (a === 'tab' && t.closest('#ph-rank') && t.dataset.to === 'rank') { ST.rank.tab = 'road'; const el = document.getElementById('ph-rank'); el.classList.remove('hide-title'); renderShot('rank'); centerCur(el, true); ftoast('rank', 'Back to your level'); return; }
 });
 document.addEventListener('input', e => {
   const t = e.target; if (!t.dataset || !t.dataset.a) return;
