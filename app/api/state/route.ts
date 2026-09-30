@@ -11,7 +11,7 @@ import {
   isValidItemKey,
   planDay,
 } from '@/lib/progress';
-import { goalStatus, streakDeadline } from '@/lib/goals';
+import { goalStatus, stampAchievedGoals, streakDeadline } from '@/lib/goals';
 import { daysBetween, todayStr } from '@/lib/date';
 import { applyRoutineAction, isRoutineAction } from '@/lib/routineActions';
 
@@ -190,8 +190,8 @@ export async function POST(req: NextRequest) {
       const createdAt = new Date().toISOString();
       let goal: Goal;
       if (raw.type === 'streak') {
+        if (!Number.isInteger(raw.target) || raw.target > 26) return bad('a streak is 1 to 26 weeks');
         const deadline = streakDeadline(raw.start, raw.target);
-        if (!deadline) return bad('not enough workout days left in the plan for that streak length');
         goal = { id: makeId(), type: 'streak', target: raw.target, start: raw.start, deadline, createdAt };
       } else if (raw.type === 'weight') {
         if (raw.direction !== 'lose' && raw.direction !== 'gain') return bad('direction is required');
@@ -238,8 +238,8 @@ export async function POST(req: NextRequest) {
 
       let updated: Goal;
       if (existing.type === 'streak') {
+        if (!Number.isInteger(target) || target > 26) return bad('a streak is 1 to 26 weeks');
         const newDeadline = streakDeadline(existing.start, target);
-        if (!newDeadline) return bad('not enough workout days left in the plan for that streak length');
         updated = { ...existing, target, deadline: newDeadline };
       } else if (existing.type === 'weight') {
         const dir = direction ?? existing.direction;
@@ -284,6 +284,8 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // A goal that is achieved now stays achieved, even if the workouts behind it change later.
+  state = { ...state, goals: stampAchievedGoals(state, new Date().toISOString(), todayStr()) };
   await saveState(userId, state);
   return NextResponse.json(state);
 }

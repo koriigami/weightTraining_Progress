@@ -1,17 +1,7 @@
-import { plan } from '../data/plan';
-import { addDaysStr, daysBetween, lastDayOfMonth } from './date';
-import {
-  cardioSince,
-  isDayCleared,
-  isDayClearedSince,
-  isPushupExercise,
-  isWorkoutDay,
-  lowerBoundReps,
-  planDay,
-  pushupsInLogSince,
-  workoutDates,
-} from './progress';
+import { addDaysStr, daysBetween, lastDayOfMonth, mondayOf } from './date';
 import type { AppState, Goal } from './progress';
+import { scoreState } from './workoutScoring';
+import type { WorkoutScore } from './workoutScoring';
 import { fmtNumber, kgToUnit, kmToUnit, unitToKg, unitToKm } from './units';
 import type { DistanceUnit, WeightUnit } from './units';
 
@@ -48,83 +38,66 @@ export const WEIGHT_GOAL_STEP: Record<WeightUnit, { min: number; max: number; st
 
 export type GoalStatus = 'active' | 'achieved' | 'failed' | 'expired';
 
-// ---------------- Streak ----------------
+// ---------------- Progress from workouts ----------------
 
-export function scheduledWorkoutDatesFrom(start: string): string[] {
-  return workoutDates().filter((d) => d >= start);
+// The workouts that count for a goal: dated inside its window and finished at or
+// after the goal's createdAt, so a goal can never be created already partly (or
+// fully) satisfied by past history. Pass `scores` to reuse an earlier scoring.
+function goalScores(goal: Goal, state: AppState, scores?: WorkoutScore[]): WorkoutScore[] {
+  return (scores ?? scoreState(state)).filter((s) => s.date >= goal.start && s.date <= goal.deadline && s.finishedAt >= goal.createdAt);
 }
 
-// The date of the Nth scheduled workout day on or after `start`, or null if
-// the plan doesn't have that many workout days left.
-export function streakDeadline(start: string, n: number): string | null {
-  const dates = scheduledWorkoutDatesFrom(start);
-  if (n <= 0 || dates.length < n) return null;
-  return dates[n - 1];
+// ---------------- Streak (in weeks) ----------------
+
+// The Sunday that ends the Nth Monday to Sunday week, counting the week that
+// holds `start` as the first.
+export function streakDeadline(start: string, weeks: number): string {
+  return addDaysStr(mondayOf(start), 7 * weeks - 1);
 }
 
-export function maxStreakFrom(start: string): number {
-  return scheduledWorkoutDatesFrom(start).length;
-}
-
-function streakWindowDates(goal: Goal): string[] {
-  return workoutDates().filter((d) => d >= goal.start && d <= goal.deadline);
-}
-
-// Walk the goal's window from the start. A past uncleared workout day fails
-// the goal immediately; today doesn't count against it until it's over.
+// Walk the goal's weeks from the start. A week with a workout adds one. A week
+// that is over with none fails the goal, and the current week does not count
+// against it until it ends.
 export function streakProgress(
   goal: Goal,
   state: AppState,
-  today: string
+  today: string,
+  scores?: WorkoutScore[]
 ): { consecutive: number; failed: boolean } {
+  // The window is the goal's own weeks, whatever deadline an older goal stored,
+  // and never runs past tomorrow (workouts can be dated a day ahead).
+  const end = streakDeadline(goal.start, goal.target);
+  const limit = addDaysStr(today, 1);
+  const weeks = new Set(goalScores({ ...goal, deadline: end < limit ? end : limit }, state, scores).map((s) => mondayOf(s.date)));
   let consecutive = 0;
-  for (const d of streakWindowDates(goal)) {
-    if (d > today) break;
-    const day = planDay(d)!;
-    const cleared = isDayCleared(day, state.days[d]);
-    if (d === today) {
-      if (cleared) consecutive++;
-      break;
+  for (let i = 0; i < goal.target; i++) {
+    const monday = addDaysStr(mondayOf(goal.start), 7 * i);
+    if (weeks.has(monday)) {
+      consecutive++;
+      continue;
     }
-    if (cleared) consecutive++;
-    else return { consecutive, failed: true };
+    if (addDaysStr(monday, 6) < today) return { consecutive, failed: true };
+    break;
   }
   return { consecutive, failed: false };
 }
 
 // ---------------- Period goals (workouts / pushups / cardio-minutes / cardio-km) ----------------
 
-// Only progress logged at or after the goal's createdAt counts, so a goal
-// can never be created already partly (or fully) satisfied by past history.
-export function periodGoalValue(goal: Goal, state: AppState): number {
-  const since = goal.createdAt;
-  const days = plan.filter((d) => isWorkoutDay(d) && d.date >= goal.start && d.date <= goal.deadline);
-  if (goal.type === 'workouts') {
-    return days.filter((d) => isDayClearedSince(d, state.days[d.date], since)).length;
+export function periodGoalValue(goal: Goal, state: AppState, scores?: WorkoutScore[]): number {
+  const list = goalScores(goal, state, scores);
+  switch (goal.type) {
+    case 'workouts':
+      return list.length;
+    case 'pushups':
+      return list.reduce((sum, s) => sum + s.pushupReps, 0);
+    case 'cardio-minutes':
+      return Math.round(list.reduce((sum, s) => sum + s.cardioMinutes, 0));
+    case 'cardio-km':
+      return Math.round(list.reduce((sum, s) => sum + s.km, 0) * 100) / 100;
+    default:
+      return 0;
   }
-  if (goal.type === 'pushups') {
-    return days.reduce((sum, d) => sum + pushupsInLogSince(d, state.days[d.date], since), 0);
-  }
-  if (goal.type === 'cardio-minutes') {
-    return days.reduce((sum, d) => sum + cardioSince(state.days[d.date], since).minutes, 0);
-  }
-  if (goal.type === 'cardio-km') {
-    return days.reduce((sum, d) => sum + cardioSince(state.days[d.date], since).km, 0);
-  }
-  return 0;
-}
-
-// Plan totals over a date range, for the "your plan has..." hint and target prefill.
-export function planTotals(start: string, end: string): { workouts: number; pushups: number; cardioMinutes: number } {
-  const days = plan.filter((d) => isWorkoutDay(d) && d.date >= start && d.date <= end);
-  let pushups = 0;
-  let cardioMinutes = 0;
-  for (const d of days) {
-    for (const ex of d.strength) if (isPushupExercise(ex.name)) pushups += lowerBoundReps(ex.reps) * ex.sets;
-    for (const ex of d.core ?? []) if (isPushupExercise(ex.name)) pushups += lowerBoundReps(ex.reps) * ex.sets;
-    if (d.cardio) cardioMinutes += d.cardio.minutes;
-  }
-  return { workouts: days.length, pushups, cardioMinutes };
 }
 
 export type PeriodPreset = 'this-week' | '2-weeks' | 'this-month' | '3-months' | 'custom';
@@ -163,6 +136,14 @@ export function weightGoalAchieved(goal: Goal, latest: number | null): boolean {
   return goal.direction === 'gain' ? latest >= goal.target : latest <= goal.target;
 }
 
+// A weight goal is met once any weigh-in from the day it was created up to its
+// deadline (and today) reaches the target. Weighing in above the target again
+// afterwards does not undo it.
+function weightGoalMet(goal: Goal, state: AppState, today: string): boolean {
+  const from = goal.createdAt.slice(0, 10);
+  return Object.keys(state.weights).some((d) => d >= from && d <= goal.deadline && d <= today && weightGoalAchieved(goal, state.weights[d]));
+}
+
 export type PaceLabel = 'Comfortable' | 'Ambitious' | 'Aggressive';
 
 export function weightPaceLabel(kgPerWeek: number): PaceLabel {
@@ -187,29 +168,45 @@ export function weightGoalPct(goal: Goal, latest: number | null): number {
 
 // ---------------- Unified status ----------------
 
-export function goalStatus(goal: Goal, state: AppState, today: string): GoalStatus {
+// A goal with an achievedAt stamp stays achieved for good: it keeps its XP and
+// its part in Goal Getter even if the workouts behind it are later edited or deleted.
+export function goalStatus(goal: Goal, state: AppState, today: string, scores?: WorkoutScore[]): GoalStatus {
+  if (goal.achievedAt) return 'achieved';
   if (goal.type === 'streak') {
-    const { consecutive, failed } = streakProgress(goal, state, today);
+    const { consecutive, failed } = streakProgress(goal, state, today, scores);
     if (consecutive >= goal.target) return 'achieved';
     if (failed) return 'failed';
     return 'active';
   }
   if (goal.type === 'weight') {
-    const latest = latestWeightOnOrBefore(state, today);
-    if (weightGoalAchieved(goal, latest)) return 'achieved';
+    if (weightGoalMet(goal, state, today)) return 'achieved';
     if (today > goal.deadline) return 'expired';
     return 'active';
   }
-  const value = periodGoalValue(goal, state);
+  const value = periodGoalValue(goal, state, scores);
   if (value >= goal.target) return 'achieved';
   if (today > goal.deadline) return 'expired';
   return 'active';
 }
 
 // Status as of an earlier date, used to find the date a goal first became achieved.
-export function goalStatusAsOf(goal: Goal, state: AppState, asOf: string): GoalStatus {
-  const clamped: Goal = { ...goal, deadline: goal.deadline < asOf ? goal.deadline : asOf };
-  return goalStatus(clamped, state, asOf);
+// It reads the progress itself, never the stamp.
+export function goalStatusAsOf(goal: Goal, state: AppState, asOf: string, scores?: WorkoutScore[]): GoalStatus {
+  const clamped: Goal = { ...goal, achievedAt: undefined, deadline: goal.deadline < asOf ? goal.deadline : asOf };
+  return goalStatus(clamped, state, asOf, scores);
+}
+
+// The goals with `achievedAt` set on every one that is achieved now and had no
+// stamp. Returns the same array when nothing changed.
+export function stampAchievedGoals(state: AppState, now: string, today: string): Goal[] {
+  const scores = scoreState(state);
+  let changed = false;
+  const goals = state.goals.map((g) => {
+    if (g.achievedAt || goalStatus(g, state, today, scores) !== 'achieved') return g;
+    changed = true;
+    return { ...g, achievedAt: now };
+  });
+  return changed ? goals : state.goals;
 }
 
 export function goalProgressValue(goal: Goal, state: AppState, today: string): number {
@@ -222,11 +219,11 @@ export function goalProgressValue(goal: Goal, state: AppState, today: string): n
 export function goalTitle(goal: Goal, units: GoalUnits = METRIC): string {
   switch (goal.type) {
     case 'streak':
-      return `${goal.target} workout days in a row`;
+      return `${goal.target} ${goal.target === 1 ? 'week' : 'weeks'} in a row`;
     case 'workouts':
-      return `${goal.target} workout days`;
+      return `${goal.target} ${goal.target === 1 ? 'workout' : 'workouts'}`;
     case 'pushups':
-      return `${goal.target} pushups`;
+      return `${goal.target} push-ups`;
     case 'cardio-minutes':
       return `${goal.target} cardio minutes`;
     case 'cardio-km':
@@ -246,50 +243,29 @@ export function daysLeft(goal: Goal, today: string): number {
 
 // ---------------- Goal XP reward ----------------
 
-// Plan totals across the goal's own window, used only to scale the ambition
-// multiplier below (not the same as progress logged toward it).
-function ambitionMultiplier(goal: Goal, planTotal: number): number {
-  if (planTotal <= 0) return goal.target > 0 ? 1.25 : 0.75;
-  const pct = goal.target / planTotal;
-  if (pct < 0.5) return 0.75;
-  if (pct < 1) return 1.0;
-  return 1.25;
-}
-
-// Deterministic from the goal's own fields (never stored). See the v5.1 plan,
-// section 1, for the base-XP table and rounding/clamp rules.
+// Deterministic from the goal's own fields (never stored): 25 a workout, 50 a
+// week of streak, 1 a cardio minute, 8 a km, a quarter of a push-up, 120 a kg
+// (a quarter more at an ambitious pace). Rounded to 5 and kept within 25 to 1000.
 export function goalReward(goal: Goal): number {
   let base: number;
   let multiplier = 1;
 
   switch (goal.type) {
     case 'streak':
-      base = 20 * goal.target;
+      base = 50 * goal.target;
       break;
-    case 'workouts': {
+    case 'workouts':
       base = 25 * goal.target;
-      const totals = planTotals(goal.start, goal.deadline);
-      multiplier = ambitionMultiplier(goal, totals.workouts);
       break;
-    }
-    case 'pushups': {
+    case 'pushups':
       base = goal.target / 4;
-      const totals = planTotals(goal.start, goal.deadline);
-      multiplier = ambitionMultiplier(goal, totals.pushups);
       break;
-    }
-    case 'cardio-minutes': {
+    case 'cardio-minutes':
       base = goal.target;
-      const totals = planTotals(goal.start, goal.deadline);
-      multiplier = ambitionMultiplier(goal, totals.cardioMinutes);
       break;
-    }
-    case 'cardio-km': {
+    case 'cardio-km':
       base = 8 * goal.target;
-      const totals = planTotals(goal.start, goal.deadline);
-      multiplier = ambitionMultiplier(goal, totals.cardioMinutes * 0.15);
       break;
-    }
     case 'weight': {
       const change = Math.abs(goal.target - (goal.baseline ?? goal.target));
       base = 120 * change;

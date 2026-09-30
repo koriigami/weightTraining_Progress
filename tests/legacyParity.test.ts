@@ -1,23 +1,13 @@
 // Legacy parity: for a state that only has plan days, weights and goals, the
-// numbers must be exactly what the scoring code produced at commit 39a2b2a,
-// before routines and workouts existed. legacyGolden.json holds those numbers.
+// per-day XP, the day streaks and the plan stats must be exactly what the scoring
+// code produced at commit 39a2b2a, before routines and workouts existed. legacyGolden.json holds those numbers.
 // See tests/fixtures/genLegacyGolden.ts for how it was produced and how to
 // regenerate it against the current code.
 import { describe, expect, it } from 'vitest';
 import legacy from './fixtures/legacyState.json';
 import golden from './fixtures/legacyGolden.json';
-import {
-  clearedStreakSeries,
-  computeProgress,
-  emptyState,
-  planDay,
-  totalXp,
-  workoutDates,
-  xpForDay,
-} from '../lib/progress';
+import { clearedStreakSeries, computeProgress, emptyState, planDay, workoutDates, xpForDay } from '../lib/progress';
 import type { AppState } from '../lib/progress';
-import { allEarnedBadges } from '../lib/badges';
-import { goalProgressValue, goalStatus } from '../lib/goals';
 import { defaultPrefs } from '../lib/routines';
 
 const state = legacy as unknown as AppState;
@@ -40,25 +30,14 @@ describe.each([
     expect(dayXp).toEqual(golden.dayXp);
   });
 
+  // XP rules v2 intentionally change the totals, level, rank, badges and goal
+  // results in the golden file: the plan-only badges are retired, Engine and
+  // Pushup Path count workouts, the monthly targets moved, and goals count
+  // workouts rather than plan days. The legacy plan stats are untouched.
   for (const g of golden.perToday) {
-    it(`totals, level, rank, streaks, badges and goals on ${g.today}`, () => {
+    it(`legacy plan stats on ${g.today}`, () => {
       const p = computeProgress(s, g.today);
-      expect(totalXp(s, g.today)).toBe(g.totalXp);
-      expect(p.xp).toBe(g.totalXp);
-      expect(p.level).toBe(g.level);
-      expect(p.rank).toBe(g.rank);
-      expect(p.xpIntoLevel).toEqual(g.xpIntoLevel);
       expect(p.stats).toEqual(g.stats);
-      const badges = allEarnedBadges(s, g.today)
-        .map((b) => `${b.id}@${b.earnedAt}`)
-        .sort();
-      expect(badges).toEqual(g.badges);
-      const goals = s.goals.map((goal) => ({
-        id: goal.id,
-        status: goalStatus(goal, s, g.today),
-        progress: goalProgressValue(goal, s, g.today),
-      }));
-      expect(goals).toEqual(g.goals);
     });
   }
 });

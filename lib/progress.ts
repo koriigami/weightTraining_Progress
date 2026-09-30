@@ -31,6 +31,7 @@ export type Goal = {
   createdAt: string; // ISO instant; anti-farming cutoff for count-based goal progress
   direction?: GoalDirection; // weight only
   baseline?: number; // weight only, kg at creation
+  achievedAt?: string; // ISO instant, stamped by the server the first time the goal is achieved. Once set the goal stays achieved
 };
 
 // The optional fields were added with routines and logged workouts. Old saved
