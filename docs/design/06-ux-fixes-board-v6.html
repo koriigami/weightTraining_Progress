@@ -945,6 +945,11 @@ a.cardlink,button.cardlink{display:block;color:inherit;text-decoration:none;text
 .tsep{height:1px;background:var(--line);margin:2px 0}
 .upcard.done{border-color:#9ED88A;background:linear-gradient(180deg,#F4FFEE,#FFF8E8 60%)}
 .sechead .xpv{font-size:20px!important}
+/* ============ round 5: View is a low-weight text button ============ */
+.viewbtn{flex:none;display:inline-flex;align-items:center;gap:2px;min-height:32px;padding:0 4px;border:0;border-radius:8px;background:none;color:var(--link);font-family:var(--font-ui);font-weight:800;font-size:14px;cursor:pointer}
+.viewbtn:hover{background:rgba(43,164,56,.1)}
+.viewbtn:focus-visible{outline:2px solid var(--xp);outline-offset:2px}
+.upcard-foot{margin-top:auto;display:flex;justify-content:flex-start}
 </style>
 <div class="page-sky sky" aria-hidden="true"><i></i><i></i><i></i></div>
 <main class="board">
@@ -1265,7 +1270,8 @@ function weekCard(doneToday) {
 }
 const thumbs = ids => `<div class="tm-thumbs">${ids.map(id => thumb(byId[id], 38)).join('')}</div>`;
 function doneRows(ids) { return `<div class="rrows">${ids.map(id => { const e = byId[id]; return `<div class="rrow">${thumb(e, 28)}<span class="rn">${e.n}</span><span class="rs ok">${e.m === 'dt' ? '32 min ' : ''}${ic('check', 16)}</span></div>`; }).join('')}</div>`; }
-function doneEntry(t, meta) { return `<div class="today-main"><div class="tm-t"><h3>${t} <span class="donechip">${ic('check', 13)}Done</span></h3><small>${meta}</small></div>${B('t', 'View', { icon: 'eye', a: `aria-label="View ${t}"` })}</div>`; }
+const viewBtn = t => `<button class="viewbtn" aria-label="View ${t}">View${ic('chevR', 16)}</button>`;
+function doneEntry(t, meta) { return `<div class="today-main"><div class="tm-t"><h3>${t} <span class="donechip">${ic('check', 13)}Done</span></h3><small>${meta}</small></div>${viewBtn(t)}</div>`; }
 const TILES = () => `<div class="today-alt"><button class="alt">${ic('clipboard', 20)}Other routine</button><button class="alt">${ic('bike', 20)}Cardio</button><button class="alt">${ic('plus', 20)}Custom workout</button></div>`;
 function todayCard(state, w) {
   if (state === 'done') return `<section class="card tcard" aria-label="Today"><div class="today-h"><span class="eyebrow ok">${ic('check', 14)} Done today</span><span class="wk ok">+195 XP</span></div>${doneEntry('Pull A', '52 min · 12 sets · +105 XP')}${doneRows(['db-row', 'db-1row', 'db-rfly'])}<div class="tsep"></div>${doneEntry('Evening ride', '11.2 km · +90 XP')}${doneRows(['bike'])}${TILES()}</section>`;
@@ -1379,7 +1385,7 @@ const SHOTS = [
   { id: 'home-live', sec: 'home', t: 'In progress', s: 'A workout is running', b: () => homeScreen('live'),
     n: ['Exactly as the app works today: the Resume bar floats just above the tabs, on Home and on every other tab.', 'Home itself stays the same while a workout runs.'] },
   { id: 'home-done', sec: 'home', t: 'Done today', s: 'Pull A and an evening ride', b: () => homeScreen('done'),
-    n: ['The same card as Ready. Each workout from today gets a Done tick, its XP, and View in place of Start.', 'Exercise rows show ticks instead of sets and reps.', 'The three tiles stay, so starting another workout is still one tap.'] },
+    n: ['The same card as Ready. Each workout from today gets a Done tick, its XP, and a small View link in place of Start.', 'Exercise rows show ticks instead of sets and reps.', 'The three tiles stay, so starting another workout is still one tap.'] },
   { id: 'start-sheet', sec: 'start', t: 'Start sheet', s: 'The Workout button', b: () => homeScreen('ready') + startSheet(),
     n: ['The center button is Workout with a +, on a wider button with room around the word.', 'Your routines first, with today\'s tagged. Then cardio. Then Custom workout: pick exercises, then start.'] },
   { id: 'picker', sec: 'start', t: 'Custom workout', s: 'Try it: pick exercises', b: pickerScreen, tryit: 1,
@@ -1580,7 +1586,7 @@ function stripes() {
 const DESK = [['home', 'Home'], ['detail', 'Workout page'], ['ride', 'Cardio log'], ['goal', 'Goal date'], ['insights', 'Insights (owner only)']];
 let DV = 'home', DHOME = 'done';
 const DNOTES = {
-  home: ['The big level card stays on desktop, where there is room for it.', 'Today\'s workout is the three-card row from the app today: two routines, then Something else for another routine, cardio or a custom workout.', 'In progress shows in the sidebar above your name, as it does today.', 'Done today keeps the same three cards: finished workouts get a Done tick and View in place of Start. Switch states above the browser.'],
+  home: ['The big level card stays on desktop, where there is room for it.', 'Today\'s workout is the three-card row from the app today: two routines, then Something else for another routine, cardio or a custom workout.', 'In progress shows in the sidebar above your name, as it does today.', 'Done today keeps the same three cards: finished workouts get a Done tick and a small View link in place of Start. Switch states above the browser.'],
   detail: ['Main column: stats and every set. Side column: muscles and notes. The XP card is gone, and the eye on the XP tile opens it.', 'Share and Edit in the header. Delete workout sits at the bottom.'],
   ride: ['Discard and Finish stay pinned in the header. No finish bonus chip and no Add lap.', 'Settings sits next to Discard at the end, like on the phone.'],
   goal: ['The goal dialog keeps the calendar inside it, like the phone sheet. Title, reward and buttons stay pinned.'],
@@ -1595,7 +1601,7 @@ function deskFrame(on, head, main, aside, narrow, live) {
 }
 function deskToday(state) {
   const card = (t, line) => `<article class="card upcard"><h4>${t}</h4><small style="color:var(--muted)">${line}</small>${rrowsFor(R_ITEMS[t].slice(0, 3))}${B('p', 'Start', { icon: 'play', a: `aria-label="Start ${t}"` })}</article>`;
-  const done = (t, line, rows) => `<article class="card upcard done"><h4>${t} <span class="donechip">${ic('check', 13)}Done</span></h4><small style="color:var(--muted)">${line}</small>${rows}${B('t', 'View', { icon: 'eye', a: `aria-label="View ${t}"` })}</article>`;
+  const done = (t, line, rows) => `<article class="card upcard done"><h4>${t} <span class="donechip">${ic('check', 13)}Done</span></h4><small style="color:var(--muted)">${line}</small>${rows}<div class="upcard-foot">${viewBtn(t)}</div></article>`;
   const other = `<article class="card upcard empty"><b class="gt" style="font-size:20px">Something else</b><small style="color:var(--muted)">Another routine, cardio or a custom workout.</small>${B('t', 'Choose', { icon: 'plus' })}</article>`;
   if (state === 'done') return `<div class="sechead"><div class="sec-label">Done today</div><b class="xpv">+195 XP</b></div><div class="upnext">${done('Pull A', '52 min · 12 sets · +105 XP', doneRows(['db-row', 'db-1row', 'db-rfly']))}${done('Evening ride', '11.2 km · +90 XP', doneRows(['bike']))}${other}</div>`;
   return `<div class="sechead"><div class="sec-label">Today's workout</div><button class="textbtn sm">All routines</button></div><div class="upnext">${card('Pull A', '5 exercises · 0 of 1 this week')}${card('Legs', '4 exercises · 0 of 1 this week')}${other}</div>`;
