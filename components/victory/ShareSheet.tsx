@@ -1,128 +1,83 @@
 'use client';
 
-import { Copy, Share2 } from 'lucide-react';
-import { RankShield } from '@/components/RankShield';
-import { useProgress } from '@/components/ProgressProvider';
+import { useRef, useState } from 'react';
+import { Dice5, Download, Share2, X } from 'lucide-react';
+import { ShareCardSvg } from '@/components/share/ShareCardSvg';
 import { Button } from '@/components/ui/Button';
-import { Hero } from '@/components/ui/Card';
-import { Sheet } from '@/components/ui/Sheet';
-import { RANK_TITLES } from '@/lib/progress';
-import type { Rank } from '@/lib/progress';
-import { shareText } from '@/lib/victory';
-import { fmtVolume } from '@/lib/units';
-import type { WeightUnit } from '@/lib/units';
+import { Sheet, useSheet } from '@/components/ui/Sheet';
+import type { ShareCard } from '@/lib/shareCard';
+import { useDesktopLayout } from '@/lib/useMediaQuery';
 
-export type ShareData = {
-  title: string;
-  dateLabel: string;
-  sets: number;
-  minutes: number | null;
-  volumeKg: number;
-  xp: number;
-  rank: Rank;
-  level: number;
-  weight: WeightUnit;
-};
-
-// The Web Share API is there on phones and some desktop browsers.
-function canShare(): boolean {
-  return typeof navigator !== 'undefined' && typeof navigator.share === 'function';
-}
-
-async function copyText(text: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    // Older browsers and pages without clipboard access: a hidden box and the copy command.
-    try {
-      const box = document.createElement('textarea');
-      box.value = text;
-      box.setAttribute('readonly', '');
-      box.style.position = 'fixed';
-      box.style.opacity = '0';
-      document.body.appendChild(box);
-      box.select();
-      const ok = document.execCommand('copy');
-      document.body.removeChild(box);
-      return ok;
-    } catch {
-      return false;
-    }
-  }
+// The desktop dialog has no title row above the picture: the title sits in the
+// right-hand column, so it brings its own close button.
+function SideHead() {
+  const { close } = useSheet();
+  return (
+    <div className="wt-sheet-title-row">
+      <h2 className="wt-sheet-title gt">Share workout</h2>
+      <button type="button" className="wt-iconbtn wt-sheet-close" aria-label="Close" onClick={close}>
+        <X size={20} aria-hidden="true" />
+      </button>
+    </div>
+  );
 }
 
 /**
- * Share workout: a preview card (title, stats, rank shield, XP) and a Share
- * button. Share opens the phone's share sheet with the text when the browser can.
- * Without that, and as a second choice, the text can be copied. Making a picture
- * of the card is not built yet.
+ * Share workout: the share card as a live SVG preview, a dice on its corner that
+ * rolls a new sky, and two buttons, Share image and Save image. The buttons are
+ * not wired yet (making the picture is the next step), so both are disabled.
+ * Phone: a bottom sheet with the buttons pinned below the picture. Desktop: a
+ * dialog with the picture on the left and the title, a line of copy and the
+ * buttons on the right.
  */
-export function ShareSheet({ open, onClose, data }: { open: boolean; onClose: () => void; data: ShareData }) {
-  const { showToast } = useProgress();
-  const text = shareText({ title: data.title, sets: data.sets, volumeKg: data.volumeKg, minutes: data.minutes, xp: data.xp, rankTitle: RANK_TITLES[data.rank] }, data.weight);
-  const share = canShare();
-
-  async function doShare() {
-    try {
-      await navigator.share({ title: data.title, text });
-    } catch (e) {
-      // Closing the share sheet is not an error.
-      if (e instanceof DOMException && e.name === 'AbortError') return;
-      showToast((await copyText(text)) ? 'Copied to your clipboard.' : "Couldn't share this workout.");
-    }
+export function ShareSheet({ open, onClose, card }: { open: boolean; onClose: () => void; card: ShareCard }) {
+  const desktop = useDesktopLayout();
+  const svgRef = useRef<SVGSVGElement>(null); // the source of the picture, for exporting
+  // Every opening starts on roll 0, so the same workout always opens on the same sky.
+  const [roll, setRoll] = useState(0);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setRoll(0);
   }
 
-  async function doCopy() {
-    showToast((await copyText(text)) ? 'Copied to your clipboard.' : "Couldn't copy. Select the text and copy it.");
-  }
-
-  const footer = share ? (
-    <>
-      <Button variant="secondary" icon={<Copy size={18} aria-hidden="true" />} onClick={() => void doCopy()}>
-        Copy text
+  const actions = (
+    <div className="wt-share-actions">
+      <Button block disabled data-testid="share-image" icon={<Share2 size={18} aria-hidden="true" />}>
+        Share image
       </Button>
-      <Button icon={<Share2 size={18} aria-hidden="true" />} onClick={() => void doShare()}>
-        Share
+      <Button block disabled variant="secondary" data-testid="save-image" icon={<Download size={18} aria-hidden="true" />}>
+        Save image
       </Button>
-    </>
-  ) : (
-    <Button icon={<Copy size={18} aria-hidden="true" />} onClick={() => void doCopy()}>
-      Copy text
-    </Button>
+    </div>
   );
 
   return (
-    <Sheet open={open} onClose={onClose} title="Share workout" footer={footer}>
-      <Hero className="wt-sharecard">
-        <RankShield rank={data.rank} level={data.level} size={64} />
-        <div className="gt" style={{ fontSize: 26, overflowWrap: 'anywhere' }}>
-          {data.title}
-        </div>
-        <div className="wt-hero-t">{data.dateLabel}</div>
-        <div className="sc-stats">
-          <div className="wt-stat">
-            <small style={{ color: 'var(--hero-sub)' }}>Sets</small>
-            <b>{data.sets}</b>
+    <Sheet
+      open={open}
+      onClose={onClose}
+      className="wt-share-sheet"
+      title={desktop ? undefined : 'Share workout'}
+      ariaLabel="Share workout"
+      footer={desktop ? undefined : actions}
+    >
+      <div className="wt-share-grid">
+        <div className="wt-share-preview">
+          <div className="wt-share-card">
+            <ShareCardSvg card={card} roll={roll} ref={svgRef} />
           </div>
-          {data.minutes !== null && (
-            <div className="wt-stat">
-              <small style={{ color: 'var(--hero-sub)' }}>Time</small>
-              <b>{data.minutes} min</b>
-            </div>
-          )}
-          {data.volumeKg > 0 && (
-            <div className="wt-stat">
-              <small style={{ color: 'var(--hero-sub)' }}>Volume</small>
-              <b>{fmtVolume(data.volumeKg, data.weight)}</b>
-            </div>
-          )}
+          <button type="button" className="wt-share-dice" aria-label="New sky" onClick={() => setRoll((r) => r + 1)}>
+            <Dice5 size={24} aria-hidden="true" />
+          </button>
         </div>
-        <div className="gt gold" style={{ fontSize: 24 }}>
-          +{data.xp} XP
-        </div>
-        <small style={{ fontWeight: 800, color: 'var(--hero-sub)' }}>Levl · {RANK_TITLES[data.rank]}</small>
-      </Hero>
+        {desktop && (
+          <div className="wt-share-side">
+            <SideHead />
+            <p>Share the picture to any app, or save it.</p>
+            {actions}
+          </div>
+        )}
+      </div>
     </Sheet>
   );
 }

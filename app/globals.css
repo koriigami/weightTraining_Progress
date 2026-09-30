@@ -3333,19 +3333,83 @@ textarea.wt-input {
 .wt-switch[aria-checked='true'] i {
   transform: translateX(22px);
 }
-.wt-sharecard {
-  border-radius: 22px;
-  padding: 18px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: center;
+/* ---- Share sheet: the card preview, the dice, the two buttons ---- */
+/* The card is 4:5. The width is worked out from the height limit, so on a short phone the
+   preview gets narrower (and stays centred) instead of running out of the sheet. */
+.wt-share-preview {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  max-height: min(56dvh, 560px);
+  width: min(100%, calc(min(56dvh, 560px) * 0.8));
+  margin: 0 auto;
 }
-.wt-sharecard .sc-stats {
-  display: flex;
-  justify-content: center;
-  gap: 18px;
+/* Only this wrapper clips (the rounded corners). The dice is its sibling, so it is never clipped. */
+.wt-share-card {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px -12px rgba(40, 25, 5, 0.55);
+}
+.wt-share-card svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* New sky: a round gold button, like the secondary button, on the preview's bottom-right corner. */
+.wt-share-dice {
+  position: absolute;
+  right: -6px;
+  bottom: -8px;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px solid var(--s-line);
+  background: var(--s-grad);
+  color: var(--s-ink);
+  box-shadow: 0 3px 0 var(--s-bevel), 0 8px 16px -8px rgba(0, 0, 0, 0.5);
+  touch-action: manipulation;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+.wt-share-dice:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--s-bevel);
+}
+/* Share image and Save image: two equal columns on the phone (in the sheet's footer). */
+.wt-share-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.wt-share-actions .wt-btn {
+  padding: 0 10px;
+  font-size: 16px;
+}
+@media (min-width: 768px) {
+  /* The desktop dialog is wider than the others: the picture on the left, the actions on the right. */
+  .wt-sheet.wt-share-sheet {
+    width: 760px;
+    max-width: 100%;
+  }
+  .wt-share-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 24px;
+    align-items: center;
+  }
+  .wt-share-side {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .wt-share-side p {
+    margin: 0 4px 6px;
+    color: var(--muted);
+  }
+  .wt-share-side .wt-share-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* ---- Home: week card, up next, feed ---- */

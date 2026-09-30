@@ -144,7 +144,12 @@ Tick these on each screen below, at 390 px and at 1440 px.
 - [ ] Edit the title, date and time, and notes. The changes save. (There is no photo control yet: it waits for file storage.)
 - [ ] The XP lines follow rules v2: sets, cardio, beat or record, finish bonus
       and weekly goal only when earned.
-- [ ] Share opens the sheet with a preview card and either the phone's share sheet or a Copy button.
+- [ ] Share opens the sheet with the share card as the preview: a random sky,
+      the muscles worked, the stats and the workout's own XP. A renamed title
+      shows on the card. The dice on the card's corner rolls a new sky; closing
+      and reopening the sheet brings back the first sky. Share image (green) and
+      Save image (gold) sit below the card on a phone and to the right of it on
+      desktop. (Both stay disabled until the picture export is built.)
 - [ ] Done is pinned at the bottom. Reload the page: no celebration replays.
 
 ## Reward moments

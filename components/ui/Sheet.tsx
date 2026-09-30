@@ -41,6 +41,7 @@ export function Sheet({
   ariaLabel,
   description,
   footer,
+  className,
   children,
 }: {
   open: boolean;
@@ -51,6 +52,8 @@ export function Sheet({
   description?: ReactNode;
   /** A pinned footer, e.g. Clear and Show 12 exercises. */
   footer?: ReactNode;
+  /** Extra class on the sheet itself, e.g. to make the desktop dialog wider. */
+  className?: string;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -90,7 +93,7 @@ export function Sheet({
         <button type="button" tabIndex={-1} className="wt-scrim" aria-label="Close" onClick={controls.close} />
         <div
           ref={ref}
-          className="wt-sheet"
+          className={cn('wt-sheet', className)}
           role="dialog"
           aria-modal="true"
           aria-labelledby={title ? titleId : undefined}

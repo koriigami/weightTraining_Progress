@@ -8,6 +8,7 @@ import { workoutTotals } from '@/lib/routines';
 import type { Routine } from '@/lib/routines';
 import { RANK_TITLES, rankForLevel } from '@/lib/progress';
 import { routineWouldChange, updateRoutineFromWorkout } from '@/lib/routineUpdate';
+import { shareCardData } from '@/lib/shareCard';
 import { fmtVolume } from '@/lib/units';
 import { useCountUp } from '@/lib/useCountUp';
 import { useDesktopLayout } from '@/lib/useMediaQuery';
@@ -194,17 +195,11 @@ function Victory({ finished }: { finished: Finished }) {
   const leveled = to.level > from.level;
   const ranked = leveled && rankForLevel(to.level) !== rankForLevel(from.level);
 
-  const shareData = {
-    title: title.trim() || live.title,
-    dateLabel: formatWhen(live.when),
-    sets: totals.sets,
-    minutes,
-    volumeKg: totals.volume,
-    xp: total,
-    rank: to.rank,
-    level: to.level,
-    weight: prefs.units.weight,
-  };
+  // The card shows the workout as the screen shows it now (a renamed title counts), the rank and level right after it.
+  const card = useMemo(
+    () => shareCardData({ workout: { ...live, title: title.trim() || live.title }, lookup, units: prefs.units, rank: to.rank, level: to.level }),
+    [live, title, lookup, prefs.units, to.rank, to.level]
+  );
 
   return (
     <Screen
@@ -392,7 +387,7 @@ function Victory({ finished }: { finished: Finished }) {
         </Button>
       )}
 
-      <ShareSheet open={sharing} onClose={() => setSharing(false)} data={shareData} />
+      <ShareSheet open={sharing} onClose={() => setSharing(false)} card={card} />
     </Screen>
   );
 }

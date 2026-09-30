@@ -8,6 +8,7 @@ import { workoutSummary, feedTiles } from '@/lib/feed';
 import { deleteSentence, deletedToast, setLine, xpBreakdown } from '@/lib/history';
 import { musclesOfExercises } from '@/lib/muscles';
 import { WORKOUT_XP } from '@/lib/routines';
+import { shareCardData } from '@/lib/shareCard';
 import type { ExerciseDef } from '@/data/exercises';
 import { useDesktopLayout, useWideLayout } from '@/lib/useMediaQuery';
 import { useProgress } from '@/components/ProgressProvider';
@@ -85,6 +86,10 @@ export function WorkoutView() {
   const units = prefs.units;
 
   const summary = useMemo(() => (w ? workoutSummary(w, lookup, routines) : null), [w, lookup, routines]);
+  const card = useMemo(
+    () => (w ? shareCardData({ workout: w, lookup, units, rank: progress.rank, level: progress.level }) : null),
+    [w, lookup, units, progress.rank, progress.level]
+  );
   const breakdown = useMemo(() => (w ? xpBreakdown(w, { lookup, weight: units.weight, distance: units.distance, weeklyGoal: prefs.weeklyGoal }) : null), [w, lookup, units, prefs.weeklyGoal]);
 
   if (leaving || (loading && !w)) return <Screen header={<PageHeader title="Workout" back />}>{null}</Screen>;
@@ -234,21 +239,7 @@ export function WorkoutView() {
 
       <XpEarnedModal open={xpOpen} onClose={() => setXpOpen(false)} lines={breakdown.lines} total={breakdown.total} />
       <DeleteWorkoutDialog open={confirming} sentence={sentence} saving={deleting} onKeep={() => setConfirming(false)} onDelete={() => void remove()} />
-      <ShareSheet
-        open={sharing}
-        onClose={() => setSharing(false)}
-        data={{
-          title: w.title,
-          dateLabel: when,
-          sets: summary.sets,
-          minutes: summary.minutes,
-          volumeKg: summary.volumeKg ?? 0,
-          xp: w.xp,
-          rank: progress.rank,
-          level: progress.level,
-          weight: units.weight,
-        }}
-      />
+      {card && <ShareSheet open={sharing} onClose={() => setSharing(false)} card={card} />}
     </Screen>
   );
 }
