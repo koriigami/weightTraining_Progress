@@ -133,7 +133,8 @@ export function ShareSheet({ open, onClose, card }: { open: boolean; onClose: ()
             <ShareCardSvg card={card} roll={roll} ref={svgRef} />
             {url && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img className="wt-share-img" src={url} alt={`${card.fullTitle.trim() || 'Workout'} workout card picture`} />
+              // The SVG underneath already carries the card's label, so this copy stays silent.
+              <img className="wt-share-img" src={url} alt="" aria-hidden="true" />
             )}
           </div>
           <button type="button" className="wt-share-dice" aria-label="New sky" onClick={() => setRoll((r) => r + 1)}>
