@@ -21,7 +21,7 @@ export const MONTHLY_COLORS: Record<string, [string, string]> = {
   cardio: ['#FF9DA8', '#C21F3C'],
   run: ['#FFB199', '#E0461F'],
   ride: ['#9FD8FF', '#1466C2'],
-  perfect: ['#FFE27A', '#B8860B'],
+  goal: ['#FFE27A', '#B8860B'],
   weigh: ['#D6B8FF', '#6B2FC9'],
 };
 

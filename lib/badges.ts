@@ -1,25 +1,15 @@
-import { plan } from '../data/plan';
-import { addDaysStr, mondayOf } from './date';
-import {
-  START_WEIGHT,
-  isDayCleared,
-  isPerfectDay,
-  isWorkoutDay,
-  planDay,
-  pushupsInLog,
-  workoutDates,
-} from './progress';
+import { addDaysStr, lastDayOfMonth, mondayOf, monthKey } from './date';
+import { START_WEIGHT, isDayCleared, planDay, workoutDates } from './progress';
 import type { AppState, BadgeTier, Goal } from './progress';
 import { goalStatusAsOf } from './goals';
+import { weeklyGoalOf } from './routines';
 import { scoreState } from './workoutScoring';
 import type { WorkoutScore } from './workoutScoring';
 
 export type BadgeShape = 'shield' | 'hex' | 'circle' | 'diamond' | 'square' | 'star';
 
 export type LifetimeFamilyId =
-  | 'iron-will'
   | 'pushup-path'
-  | 'grinder'
   | 'engine'
   | 'road-runner'
   | 'rider'
@@ -35,17 +25,15 @@ export const LIFETIME_FAMILIES: Record<
   LifetimeFamilyId,
   { name: string; metric: string; shape: BadgeShape; icon: string; tiers: number[]; unit: string; dy?: number }
 > = {
-  'iron-will': { name: 'Iron Will', metric: 'Best streak', shape: 'shield', icon: 'flame', tiers: [3, 7, 14, 30, 60, 100], unit: 'days' },
   'pushup-path': {
     name: 'Pushup Path',
-    metric: 'Lifetime pushups',
+    metric: 'Push-up reps logged',
     shape: 'hex',
     icon: 'chevrons',
     tiers: [100, 500, 1000, 2500, 5000, 10000],
     unit: '',
   },
-  grinder: { name: 'Grinder', metric: 'Days cleared', shape: 'hex', icon: 'dumbbell', tiers: [5, 15, 30, 60, 120, 200], unit: 'days' },
-  engine: { name: 'Engine', metric: 'Cardio minutes', shape: 'circle', icon: 'timer', dy: -6, tiers: [60, 300, 600, 1200, 2500, 5000], unit: 'min' },
+  engine: { name: 'Engine', metric: 'Workout cardio minutes', shape: 'circle', icon: 'timer', dy: -6, tiers: [60, 300, 600, 1200, 2500, 5000], unit: 'min' },
   'road-runner': {
     name: 'Road Runner',
     metric: 'Run and treadmill km',
@@ -67,7 +55,7 @@ export const LIFETIME_FAMILIES: Record<
   },
   // The families below score logged workouts (routines), not the 6-week plan.
   finisher: { name: 'Finisher', metric: 'Workouts finished', shape: 'shield', icon: 'target', tiers: [1, 10, 25, 50, 100, 250], unit: 'workouts' },
-  'iron-mover': { name: 'Iron Mover', metric: 'Tonnes lifted', shape: 'hex', icon: 'dumbbell', tiers: [1, 5, 10, 25, 50, 100], unit: 't' },
+  'iron-mover': { name: 'Iron Mover', metric: 'Sets logged', shape: 'hex', icon: 'dumbbell', tiers: [50, 250, 500, 1000, 2500, 5000], unit: 'sets' },
   'record-breaker': {
     name: 'Record Breaker',
     metric: 'Personal records',
@@ -92,49 +80,20 @@ const TIER_NAMES: BadgeTier[] = ['bronze', 'silver', 'gold', 'diamond', 'master'
 
 type Sample = { date: string; value: number };
 
-function ironWillSeries(state: AppState): Sample[] {
-  const out: Sample[] = [];
-  let running = 0;
-  let best = 0;
-  for (const date of workoutDates()) {
-    const day = planDay(date)!;
-    if (isDayCleared(day, state.days[date])) running++;
-    else running = 0;
-    best = Math.max(best, running);
-    out.push({ date, value: best });
-  }
-  return out;
+function pushupPathSeries(scores: WorkoutScore[]): Sample[] {
+  let total = 0;
+  return scores.map((s) => {
+    total += s.pushupReps;
+    return { date: s.date, value: total };
+  });
 }
 
-function pushupPathSeries(state: AppState): Sample[] {
+function engineSeries(scores: WorkoutScore[]): Sample[] {
   let total = 0;
-  const out: Sample[] = [];
-  for (const date of workoutDates()) {
-    total += pushupsInLog(planDay(date)!, state.days[date]);
-    out.push({ date, value: total });
-  }
-  return out;
-}
-
-function grinderSeries(state: AppState): Sample[] {
-  let total = 0;
-  const out: Sample[] = [];
-  for (const date of workoutDates()) {
-    if (isDayCleared(planDay(date)!, state.days[date])) total++;
-    out.push({ date, value: total });
-  }
-  return out;
-}
-
-function engineSeries(state: AppState): Sample[] {
-  let total = 0;
-  const out: Sample[] = [];
-  for (const date of workoutDates()) {
-    const log = state.days[date];
-    if (log?.cardio) total += log.cardio.minutes;
-    out.push({ date, value: total });
-  }
-  return out;
+  return scores.map((s) => {
+    total += s.cardioMinutes;
+    return { date: s.date, value: Math.round(total) };
+  });
 }
 
 function modalityKmSeries(state: AppState, modality: 'treadmill' | 'cycle'): Sample[] {
@@ -194,22 +153,30 @@ function withWorkoutKm(plan: Sample[], scores: WorkoutScore[], pick: (s: Workout
   return out;
 }
 
+// A finished workout is one whose plan was done, so a workout with sets missing does not count.
 function finisherSeries(scores: WorkoutScore[]): Sample[] {
-  return scores.map((s, i) => ({ date: s.date, value: i + 1 }));
+  let total = 0;
+  const out: Sample[] = [];
+  for (const s of scores) {
+    if (!s.planComplete) continue;
+    total++;
+    out.push({ date: s.date, value: total });
+  }
+  return out;
 }
 
 function ironMoverSeries(scores: WorkoutScore[]): Sample[] {
-  let kg = 0;
+  let sets = 0;
   return scores.map((s) => {
-    kg += s.volume;
-    return { date: s.date, value: Math.round(kg) / 1000 };
+    sets += s.sets;
+    return { date: s.date, value: sets };
   });
 }
 
 function recordBreakerSeries(scores: WorkoutScore[]): Sample[] {
   let total = 0;
   return scores.map((s) => {
-    total += s.prs.length;
+    total += s.records;
     return { date: s.date, value: total };
   });
 }
@@ -236,10 +203,8 @@ function allRounderSeries(scores: WorkoutScore[]): Sample[] {
 }
 
 const SERIES_BUILDERS: Record<LifetimeFamilyId, (state: AppState, scores: WorkoutScore[]) => Sample[]> = {
-  'iron-will': (s) => ironWillSeries(s),
-  'pushup-path': (s) => pushupPathSeries(s),
-  grinder: (s) => grinderSeries(s),
-  engine: (s) => engineSeries(s),
+  'pushup-path': (_s, w) => pushupPathSeries(w),
+  engine: (_s, w) => engineSeries(w),
   'road-runner': (s, w) => withWorkoutKm(modalityKmSeries(s, 'treadmill'), w, (x) => x.runKm),
   rider: (s, w) => withWorkoutKm(modalityKmSeries(s, 'cycle'), w, (x) => x.rideKm),
   shedding: (s) => sheddingSeries(s),
@@ -281,22 +246,17 @@ function familyProgress(id: LifetimeFamilyId, state: AppState, scores: WorkoutSc
 
 // ---------------- Monthly badges ----------------
 
-export type MonthlyBadgeId =
-  | 'month-clear'
-  | 'pushup-month'
-  | 'cardio-month'
-  | '20k-walk-run'
-  | '40k-ride'
-  | 'perfect-month'
-  | 'weigh-in-month';
+// The ids of the two distance badges predate the 50 and 100 km targets. They stay
+// so badges already earned and seen keep their identity.
+export type MonthlyBadgeId = 'month-clear' | 'goal-month' | 'pushup-month' | 'cardio-month' | '20k-walk-run' | '40k-ride' | 'weigh-in-month';
 
 export const MONTHLY_BADGES: Record<MonthlyBadgeId, { name: string; icon?: string; text?: string; rule: string; colorKey: string }> = {
-  'month-clear': { name: 'Month Clear', icon: 'week', rule: '12 days cleared', colorKey: 'clear' },
-  'pushup-month': { name: 'Pushup Month', text: '300', rule: '300 pushups', colorKey: 'pushup' },
-  'cardio-month': { name: 'Cardio Month', text: '150', rule: '150 cardio minutes', colorKey: 'cardio' },
-  '20k-walk-run': { name: '20K Walk/Run', text: '20K', rule: '20 km treadmill', colorKey: 'run' },
-  '40k-ride': { name: '40K Ride', text: '40K', rule: '40 km cycle', colorKey: 'ride' },
-  'perfect-month': { name: 'Perfect Month', icon: 'crown', rule: 'Every scheduled workout day cleared', colorKey: 'perfect' },
+  'month-clear': { name: 'Month Clear', icon: 'week', rule: 'Trained on 25 days', colorKey: 'clear' },
+  'goal-month': { name: 'Goal Month', icon: 'target', rule: 'Weekly goal met every week', colorKey: 'goal' },
+  'pushup-month': { name: 'Pushup Month', text: '1000', rule: '1,000 push-up reps', colorKey: 'pushup' },
+  'cardio-month': { name: 'Cardio Month', text: '600', rule: '600 cardio minutes', colorKey: 'cardio' },
+  '20k-walk-run': { name: '50K Walk/Run', text: '50K', rule: '50 km walking or running', colorKey: 'run' },
+  '40k-ride': { name: '100K Ride', text: '100K', rule: '100 km riding', colorKey: 'ride' },
   'weigh-in-month': { name: 'Weigh-in Month', icon: 'scale', rule: '20 weigh-ins', colorKey: 'weigh' },
 };
 
@@ -307,100 +267,104 @@ export type MonthProgress = {
   badges: Record<MonthlyBadgeId, MonthBadgeInfo>;
 };
 
-function monthsToConsider(state: AppState): string[] {
-  const set = new Set<string>();
-  for (const d of plan) set.add(d.date.slice(0, 7));
-  for (const d of Object.keys(state.weights)) set.add(d.slice(0, 7));
-  for (const d of Object.keys(state.days)) set.add(d.slice(0, 7));
-  return Array.from(set).sort();
+// Months with a workout or a weigh-in, and the current one. A month in the
+// future is never evaluated.
+function monthsToConsider(state: AppState, scores: WorkoutScore[], today: string): string[] {
+  const current = monthKey(today);
+  const set = new Set<string>([current]);
+  for (const s of scores) set.add(monthKey(s.date));
+  for (const d of Object.keys(state.weights)) set.add(monthKey(d));
+  return Array.from(set)
+    .filter((m) => m <= current)
+    .sort();
 }
 
-function scheduledWorkoutDaysInMonth(month: string) {
-  return plan.filter((d) => isWorkoutDay(d) && d.date.slice(0, 7) === month);
+// Running total over the month's workouts, and the date it first reached the target.
+function runningTotal(scores: WorkoutScore[], target: number, pick: (s: WorkoutScore) => number): { value: number; earnedAt?: string } {
+  let running = 0;
+  let earnedAt: string | undefined;
+  for (const s of scores) {
+    running += pick(s);
+    if (earnedAt === undefined && running >= target) earnedAt = s.date;
+  }
+  return { value: running, earnedAt };
 }
 
-function monthProgress(month: string, state: AppState): MonthProgress {
-  const scheduled = scheduledWorkoutDaysInMonth(month);
+// Goal Month: every Monday to Sunday week that starts in the month has as many
+// finished workouts (plan done) as the weekly goal, whatever month they fall in.
+// The month is earned on the date the last of those weeks reached its goal.
+function goalMonth(month: string, allScores: WorkoutScore[], weeklyGoal: number): { value: number; target: number; earnedAt?: string } {
+  const first = `${month}-01`;
+  const last = lastDayOfMonth(first);
+  const weeks: string[] = [];
+  for (let monday = mondayOf(first) < first ? addDaysStr(mondayOf(first), 7) : first; monday <= last; monday = addDaysStr(monday, 7)) weeks.push(monday);
+  let met = 0;
+  let earnedAt: string | undefined;
+  for (const monday of weeks) {
+    const sunday = addDaysStr(monday, 6);
+    const done = allScores.filter((s) => s.planComplete && s.date >= monday && s.date <= sunday);
+    if (done.length < weeklyGoal) continue;
+    met++;
+    const hit = done[weeklyGoal - 1].date;
+    if (earnedAt === undefined || hit > earnedAt) earnedAt = hit;
+  }
+  return { value: met, target: weeks.length, earnedAt: met === weeks.length && weeks.length > 0 ? earnedAt : undefined };
+}
+
+function monthProgress(month: string, state: AppState, allScores: WorkoutScore[]): MonthProgress {
+  const scores = allScores.filter((s) => monthKey(s.date) === month);
   const weighInsInMonth = Object.keys(state.weights)
-    .filter((d) => d.slice(0, 7) === month)
+    .filter((d) => monthKey(d) === month)
     .sort();
 
-  function runningAt(target: number, kind: 'clear' | 'pushups' | 'cardio' | 'tread' | 'cycle'): { value: number; earnedAt?: string } {
-    let running = 0;
-    let earnedAt: string | undefined;
-    for (const d of scheduled) {
-      const log = state.days[d.date];
-      if (kind === 'clear') {
-        if (isDayCleared(d, log)) running++;
-      } else if (kind === 'pushups') {
-        running += pushupsInLog(d, log);
-      } else if (kind === 'cardio') {
-        running += log?.cardio?.minutes ?? 0;
-      } else if (kind === 'tread') {
-        if (log?.cardio?.km !== undefined && d.cardio?.modality === 'treadmill') running += log.cardio.km;
-      } else if (kind === 'cycle') {
-        if (log?.cardio?.km !== undefined && d.cardio?.modality === 'cycle') running += log.cardio.km;
-      }
-      if (earnedAt === undefined && running >= target) earnedAt = d.date;
-    }
-    return { value: running, earnedAt };
-  }
-
-  const clear = runningAt(12, 'clear');
-  const pushup = runningAt(300, 'pushups');
-  const cardio = runningAt(150, 'cardio');
-  const tread = runningAt(20, 'tread');
-  const cycle = runningAt(40, 'cycle');
-
-  const perfectEligible = scheduled.length >= 8;
-  const clearedCount = clear.value;
-  const perfectEarned = perfectEligible && scheduled.length > 0 && clearedCount === scheduled.length;
-  const perfectEarnedAt = perfectEarned
-    ? scheduled
-        .filter((d) => isDayCleared(d, state.days[d.date]))
-        .map((d) => d.date)
-        .sort()
-        .slice(-1)[0]
-    : undefined;
+  const days = Array.from(new Set(scores.map((s) => s.date))).sort();
+  const clearTarget = 25;
+  const clear = { value: days.length, earnedAt: days.length >= clearTarget ? days[clearTarget - 1] : undefined };
+  const goal = goalMonth(month, allScores, weeklyGoalOf(state));
+  const pushup = runningTotal(scores, 1000, (s) => s.pushupReps);
+  const cardio = runningTotal(scores, 600, (s) => s.cardioMinutes);
+  const run = runningTotal(scores, 50, (s) => s.runKm);
+  const ride = runningTotal(scores, 100, (s) => s.rideKm);
 
   const weighTarget = 20;
   const weighEarnedAt = weighInsInMonth.length >= weighTarget ? weighInsInMonth[weighTarget - 1] : undefined;
 
+  const info = (r: { value: number; earnedAt?: string }, target: number): MonthBadgeInfo => ({
+    earned: r.earnedAt !== undefined,
+    earnedAt: r.earnedAt,
+    value: Math.round(r.value * 10) / 10,
+    target,
+    eligible: true,
+  });
+
   const badges: Record<MonthlyBadgeId, MonthBadgeInfo> = {
-    'month-clear': { earned: clear.value >= 12, earnedAt: clear.earnedAt, value: clear.value, target: 12, eligible: true },
-    'pushup-month': { earned: pushup.value >= 300, earnedAt: pushup.earnedAt, value: pushup.value, target: 300, eligible: true },
-    'cardio-month': { earned: cardio.value >= 150, earnedAt: cardio.earnedAt, value: cardio.value, target: 150, eligible: true },
-    '20k-walk-run': { earned: tread.value >= 20, earnedAt: tread.earnedAt, value: tread.value, target: 20, eligible: true },
-    '40k-ride': { earned: cycle.value >= 40, earnedAt: cycle.earnedAt, value: cycle.value, target: 40, eligible: true },
-    'perfect-month': {
-      earned: perfectEarned,
-      earnedAt: perfectEarnedAt,
-      value: clearedCount,
-      target: scheduled.length,
-      eligible: perfectEligible,
-    },
+    'month-clear': info(clear, clearTarget),
+    'goal-month': info(goal, goal.target),
+    'pushup-month': info(pushup, 1000),
+    'cardio-month': info(cardio, 600),
+    '20k-walk-run': info(run, 50),
+    '40k-ride': info(ride, 100),
     'weigh-in-month': { earned: weighInsInMonth.length >= weighTarget, earnedAt: weighEarnedAt, value: weighInsInMonth.length, target: weighTarget, eligible: true },
   };
 
   return { month, badges };
 }
 
-export function computeMonthlyProgress(state: AppState): MonthProgress[] {
-  return monthsToConsider(state).map((m) => monthProgress(m, state));
+export function computeMonthlyProgress(state: AppState, today: string, scores: WorkoutScore[] = scoreState(state, today)): MonthProgress[] {
+  return monthsToConsider(state, scores, today).map((m) => monthProgress(m, state, scores));
 }
 
 // ---------------- Special badges ----------------
 
-export type SpecialBadgeId = 'awakening' | 'perfect-day' | 'full-week' | 'goal-getter' | 'program-complete';
+export type SpecialBadgeId = 'clean-sweep' | 'goal-getter';
 
 export const SPECIAL_BADGES: Record<SpecialBadgeId, { name: string; description: string; icon: string }> = {
-  awakening: { name: 'Awakening', description: 'First day cleared', icon: 'flame' },
-  'perfect-day': { name: 'Perfect Day', description: 'Every item ticked', icon: 'star' },
-  'full-week': { name: 'Full Week', description: 'A whole week cleared', icon: 'week' },
+  'clean-sweep': { name: 'Clean Sweep', description: 'Finish a routine with every planned set ticked', icon: 'crown' },
   'goal-getter': { name: 'Goal Getter', description: 'First goal achieved', icon: 'target' },
-  'program-complete': { name: 'Program Complete', description: 'All 6 weeks cleared', icon: 'trophy' },
 };
 
+// The first day a goal counts as achieved. Goals keep their achievedAt stamp, so
+// one whose progress was later edited away still gets the day it was stamped.
 function firstGoalAchievedDate(goal: Goal, state: AppState, today: string): string | null {
   const end = goal.deadline < today ? goal.deadline : today;
   let d = goal.start;
@@ -410,54 +374,21 @@ function firstGoalAchievedDate(goal: Goal, state: AppState, today: string): stri
     d = addDaysStr(d, 1);
     guard++;
   }
-  return null;
+  return goal.achievedAt ? goal.achievedAt.slice(0, 10) : null;
 }
 
-function computeSpecialBadges(state: AppState, today: string): Partial<Record<SpecialBadgeId, { earnedAt: string }>> {
+function computeSpecialBadges(state: AppState, today: string, scores: WorkoutScore[]): Partial<Record<SpecialBadgeId, { earnedAt: string }>> {
   const result: Partial<Record<SpecialBadgeId, { earnedAt: string }>> = {};
 
-  for (const date of workoutDates()) {
-    if (isDayCleared(planDay(date)!, state.days[date])) {
-      result.awakening = { earnedAt: date };
-      break;
-    }
-  }
+  const sweep = scores.find((s) => s.cleanSweep);
+  if (sweep) result['clean-sweep'] = { earnedAt: sweep.date };
 
-  for (const date of workoutDates()) {
-    if (isPerfectDay(planDay(date)!, state.days[date])) {
-      result['perfect-day'] = { earnedAt: date };
-      break;
-    }
+  let earliest: string | null = null;
+  for (const goal of state.goals) {
+    const d = firstGoalAchievedDate(goal, state, today);
+    if (d && (earliest === null || d < earliest)) earliest = d;
   }
-
-  {
-    const mondays = Array.from(new Set(plan.map((d) => mondayOf(d.date)))).sort();
-    for (const monday of mondays) {
-      const sunday = addDaysStr(monday, 6);
-      const weekWorkoutDays = plan.filter((d) => isWorkoutDay(d) && d.date >= monday && d.date <= sunday);
-      if (weekWorkoutDays.length === 0) continue;
-      if (weekWorkoutDays.every((d) => isDayCleared(d, state.days[d.date]))) {
-        result['full-week'] = { earnedAt: weekWorkoutDays.map((d) => d.date).sort().slice(-1)[0] };
-        break;
-      }
-    }
-  }
-
-  {
-    const all = plan.filter(isWorkoutDay);
-    if (all.length > 0 && all.every((d) => isDayCleared(d, state.days[d.date]))) {
-      result['program-complete'] = { earnedAt: all.map((d) => d.date).sort().slice(-1)[0] };
-    }
-  }
-
-  {
-    let earliest: string | null = null;
-    for (const goal of state.goals) {
-      const d = firstGoalAchievedDate(goal, state, today);
-      if (d && (earliest === null || d < earliest)) earliest = d;
-    }
-    if (earliest) result['goal-getter'] = { earnedAt: earliest };
-  }
+  if (earliest) result['goal-getter'] = { earnedAt: earliest };
 
   return result;
 }
@@ -478,8 +409,8 @@ export function computeBadges(state: AppState, today: string): BadgeState {
   });
   return {
     lifetime,
-    monthly: computeMonthlyProgress(state),
-    special: computeSpecialBadges(state, today),
+    monthly: computeMonthlyProgress(state, today, scores),
+    special: computeSpecialBadges(state, today, scores),
   };
 }
 

@@ -16,7 +16,7 @@ const EM_DASH = String.fromCharCode(8212);
 
 const badge = (id: string): CelebrationEvent => ({
   kind: 'badge',
-  badge: { id: `special:${id}`, kind: 'special', badge: 'awakening', earnedAt: '2026-09-27' },
+  badge: { id: `special:${id}`, kind: 'special', badge: 'clean-sweep', earnedAt: '2026-09-27' },
 });
 const badgeN = (n: number): CelebrationEvent => ({
   kind: 'badge',
@@ -74,7 +74,7 @@ describe('replaying a rank', () => {
 
 describe('moment wording', () => {
   it('has a dialog label, a title and a sentence for screen readers, with no em dash', () => {
-    for (const e of [level(6), rank(), badgeN(1), badge('awakening')]) {
+    for (const e of [level(6), rank(), badgeN(1), badge('clean-sweep')]) {
       const c = momentCopy(e);
       expect(c.label.length).toBeGreaterThan(0);
       expect(c.title).toMatch(/!$/);
@@ -101,7 +101,7 @@ describe('moment wording', () => {
 describe('badge medal for the unlock moment', () => {
   it('a lifetime tier: the tier ribbon and medal colours, the threshold in words', () => {
     const m = describeMomentBadge({ id: 'x', kind: 'lifetime', family: 'iron-mover', tier: 'gold', earnedAt: '2026-09-27' });
-    expect(m).toMatchObject({ name: 'Iron Mover', ribbon: 'Gold', what: 'Tonnes lifted: 10 t', icon: 'dumbbell' });
+    expect(m).toMatchObject({ name: 'Iron Mover', ribbon: 'Gold', what: 'Sets logged: 500 sets', icon: 'dumbbell' });
     expect(m.medal).toEqual(['#FFE58A', '#C78A00']);
     // The gold ribbon is the tier's dark gold, darkened until the white text on it reads.
     expect(m.ribbonColor).toBe(ribbonBackground('#C78A00'));
@@ -125,10 +125,10 @@ describe('badge medal for the unlock moment', () => {
   });
 
   it('a monthly badge and a special badge reuse the same moment', () => {
-    const month = describeMomentBadge({ id: 'm', kind: 'monthly', badge: 'perfect-month', month: '2026-10', earnedAt: '2026-10-30' });
-    expect(month).toMatchObject({ name: 'Perfect Month', ribbon: 'Monthly', what: 'Every scheduled workout day cleared, October 2026' });
-    const special = describeMomentBadge({ id: 's', kind: 'special', badge: 'awakening', earnedAt: '2026-09-27' });
-    expect(special).toMatchObject({ name: 'Awakening', ribbon: 'Special', what: 'First day cleared' });
+    const month = describeMomentBadge({ id: 'm', kind: 'monthly', badge: 'goal-month', month: '2026-10', earnedAt: '2026-10-30' });
+    expect(month).toMatchObject({ name: 'Goal Month', ribbon: 'Monthly', what: 'Weekly goal met every week, October 2026' });
+    const special = describeMomentBadge({ id: 's', kind: 'special', badge: 'clean-sweep', earnedAt: '2026-09-27' });
+    expect(special).toMatchObject({ name: 'Clean Sweep', ribbon: 'Special', what: 'Finish a routine with every planned set ticked' });
     expect(month.what).not.toContain(EM_DASH);
   });
 });
