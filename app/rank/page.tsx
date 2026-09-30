@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useCelebration } from '@/components/celebrate/CelebrationProvider';
 import { useProgress } from '@/components/ProgressProvider';
 import { RankShield } from '@/components/RankShield';
@@ -15,9 +15,10 @@ import { Segmented } from '@/components/ui/Segmented';
 import { buildBadgeCards, cardToEarned } from '@/lib/badgeCards';
 import type { BadgeCard } from '@/lib/badgeCards';
 import { rankMomentForGate } from '@/lib/celebrations';
+import { RANK_RETAP_EVENT } from '@/lib/rankRetap';
 import { gatePreview } from '@/lib/rankRoad';
 import type { GateRow } from '@/lib/rankRoad';
-import { useWideLayout } from '@/lib/useMediaQuery';
+import { useDesktopLayout, useWideLayout } from '@/lib/useMediaQuery';
 import { useToday } from '@/lib/useToday';
 
 type Tab = 'road' | 'badges';
@@ -32,9 +33,16 @@ export default function RankPage() {
   const { progress, state } = useProgress();
   const celebration = useCelebration();
   const today = useToday();
+  const desktop = useDesktopLayout();
   const wide = useWideLayout();
   const [tab, setTab] = useState<Tab>('road');
   const [preview, setPreview] = useState<Preview | null>(null);
+  // Tapping the Rank tab again shows the Road (the road itself scrolls to your level).
+  useEffect(() => {
+    const show = () => setTab('road');
+    window.addEventListener(RANK_RETAP_EVENT, show);
+    return () => window.removeEventListener(RANK_RETAP_EVENT, show);
+  }, []);
   const cards = useMemo(() => buildBadgeCards(state, today), [state, today]);
 
   // An unlocked rank or an earned badge replays its moment. Anything still locked opens the preview.
@@ -52,21 +60,25 @@ export default function RankPage() {
   const road = <RankRoad xp={progress.xp} onPreview={openGate} />;
   const badges = <BadgesPanel cards={cards} today={today} onOpen={openBadge} />;
 
+  const tabs = (
+    <Segmented
+      ariaLabel="Rank view"
+      value={tab}
+      onChange={setTab}
+      options={[
+        { value: 'road', label: 'Rank Road' },
+        { value: 'badges', label: 'Badges' },
+      ]}
+    />
+  );
+
   return (
-    <Screen header={<PageHeader title="Rank" large />} aside={wide ? badges : undefined}>
+    <Screen header={<PageHeader title="Rank" large collapse sub={desktop ? undefined : <div className="wt-ph-tabs">{tabs}</div>} />} aside={wide ? badges : undefined}>
       {wide ? (
         <Card className="wt-roadcard">{road}</Card>
       ) : (
         <>
-          <Segmented
-            ariaLabel="Rank view"
-            value={tab}
-            onChange={setTab}
-            options={[
-              { value: 'road', label: 'Rank Road' },
-              { value: 'badges', label: 'Badges' },
-            ]}
-          />
+          {desktop && tabs}
           {tab === 'road' ? road : badges}
         </>
       )}

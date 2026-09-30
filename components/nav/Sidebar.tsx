@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { EllipsisVertical, LogOut, Settings, User } from 'lucide-react';
 import { RankShield } from '@/components/RankShield';
+import { onRetap } from '@/lib/rankRetap';
 import { useProgress } from '@/components/ProgressProvider';
 import { useElapsed, useWorkoutSession } from '@/components/WorkoutSessionProvider';
 import { Avatar } from '@/components/ui/Avatar';
@@ -125,8 +126,9 @@ export function Sidebar({ onStart, onSignOut }: { onStart: () => void; onSignOut
       <nav aria-label="Main" className="flex flex-col gap-1" data-testid="side-nav">
         {SIDEBAR_ITEMS.map((item) => {
           const Icon = item.icon;
+          const on = item.active(pathname);
           return (
-            <Link key={item.key} href={item.href} className="wt-navi" aria-current={item.active(pathname) ? 'page' : undefined}>
+            <Link key={item.key} href={item.href} className="wt-navi" aria-current={on ? 'page' : undefined} onClick={(e) => onRetap(e, on, item.key)}>
               <Icon size={22} aria-hidden="true" />
               <span>{item.label}</span>
             </Link>

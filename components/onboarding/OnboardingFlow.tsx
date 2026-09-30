@@ -107,9 +107,15 @@ export function OnboardingFlow() {
               <i key={i} className={cn(i <= step && 'on')} />
             ))}
           </div>
-          <span className="wt-ob-step" aria-hidden="true">
-            {step + 1} of {STEPS}
-          </span>
+          {step === 2 ? (
+            <button type="button" className="wt-textbtn wt-ob-skip" onClick={onSkip} disabled={busy}>
+              Skip
+            </button>
+          ) : (
+            <span className="wt-ob-step" aria-hidden="true">
+              {step + 1} of {STEPS}
+            </span>
+          )}
         </div>
 
         <div className="wt-ob-body">
@@ -137,14 +143,9 @@ export function OnboardingFlow() {
         </div>
 
         <div className="wt-ob-foot">
-          <Button block size="lg" loading={busy && (last || step !== 2)} onClick={onContinue} disabled={busy}>
+          <Button block size="lg" loading={busy} onClick={onContinue} disabled={busy}>
             {last ? "Let's go" : 'Continue'}
           </Button>
-          {step === 2 && (
-            <Button block variant="secondary" loading={busy} onClick={onSkip} disabled={busy}>
-              Skip
-            </Button>
-          )}
         </div>
       </div>
     </div>

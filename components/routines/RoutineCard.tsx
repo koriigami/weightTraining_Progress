@@ -1,44 +1,73 @@
 'use client';
 
 import Link from 'next/link';
-import { Check, ChevronRight, Eye, Pencil, Play, Plus } from 'lucide-react';
+import { useState } from 'react';
+import { Check, ChevronRight, Ellipsis, Eye, Pencil, Play, Plus, Trash2 } from 'lucide-react';
 import type { Routine } from '@/lib/routines';
+import { duplicateRoutine, newRoutineId } from '@/lib/routineDraft';
 import { routineMeta } from '@/lib/routineSummary';
 import { useProgress } from '@/components/ProgressProvider';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { GameModal } from '@/components/ui/GameModal';
 import { Tag } from '@/components/ui/Chip';
 import { cn } from '@/components/ui/cn';
 import { ExerciseRows } from './ExerciseRows';
+import { RoutineMenu } from './RoutineMenu';
 import { useStartRoutine } from './useStartRoutine';
 
 /**
  * A saved routine: the title opens the full preview, every exercise is listed
  * with its sets and weight (six rows, then "+N more"), and Edit and Start sit
- * at the bottom. `doneThisWeek` feeds the "1 of 2" chip when it has a weekly count.
+ * at the bottom. The three dots open Duplicate and Delete routine. `doneThisWeek`
+ * feeds the "1 of 2" chip when it has a weekly count.
  */
 export function RoutineCard({ routine, doneThisWeek }: { routine: Routine; doneThisWeek: number }) {
-  const { lookup } = useProgress();
+  const { lookup, saveRoutine, deleteRoutine, showToast } = useProgress();
   const start = useStartRoutine();
   const target = routine.timesPerWeek;
   const reached = target !== undefined && doneThisWeek >= target;
+  const [menu, setMenu] = useState(false);
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  // The copy sits right after the original.
+  async function duplicate() {
+    const copy = duplicateRoutine(routine, newRoutineId());
+    const error = await saveRoutine(copy, { after: routine.id });
+    showToast(error ?? `Duplicated as ${copy.title}`);
+  }
+
+  async function remove() {
+    setBusy(true);
+    const error = await deleteRoutine(routine.id);
+    setBusy(false);
+    setConfirm(false);
+    showToast(error ?? `${routine.title} deleted`);
+  }
+
+  const n = routine.items.length;
 
   return (
     <Card as="article" className="wt-rcard" aria-label={routine.title}>
-      <Link href={`/routine/${routine.id}/preview`} className="wt-rc-head" aria-label={`${routine.title}, preview`}>
-        <span className="grow">
-          <h3>{routine.title}</h3>
-          <small>{routineMeta(routine.items, lookup)}</small>
-        </span>
-        {target !== undefined && (
-          <span className={cn('wt-wk', reached && 'ok')}>
-            {reached && <Check size={14} aria-hidden="true" />}
-            {doneThisWeek} of {target}
-            <span className="sr-only"> this week</span>
+      <div className="wt-rc-head-row">
+        <Link href={`/routine/${routine.id}/preview`} className="wt-rc-head" aria-label={`${routine.title}, preview`}>
+          <span className="grow">
+            <h3>{routine.title}</h3>
+            <small>{routineMeta(routine.items, lookup)}</small>
           </span>
-        )}
-        <ChevronRight size={18} aria-hidden="true" />
-      </Link>
+          {target !== undefined && (
+            <span className={cn('wt-wk', reached && 'ok')}>
+              {reached && <Check size={14} aria-hidden="true" />}
+              {doneThisWeek} of {target}
+              <span className="sr-only"> this week</span>
+            </span>
+          )}
+        </Link>
+        <button type="button" className="wt-iconbtn" aria-label={`More for ${routine.title}`} aria-haspopup="dialog" onClick={() => setMenu(true)}>
+          <Ellipsis size={20} aria-hidden="true" />
+        </button>
+      </div>
       <ExerciseRows items={routine.items} />
       <div className="wt-rc-actions">
         <ButtonLink href={`/routine/${routine.id}`} variant="secondary" size="sm" icon={<Pencil size={16} aria-hidden="true" />} aria-label={`Edit ${routine.title}`}>
@@ -48,6 +77,21 @@ export function RoutineCard({ routine, doneThisWeek }: { routine: Routine; doneT
           Start
         </Button>
       </div>
+      <RoutineMenu open={menu} onClose={() => setMenu(false)} title={routine.title} onDuplicate={duplicate} onDelete={() => setConfirm(true)} />
+      <GameModal
+        open={confirm}
+        strict
+        tone="red"
+        icon={<Trash2 size={30} aria-hidden="true" />}
+        title="Delete routine?"
+        cancelLabel="Keep it"
+        confirmLabel="Delete"
+        confirmLoading={busy}
+        onCancel={() => setConfirm(false)}
+        onConfirm={remove}
+      >
+        {routine.title} and its {n} {n === 1 ? 'exercise' : 'exercises'} will be removed. Workouts you logged with it stay.
+      </GameModal>
     </Card>
   );
 }

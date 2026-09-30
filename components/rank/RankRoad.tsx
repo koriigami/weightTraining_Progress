@@ -6,6 +6,7 @@ import { RankShield } from '@/components/RankShield';
 import { Chip } from '@/components/ui/Chip';
 import { XpBar } from '@/components/ui/XpBar';
 import { cn } from '@/components/ui/cn';
+import { RANK_RETAP_EVENT } from '@/lib/rankRetap';
 import { buildRoad, levelsWord } from '@/lib/rankRoad';
 import type { GateRow, LevelRow, Road } from '@/lib/rankRoad';
 import { RANK_TITLES } from '@/lib/progress';
@@ -95,6 +96,13 @@ export function RankRoad({ xp, onPreview }: { xp: number; onPreview: (gate: Gate
     center();
     const id = requestAnimationFrame(() => requestAnimationFrame(center));
     return () => cancelAnimationFrame(id);
+  }, []);
+
+  // Tapping the Rank tab again brings you back to your level.
+  useEffect(() => {
+    const back = () => curRef.current?.scrollIntoView({ block: 'center', behavior: reducedMotion() ? 'auto' : 'smooth' });
+    window.addEventListener(RANK_RETAP_EVENT, back);
+    return () => window.removeEventListener(RANK_RETAP_EVENT, back);
   }, []);
 
   const nextGate = road.rows.find((r): r is GateRow => r.kind === 'gate' && r.level === road.nextGate);

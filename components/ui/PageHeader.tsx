@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { BackButton } from './BackButton';
+import { useScrollHide } from '@/lib/useScrollHide';
 import { cn } from './cn';
 
 /**
@@ -21,6 +22,7 @@ export function PageHeader({
   sub,
   large,
   narrow,
+  collapse,
 }: {
   title: string;
   /** Show the round gold back button. A string is a link target, true uses history. */
@@ -40,9 +42,12 @@ export function PageHeader({
   large?: boolean;
   /** Match a narrow screen body (740px on desktop). */
   narrow?: boolean;
+  /** Phone: the title row tucks away while scrolling down and returns on scroll up. The `sub` row stays pinned. */
+  collapse?: boolean;
 }) {
+  const hidden = useScrollHide(Boolean(collapse));
   return (
-    <header className={cn('wt-ph', large && 'large', narrow && 'narrow')}>
+    <header className={cn('wt-ph', large && 'large', narrow && 'narrow', collapse && 'collapsible', hidden && 'collapsed')}>
       <div className="wt-ph-in">
         {(lead || back || !large) && (
           <div className="wt-ph-lead">

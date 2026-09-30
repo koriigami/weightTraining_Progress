@@ -41,6 +41,8 @@ export default function ExercisesPage() {
         <PageHeader
           title={desktop ? 'Exercises' : 'Routines'}
           large
+          collapse
+          sub={desktop ? undefined : <RoutinesTabs current="exercises" />}
           actions={
             desktop ? (
               <Button variant="secondary" icon={<Plus size={18} aria-hidden="true" />} onClick={() => setCreating(true)}>
@@ -65,7 +67,6 @@ export default function ExercisesPage() {
         ) : undefined
       }
     >
-      <RoutinesTabs current="exercises" />
       <ExerciseFilters filters={filters} onChange={setFilters} resultCount={count} />
       <Card tone="flush">
         <ExerciseList exercises={exercises} filters={filters} onFiltersChange={setFilters} mode="browse" activeId={wide ? activeId : null} onInfo={open} />

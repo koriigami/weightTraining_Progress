@@ -1,6 +1,6 @@
 'use client';
 
-import { ClipboardList, Compass } from 'lucide-react';
+import { Compass, Plus } from 'lucide-react';
 import { useProgress } from '@/components/ProgressProvider';
 import { RoutinesTabs } from '@/components/RoutinesTabs';
 import { RoutineCard } from '@/components/routines/RoutineCard';
@@ -23,11 +23,13 @@ export default function RoutinesPage() {
         <PageHeader
           title="Routines"
           large
+          collapse
+          sub={desktop ? undefined : <RoutinesTabs current="mine" />}
           actions={
             desktop ? (
               <>
-                <ButtonLink href="/routine/new" variant="secondary" icon={<ClipboardList size={20} aria-hidden="true" />}>
-                  New routine
+                <ButtonLink href="/routine/new" variant="secondary" icon={<Plus size={20} aria-hidden="true" />}>
+                  Create routine
                 </ButtonLink>
                 <ButtonLink href="/explore" variant="secondary" icon={<Compass size={20} aria-hidden="true" />}>
                   Explore
@@ -38,10 +40,9 @@ export default function RoutinesPage() {
         />
       }
     >
-      <RoutinesTabs current="mine" />
       {!desktop && (
-        <ButtonLink href="/routine/new" variant="secondary" block icon={<ClipboardList size={20} aria-hidden="true" />}>
-          New routine
+        <ButtonLink href="/routine/new" variant="secondary" block icon={<Plus size={20} aria-hidden="true" />}>
+          Create routine
         </ButtonLink>
       )}
       {routines.length === 0 ? (
@@ -51,7 +52,7 @@ export default function RoutinesPage() {
           </p>
           <p style={{ margin: '0 0 14px', color: 'var(--muted)' }}>A routine is one day of training: exercises, then sets with a weight and reps. Build your own, or start from a ready-made one.</p>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <ButtonLink href="/routine/new">New routine</ButtonLink>
+            <ButtonLink href="/routine/new">Create routine</ButtonLink>
             <ButtonLink href="/explore" variant="secondary">
               Explore
             </ButtonLink>
