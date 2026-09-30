@@ -16,6 +16,10 @@ function memoryKv(seed: Record<string, unknown> = {}): KV & { data: Map<string, 
     async set(key, value) {
       data.set(key, structuredClone(value));
     },
+    async scan(pattern) {
+      const [head, tail] = pattern.split('*');
+      return [...data.keys()].filter((k) => k.startsWith(head) && k.endsWith(tail));
+    },
   };
 }
 
@@ -57,5 +61,17 @@ describe('per-user state', () => {
     const saved: AppState = { ...newUserState(), routines: [{ id: 'r', title: 'R', items: [] }] };
     await store.saveState('u', saved);
     expect(await store.getState('u', 'u@example.com')).toEqual(saved);
+  });
+});
+
+describe('listing users', () => {
+  it('lists the ids that have a saved state, whatever they look like', async () => {
+    const kv = memoryKv({
+      'wt:user:123:state': emptyState(),
+      'wt:user:dev:a@b.co:state': emptyState(),
+      'wt:user:123:profile': {},
+      'wt:user:123:backup:v7': {},
+    });
+    expect((await createStore(kv).listUserIds()).sort()).toEqual(['123', 'dev:a@b.co']);
   });
 });

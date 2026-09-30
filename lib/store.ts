@@ -5,6 +5,7 @@ import { defaultPrefs } from './routines';
 import { completionToDayLog, hasLegacyDays, migratePlanDays } from './migrations/planDays';
 import type { LegacyDayLog, LegacyState } from './migrations/planDays';
 import { todayStr } from './date';
+import { isOwnerEmail } from './owner';
 
 const STATE_KEY_V2 = 'wt:state:v2';
 const STATE_KEY_V1 = 'wt:state';
@@ -119,17 +120,14 @@ export type Profile = { email: string; name: string; image: string; createdAt: s
 export type KV = {
   get<T>(key: string): Promise<T | null>;
   set(key: string, value: unknown): Promise<void>;
+  // Every key that matches a glob pattern such as `wt:user:*:state`.
+  scan(pattern: string): Promise<string[]>;
 };
 
 const stateKey = (userId: string) => `wt:user:${userId}:state`;
 const profileKey = (userId: string) => `wt:user:${userId}:profile`;
 // The state exactly as it was before the plan days became workouts, kept once.
 const backupKey = (userId: string) => `wt:user:${userId}:backup:v7`;
-
-function isOwner(email: string | undefined | null): boolean {
-  const owner = process.env.OWNER_EMAIL?.trim().toLowerCase();
-  return Boolean(owner && email && email.trim().toLowerCase() === owner);
-}
 
 export function createStore(kv: KV) {
   // Brings a state read for the first time under v8 up to date. A state that still
@@ -155,7 +153,7 @@ export function createStore(kv: KV) {
     async getState(userId: string, email?: string | null): Promise<AppState> {
       const existing = await kv.get<LegacyState>(stateKey(userId));
       if (existing) return upgrade(userId, existing);
-      if (isOwner(email)) {
+      if (isOwnerEmail(email)) {
         // Copy the legacy single-user progress once. Legacy keys are never written or deleted.
         const v2 = await kv.get<LegacyState>(STATE_KEY_V2);
         const v1 = v2 ? null : await kv.get<V1AppState>(STATE_KEY_V1);
@@ -168,6 +166,14 @@ export function createStore(kv: KV) {
     },
     async saveState(userId: string, state: AppState): Promise<void> {
       await kv.set(stateKey(userId), state);
+    },
+    async getProfile(userId: string): Promise<Profile | null> {
+      return kv.get<Profile>(profileKey(userId));
+    },
+    // The id of everyone who has a saved state, for the owner's Insights.
+    async listUserIds(): Promise<string[]> {
+      const keys = await kv.scan('wt:user:*:state');
+      return keys.map((k) => k.slice('wt:user:'.length, -':state'.length));
     },
     async saveProfile(userId: string, p: Omit<Profile, 'createdAt'>): Promise<void> {
       const prev = await kv.get<Profile>(profileKey(userId));
@@ -189,6 +195,10 @@ const memoryKv: KV = {
   async set(key, value) {
     (globalKv.__wtMemoryKv ??= new Map()).set(key, structuredClone(value));
   },
+  async scan(pattern) {
+    const [head, tail] = pattern.split('*');
+    return [...(globalKv.__wtMemoryKv ??= new Map()).keys()].filter((k) => k.startsWith(head) && k.endsWith(tail));
+  },
 };
 
 const redisKv: KV = {
@@ -198,6 +208,17 @@ const redisKv: KV = {
   async set(key, value) {
     await getRedis().set(key, value);
   },
+  async scan(pattern) {
+    const redis = getRedis();
+    const keys: string[] = [];
+    let cursor = '0';
+    do {
+      const [next, batch] = await redis.scan(cursor, { match: pattern, count: 200 });
+      cursor = String(next);
+      keys.push(...batch);
+    } while (cursor !== '0');
+    return [...new Set(keys)];
+  },
 };
 
 function active() {
@@ -206,4 +227,6 @@ function active() {
 
 export const getState = (userId: string, email?: string | null) => active().getState(userId, email);
 export const saveState = (userId: string, state: AppState) => active().saveState(userId, state);
+export const getProfile = (userId: string) => active().getProfile(userId);
+export const listUserIds = () => active().listUserIds();
 export const saveProfile = (userId: string, p: Omit<Profile, 'createdAt'>) => active().saveProfile(userId, p);

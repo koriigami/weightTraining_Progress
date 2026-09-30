@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useEffect, useId, useRef, useState } from 'react';
-import { EllipsisVertical, LogOut, Settings, User } from 'lucide-react';
+import { BarChart3, EllipsisVertical, LogOut, Settings, User } from 'lucide-react';
 import { RankShield } from '@/components/RankShield';
 import { onRetap } from '@/lib/rankRetap';
 import { useProgress } from '@/components/ProgressProvider';
@@ -69,6 +69,11 @@ function AccountMenu({ onSignOut }: { onSignOut: () => void }) {
             <Link href="/settings" role="menuitem" onClick={() => setOpen(false)}>
               <Settings size={18} aria-hidden="true" /> Settings
             </Link>
+            {auth?.user?.isOwner && (
+              <Link href="/insights" role="menuitem" onClick={() => setOpen(false)}>
+                <BarChart3 size={18} aria-hidden="true" /> Insights
+              </Link>
+            )}
             <button
               type="button"
               role="menuitem"

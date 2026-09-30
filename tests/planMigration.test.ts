@@ -224,6 +224,10 @@ function memoryKv(seed: Record<string, unknown> = {}): KV & { data: Map<string, 
       writes.push(key);
       data.set(key, structuredClone(value));
     },
+    async scan(pattern) {
+      const [head, tail] = pattern.split('*');
+      return [...data.keys()].filter((k) => k.startsWith(head) && k.endsWith(tail));
+    },
   };
 }
 

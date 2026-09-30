@@ -2,6 +2,7 @@ import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
 import type { Provider } from 'next-auth/providers';
+import { isOwnerEmail } from '@/lib/owner';
 import { saveProfile } from '@/lib/store';
 
 export function allowedEmails(): string[] {
@@ -60,7 +61,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      if (session.user) session.user.id = (token.id as string) ?? token.sub ?? '';
+      if (session.user) {
+        session.user.id = (token.id as string) ?? token.sub ?? '';
+        // Only the yes or no reaches the browser, never OWNER_EMAIL itself.
+        session.user.isOwner = isOwnerEmail(session.user.email);
+      }
       return session;
     },
   },
