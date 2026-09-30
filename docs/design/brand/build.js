@@ -1,6 +1,6 @@
 // Builds every Levl brand asset from one mark: node docs/design/brand/build.js
 // Writes public/logo.svg (in-app lockups), public/favicon.svg (heavier strokes for 16 px), favicon-32.png, icon-192.png, icon-512.png,
-// icon-maskable-192.png, icon-maskable-512.png, apple-touch-icon.png, og.png
+// icon-maskable-192.png, icon-maskable-512.png, apple-touch-icon.png, favicon.ico (16, 32, 48), og.jpg
 // and docs/design/brand/logo.svg.
 const fs = require('fs');
 const path = require('path');
@@ -91,7 +91,9 @@ body{margin:0;background:transparent}
   const p = await b.newPage({ viewport: { width: 1300, height: 700 } });
   await p.goto('file://' + html);
   await p.evaluate(() => document.fonts.ready);
-  await (await p.$('#og')).screenshot({ path: path.join(PUB, 'og.png') });
+  // JPEG keeps the link preview small (WhatsApp skips large images). Bump OG_FILE in app/layout.tsx
+  // when the image changes, so WhatsApp, LinkedIn and Facebook fetch it fresh.
+  await (await p.$('#og')).screenshot({ path: path.join(PUB, 'og.jpg'), type: 'jpeg', quality: 90 });
   await p.close();
   await shot('#fav', 32, 'favicon-32.png');
   await shot('#tile', 192, 'icon-192.png');
@@ -99,6 +101,31 @@ body{margin:0;background:transparent}
   await shot('#mask', 192, 'icon-maskable-192.png');
   await shot('#mask', 512, 'icon-maskable-512.png');
   await shot('#bleed', 180, 'apple-touch-icon.png');
+  // favicon.ico for Vercel, search results and older crawlers: PNG entries packed into one ICO.
+  const sizes = [16, 32, 48];
+  const pngs = [];
+  for (const s of sizes) {
+    const q = await b.newPage({ viewport: { width: 1300, height: 700 }, deviceScaleFactor: s / 512 });
+    await q.goto('file://' + html);
+    pngs.push(await (await q.$('#fav')).screenshot({ omitBackground: true }));
+    await q.close();
+  }
+  const head = Buffer.alloc(6 + 16 * sizes.length);
+  head.writeUInt16LE(0, 0);
+  head.writeUInt16LE(1, 2);
+  head.writeUInt16LE(sizes.length, 4);
+  let offset = head.length;
+  sizes.forEach((s, i) => {
+    const e = 6 + 16 * i;
+    head.writeUInt8(s, e);
+    head.writeUInt8(s, e + 1);
+    head.writeUInt16LE(1, e + 4);
+    head.writeUInt16LE(32, e + 6);
+    head.writeUInt32LE(pngs[i].length, e + 8);
+    head.writeUInt32LE(offset, e + 12);
+    offset += pngs[i].length;
+  });
+  fs.writeFileSync(path.join(PUB, 'favicon.ico'), Buffer.concat([head, ...pngs]));
   await b.close();
   fs.unlinkSync(html);
   console.log('brand assets written');

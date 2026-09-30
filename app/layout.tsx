@@ -15,6 +15,8 @@ const title = 'Levl · Workout tracker that levels you up';
 const description =
   'Levl is a game-style workout tracker. Log strength and cardio, beat your last session, earn XP and climb from E to S rank.';
 const ogAlt = 'Levl: log workouts, beat last time, climb from E to S rank';
+// A new file name when the image changes makes WhatsApp, LinkedIn and Facebook fetch it fresh.
+const ogImage = '/og.jpg';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -28,13 +30,13 @@ export const metadata: Metadata = {
     title,
     description,
     url: '/',
-    images: [{ url: '/og.png', width: 1200, height: 630, alt: ogAlt }],
+    images: [{ url: ogImage, width: 1200, height: 630, type: 'image/jpeg', alt: ogAlt }],
   },
   twitter: {
     card: 'summary_large_image',
     title,
     description,
-    images: ['/og.png'],
+    images: [ogImage],
   },
   appleWebApp: {
     capable: true,
@@ -43,6 +45,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: '/favicon.ico', sizes: '48x48' },
       { url: '/favicon.svg', type: 'image/svg+xml' },
       { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
     ],

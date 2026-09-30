@@ -302,7 +302,8 @@ b to f). The Rulebook itself is `docs/design/xp-reference.html`, and the code fo
 - The name is a playful respelling of "level", the way Hevy respells "heavy".
 - The logo is three rounded rank chevrons on the primary green tile, with the button's bottom bevel, a thin gold ring and a gold top chevron. It came out of three rounds: a cartoon shield (rejected as childish), four refined directions (`logo-round-2.html`, the chevrons picked) and five colourways with rounded chevrons (`logo-round-3.html`, Field green picked, with the gold ring from Wood and gold).
 - The wordmark is Lilita One, the app's heading face, so "Levl" matches every other heading and label.
-- `node docs/design/brand/build.js` rebuilds every asset from the one mark: `public/logo.svg` (in-app), `public/favicon.svg` (heavier strokes for 16 px), the PNG favicon, the app icons (rounded, maskable and the full-bleed Apple icon) and `public/og.png`.
+- `node docs/design/brand/build.js` rebuilds every asset from the one mark: `public/logo.svg` (in-app), `public/favicon.svg` (heavier strokes for 16 px), the PNG favicon, `public/favicon.ico` (16, 32 and 48 px, for Vercel and older crawlers), the app icons (rounded, maskable and the full-bleed Apple icon) and `public/og.jpg`.
+- Link previews are cached by WhatsApp, LinkedIn, Facebook and X. When the OG image changes, give it a new file name (the `ogImage` constant in `app/layout.tsx`), and share the link with a query such as `?v=2` to get a fresh preview in chats that already cached the old one.
 
 ## Where the chat lives
 
