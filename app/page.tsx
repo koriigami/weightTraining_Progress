@@ -34,7 +34,7 @@ export default function HomePage() {
       <SectionLabel>Recent workouts</SectionLabel>
       {feed.length === 0 ? (
         <Card tone="dashed" className="text-center">
-          <p style={{ margin: 0, color: 'var(--muted)' }}>No workouts yet. Start a routine or an empty workout, and it shows up here.</p>
+          <p style={{ margin: 0, color: 'var(--muted)' }}>No workouts yet. Start a routine or a custom workout, and it shows up here.</p>
         </Card>
       ) : (
         <div className="wt-feed">

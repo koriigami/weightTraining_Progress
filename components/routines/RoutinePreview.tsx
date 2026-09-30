@@ -26,7 +26,7 @@ import { useStartRoutine } from './useStartRoutine';
 /**
  * The full preview of a routine: every exercise with every set, a muscle map,
  * and the main action. `kind` is "mine" for a saved routine (Edit, Start routine)
- * or "starter" for a ready-made one (Try now, Add to my routines).
+ * or "starter" for a ready-made one (Start, Save routine).
  */
 export function RoutinePreview({ routine, kind }: { routine: Routine; kind: 'mine' | 'starter' }) {
   const router = useRouter();
@@ -74,10 +74,10 @@ export function RoutinePreview({ routine, kind }: { routine: Routine; kind: 'min
   ) : (
     <div className="wt-rc-actions">
       <Button variant="secondary" icon={<Play size={16} fill="currentColor" aria-hidden="true" />} onClick={tryNow}>
-        Try now
+        Start
       </Button>
       <Button className="grow" disabled={added} loading={addingId === routine.id} icon={added ? <Check size={16} aria-hidden="true" /> : undefined} onClick={() => void add(routine)}>
-        {added ? 'Added' : 'Add to my routines'}
+        {added ? 'Added' : 'Save routine'}
       </Button>
     </div>
   );

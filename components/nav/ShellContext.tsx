@@ -3,8 +3,12 @@
 import { createContext, useContext } from 'react';
 
 type ShellValue = {
-  /** Opens the Start sheet (empty workout, quick log, routines). */
+  /** Opens the Start sheet (routines, Cardio, Custom workout). */
   openStart: () => void;
+  /** Opens the exercise picker for a custom workout. No workout exists until Start workout. */
+  openCustom: () => void;
+  /** Opens the Cardio picker, optionally with an activity already highlighted. */
+  openCardio: (activityId?: string) => void;
   /** Opens the Sign out confirmation. */
   askSignOut: () => void;
 };

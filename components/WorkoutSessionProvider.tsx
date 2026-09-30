@@ -6,7 +6,8 @@ import * as feedback from '@/lib/feedback';
 import { instantiateRoutine, setXp, workoutItemsFromRoutine } from '@/lib/routines';
 import type { LoggedSet, Routine, WorkoutTotals } from '@/lib/routines';
 import * as S from '@/lib/session';
-import type { CardioKind, Removal, Session, SessionResult, SetPatch } from '@/lib/session';
+import type { Removal, Session, SessionResult, SetPatch } from '@/lib/session';
+import { useWakeLock } from '@/lib/useWakeLock';
 import { useProgress } from '@/components/ProgressProvider';
 import type { SaveWorkoutResult } from '@/components/ProgressProvider';
 
@@ -24,12 +25,14 @@ type WorkoutSessionValue = {
   lastFinished: Extract<FinishResult, { ok: true }> | null;
   clearLastFinished: () => void;
 
-  /** Start an empty workout, or one prefilled from a routine. Returns an error message, or null. */
-  start: (routineId?: string) => string | null;
+  /** Start a workout from a routine. Returns an error message, or null. */
+  start: (routineId: string) => string | null;
+  /** Start a custom workout with the exercises picked before Start. The clock starts now. */
+  startCustom: (exerciseIds: string[]) => string | null;
   /** Starts a workout from a ready-made routine that is not saved (Try now). Dumbbell weights are set for this person. */
   startTemplate: (routine: Routine) => string | null;
-  /** Quick log of a run, walk or ride. */
-  startCardio: (kind: CardioKind) => string | null;
+  /** Start a cardio workout: one distance exercise (an id from CARDIO_CHOICES), one set to fill in. */
+  startCardio: (exerciseId: string) => string | null;
   /** Rejects an exercise that is already in the workout. Returns an error message, or null. */
   addExercise: (exerciseId: string) => string | null;
   /** Returns an undo function, or null when there was nothing at that index. */
@@ -39,6 +42,8 @@ type WorkoutSessionValue = {
   addSet: (index: number) => string | null;
   removeSet: (index: number, setIndex: number) => string | null;
   updateSet: (index: number, setIndex: number, patch: SetPatch) => void;
+  /** The cardio card's Time and Distance. Time above zero counts as done, and typing a Time stops it following the clock. */
+  updateCardio: (index: number, patch: SetPatch) => void;
   /** Returns whether the set is now ticked and the XP it is worth, for the "+5 XP" pop. */
   toggleSet: (index: number, setIndex: number) => { done: boolean; xp: number } | null;
   setTitle: (title: string) => void;
@@ -77,7 +82,7 @@ const EMPTY_TOTALS: WorkoutTotals = { sets: 0, volume: 0, xp: 0, exercises: 0, c
 export function WorkoutSessionProvider({ children }: { children: React.ReactNode }) {
   const { data: auth } = useSession();
   const userId = auth?.user?.id ?? null;
-  const { routines, lookup, saveWorkout, prefs } = useProgress();
+  const { routines, workouts, lookup, saveWorkout, prefs } = useProgress();
 
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
@@ -92,6 +97,8 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
   routinesRef.current = routines;
   const prefsRef = useRef(prefs);
   prefsRef.current = prefs;
+  const workoutsRef = useRef(workouts);
+  workoutsRef.current = workouts;
   const finishing = useRef<Promise<FinishResult> | null>(null);
 
   // One place that changes the workout: the ref (for instant reads), React state
@@ -138,36 +145,48 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
     [commit]
   );
 
+  // Last time's numbers for a new exercise, when the pref is on.
+  const prefill = useCallback((): S.Prefill | undefined => (prefsRef.current.prefillLast ? S.prefillFrom(workoutsRef.current) : undefined), []);
+
   const start = useCallback(
-    (routineId?: string) => {
+    (routineId: string) => {
       if (sessionRef.current) return 'Finish or discard your current workout first.';
-      const now = new Date();
-      if (!routineId) {
-        commit(S.newSession(now));
-        return null;
-      }
       const routine = routinesRef.current.find((r) => r.id === routineId);
       if (!routine) return 'That routine no longer exists.';
-      commit(S.sessionFromRoutine(routine, now));
+      commit(S.sessionFromRoutine(routine, new Date()));
       return null;
     },
     [commit]
+  );
+
+  const startCustom = useCallback(
+    (exerciseIds: string[]) => {
+      if (sessionRef.current) return 'Finish or discard your current workout first.';
+      const result = S.customSession(new Date(), exerciseIds, lookupRef.current, { prefill: prefill() });
+      if (!result.ok) return result.error;
+      commit(result.session);
+      return null;
+    },
+    [commit, prefill]
   );
 
   const startTemplate = useCallback(
     (routine: Routine) => {
       if (sessionRef.current) return 'Finish or discard your current workout first.';
       const personal = instantiateRoutine(routine, routine.id, prefsRef.current);
-      commit(S.newSession(new Date(), { title: routine.title, items: workoutItemsFromRoutine(personal) }));
+      const items = workoutItemsFromRoutine(personal);
+      commit(S.newSession(new Date(), { title: routine.title, items, plan: S.planFromItems(items) }));
       return null;
     },
     [commit]
   );
 
   const startCardio = useCallback(
-    (kind: CardioKind) => {
+    (exerciseId: string) => {
       if (sessionRef.current) return 'Finish or discard your current workout first.';
-      commit(S.cardioSession(kind, new Date(), lookupRef.current));
+      const result = S.cardioSession(exerciseId, new Date(), lookupRef.current);
+      if (!result.ok) return result.error;
+      commit(result.session);
       return null;
     },
     [commit]
@@ -177,9 +196,9 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
     (exerciseId: string) => {
       const cur = sessionRef.current;
       if (!cur) return 'No workout in progress.';
-      return apply(S.addExercise(cur, exerciseId, lookupRef.current));
+      return apply(S.addExercise(cur, exerciseId, lookupRef.current, prefill()));
     },
-    [apply]
+    [apply, prefill]
   );
 
   const removeExercise = useCallback(
@@ -191,7 +210,7 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
       commit(removal.session);
       return () => {
         const now = sessionRef.current;
-        if (now) commit(S.restoreExercise(now, removal.removed, removal.index));
+        if (now) commit(S.restoreExercise(now, removal.removed, removal.index, removal.planSlot));
       };
     },
     [commit]
@@ -236,6 +255,14 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
     (index: number, setIndex: number, patch: SetPatch) => {
       const cur = sessionRef.current;
       if (cur) commit(S.updateSet(cur, index, setIndex, patch));
+    },
+    [commit]
+  );
+
+  const updateCardio = useCallback(
+    (index: number, patch: SetPatch) => {
+      const cur = sessionRef.current;
+      if (cur) commit(S.updateCardio(cur, index, patch));
     },
     [commit]
   );
@@ -297,6 +324,24 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
     return run;
   }, [commit, saveWorkout]);
 
+  // Time on a cardio card follows the clock until it is typed in.
+  const following = Boolean(session?.follow?.length);
+  useEffect(() => {
+    if (!following) return undefined;
+    const tick = () => {
+      const cur = sessionRef.current;
+      if (!cur) return;
+      const next = S.syncFollow(cur, new Date());
+      if (next !== cur) commit(next);
+    };
+    tick();
+    const id = setInterval(tick, 5000);
+    return () => clearInterval(id);
+  }, [following, session?.startedAt, commit]);
+
+  // Keep the screen awake while a workout is running, when the pref is on.
+  useWakeLock(Boolean(session) && prefs.keepAwake);
+
   const totals = useMemo(() => (session ? S.sessionTotals(session, lookup) : EMPTY_TOTALS), [session, lookup]);
   const counts = useMemo(() => (session ? S.setCounts(session) : { done: 0, total: 0, unticked: 0 }), [session]);
   const clearLastFinished = useCallback(() => setLastFinished(null), []);
@@ -309,6 +354,7 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
     lastFinished,
     clearLastFinished,
     start,
+    startCustom,
     startTemplate,
     startCardio,
     addExercise,
@@ -318,6 +364,7 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
     addSet,
     removeSet,
     updateSet,
+    updateCardio,
     toggleSet,
     setTitle,
     setItemNotes,

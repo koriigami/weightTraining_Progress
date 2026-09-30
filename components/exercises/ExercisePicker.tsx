@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus } from 'lucide-react';
+import { Play, Plus } from 'lucide-react';
 import { EXERCISES, exerciseById } from '@/data/exercises';
 import type { Muscle } from '@/data/exercises';
 import { emptyFilters } from '@/lib/exerciseFilter';
@@ -21,8 +21,8 @@ import { ExerciseList, useVisibleCount } from './ExerciseList';
 type PickerProps = {
   open: boolean;
   onClose: () => void;
-  /** add: pick several and add them. replace: pick one to swap in. */
-  mode: 'add' | 'replace';
+  /** add: pick several and add them. replace: pick one to swap in. start: pick the exercises of a new custom workout. */
+  mode: 'add' | 'replace' | 'start';
   /** "In routine" or "In workout". */
   inLabel: string;
   /** Used in "Push Up is already in Push A." */
@@ -33,9 +33,13 @@ type PickerProps = {
   initialMuscles?: Muscle[];
   onAdd: (ids: string[]) => void;
   onReplace: (id: string) => void;
+  /** start mode: called with the picked ids once the picker has closed. */
+  onStart?: (ids: string[]) => void;
 };
 
-function PickerBody({ mode, inLabel, listName, inList, initialMuscles, onAdd, onReplace, close }: Omit<PickerProps, 'open' | 'onClose'> & { close: () => void }) {
+const TITLES = { add: 'Add exercise', replace: 'Replace exercise', start: 'Custom workout' } as const;
+
+function PickerBody({ mode, inLabel, listName, inList, initialMuscles, onAdd, onReplace, onStart, close, closeThen }: Omit<PickerProps, 'open' | 'onClose'> & { close: () => void; closeThen: (fn: () => void) => void }) {
   const { customExercises, lookup, showToast } = useProgress();
   const [filters, setFilters] = useState<Filters>(() => ({ ...emptyFilters(), muscles: initialMuscles ?? [] }));
   const [selected, setSelected] = useState<string[]>([]);
@@ -57,7 +61,7 @@ function PickerBody({ mode, inLabel, listName, inList, initialMuscles, onAdd, on
   return (
     <>
       <PageHeader
-        title={mode === 'replace' ? 'Replace exercise' : 'Add exercise'}
+        title={TITLES[mode]}
         lead={
           <button type="button" className="wt-textbtn" onClick={close}>
             Cancel
@@ -100,26 +104,49 @@ function PickerBody({ mode, inLabel, listName, inList, initialMuscles, onAdd, on
           </Button>
         </div>
       )}
+      {n > 0 && mode === 'start' && (
+        <div className="wt-foot">
+          <Button size="lg" icon={<Play size={20} fill="currentColor" aria-hidden="true" />} onClick={() => closeThen(() => onStart?.(selected))}>
+            Start workout · {n}
+          </Button>
+        </div>
+      )}
       <ExerciseInfoSheet exercise={infoId ? lookup(infoId) ?? null : null} onClose={() => setInfoId(null)} />
-      <CustomExerciseSheet open={creating} onClose={() => setCreating(false)} onCreated={(e) => mode === 'add' && setSelected((s) => [...s, e.id])} />
+      <CustomExerciseSheet open={creating} onClose={() => setCreating(false)} onCreated={(e) => mode !== 'replace' && setSelected((s) => [...s, e.id])} />
     </>
   );
 }
 
 /**
- * The phone's full-screen exercise picker: search, filters, the list, and "Add N
- * exercises" pinned at the bottom. Exercises already in the routine or workout
+ * The full-screen exercise picker: search, filters, the list, and "Add N
+ * exercises" (or, starting a custom workout, "Start workout · N") pinned at the
+ * bottom once something is picked. Exercises already in the routine or workout
  * are marked and cannot be picked twice. Esc, Cancel and the Back button close it.
  */
 export function ExercisePicker(props: PickerProps) {
   const { open, onClose, ...body } = props;
   const ref = useRef<HTMLDivElement>(null);
-  const requestClose = useBackToClose(open, onClose);
+  const pending = useRef<(() => void) | null>(null);
+  const handleClose = useCallback(() => {
+    onClose();
+    const fn = pending.current;
+    pending.current = null;
+    fn?.();
+  }, [onClose]);
+  const requestClose = useBackToClose(open, handleClose);
+  // Closes first, then runs fn once the history entry the picker pushed is gone (Start navigates).
+  const closeThen = useCallback(
+    (fn: () => void) => {
+      pending.current = fn;
+      requestClose();
+    },
+    [requestClose]
+  );
   useDialog(open, ref, requestClose);
   if (!open || typeof document === 'undefined') return null;
   return createPortal(
-    <div ref={ref} className="wt-picker" role="dialog" aria-modal="true" aria-label={props.mode === 'replace' ? 'Replace exercise' : 'Add exercise'} tabIndex={-1}>
-      <PickerBody {...body} close={requestClose} />
+    <div ref={ref} className="wt-picker" role="dialog" aria-modal="true" aria-label={TITLES[props.mode]} tabIndex={-1}>
+      <PickerBody {...body} close={requestClose} closeThen={closeThen} />
     </div>,
     document.body
   );

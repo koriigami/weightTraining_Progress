@@ -18,7 +18,7 @@ export const START_DESTINATION: Record<Start, string> = { own: '/routine/new', t
 const STARTS: { id: Start; icon: React.ReactNode; title: string; sub: string }[] = [
   { id: 'own', icon: <ClipboardList size={22} aria-hidden="true" />, title: 'Build my own routine', sub: 'Pick exercises, sets and weights for one day of training.' },
   { id: 'template', icon: <Compass size={22} aria-hidden="true" />, title: 'Pick a ready-made routine', sub: 'Start from a routine and change anything.' },
-  { id: 'log', icon: <Zap size={22} aria-hidden="true" />, title: 'Just log as I go', sub: 'Start an empty workout whenever you train.' },
+  { id: 'log', icon: <Zap size={22} aria-hidden="true" />, title: 'Just log as I go', sub: 'Start a custom workout whenever you train.' },
 ];
 
 const STEPS = 4;

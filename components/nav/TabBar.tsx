@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Dumbbell, Play } from 'lucide-react';
+import { Dumbbell, Plus } from 'lucide-react';
 import { useElapsed, useWorkoutSession } from '@/components/WorkoutSessionProvider';
 import { TAB_ITEMS } from './items';
 import type { NavItem } from './items';
@@ -20,7 +20,7 @@ function Tab({ item, pathname }: { item: NavItem; pathname: string }) {
   );
 }
 
-/** The phone's bottom dock: a "workout in progress" bar and the tab bar with the raised START button. */
+/** The phone's bottom dock: a "workout in progress" bar and the tab bar with the raised WORKOUT button. */
 export function TabBar({ onStart, showMini }: { onStart: () => void; showMini: boolean }) {
   const pathname = usePathname();
   const { session } = useWorkoutSession();
@@ -40,9 +40,9 @@ export function TabBar({ onStart, showMini }: { onStart: () => void; showMini: b
         {TAB_ITEMS.left.map((item) => (
           <Tab key={item.key} item={item} pathname={pathname} />
         ))}
-        <button type="button" className="wt-startfab" aria-label="Start a workout" onClick={onStart}>
-          <Play size={20} fill="currentColor" aria-hidden="true" />
-          START
+        <button type="button" className="wt-startfab" aria-label="Workout: start a workout" onClick={onStart}>
+          <Plus size={22} strokeWidth={3} aria-hidden="true" />
+          WORKOUT
         </button>
         {TAB_ITEMS.right.map((item) => (
           <Tab key={item.key} item={item} pathname={pathname} />

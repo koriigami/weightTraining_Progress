@@ -5,7 +5,8 @@ import { Play, Plus } from 'lucide-react';
 import { formatDateShort } from '@/lib/date';
 import type { UpNextItem } from '@/lib/week';
 import { ExerciseRows } from '@/components/routines/ExerciseRows';
-import { useStartEmpty, useStartRoutine } from '@/components/routines/useStartRoutine';
+import { useShell } from '@/components/nav/ShellContext';
+import { useStartRoutine } from '@/components/routines/useStartRoutine';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHead } from '@/components/ui/Card';
 
@@ -17,13 +18,13 @@ function line(item: UpNextItem): string {
   return item.lastDate ? `${base} · last done ${formatDateShort(item.lastDate)}` : base;
 }
 
-const NOTHING_YET = "No routines yet. Build one, or start an empty workout and log as you go.";
+const NOTHING_YET = "No routines yet. Build one, or start a custom workout and log as you go.";
 const ALL_DONE = "Every routine has reached its weekly count. Nice work. Start something else if you want more.";
 
-/** Phone: the Up next card with a Start button per routine and Empty workout. */
+/** Phone: the Up next card with a Start button per routine and Custom workout. */
 export function UpNextCard({ items, allDone, hasRoutines }: { items: UpNextItem[]; allDone: boolean; hasRoutines: boolean }) {
   const start = useStartRoutine();
-  const startEmpty = useStartEmpty();
+  const { openCustom } = useShell();
   return (
     <Card aria-label="Up next">
       <CardHead
@@ -48,8 +49,8 @@ export function UpNextCard({ items, allDone, hasRoutines }: { items: UpNextItem[
         ))}
         {items.length === 0 && <p style={{ margin: 0, color: 'var(--muted)' }}>{hasRoutines ? (allDone ? ALL_DONE : '') : NOTHING_YET}</p>}
       </div>
-      <Button variant="secondary" block icon={<Plus size={18} aria-hidden="true" />} onClick={startEmpty}>
-        Empty workout
+      <Button variant="secondary" block icon={<Plus size={18} aria-hidden="true" />} onClick={openCustom}>
+        Custom workout
       </Button>
     </Card>
   );
@@ -80,7 +81,7 @@ export function UpNextRow({ items, allDone, hasRoutines, onSomethingElse }: { it
         <b className="gt" style={{ fontSize: 20 }}>
           Something else?
         </b>
-        <small style={{ color: 'var(--muted)' }}>Start an empty workout, pick another routine, or quick-log a run.</small>
+        <small style={{ color: 'var(--muted)' }}>Start a custom workout, pick another routine, or log some cardio.</small>
         <Button variant="secondary" icon={<Play size={16} fill="currentColor" aria-hidden="true" />} onClick={onSomethingElse}>
           Start
         </Button>

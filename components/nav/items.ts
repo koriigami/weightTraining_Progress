@@ -13,7 +13,7 @@ const profile: NavItem = {
   active: (p) => ['/profile', '/settings', '/stats', '/goals'].some((r) => p === r) || p === '/calendar' || p.startsWith('/calendar/'),
 };
 
-// Phone tabs: Home, Routines, START (raised, in the tab bar itself), Rank, Profile.
+// Phone tabs: Home, Routines, WORKOUT (raised, in the tab bar itself), Rank, Profile.
 // The exercise library is reached from inside Routines on the phone.
 export const TAB_ITEMS = {
   left: [

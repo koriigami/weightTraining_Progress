@@ -10,6 +10,8 @@ import { SignInScreen } from '@/components/SignInScreen';
 import { Sidebar } from '@/components/nav/Sidebar';
 import { TabBar } from '@/components/nav/TabBar';
 import { StartSheet } from '@/components/nav/StartSheet';
+import { CardioSheet } from '@/components/nav/CardioSheet';
+import { CustomWorkoutPicker } from '@/components/nav/CustomWorkoutPicker';
 import { SignOutDialog } from '@/components/nav/SignOutDialog';
 import { ShellContext } from '@/components/nav/ShellContext';
 import { isTabRoot } from '@/components/nav/items';
@@ -32,9 +34,12 @@ const MINIBAR_H = '56px';
 function Frame({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { loading, authorized, prefs } = useProgress();
+  const { loading, authorized, prefs, showToast } = useProgress();
   const { session } = useWorkoutSession();
   const [startOpen, setStartOpen] = useState(false);
+  const [customOpen, setCustomOpen] = useState(false);
+  // `key` makes the Cardio sheet start fresh (with its highlight) each time it opens.
+  const [cardio, setCardio] = useState<{ open: boolean; key: number; act: string | null }>({ open: false, key: 0, act: null });
   const [signOutOpen, setSignOutOpen] = useState(false);
 
   // Hold the page back until the first load finishes, so nobody sees an empty
@@ -55,7 +60,26 @@ function Frame({ children }: { children: React.ReactNode }) {
   const showMini = tabs && Boolean(session) && pathname !== '/workout';
   const dock = tabs ? `calc(${TABBAR_H} + env(safe-area-inset-bottom)${showMini ? ` + ${MINIBAR_H}` : ''})` : '0px';
 
-  const value = useMemo(() => ({ openStart: () => setStartOpen(true), askSignOut: () => setSignOutOpen(true) }), []);
+  const running = useRef(false);
+  running.current = Boolean(session);
+  const value = useMemo(() => {
+    // A workout in progress has to be finished or discarded before another starts.
+    const busy = () => {
+      if (!running.current) return false;
+      showToast('Finish or discard your current workout first.');
+      return true;
+    };
+    return {
+      openStart: () => setStartOpen(true),
+      openCustom: () => {
+        if (!busy()) setCustomOpen(true);
+      },
+      openCardio: (act?: string) => {
+        if (!busy()) setCardio((c) => ({ open: true, key: c.key + 1, act: act ?? null }));
+      },
+      askSignOut: () => setSignOutOpen(true),
+    };
+  }, [showToast]);
 
   return (
     <ShellContext.Provider value={value}>
@@ -70,6 +94,8 @@ function Frame({ children }: { children: React.ReactNode }) {
         {!bare && tabs && <TabBar onStart={value.openStart} showMini={showMini} />}
       </div>
       <StartSheet open={startOpen} onClose={() => setStartOpen(false)} />
+      <CustomWorkoutPicker open={customOpen} onClose={() => setCustomOpen(false)} />
+      <CardioSheet key={cardio.key} open={cardio.open} initial={cardio.act} onClose={() => setCardio((c) => ({ ...c, open: false }))} />
       <SignOutDialog open={signOutOpen} onClose={() => setSignOutOpen(false)} />
     </ShellContext.Provider>
   );

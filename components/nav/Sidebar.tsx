@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useEffect, useId, useRef, useState } from 'react';
-import { EllipsisVertical, LogOut, Play, Settings, User } from 'lucide-react';
+import { EllipsisVertical, LogOut, Settings, User } from 'lucide-react';
 import { RankShield } from '@/components/RankShield';
 import { useProgress } from '@/components/ProgressProvider';
 import { useElapsed, useWorkoutSession } from '@/components/WorkoutSessionProvider';
@@ -106,7 +106,7 @@ function AccountMenu({ onSignOut }: { onSignOut: () => void }) {
   );
 }
 
-/** The desktop sidebar: logo, START, the sections, the workout in progress, and the account menu. */
+/** The desktop sidebar: logo, + Workout, the sections, the workout in progress, and the account menu. */
 export function Sidebar({ onStart, onSignOut }: { onStart: () => void; onSignOut: () => void }) {
   const pathname = usePathname();
   const { progress } = useProgress();
@@ -119,8 +119,8 @@ export function Sidebar({ onStart, onSignOut }: { onStart: () => void; onSignOut
         <RankShield rank={progress.rank} size={28} />
         <span className="gt">Home Workout</span>
       </Link>
-      <Button size="lg" icon={<Play size={18} fill="currentColor" aria-hidden="true" />} onClick={onStart}>
-        START
+      <Button size="lg" onClick={onStart}>
+        + Workout
       </Button>
       <nav aria-label="Main" className="flex flex-col gap-1" data-testid="side-nav">
         {SIDEBAR_ITEMS.map((item) => {

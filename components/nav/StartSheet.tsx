@@ -1,19 +1,28 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Bike, ClipboardList, Dumbbell, Footprints, Play, Plus } from 'lucide-react';
+import { Bike, ChevronRight, ClipboardList, Footprints, PersonStanding, Play, Plus } from 'lucide-react';
+import { estimateMinutes } from '@/lib/routines';
+import { upNextRoutines } from '@/lib/week';
+import { useToday } from '@/lib/useToday';
 import { useProgress } from '@/components/ProgressProvider';
 import { useElapsed, useWorkoutSession } from '@/components/WorkoutSessionProvider';
-import type { CardioKind } from '@/lib/session';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { Sheet, useSheet } from '@/components/ui/Sheet';
+import { useShell } from './ShellContext';
+
+const MAX_ROUTINES = 3;
 
 function StartBody() {
   const router = useRouter();
   const { closeThen } = useSheet();
-  const { routines, showToast } = useProgress();
+  const { routines, workouts, lookup, showToast } = useProgress();
+  const { openCustom, openCardio } = useShell();
+  const today = useToday();
   const ws = useWorkoutSession();
   const elapsed = useElapsed(ws.session?.startedAt);
+  // The routine that is due today comes first and wears the Today tag.
+  const todayId = upNextRoutines(routines, workouts, today, 1).items[0]?.routine.id;
 
   // Start, then go to the log once the sheet has closed.
   function begin(run: () => string | null) {
@@ -46,31 +55,17 @@ function StartBody() {
     );
   }
 
-  const quick: { kind: CardioKind; label: string; icon: React.ReactNode }[] = [
-    { kind: 'run', label: 'Run', icon: <Footprints size={16} aria-hidden="true" /> },
-    { kind: 'walk', label: 'Walk', icon: <Footprints size={16} aria-hidden="true" /> },
-    { kind: 'ride', label: 'Ride', icon: <Bike size={16} aria-hidden="true" /> },
+  const cardio = [
+    { id: 'run', label: 'Run', icon: <Footprints size={22} aria-hidden="true" /> },
+    { id: 'walk', label: 'Walk', icon: <PersonStanding size={22} aria-hidden="true" /> },
+    { id: 'cycle', label: 'Ride', icon: <Bike size={22} aria-hidden="true" /> },
   ];
+  const listed = [...routines.filter((r) => r.id === todayId), ...routines.filter((r) => r.id !== todayId)].slice(0, MAX_ROUTINES);
 
   return (
     <div>
-      <Button variant="secondary" block icon={<Plus size={18} aria-hidden="true" />} onClick={() => begin(() => ws.start())}>
-        Empty workout
-      </Button>
-
-      <h3 className="wt-sec-label" style={{ fontSize: 17, marginTop: 14 }}>
-        Quick log
-      </h3>
-      <div className="wt-grid-2" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', marginTop: 8 }}>
-        {quick.map((q) => (
-          <Button key={q.kind} variant="secondary" size="sm" icon={q.icon} onClick={() => begin(() => ws.startCardio(q.kind))}>
-            {q.label}
-          </Button>
-        ))}
-      </div>
-
-      <h3 className="wt-sec-label" style={{ fontSize: 17, marginTop: 14 }}>
-        Routines
+      <h3 className="wt-sec-label" style={{ fontSize: 17 }}>
+        Your routines
       </h3>
       {routines.length === 0 ? (
         <div className="wt-startrow" style={{ marginTop: 12 }}>
@@ -83,27 +78,59 @@ function StartBody() {
           </ButtonLink>
         </div>
       ) : (
-        <div className="wt-startlist">
-          {routines.map((r) => (
-            <div key={r.id} className="wt-startrow">
-              <div className="grow">
-                <b>{r.title}</b>
-                <small>
-                  {r.items.length} {r.items.length === 1 ? 'exercise' : 'exercises'}
-                </small>
+        <>
+          <div className="wt-startlist">
+            {listed.map((r) => (
+              <div key={r.id} className="wt-startrow">
+                <div className="grow">
+                  <b>
+                    {r.title}
+                    {r.id === todayId && <span className="wt-todaytag">Today</span>}
+                  </b>
+                  <small>
+                    {r.items.length} {r.items.length === 1 ? 'exercise' : 'exercises'} · about {estimateMinutes(r.items, lookup)} min
+                  </small>
+                </div>
+                <Button size="sm" icon={<Play size={14} fill="currentColor" aria-hidden="true" />} aria-label={`Start ${r.title}`} onClick={() => begin(() => ws.start(r.id))}>
+                  Start
+                </Button>
               </div>
-              <Button size="sm" icon={<Dumbbell size={14} aria-hidden="true" />} aria-label={`Start ${r.title}`} onClick={() => begin(() => ws.start(r.id))}>
-                Start
-              </Button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+          <button type="button" className="wt-textbtn" onClick={() => closeThen(() => router.push('/routines'))}>
+            All routines
+            <ChevronRight size={16} aria-hidden="true" />
+          </button>
+        </>
       )}
+
+      <h3 className="wt-sec-label" style={{ fontSize: 17, marginTop: 14 }}>
+        Cardio
+      </h3>
+      <div className="wt-acts" style={{ marginTop: 8 }}>
+        {cardio.map((c) => (
+          <button key={c.id} type="button" className="wt-act" onClick={() => closeThen(() => openCardio(c.id))}>
+            <span className="ib">{c.icon}</span>
+            {c.label}
+          </button>
+        ))}
+      </div>
+
+      <button type="button" className="wt-startrow wt-customrow" onClick={() => closeThen(openCustom)}>
+        <span className="ib">
+          <Plus size={22} aria-hidden="true" />
+        </span>
+        <span className="grow">
+          <b>Custom workout</b>
+          <small>Pick exercises, then start</small>
+        </span>
+        <ChevronRight size={18} aria-hidden="true" />
+      </button>
     </div>
   );
 }
 
-/** Empty workout, quick log of a run, walk or ride, and your routines with Start buttons. */
+/** Your routines with Start, the Cardio tiles, and Custom workout. */
 export function StartSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Sheet open={open} onClose={onClose} title="Start a workout">
