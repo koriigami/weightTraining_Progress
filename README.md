@@ -6,9 +6,9 @@ to S), badges and a Rank Road. Built with Next.js 15 (App Router), TypeScript,
 Tailwind and Motion. Sign-in is Google only, with an invite list. Each person's
 data is stored under their own key in Upstash Redis.
 
-The app started as a 6-week home workout plan (Sep 21 to Nov 1, 2026). That
-plan's history is still there and still scored by its original rules, but new
-work happens in routines and logged workouts.
+The app started as a fixed 6-week home workout plan. That plan is gone: its
+history was turned into ordinary logged workouts (with a backup of the old data),
+and everything now happens in routines and logged workouts.
 
 ## Features
 
@@ -16,10 +16,14 @@ work happens in routines and logged workouts.
   exercises with muscle groups, equipment and a muscle map), or add a
   ready-made one from Explore: strength splits, running, walking and cycling.
   Every routine has a preview with all its sets.
-- **Workout logging, like Hevy.** Start from a routine or an empty workout.
-  Sets are prefilled, you tick each one and edit weight and reps. Cardio sets
-  take time and distance and work out the pace. Add exercises on the fly (no
-  duplicates), reorder, swap, and discard or finish with a confirm.
+- **Workout logging, like Hevy.** The Workout button opens a Start sheet:
+  a routine, a Run, Walk or Ride, or a Custom workout. Sets are prefilled with
+  last time's numbers, you tick each one and edit weight and reps. Cardio sets
+  take time and distance and work out the pace or speed. Add exercises on the
+  fly (no duplicates), reorder, swap, and discard or finish with a confirm.
+  Live "Beat last time" and "Record" chips show the bonus as you earn it.
+- **Your workouts.** Every workout has its own page with an XP breakdown. Edit
+  its date, time and sets, or delete it, and the XP of the rest is worked out again.
 - **Victory.** Finishing plays a Victory screen: rolling XP, crowns for sets,
   and an XP bar. Edit the title, date and time, and notes, and share the workout as text.
   A photo waits for file storage (see the roadmap).
@@ -35,14 +39,20 @@ work happens in routines and logged workouts.
 - **Profile.** Weekly chart (XP, sets, volume), stat tiles, goals, weight log
   with a sparkline, this month at a glance, and a workout feed. **Statistics**
   has a body heat map and sets per muscle, and **Calendar** a month view.
-- **Goals.** Streak, workouts, pushups, cardio time, distance and weight goals
-  with XP rewards. Typed and shown in your own units.
+- **Goals.** Weekly streak, workouts, pushups, cardio time, distance and weight
+  goals with XP rewards, and a game-style date picker. Typed and shown in your own
+  units. A goal that is reached stays reached.
 - **Settings.** Units (kg or lb, km or mi), equipment, things to avoid, weekly
   goal, sounds and haptics.
 - **Onboarding.** Four screens, once: units, equipment, things to avoid, and how
   to start.
-- **Phone and desktop.** A tab bar with a raised START button on the phone, a
+- **Phone and desktop.** A tab bar with a raised Workout button on the phone, a
   sidebar with an account menu on desktop. Installable to a phone home screen.
+- **Insights (owner only).** For the person named in `OWNER_EMAIL`: how many
+  people joined, how many are active each week, how long people take to reach
+  each rank and how they train. It shows group numbers only, never a name or a
+  set, and a group of fewer than 5 people is hidden behind a lock. Everyone else
+  gets a 404 and never sees a link.
 
 ## Screens and routes
 
@@ -57,60 +67,67 @@ Every route is prerendered as a static shell. Data is read on the client.
 | `/routine/new`, `/routine/[id]` | Routine editor (create, edit, delete) |
 | `/routine/[id]/preview` | Every set of a routine, with Start |
 | `/workout` | Log a workout |
+| `/workout/settings` | Workout settings: sounds, vibration, keep screen on, fill in last time |
 | `/workout/done` | Victory, then the reward moments |
+| `/workout/view?id=`, `/workout/edit?id=` | A finished workout, and its editor |
 | `/rank` | Rank Road and Badges |
 | `/profile` | Stats, goals, weight, this month, workouts |
 | `/stats` | Body heat map and sets per muscle |
-| `/calendar`, `/calendar/plan` | Month calendar, and the original 6-week plan |
+| `/calendar` | Month calendar |
 | `/settings` | Account, training, app |
 | `/onboarding` | The first-run flow |
 | `/auth/denied` | Shown to a Google account that is not on the invite list |
 | `/badges`, `/goals` | Redirect to `/rank` and `/profile#goals` |
-| `/api/state` | The one JSON API: `GET` the state, `POST` an action |
+| `/insights` | Owner only: group numbers on how people use the app |
+| `/api/state` | A person's own state: `GET` it, `POST` an action |
+| `/api/insights` | Owner only: the Insights numbers (404 for anyone else) |
 | `/api/auth/*` | Auth.js |
 
 ## Data model
 
 Each person's state is one JSON document, `wt:user:{id}:state`, still
-`version: 2`. The original plan log (`days`, `weights`, `goals`) is unchanged.
-Everything added since is an optional field, and a missing field reads as empty:
+`version: 2`. Every field but `version`, `weights` and `goals` is optional, and a
+missing field reads as empty:
 
-- `days`: the 6-week plan log, keyed by date, with its own scoring rules.
 - `weights`: one weight per date, in kg.
-- `goals`: goals, stored in kg and km.
+- `goals`: goals, stored in kg and km. A reached goal keeps an `achievedAt`.
 - `routines`: a routine is one day's exercises, each with planned sets.
-- `workouts`: finished workouts, set by set. The server works out XP and
-  personal records, and scores them again after every change.
-- `prefs`: units, equipment, things to avoid, weekly goal, onboarding.
+- `workouts`: finished workouts, set by set, with the `plan` each one set out to do.
+  The server works out XP, beats and records, and scores them again after every change.
+- `prefs`: units, equipment, things to avoid, weekly goal, workout settings, onboarding.
 - `customExercises`: the person's own exercises, next to the library in
   `data/exercises.ts`.
+- `rulesV2Note`: whether the "XP was worked out again" note is waiting on Home.
 
 Weight and distance are always stored in kg and km. Units in Settings change
 what the screens show and what a typed number means. Profile info (name,
-email, photo) is kept at `wt:user:{id}:profile`.
+email, photo, when they joined) is kept at `wt:user:{id}:profile`. A state that
+still had the old plan log is converted on read, and the untouched original is
+kept once at `wt:user:{id}:backup:v7`.
 
 ## Scoring rules
 
-Total XP is the plan XP plus workout XP plus badge and goal rewards. Levels,
-ranks and badges come from the total. The rules are in `lib/workoutScoring.ts`
-(workouts), `lib/progress.ts` (plan, levels, ranks) and `lib/badges.ts`.
+XP rules v2, from the signed-off rulebook in `docs/design/xp-reference.html`. Total
+XP is workout XP plus badge and goal rewards plus weigh-ins. Levels, ranks and
+badges come from the total. The code is `lib/workoutScoring.ts` (workouts),
+`lib/progress.ts` (totals, levels, ranks) and `lib/badges.ts`.
 
 | Source | XP |
 |---|---|
-| Ticked strength set (logged workout) | 5 |
-| Cardio set (logged workout) | 1 per minute, up to 30 per set, plus 10 when a distance is logged |
-| Finishing a workout with at least one ticked set | 50 |
-| Personal record (heaviest set, then most reps, for an exercise; the first time is never a PR) | 25 |
-| Hitting the weekly goal (first time in a Monday to Sunday week) | 50 |
-| Plan: strength item | 15 |
-| Plan: core item | 10 |
-| Plan: cardio, plus a distance bonus | 20, plus 10 |
-| Plan: day cleared (all strength ticked) | 50, plus 10 per streak day up to 50 |
-| Plan: perfect day (everything ticked) | 25 |
+| Ticked strength set with a rep (or a 5 second hold) | 5, whatever the weight |
+| Cardio set | 1 per minute, up to 30 per set, plus 10 when a distance is logged |
+| Interval set | Work plus easy minutes, up to 30 |
+| Beat last time (per exercise, per workout) | 10 |
+| All-time record (replaces the beat) | 25 |
+| Finishing the plan (every planned exercise and set ticked) | The XP of the planned sets, up to 50, at most twice a day |
+| The weekly goal (first time in a Monday to Sunday week) | 50 |
 | Weigh-in | 10 |
 | Badge tier (Bronze, Silver, Gold, Diamond, Master, Legend) | 25, 50, 100, 200, 350, 500 |
 | Monthly badge / special badge | 75 / 50 |
 | Goal reward | 25 to 1,000, worked out from the goal |
+
+The first time an exercise is logged there is nothing to beat, so it earns
+neither a beat nor a record.
 
 | Levels and ranks | |
 |---|---|
@@ -119,25 +136,21 @@ ranks and badges come from the total. The rules are in `lib/workoutScoring.ts`
 | D, C, B, A | levels 5, 10, 15 and 20 |
 | S-Rank Hunter | level 30 and up |
 
-Streaks for logged workouts are weekly: a week counts if you trained at least
-once. The plan's daily streaks and badges stay as they were.
+Streaks are weekly: a week counts if you trained at least once.
 
-Badge families that score logged workouts: Finisher (workouts finished), Iron
-Mover (tonnes lifted), Record Breaker (PRs), Streak Keeper (weekly streak) and
-All-Rounder (muscle groups). Road Runner and Rider also count logged runs and
-rides. Badges that only the 6-week plan can move (Iron Will, Pushup Path,
-Grinder, Engine, Perfect Month, Awakening, Month Clear and the like) are shown
-only to people who have plan days.
+Badge families: Finisher (finished plans), Iron Mover (sets), Record Breaker,
+Streak Keeper, All-Rounder, Road Runner, Rider, Engine (cardio minutes),
+Pushup Path (push-up reps), Scale Keeper and Shedding, plus monthly badges (Month
+Clear, Goal Month, Cardio Month and more) and specials (Clean Sweep, Goal Getter).
 
-Legacy parity: `tests/legacyParity.test.ts` pins the plan-only numbers (XP,
-levels, ranks, streaks, badges, goals) to what the code produced before
-workouts existed.
+Migration: `tests/planMigration.test.ts` pins how an old plan-era state becomes
+workouts, the v7 backup, and that reading it twice changes nothing.
 
 ## Tests and development
 
 ```bash
 npm install
-npm test            # vitest over tests/ (pure logic: scoring, badges, rank road, units, sessions)
+npm test            # vitest over tests/ (pure logic: scoring, badges, rank road, units, sessions, migration, insights)
 npx tsc --noEmit    # type check
 npm run lint        # next lint
 npm run build       # production build; the routes stay static
@@ -152,18 +165,11 @@ is kept in memory for the life of the dev server. Run it like this:
 AUTH_SECRET=dev-secret ALLOWED_EMAILS=me@example.com,friend@example.com OWNER_EMAIL=me@example.com npm run dev
 ```
 
-Sign in as `me@example.com` to get the owner's setup, or as
-`friend@example.com` to see the onboarding a new person gets.
+Sign in as `me@example.com` to be the owner (Insights shows in Settings), or as
+`friend@example.com` to see the onboarding a new person gets. Insights needs 5
+people with data before it shows numbers.
 
 Manual checks per screen are in `docs/QA.md`.
-
-## Editing the plan
-
-The original 6-week plan lives in `data/plan.ts`. Each session type (`pushA`,
-`pushB`, `pullA`, `pullB`, `legs`, `fullBody`) is a small function keyed by
-week number, and the weekly layout is the `WEEK_LAYOUT` table near the top.
-The owner's six sessions are also copied into routines once, the first time the
-owner signs in after routines shipped.
 
 ## Setting up sign-in and progress storage
 
@@ -191,7 +197,8 @@ owner signs in. The old keys are never changed or deleted.
    - `AUTH_GOOGLE_ID`: the OAuth client ID.
    - `AUTH_GOOGLE_SECRET`: the OAuth client secret.
    - `ALLOWED_EMAILS`: comma-separated Google emails that may sign in.
-   - `OWNER_EMAIL`: the owner's Google email, so their old progress is copied over.
+   - `OWNER_EMAIL`: the owner's Google email. Their older progress is copied over
+     on first sign-in, and only they can open Insights.
 5. Redeploy.
 
 ## Deploying to Vercel

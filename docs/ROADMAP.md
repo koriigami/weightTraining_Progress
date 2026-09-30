@@ -1,10 +1,10 @@
 # v7 roadmap: routines like Hevy, plus Solo Leveling gamification
 
-## Status (updated after stage 4)
+## Status (updated after v8 stage F)
 
-The v7 redesign was merged to `main` (304f149) and is live. The next round, v8, fixes what
-day-to-day use turned up, moves XP to rules v2 and removes the 6-week plan. Its plan is in
-`docs/V8_PLAN.md`.
+The v7 redesign was merged to `main` (304f149) and is live. v8 fixes what day-to-day use turned
+up, moves XP to rules v2 and removes the 6-week plan. Its plan is in `docs/V8_PLAN.md`. All of
+v8 is built on the branch `claude/home-workout-nutrition-plan-kuyhvx` and is not merged yet.
 
 | Stage | What | State |
 |---|---|---|
@@ -16,23 +16,38 @@ day-to-day use turned up, moves XP to rules v2 and removes the 6-week plan. Its 
 | 3B | Rank Road and Badges, Profile, Statistics, Calendar, Settings, onboarding | Done |
 | 4 | Reward moments (level up, rank up, badge chest) with a queue, sounds and haptics, goals and volumes in the person's units, plan-only badges hidden, docs, full regression at 390 px and 1440 px, axe check | Done |
 | v7 release | Merged to `main`, deployed to production | Done |
-| v8 design | Board 06 (UX fixes) and the XP Rulebook, see `docs/design/` | Waiting for sign-off |
-| v8 build | Stages A to F in `docs/V8_PLAN.md` | Not started |
+| v8 design | Board 06 (UX fixes) and the XP Rulebook, see `docs/design/` | Done, signed off |
+| v8 A1 | Scoring rules v2, badges v2, goals on workouts that stay achieved | Done, on branch, not merged |
+| v8 A2 | The 6-week plan removed: plan days become workouts on read, with a v7 backup | Done, on branch, not merged |
+| v8 B | Workout flow: Workout button, Start sheet, Custom workout, Cardio picker, adaptive log, Workout settings | Done, on branch, not merged |
+| v8 C | History: workout page, Edit workout, XP breakdown, delete with a level-drop line | Done, on branch, not merged |
+| v8 D | Home (Resource bar, Today card, Done today), Routines menu, pinned tabs, Rank re-centre | Done, on branch, not merged |
+| v8 E | Goals and dates: the date picker, the goal sheet, weekly streak goals | Done, on branch, not merged |
+| v8 F | Owner-only Insights, docs and screenshots | Done, on branch, not merged |
+| v8 release | Opus review, then a fast-forward merge to `main` once the user says yes | Waiting |
 
 
 ### Next
 
-1. **Photo storage with Vercel Blob.** Victory has no photo control yet. Upstash Redis cannot hold
+1. **Level-pace review.** After about 3 weeks of tester data, open Insights (days to D, C and B
+   rank, workouts a week) and decide whether the level curve `50 * n * (n - 1)` and the XP rules
+   need to change. Until then the curve stays.
+2. **Remove the page headers** (backlog). The phone tab screens keep a large title and the desktop
+   a header row. Try screens without them, with the title only in the tab or the sidebar.
+3. **Rewards.** Coins, cosmetics, streak shields and a season road. Rewards never buy XP: XP stays
+   a record of effort.
+4. **Photo storage with Vercel Blob.** Victory has no photo control yet. Upstash Redis cannot hold
    images, so photos go to Vercel Blob (free tier) and the workout keeps only a URL in `photo`. A
    photo stays optional.
-2. **Google Health sync.** Weight first, then workouts. Health Connect is an on-device Android
-   API, so a web app goes through the Google Health cloud API. Verify that before building.
-3. **Image share cards.** Render the Share card to a canvas on the client, then share it as a file
+5. **Image share cards.** Render the Share card to a canvas on the client, then share it as a file
    with the Web Share API, or offer "Save image". Today Share sends text.
-4. **Generated plans (the Trainer).** Optional, never forced: a plan built from equipment, things
-   to avoid and weekly goal, saved as ordinary routines. Maybe a paid tier later, like Hevy.
-5. Smaller: a real ESLint setup (`npm run lint` is not configured), and a component test layer for
+6. **Google Health sync.** Weight first, then workouts. Health Connect is an on-device Android
+   API, so a web app goes through the Google Health cloud API. Verify that before building.
+7. **Rename the app.** It is still called Home Workout.
+8. Smaller: a real ESLint setup (`npm run lint` is not configured), and a component test layer for
    the reward moments.
+
+The generated plan (the Trainer) was rejected and is not on the list. See `docs/DESIGN_HISTORY.md`.
 
 
 ## Context

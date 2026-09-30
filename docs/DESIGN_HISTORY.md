@@ -180,7 +180,7 @@ you planned.
 
 Where each decision from board 05 lives in the code, and where the build differs
 on purpose. Screenshots of each stage are in `docs/screenshots/` (`stage2-*`,
-`stage3a-*`, `stage3b-*`, `stage4-*`).
+`stage3a-*`, `stage3b-*`, `stage4-*`, and `stage-v8-*` for v8).
 
 ### Where each decision lives
 
@@ -241,6 +241,53 @@ on purpose. Screenshots of each stage are in `docs/screenshots/` (`stage2-*`,
   Calendar and Settings are pushed pages under Profile, as decided on the board.
 - **Not built:** the generated plan (rejected), a social feed, Google Health sync
   and the workout photo. See `docs/ROADMAP.md`.
+
+### v8 as built (board 06 and the XP Rulebook)
+
+Where each v8 decision lives. Screenshots are `docs/screenshots/stage-v8-*` (stages
+b to f). The Rulebook itself is `docs/design/xp-reference.html`, and the code follows it.
+
+| Decision | Code |
+|---|---|
+| Set XP, beat last time, records, finish bonus, weekly goal | `lib/routines.ts` (`setXp`, `WORKOUT_XP`), `lib/workoutScoring.ts` (`scoreWorkouts`, `planProgress`, `liveMarks`) |
+| The plan snapshot taken at Start (`WorkoutLog.plan`) | `lib/session.ts`, `lib/routineValidation.ts` |
+| Badges v2, goals on workouts, goals that stay achieved | `lib/badges.ts`, `lib/badgeCards.ts`, `lib/goals.ts`, `stampAchievedGoals` in `app/api/state/route.ts` |
+| 6-week plan turned into workouts, v7 backup, the "XP was worked out again" note | `lib/migrations/planDays.ts`, `lib/store.ts` (`upgrade`), `AppState.rulesV2Note`, `components/home/RulesNote.tsx` |
+| Workout button, Start sheet, Custom workout picker, Cardio picker | `components/nav/` (`StartSheet`, `CustomWorkoutPicker`, `CardioSheet`), `components/AppShell.tsx` |
+| Log screen: adaptive stats, XP popover, Beat and Record chips, cardio card | `components/workout/`, `lib/liveStats.ts`, `lib/session.ts` |
+| Workout settings (Sounds, Vibration, Keep screen on, Fill in last time) | `app/workout/settings/page.tsx`, `components/workout/WorkoutSettings.tsx`, `lib/useWakeLock.ts` |
+| Workout page, XP breakdown, delete with the level-drop line | `app/workout/view/page.tsx`, `components/workout/WorkoutView.tsx`, `DeleteWorkoutDialog.tsx`, `lib/history.ts` |
+| Edit workout with a date and time modal | `app/workout/edit/page.tsx`, `components/workout/EditWorkout.tsx`, `components/ui/DatePicker.tsx` |
+| Home: Resource bar, Today card, Done today, desktop Today row | `components/home/`, `lib/todayCard.ts`, `lib/scrollHide.ts` |
+| Routines menu (Duplicate, Delete), Create routine, pinned tabs, collapsing titles | `components/routines/RoutineMenu.tsx`, `components/RoutinesTabs.tsx`, `components/ui/PageHeader.tsx`, `lib/useScrollHide.ts` |
+| Rank re-centres when the tab is tapped again | `lib/rankRetap.ts`, `components/nav/` |
+| Goal sheet with an inline end date picker, weekly streak goals | `components/goals/NewGoalSheet.tsx`, `lib/goals.ts` |
+| Insights for the owner | `app/insights/page.tsx`, `components/insights/`, `lib/insights.ts`, `lib/owner.ts`, `app/api/insights/route.ts` |
+
+#### Where the build differs from board 06, on purpose
+
+- **A workout page is `/workout/view?id=...` and its editor `/workout/edit?id=...`.**
+  The board shows `/workout/w-29-pull-a`. A dynamic segment would need a server
+  render for every workout id, and every page here is a static shell, so the id is
+  a query parameter and the pages read it on the client.
+- **The saved workout page and the cards say "Time", not "Duration".** The board's
+  strength stats read Duration, Volume, Sets. Cardio and saved workouts show one
+  Time tile, so the label is the same everywhere a finished workout is shown. The
+  live log keeps Duration for strength and mixed workouts.
+- **Cardio Time follows the clock only for a workout that is one cardio
+  exercise.** With more than one exercise there is no single clock to follow, so
+  each Time is typed. Typing a Time takes it off the clock for good.
+- **Done today cards fill the row in a fixed order.** Finished workouts come
+  first, then routines still to do (least recently done first) up to three cards,
+  and "Something else" is always last. The board showed the cards in a fixed
+  example order.
+- **The Insights page has no "Sample data" chip.** It shows real numbers. Until 5
+  people have joined it shows one line instead of the board's sample numbers.
+- **Insights counts a rank from workout XP alone.** Weigh-ins, badges and goal
+  rewards are left out, so "days to D rank" runs a little longer than the real
+  level. It is a pace check, not a leaderboard.
+- **Insights hides a week with fewer than 5 active people** as a lock on the
+  chart, where the board's sample chart shows small counts.
 
 ## Other design decisions that are not on a board
 

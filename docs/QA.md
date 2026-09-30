@@ -13,9 +13,8 @@ AUTH_SECRET=dev-secret ALLOWED_EMAILS=me@example.com,friend@example.com OWNER_EM
 Open http://localhost:3311. Progress lives in memory, so restarting the server
 gives a clean slate. Use two people:
 
-- **friend@example.com**: a new person. Onboarding, no routines, no plan days.
-- **me@example.com**: the owner. Comes with the six plan routines. Plan days only
-  exist if you tick some on `/calendar/plan`.
+- **friend@example.com**: a new person. Onboarding, no routines, no workouts.
+- **me@example.com**: the owner (`OWNER_EMAIL`). The only one who sees Insights.
 
 Free the port with `fuser -k 3311/tcp`. Do not use `pkill -f`.
 
@@ -50,14 +49,24 @@ Tick these on each screen below, at 390 px and at 1440 px.
 
 ## Home `/`
 
-- [ ] Hunter card: shield, level, rank title, XP bar. Numbers match Rank.
-- [ ] This week: the week count against the weekly goal.
-- [ ] Up next: routine cards. Phone stacks them, desktop puts them side by side.
-- [ ] Recent workouts: a card per workout with sets, volume and time. Big volumes
-      read as tonnes (5.7 t) or thousands of pounds (12.6k lb).
-- [ ] Empty state for a new person is friendly, with a way to start.
-- [ ] Phone: the tab bar has Home, Routines, a raised START, Rank, Profile. A
-      workout in progress adds a mini bar above it.
+- [ ] Phone: the Resource bar on top (level shield and XP bar, week streak,
+      weekly goal count). Desktop: the hunter card and the week card.
+- [ ] Ready: the Today card names one routine ("Today's workout") with a normal
+      size Start and its first 3 exercises. Desktop shows three cards: two
+      routines and a dashed "Something else".
+- [ ] Done today (finish a workout first): the same card turns green with Done
+      chips and a text "View" link. On desktop each finished workout is a Done
+      card, then routines still to do fill the row, and "Something else" is last.
+      The total "+N XP" shows in the section title.
+- [ ] A workout in progress shows a Resume bar (phone) or the sidebar card
+      (desktop).
+- [ ] This week opens `/calendar`.
+- [ ] Recent workouts: a card per workout with Time, Volume, Sets and XP (cardio
+      shows Distance and Pace). Tapping one opens its workout page.
+- [ ] For someone who had workouts before v8, the "XP was worked out again" note
+      shows once and does not come back after it is dismissed.
+- [ ] Phone: the tab bar has Home, Routines, a raised WORKOUT button, Rank,
+      Profile.
 
 ## Routines `/routines`, Explore, Exercises
 
@@ -66,32 +75,65 @@ Tick these on each screen below, at 390 px and at 1440 px.
 - [ ] My routines: each card lists every exercise, "+N more" after six.
 - [ ] Explore: chips filter Running, Walking, Cycling and the strength groups. A
       card opens its preview.
-- [ ] Preview: every set, the muscle map, "Add to my routines" or "Start".
+- [ ] Preview: every set, the muscle map, "Save routine" or "Start".
 - [ ] Exercises: multi-select muscle and equipment filters, search, removable
       pills, Clear, an exercise detail with the muscle map, a custom exercise.
 - [ ] Create a routine: title, add exercises from the picker (phone) or the side
       library (desktop), an exercise already in the routine is tagged and cannot
       be added, sets can be added and removed, reorder and swap work.
-- [ ] Edit a routine, save, and see the change. Delete a routine: soft red entry
-      at the bottom, solid red confirm, the routine is gone.
+- [ ] Edit a routine, save, and see the change. The dots on a routine card open a
+      menu with Duplicate (a copy right after it, with a toast) and Delete (a
+      solid red confirm, then a toast).
+- [ ] "Create routine" opens the editor.
+- [ ] Phone: the tabs (My routines, Explore, Exercises) stay pinned under the
+      header, and the large title collapses when scrolling down.
 - [ ] A cardio routine shows time and distance per set and a pace in min/km.
 
-## Workout log `/workout`
+## Start flow and workout log `/workout`
 
-- [ ] Start from a routine, from an empty workout, and from a quick cardio log.
-- [ ] Sets are prefilled. Ticking a set pops "+5 XP", and the live stats update.
-- [ ] Editing weight and reps works, and the units follow Settings.
+- [ ] The Workout button (tab bar on the phone, top of the sidebar on desktop)
+      opens the Start sheet: your routines, the Run, Walk and Ride tiles, and
+      Custom workout.
+- [ ] Custom workout: no Start button until an exercise is picked, then "Start
+      workout, N". The clock stays at 0 until Start. Cancel starts nothing.
+- [ ] Cardio picker: tapping an activity only highlights it. Start opens the
+      log with that activity.
+- [ ] A ride or run alone shows Time, Distance, Speed (ride) or Pace (run and
+      walk), and XP. No Volume and no Sets. Strength shows Duration, Volume,
+      Sets and XP.
+- [ ] Sets are prefilled with last time's numbers (Workout settings can turn
+      that off). Ticking a set pops "+5 XP".
+- [ ] The XP info button opens the popover: XP so far and plan progress.
+- [ ] "Beat last time" and "Record" chips appear on an exercise as soon as its
+      ticked set earns them, never the first time an exercise is logged.
+- [ ] Cardio card: Time follows the clock until you type in it (only when the
+      workout is that one cardio exercise). Typing a Time takes it off the clock.
 - [ ] Add exercise: a duplicate is refused with a message. Remove exercise shows
       an Undo toast.
-- [ ] Cardio set: time and distance give a pace.
-- [ ] Finish opens a confirm that says how many sets are not ticked. Two equal
-      width buttons: "Keep logging" and "Finish". A workout with no ticked set
-      cannot be finished.
+- [ ] The end of the log: Add exercise, then Settings and Discard. Settings opens
+      `/workout/settings` (Sounds, Vibration, Keep screen on, Fill in last
+      time's numbers) and changes stick.
+- [ ] Finish confirm names the planned exercises that are not done and says how
+      many sets are not ticked. A workout with no ticked set cannot be finished.
 - [ ] Discard: soft red entry, a confirm with the solid red button. Tapping
       outside only shakes it. Esc or "Keep going" closes it.
 - [ ] Phone: nothing is pinned while logging. Desktop: Discard and Finish stay in
-      the sticky header, and "+ Add exercise" focuses the library search.
+      the sticky header.
 - [ ] Reload mid-workout: the workout is still there.
+
+## Workout page, edit and delete `/workout/view?id=`
+
+- [ ] Open a workout from Home or the Profile feed. The page shows
+      its stats, the XP tile, muscles, exercises with their chips, notes, Share
+      and Edit.
+- [ ] The eye on the XP tile opens the XP breakdown modal (sets, cardio, beat,
+      record, finish, weekly goal) that adds up to the workout's XP.
+- [ ] Edit (`/workout/edit?id=`): the log layout without a clock. The date and
+      time open in the game-style date picker modal. Save, and the page shows
+      the change. Changing a date re-scores the other workouts.
+- [ ] Delete: a solid red confirm that says what level you would drop to, if it
+      would drop. Afterwards an "XP updated" toast and no level-down animation.
+- [ ] A missing or wrong id shows a friendly not-found state.
 
 ## Victory `/workout/done`
 
@@ -100,6 +142,8 @@ Tick these on each screen below, at 390 px and at 1440 px.
       sooner. Never on top of the banner at once.
 - [ ] Order: level up or rank up first, then new badges, one at a time.
 - [ ] Edit the title, date and time, and notes. The changes save. (There is no photo control yet: it waits for file storage.)
+- [ ] The XP lines follow rules v2: sets, cardio, beat or record, finish bonus
+      and weekly goal only when earned.
 - [ ] Share opens the sheet with a preview card and either the phone's share sheet or a Copy button.
 - [ ] Done is pinned at the bottom. Reload the page: no celebration replays.
 
@@ -135,10 +179,11 @@ For each of Level up, Rank up and Badge unlock:
 - [ ] Tap a locked gate or a locked badge: a full-colour preview marked Locked
       and the requirement. Tap an unlocked gate or an earned badge: its moment
       replays, without the "+XP" line.
-- [ ] Badges: Workouts, Lifetime, This month, Trophies and Milestones. A new
-      person sees no plan-only badges (Perfect Month, Awakening, Month Clear,
-      Program Complete, Iron Will and the like). The owner with plan days sees
-      all of them.
+- [ ] Tap the Rank tab again (or the sidebar item) after scrolling: the road
+      re-centres on your level.
+- [ ] Badges: Workouts, Lifetime, This month, Trophies and Milestones. The retired
+      plan badges (Perfect Month, Awakening, Program Complete, Iron Will and the
+      like) are nowhere. Goal Month and Clean Sweep exist.
 - [ ] Phone: a segment switches between Rank Road and Badges. Desktop: the
       Badges column stays in place while the road scrolls.
 
@@ -148,9 +193,13 @@ For each of Level up, Rank up and Badge unlock:
       Week streak. The gear opens Settings.
 - [ ] Stats: the weekly chart switches between XP, Sets and Volume. Four tiles:
       workouts, lifted, PRs, cardio. "See all" opens Statistics.
-- [ ] Goals: New goal (two steps), the XP reward shown before saving, edit and
-      delete from the dots, with Undo on delete. Weight goals and distance goals
-      are typed and shown in your own units.
+- [ ] Goals: New goal opens the goal sheet with the title and the XP reward
+      pinned. "Pick end date" opens the inline calendar (a sheet on the phone, a
+      dialog on desktop) that starts on the first pickable month. A goal that is
+      already reached is refused. Streak goals ask for weeks. Edit and delete
+      from the dots, with Undo on delete. Weight and distance goals are typed and
+      shown in your own units, and a weigh-in date uses the picker too.
+- [ ] A goal stays achieved after a workout behind it is deleted.
 - [ ] Weight: log a weight, the change and sparkline update, the value is in
       your unit. Out-of-range values are refused.
 - [ ] This month strip, and Calendar opens the full month.
@@ -161,9 +210,9 @@ For each of Level up, Rank up and Badge unlock:
 
 - [ ] Statistics: the body heat map (front and back) and sets per muscle for the
       last seven days, with an accessible text summary.
-- [ ] Calendar: a month grid, previous and next month, a day list, days with a
-      workout marked. "6-week plan" opens `/calendar/plan`, where plan days can be
-      ticked.
+- [ ] Calendar: a month grid whose today cells line up with the header, previous
+      and next month, a day list, days with a workout marked. There is no plan
+      link.
 
 ## Settings `/settings`
 
@@ -172,7 +221,31 @@ For each of Level up, Rank up and Badge unlock:
       editor. Save, reload, and the value is still there.
 - [ ] App: Sounds and Haptics switches persist.
 - [ ] Sign out: a confirm with the solid red button. On desktop the sidebar user
-      row opens an account menu with Profile, Settings and Sign out.
+      row opens an account menu with Profile, Settings and Sign out (and
+      Insights, for the owner).
+- [ ] Onboarding: the Skip button is in the top bar.
+
+## Insights `/insights` (owner only)
+
+Sign in as `me@example.com`, and add five or six more people with workouts (sign
+in as each, then log a workout or send `saveWorkout` to `/api/state`).
+
+- [ ] Fewer than 5 people: "Insights appear once 5 people have joined."
+- [ ] The owner sees the four tiles (People, Active this week, Workouts a week,
+      Days to D rank), the weekly bar chart with this week in gold, the funnel,
+      the days to each rank and "How people train". Bars have value labels and a
+      tooltip.
+- [ ] Any group under 5 people shows a lock instead of a number, in a tile, a
+      bar row or a week.
+- [ ] 4 weeks, 12 weeks and All time change the chart and the numbers.
+- [ ] Nothing on the page or in the `/api/insights` response has a name, email,
+      id, set or weight.
+- [ ] Phone: the tiles are two across, the cards stack, no horizontal scroll.
+- [ ] A person who is not the owner: `/api/insights` answers 404, `/insights`
+      shows the not-found state, and Settings and the account menu have no
+      Insights entry. Signed out, the API also answers 404.
+- [ ] The owner sees an Insights row in Settings (App) and an Insights entry in
+      the desktop account menu.
 
 ## After the pass
 
