@@ -1,4 +1,4 @@
-import { addDaysStr, daysBetween, lastDayOfMonth, mondayOf } from './date';
+import { addDaysStr, daysBetween, formatDay, lastDayOfMonth, mondayOf } from './date';
 import type { AppState, Goal } from './progress';
 import { scoreState } from './workoutScoring';
 import type { WorkoutScore } from './workoutScoring';
@@ -119,6 +119,65 @@ export function periodEnd(preset: PeriodPreset, start: string): string {
       return addDaysStr(start, 89);
     default:
       return addDaysStr(start, 6);
+  }
+}
+
+export type EndPreset = '2-weeks' | '1-month' | '3-months';
+
+/** The end-date chips on the goal sheet, in order. "Pick end date" is a fourth chip that opens the calendar. */
+export const END_PRESETS: { id: EndPreset; label: string }[] = [
+  { id: '2-weeks', label: '2 weeks' },
+  { id: '1-month', label: '1 month' },
+  { id: '3-months', label: '3 months' },
+];
+
+// The same day-of-month some months on, or the month's last day when it is shorter (31 Jan + 1 month is 28 Feb).
+function addMonthsStr(date: string, months: number): string {
+  const [y, m, d] = date.split('-').map(Number);
+  const first = new Date(Date.UTC(y, m - 1 + months, 1));
+  const last = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth(), Math.min(d, last))).toISOString().slice(0, 10);
+}
+
+/** The end date a preset chip gives, counted from today. */
+export function endPresetDate(preset: EndPreset, today: string): string {
+  return preset === '2-weeks' ? addDaysStr(today, 14) : addMonthsStr(today, preset === '1-month' ? 1 : 3);
+}
+
+/** "Ends Sat 31 Oct", the line under the calendar and under a weekly streak goal. */
+export const endsLabel = (date: string): string => `Ends ${formatDay(date)}`;
+
+/** How much a person did in the 4 weeks up to today, to size a new goal from. Read from real workouts. */
+export type RecentNumbers = { workouts: number; pushups: number; cardioMinutes: number; km: number; weeksTrained: number };
+
+export function recentNumbers(state: AppState, today: string, weeks = 4): RecentNumbers {
+  const from = addDaysStr(today, -(7 * weeks - 1));
+  const list = scoreState(state).filter((s) => s.date >= from && s.date <= today);
+  return {
+    workouts: list.length,
+    pushups: list.reduce((sum, s) => sum + s.pushupReps, 0),
+    cardioMinutes: Math.round(list.reduce((sum, s) => sum + s.cardioMinutes, 0)),
+    km: Math.round(list.reduce((sum, s) => sum + s.km, 0) * 10) / 10,
+    weeksTrained: new Set(list.map((s) => mondayOf(s.date))).size,
+  };
+}
+
+/** The short hint under a goal's amount, in plain workout terms. Null when there is nothing to say. `kmText` is the distance already in the person's unit. */
+export function goalHint(type: Goal['type'], n: RecentNumbers, weeks = 4, kmText?: string): string | null {
+  const span = `in the last ${weeks} weeks`;
+  switch (type) {
+    case 'workouts':
+      return `You logged ${n.workouts} ${n.workouts === 1 ? 'workout' : 'workouts'} ${span}.`;
+    case 'streak':
+      return `You trained in ${n.weeksTrained} of the last ${weeks} weeks.`;
+    case 'pushups':
+      return `You did ${n.pushups} push-ups ${span}.`;
+    case 'cardio-minutes':
+      return `You did ${n.cardioMinutes} cardio minutes ${span}.`;
+    case 'cardio-km':
+      return `You covered ${kmText ?? `${n.km} km`} ${span}.`;
+    default:
+      return null;
   }
 }
 
