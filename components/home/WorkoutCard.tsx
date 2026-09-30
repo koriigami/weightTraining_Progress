@@ -8,7 +8,6 @@ import { fmtVolume } from '@/lib/units';
 import type { WeightUnit } from '@/lib/units';
 import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
-import { Tag } from '@/components/ui/Chip';
 import { Thumb } from '@/components/ui/Thumb';
 
 // "19:40" as "7:40 PM".
@@ -21,8 +20,7 @@ const SHOWN = 3;
 
 /**
  * A workout in the feed: who, when, the title, time, volume, sets and XP, and the
- * first three exercises with thumbs. A day of the old 6-week plan looks the same,
- * tagged "6-week plan", with sets and XP only. Photos are not supported yet.
+ * first three exercises with thumbs. Photos are not supported yet.
  */
 export function WorkoutCard({ item, weight }: { item: FeedItem; weight: WeightUnit }) {
   const { data: auth } = useSession();
@@ -42,7 +40,6 @@ export function WorkoutCard({ item, weight }: { item: FeedItem; weight: WeightUn
             {item.time ? ` · ${clock(item.time)}` : ''}
           </small>
         </div>
-        {item.kind === 'plan' && <Tag>6-week plan</Tag>}
       </div>
       <h3>{item.title}</h3>
       {item.notes && <p style={{ margin: 0 }}>{item.notes}</p>}

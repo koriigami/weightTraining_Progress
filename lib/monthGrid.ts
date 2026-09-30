@@ -1,8 +1,7 @@
 // The Calendar screen's month grid and day lookup. Pure.
 //
 // Weeks start on Monday, like the weekly streak and goal. A day is marked when
-// something was trained on it: a finished workout, or a day of the old 6-week
-// plan with something ticked (both come from the workout feed).
+// a finished workout was logged on it (they come from the workout feed).
 import { addDaysStr, lastDayOfMonth, monthLabel } from './date';
 import { buildFeed } from './feed';
 import type { FeedItem } from './feed';
@@ -39,7 +38,7 @@ export function monthGrid(month: string): MonthGrid {
   return { month, label: monthLabel(month), leading, days };
 }
 
-/** Every session (workout or plan day) keyed by its date, newest first inside a day. */
+/** Every workout keyed by its date, newest first inside a day. */
 export function sessionsByDate(state: AppState, lookup: ExerciseLookup = stateLookup(state)): Map<string, FeedItem[]> {
   const map = new Map<string, FeedItem[]>();
   for (const item of buildFeed(state, lookup)) {

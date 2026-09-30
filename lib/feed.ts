@@ -1,13 +1,8 @@
-// The Recent workouts feed. It mixes two kinds of entry:
-// - workouts logged with the new log, and
-// - days of the old 6-week plan with something ticked, shown as "6-week plan"
-//   workouts. Their title comes from the plan day, their sets from the ticked
-//   items and their XP from the per-day helpers in lib/progress.ts.
+// The Recent workouts feed: the logged workouts with a ticked set, newest first.
 import { exerciseById } from '../data/exercises';
 import type { ExerciseDef } from '../data/exercises';
-import { allItemKeys, clearedStreakSeries, dayDoneCount, exerciseForKey, isItemTicked, isWorkoutDay, planDay, xpForDay } from './progress';
 import type { AppState } from './progress';
-import { PLAN_NAME_TO_ID, stateLookup, workoutTotals } from './routines';
+import { stateLookup, workoutTotals } from './routines';
 import type { ExerciseLookup, WorkoutLog } from './routines';
 import { fmtNumber } from './units';
 
@@ -20,10 +15,9 @@ export type FeedExercise = {
 
 export type FeedItem = {
   id: string;
-  kind: 'workout' | 'plan';
   title: string;
   date: string; // YYYY-MM-DD
-  time: string | null; // HH:mm, null for plan days
+  time: string | null; // HH:mm, null when the workout has no time of day
   minutes: number | null;
   volumeKg: number | null;
   sets: number;
@@ -60,7 +54,6 @@ export function workoutToFeedItem(w: WorkoutLog, lookup: ExerciseLookup = exerci
   const span = Date.parse(w.finishedAt) - Date.parse(w.startedAt);
   return {
     id: w.id,
-    kind: 'workout',
     title: w.title,
     date: w.date,
     time: /^\d{4}-\d{2}-\d{2}T(\d{2}:\d{2})$/.test(w.when) ? w.when.slice(11, 16) : null,
@@ -73,56 +66,12 @@ export function workoutToFeedItem(w: WorkoutLog, lookup: ExerciseLookup = exerci
   };
 }
 
-// A 6-week plan day with something ticked, or null.
-export function planDayToFeedItem(state: AppState, date: string, streaks: Record<string, number>): FeedItem | null {
-  const day = planDay(date);
-  const log = state.days[date];
-  if (!day || !isWorkoutDay(day) || !log) return null;
-  if (dayDoneCount(day, log) === 0 && !log.cardio) return null;
-
-  const exercises: FeedExercise[] = [];
-  let sets = 0;
-  for (const key of allItemKeys(day)) {
-    if (!isItemTicked(day, log, key)) continue;
-    if (key === 'cardio') {
-      const modality = day.cardio?.modality === 'treadmill' ? 'treadmill' : 'bike';
-      const def = exerciseById(modality);
-      const minutes = log.cardio?.minutes ?? day.cardio?.minutes ?? 0;
-      exercises.push({ key, name: def?.name ?? 'Cardio', detail: `${fmtNumber(minutes)} min`, exercise: def ?? null });
-      continue;
-    }
-    const ex = exerciseForKey(day, key);
-    if (!ex) continue;
-    const def = exerciseById(PLAN_NAME_TO_ID[ex.name] ?? '');
-    sets += ex.sets;
-    exercises.push({ key, name: def?.name ?? ex.name, detail: `${ex.sets} ${ex.sets === 1 ? 'set' : 'sets'}`, exercise: def ?? null });
-  }
-  return {
-    id: `plan-${date}`,
-    kind: 'plan',
-    title: day.title,
-    date,
-    time: null,
-    minutes: null,
-    volumeKg: null,
-    sets,
-    xp: xpForDay(day, log, streaks[date] ?? 0),
-    notes: null,
-    exercises,
-  };
-}
-
-// Newest first. On one day, logged workouts come before the plan day.
+// Newest first.
 export function buildFeed(state: AppState, lookup: ExerciseLookup = stateLookup(state)): FeedItem[] {
   const entries: { at: string; item: FeedItem }[] = [];
   for (const w of state.workouts ?? []) {
     const item = workoutToFeedItem(w, lookup);
     if (item) entries.push({ at: w.when, item });
-  }
-  const streaks = clearedStreakSeries(state);
-  for (const date of Object.keys(state.days ?? {})) {
-    const item = planDayToFeedItem(state, date, streaks);
-    if (item) entries.push({ at: `${date}T00:00`, item });
   }
   entries.sort((a, b) => (a.at === b.at ? 0 : a.at < b.at ? 1 : -1));
   return entries.map((e) => e.item);

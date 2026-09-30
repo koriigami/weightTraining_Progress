@@ -88,7 +88,7 @@ export function OnboardingFlow() {
     "Four quick questions, then you're in.",
     'This sets the default filter in the exercise list. Nothing is locked.',
     'We hide these from suggestions. You can still add them yourself.',
-    routines.length > 0 ? `Your ${routines.length === 6 ? '6-week plan is already saved as six routines' : 'routines are already saved'}. Everything here can be changed later in Settings.` : 'Nothing is forced. Everything here can be changed later in Settings.',
+    routines.length > 0 ? 'Your routines are already saved. Everything here can be changed later in Settings.' : 'Nothing is forced. Everything here can be changed later in Settings.',
   ][step];
 
   return (

@@ -14,8 +14,7 @@ import { weekSummary } from '@/lib/week';
 const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 /**
- * The month grid, Monday first. Every day with a finished workout (or a day of
- * the old 6-week plan with something ticked) is marked. Tap a day to list its
+ * The month grid, Monday first. Every day with a finished workout is marked. Tap a day to list its
  * workouts below the grid.
  */
 export function MonthCalendar() {

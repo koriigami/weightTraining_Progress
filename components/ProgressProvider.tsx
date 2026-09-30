@@ -2,18 +2,8 @@
 
 import { useSession } from 'next-auth/react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  allItemKeys,
-  computeProgress,
-  emptyState,
-  isDayCleared,
-  levelForXp,
-  planDay,
-  rankForLevel,
-  totalXp,
-  xpIntoLevel,
-} from '@/lib/progress';
-import type { AppState, DayLog, FullProgress, Goal, GoalDirection, Rank } from '@/lib/progress';
+import { computeProgress, emptyState, levelForXp, rankForLevel, totalXp, xpIntoLevel } from '@/lib/progress';
+import type { AppState, FullProgress, Goal, GoalDirection, Rank } from '@/lib/progress';
 import type { CustomExercise } from '@/data/exercises';
 import { applyRoutineAction } from '@/lib/routineActions';
 import { resolvePrefs, stateLookup } from '@/lib/routines';
@@ -83,11 +73,6 @@ type ProgressContextValue = {
   deleteWorkout: (id: string) => Promise<string | null>;
   savePrefs: (prefs: Prefs) => Promise<string | null>;
   addCustomExercise: (exercise: CustomExerciseInput) => Promise<AddCustomExerciseResult>;
-  tick: (date: string, key: string, xpAmount: number) => void;
-  untick: (date: string, key: string, undoLabel: string) => void;
-  logCardio: (date: string, minutes: number, km: number | undefined, xpAmount: number) => void;
-  removeCardio: (date: string, undoLabel: string) => void;
-  completeAll: (date: string) => void;
   logWeight: (date: string, kg: number) => void;
   addGoal: (goal: Omit<Goal, 'id' | 'createdAt'>) => Promise<string | null>;
   updateGoal: (goal: Goal, patch: GoalPatch) => Promise<string | null>;
@@ -369,113 +354,6 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     [postRaw, applyResult, fetchState]
   );
 
-  const tick = useCallback(
-    (date: string, key: string, xpAmount: number) => {
-      const before = stateRef.current;
-      const day = planDay(date);
-      const wasCleared = day ? isDayCleared(day, before.days[date]) : false;
-      const optimisticLog = { ...(before.days[date] ?? { items: {} }) };
-      optimisticLog.items = { ...optimisticLog.items, [key]: { at: new Date().toISOString() } };
-      const optimistic: AppState = { ...before, days: { ...before.days, [date]: optimisticLog } };
-      setState(optimistic);
-      feedback.tick();
-      void xpAmount;
-
-      runQueued({ action: 'tick', date, key }, before, (data) => {
-        const nowCleared = day ? isDayCleared(day, data.days[date]) : false;
-        if (!wasCleared && nowCleared) feedback.dayCleared();
-      });
-    },
-    [runQueued]
-  );
-
-  const untick = useCallback(
-    (date: string, key: string, undoLabel: string) => {
-      const before = stateRef.current;
-      const optimisticLog = { ...(before.days[date] ?? { items: {} }) };
-      optimisticLog.items = { ...optimisticLog.items };
-      delete optimisticLog.items[key];
-      const optimistic: AppState = { ...before, days: { ...before.days, [date]: optimisticLog } };
-      setState(optimistic);
-
-      runQueued({ action: 'untick', date, key }, before, () => {
-        showToast(undoLabel, 'Undo', () => tick(date, key, 0));
-      });
-    },
-    [runQueued, showToast, tick]
-  );
-
-  const logCardio = useCallback(
-    (date: string, minutes: number, km: number | undefined, xpAmount: number) => {
-      const before = stateRef.current;
-      const optimisticLog = { ...(before.days[date] ?? { items: {} }) };
-      const at = new Date().toISOString();
-      optimisticLog.cardio = km !== undefined ? { minutes, km, at } : { minutes, at };
-      const optimistic: AppState = { ...before, days: { ...before.days, [date]: optimisticLog } };
-      setState(optimistic);
-      feedback.tick();
-      void xpAmount;
-
-      runQueued({ action: 'logCardio', date, minutes, km }, before);
-    },
-    [runQueued]
-  );
-
-  const removeCardio = useCallback(
-    (date: string, undoLabel: string) => {
-      const before = stateRef.current;
-      const prevCardio = before.days[date]?.cardio;
-      const optimisticLog = { ...(before.days[date] ?? { items: {} }) };
-      delete optimisticLog.cardio;
-      const optimistic: AppState = { ...before, days: { ...before.days, [date]: optimisticLog } };
-      setState(optimistic);
-
-      runQueued({ action: 'untick', date, key: 'cardio' }, before, () => {
-        showToast(undoLabel, 'Undo', () => {
-          if (prevCardio) logCardio(date, prevCardio.minutes, prevCardio.km, 0);
-        });
-      });
-    },
-    [runQueued, showToast, logCardio]
-  );
-
-  const completeAll = useCallback(
-    (date: string) => {
-      const before = stateRef.current;
-      const day = planDay(date);
-      if (!day) return;
-      const prevLog = before.days[date];
-      const wasCleared = isDayCleared(day, prevLog);
-
-      const now = new Date().toISOString();
-      const optimisticLog: DayLog = { items: { ...(prevLog?.items ?? {}) } };
-      for (const key of allItemKeys(day)) {
-        if (key === 'cardio') {
-          if (!optimisticLog.cardio && day.cardio) optimisticLog.cardio = { minutes: day.cardio.minutes, at: now };
-        } else if (!optimisticLog.items[key]) {
-          optimisticLog.items[key] = { at: now };
-        }
-      }
-      const optimistic: AppState = { ...before, days: { ...before.days, [date]: optimisticLog } };
-      setState(optimistic);
-      feedback.tick();
-
-      runQueued({ action: 'completeAll', date }, before, (data) => {
-        const nowCleared = isDayCleared(day, data.days[date]);
-        if (!wasCleared && nowCleared) feedback.dayCleared();
-        showToast('Day completed.', 'Undo', () => {
-          const restoreBefore = stateRef.current;
-          const optimisticRestore: AppState = { ...restoreBefore, days: { ...restoreBefore.days } };
-          if (prevLog) optimisticRestore.days[date] = prevLog;
-          else delete optimisticRestore.days[date];
-          setState(optimisticRestore);
-          runQueued({ action: 'setDayLog', date, log: prevLog ?? { items: {} } }, restoreBefore);
-        });
-      });
-    },
-    [runQueued, showToast]
-  );
-
   const logWeight = useCallback(
     (date: string, kg: number) => {
       const before = stateRef.current;
@@ -659,11 +537,6 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     deleteWorkout,
     savePrefs,
     addCustomExercise,
-    tick,
-    untick,
-    logCardio,
-    removeCardio,
-    completeAll,
     logWeight,
     addGoal,
     updateGoal,

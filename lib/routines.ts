@@ -6,8 +6,6 @@
 //
 // Units are stored canonically: weight in kg, distance in km. Prefs.units only
 // changes how the UI shows and reads numbers.
-import { plan } from '../data/plan';
-import type { DayType } from '../data/plan';
 import { EXERCISES, EQUIPMENT_ORDER, exerciseById } from '../data/exercises';
 import type { CustomExercise, Equipment, ExerciseDef } from '../data/exercises';
 import type { AppState } from './progress';
@@ -331,98 +329,6 @@ export function blankSet(e: ExerciseDef): SetPlan {
     case 'intervals':
       return { on: 1, off: 1 };
   }
-}
-
-// ---------------- The owner's plan as routines ----------------
-
-// Names in data/plan.ts mapped to library ids.
-export const PLAN_NAME_TO_ID: Record<string, string> = {
-  Pushups: 'pushup',
-  'DB Chest Flyes (floor)': 'db-fly',
-  'DB Shoulder Press': 'db-ohp',
-  'DB Tricep Overhead Extension': 'db-ohext',
-  'DB Lateral Raises': 'db-lat',
-  'DB Front Raises': 'db-front',
-  'DB Tricep Kickbacks': 'db-kick',
-  'DB Bent-over Rows': 'db-row',
-  'DB Single-arm Rows': 'db-row1',
-  'DB Reverse Flyes': 'db-rear',
-  'DB Bicep Curls': 'db-curl',
-  'DB Hammer Curls': 'db-hammer',
-  'DB Spider Curls': 'db-spider',
-  Supermans: 'superman',
-  'Bodyweight Squats': 'bw-squat',
-  'Sumo Squats': 'sumo-squat',
-  'DB Goblet Squats': 'db-goblet',
-  'DB Sumo Squats': 'db-sumo',
-  'Glute Bridges': 'bridge',
-  'Calf Raises': 'db-calf',
-  Plank: 'plank',
-  Crunches: 'crunch',
-};
-
-const SEED_SESSIONS: { dayType: DayType; id: string; title: string }[] = [
-  { dayType: 'push-a', id: 'seed-push-a', title: 'Push A' },
-  { dayType: 'pull-a', id: 'seed-pull-a', title: 'Pull A' },
-  { dayType: 'legs', id: 'seed-legs', title: 'Legs' },
-  { dayType: 'push-b', id: 'seed-push-b', title: 'Push B' },
-  { dayType: 'pull-b', id: 'seed-pull-b', title: 'Pull B' },
-  { dayType: 'full-body', id: 'seed-full-body', title: 'Full Body' },
-];
-
-// The plan's rep text ('8-10', '10/side', '20 sec', 'max reps') as a target.
-// A range plans for its top end. 'max reps' plans nothing.
-function parsePlanReps(text: string): { reps?: number; sec?: number } {
-  const secs = text.match(/(\d+)\s*sec/i);
-  if (secs) return { sec: Number(secs[1]) };
-  const nums = text.match(/\d+/g);
-  if (!nums) return {};
-  return { reps: Number(nums[nums.length - 1]) };
-}
-
-// Starting dumbbell weight when the plan gives none: 10 kg for rows and leg
-// work, 5 kg for everything else.
-function seedDumbbellKg(e: ExerciseDef): number {
-  const heavy = ['upperback', 'lats', 'quads', 'hamstrings', 'glutes', 'calves'];
-  return heavy.includes(e.primary) ? 10 : 5;
-}
-
-function seedItem(exerciseId: string, count: number, repsText: string, notes: string | undefined): RoutineItem {
-  const e = exerciseById(exerciseId)!;
-  const target = parsePlanReps(repsText);
-  const set: SetPlan = {};
-  if (e.metric === 'weight_reps') {
-    set.kg = e.equipment === 'dumbbell' ? seedDumbbellKg(e) : 0;
-    if (target.reps !== undefined) set.reps = target.reps;
-  } else if (e.metric === 'time') {
-    if (target.sec !== undefined) set.sec = target.sec;
-  } else if (target.reps !== undefined) {
-    set.reps = target.reps;
-  }
-  const noteParts: string[] = [];
-  if (notes && !/deload/i.test(notes)) noteParts.push(notes);
-  if (/\/side/.test(repsText)) noteParts.push('Per side');
-  const item: RoutineItem = { exerciseId, sets: Array.from({ length: count }, () => ({ ...set })) };
-  if (noteParts.length) item.notes = noteParts.join('. ');
-  return item;
-}
-
-// The six sessions of the 6-week plan as routines, using week 6 sets and reps.
-// Dumbbell weights are not in the plan, so they start at the defaults above.
-export function seedOwnerRoutines(): Routine[] {
-  return SEED_SESSIONS.map(({ dayType, id, title }) => {
-    const days = plan.filter((d) => d.dayType === dayType && d.weekNumber === 6);
-    const day = days[days.length - 1];
-    const items: RoutineItem[] = [];
-    for (const ex of [...day.strength, ...(day.core ?? [])]) {
-      const exerciseId = PLAN_NAME_TO_ID[ex.name];
-      if (exerciseId) items.push(seedItem(exerciseId, ex.sets, ex.reps, ex.notes));
-    }
-    if (day.cardio) {
-      items.push({ exerciseId: day.cardio.modality === 'treadmill' ? 'treadmill' : 'bike', sets: [{ min: day.cardio.minutes }] });
-    }
-    return { id, title, timesPerWeek: 1, items };
-  });
 }
 
 // ---------------- Ready-made routines ----------------

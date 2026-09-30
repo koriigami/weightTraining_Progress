@@ -16,7 +16,6 @@ export default function RoutinesPage() {
   const { routines, workouts } = useProgress();
   const today = useToday();
   const desktop = useDesktopLayout();
-  const seeded = routines.some((r) => r.id.startsWith('seed-'));
 
   return (
     <Screen
@@ -45,7 +44,6 @@ export default function RoutinesPage() {
           New routine
         </ButtonLink>
       )}
-      {seeded && <div className="wt-hint">Your 6-week plan is saved as these routines. Everything you have logged, your XP and your badges stay as they are.</div>}
       {routines.length === 0 ? (
         <Card tone="dashed" className="text-center">
           <p style={{ margin: '0 0 4px' }}>

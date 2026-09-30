@@ -50,11 +50,6 @@ export const WORKOUT_FAMILIES: LifetimeFamilyId[] = ['finisher', 'iron-mover', '
 /** The rest: volume-style counters, distance and the scale. */
 export const LEGACY_FAMILIES: LifetimeFamilyId[] = ['pushup-path', 'engine', 'road-runner', 'rider', 'shedding', 'scale-keeper'];
 
-/** True when the person has any legacy plan day recorded. Home only links the plan calendar for them. */
-export function hasPlanDays(state: AppState): boolean {
-  return Object.keys(state.days ?? {}).length > 0;
-}
-
 const pct = (value: number, target: number | null): number => (target === null ? 100 : target <= 0 ? 0 : Math.max(0, Math.min(100, Math.round((value / target) * 100))));
 
 const withUnit = (n: number, unit: string): string => `${fmtNumber(n)}${unit ? ` ${unit}` : ''}`;

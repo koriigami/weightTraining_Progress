@@ -49,9 +49,9 @@ function Grid({ cards, onOpen, extra }: { cards: BadgeCard[]; onOpen: (card: Bad
 }
 
 /**
- * Every badge, earned or not: the new workout families, the lifetime badges from
- * the 6-week plan, this month's badges, the trophy case of earned monthly
- * badges, and the milestones.
+ * Every badge, earned or not: the workout families, the other lifetime badges,
+ * this month's badges, the trophy case of earned monthly badges, and the
+ * milestones.
  */
 export function BadgesPanel({ cards, today, onOpen }: { cards: BadgeCards; today: string; onOpen: (card: BadgeCard) => void }) {
   const daysLeft = Math.max(0, daysBetween(today, lastDayOfMonth(today)));

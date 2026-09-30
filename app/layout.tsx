@@ -12,7 +12,7 @@ const lilitaOne = Lilita_One({ subsets: ['latin'], weight: '400', variable: '--f
 
 export const metadata: Metadata = {
   title: 'Home Workout',
-  description: '6-week home workout plan',
+  description: 'Home workout tracker',
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,

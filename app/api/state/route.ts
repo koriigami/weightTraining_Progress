@@ -1,16 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { getState, saveState } from '@/lib/store';
-import {
-  AppState,
-  DayLog,
-  Goal,
-  GoalDirection,
-  GoalType,
-  allItemKeys,
-  isValidItemKey,
-  planDay,
-} from '@/lib/progress';
+import { AppState, Goal, GoalDirection, GoalType } from '@/lib/progress';
 import { goalStatus, stampAchievedGoals, streakDeadline } from '@/lib/goals';
 import { daysBetween, todayStr } from '@/lib/date';
 import { applyRoutineAction, isRoutineAction } from '@/lib/routineActions';
@@ -23,12 +14,6 @@ function todayPlusOne(): string {
 
 function isValidDate(date: unknown): date is string {
   return typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date);
-}
-
-function findWorkoutDay(date: string) {
-  const day = planDay(date);
-  if (!day || day.dayType === 'rest' || day.dayType === 'pre-start') return undefined;
-  return day;
 }
 
 function bad(message: string) {
@@ -64,104 +49,6 @@ export async function POST(req: NextRequest) {
   const maxDate = todayPlusOne();
 
   switch (body.action) {
-    case 'tick': {
-      const date = body.date;
-      const key = body.key;
-      if (!isValidDate(date) || typeof key !== 'string') return bad('invalid input');
-      if (date > maxDate) return bad('date is in the future');
-      const day = findWorkoutDay(date);
-      if (!day) return bad('not a workout day');
-      if (key === 'cardio' || !isValidItemKey(day, key)) return bad('invalid item key');
-      const log: DayLog = state.days[date] ?? { items: {} };
-      log.items[key] = { at: new Date().toISOString() };
-      state.days[date] = log;
-      break;
-    }
-    case 'untick': {
-      const date = body.date;
-      const key = body.key;
-      if (!isValidDate(date) || typeof key !== 'string') return bad('invalid input');
-      const day = findWorkoutDay(date);
-      if (!day || !isValidItemKey(day, key)) return bad('invalid item key');
-      const log = state.days[date];
-      if (log) {
-        if (key === 'cardio') delete log.cardio;
-        else delete log.items[key];
-      }
-      break;
-    }
-    case 'logCardio': {
-      const date = body.date;
-      const minutes = body.minutes;
-      const km = body.km;
-      if (!isValidDate(date)) return bad('invalid date');
-      if (date > maxDate) return bad('date is in the future');
-      const day = findWorkoutDay(date);
-      if (!day || !day.cardio) return bad('no cardio scheduled today');
-      if (typeof minutes !== 'number' || Number.isNaN(minutes) || minutes < 1 || minutes > 180) {
-        return bad('minutes out of range');
-      }
-      if (km !== undefined && (typeof km !== 'number' || Number.isNaN(km) || km < 0 || km > 100)) {
-        return bad('km out of range');
-      }
-      const log: DayLog = state.days[date] ?? { items: {} };
-      const at = new Date().toISOString();
-      log.cardio = typeof km === 'number' ? { minutes, km, at } : { minutes, at };
-      state.days[date] = log;
-      break;
-    }
-    case 'completeAll': {
-      const date = body.date;
-      if (!isValidDate(date)) return bad('invalid date');
-      if (date > maxDate) return bad('date is in the future');
-      const day = findWorkoutDay(date);
-      if (!day) return bad('not a workout day');
-      const log: DayLog = state.days[date] ?? { items: {} };
-      const now = new Date().toISOString();
-      for (const key of allItemKeys(day)) {
-        if (key === 'cardio') {
-          if (!log.cardio && day.cardio) log.cardio = { minutes: day.cardio.minutes, at: now };
-        } else if (!log.items[key]) {
-          log.items[key] = { at: now };
-        }
-      }
-      state.days[date] = log;
-      break;
-    }
-    case 'setDayLog': {
-      const date = body.date;
-      const rawLog = body.log as Partial<DayLog> | undefined;
-      if (!isValidDate(date)) return bad('invalid date');
-      const day = findWorkoutDay(date);
-      if (!day) return bad('not a workout day');
-      if (!rawLog || typeof rawLog !== 'object' || typeof rawLog.items !== 'object' || rawLog.items === null) {
-        return bad('invalid log');
-      }
-      const validKeys = new Set(allItemKeys(day).filter((k) => k !== 'cardio'));
-      const items: Record<string, { at: string }> = {};
-      for (const [key, entry] of Object.entries(rawLog.items)) {
-        if (!validKeys.has(key) || !entry || typeof entry.at !== 'string') return bad('invalid log');
-        items[key] = { at: entry.at };
-      }
-      let cardio: DayLog['cardio'];
-      if (rawLog.cardio !== undefined) {
-        if (!day.cardio) return bad('no cardio scheduled today');
-        const { minutes, km, at } = rawLog.cardio;
-        if (typeof minutes !== 'number' || Number.isNaN(minutes) || minutes < 1 || minutes > 180) {
-          return bad('minutes out of range');
-        }
-        if (km !== undefined && (typeof km !== 'number' || Number.isNaN(km) || km < 0 || km > 100)) {
-          return bad('km out of range');
-        }
-        cardio = { minutes, at: typeof at === 'string' ? at : new Date().toISOString(), ...(km !== undefined ? { km } : {}) };
-      }
-      if (Object.keys(items).length === 0 && !cardio) {
-        delete state.days[date];
-      } else {
-        state.days[date] = { items, ...(cardio ? { cardio } : {}) };
-      }
-      break;
-    }
     case 'weight': {
       const date = body.date;
       const kg = body.kg;

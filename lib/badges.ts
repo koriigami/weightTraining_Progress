@@ -1,5 +1,4 @@
 import { addDaysStr, lastDayOfMonth, mondayOf, monthKey } from './date';
-import { START_WEIGHT, isDayCleared, planDay, workoutDates } from './progress';
 import type { AppState, BadgeTier, Goal } from './progress';
 import { goalStatusAsOf } from './goals';
 import { weeklyGoalOf } from './routines';
@@ -53,7 +52,7 @@ export const LIFETIME_FAMILIES: Record<
     tiers: [7, 30, 60, 100, 200, 365],
     unit: '',
   },
-  // The families below score logged workouts (routines), not the 6-week plan.
+  // The families below score the workout itself: sets finished, plan done, records, weeks and muscles.
   finisher: { name: 'Finisher', metric: 'Workouts finished', shape: 'shield', icon: 'target', tiers: [1, 10, 25, 50, 100, 250], unit: 'workouts' },
   'iron-mover': { name: 'Iron Mover', metric: 'Sets logged', shape: 'hex', icon: 'dumbbell', tiers: [50, 250, 500, 1000, 2500, 5000], unit: 'sets' },
   'record-breaker': {
@@ -96,25 +95,24 @@ function engineSeries(scores: WorkoutScore[]): Sample[] {
   });
 }
 
-function modalityKmSeries(state: AppState, modality: 'treadmill' | 'cycle'): Sample[] {
+// Distance from logged workouts, running total, at each workout that added some.
+function kmSeries(scores: WorkoutScore[], pick: (s: WorkoutScore) => number): Sample[] {
   let total = 0;
   const out: Sample[] = [];
-  for (const date of workoutDates()) {
-    const day = planDay(date)!;
-    const log = state.days[date];
-    if (log?.cardio?.km !== undefined && day.cardio?.modality === modality) total += log.cardio.km;
-    out.push({ date, value: total });
+  for (const s of scores) {
+    const km = pick(s);
+    if (km <= 0) continue;
+    total += km;
+    out.push({ date: s.date, value: total });
   }
   return out;
 }
 
-// The weight Shedding counts from. The owner's 6-week plan started at 110 kg, so
-// anyone with plan days keeps that number and their badges stay exactly as they
-// were. Everyone else counts from their own first weigh-in: measured against 110,
-// a first weigh-in of 75 kg would count as 35 kg lost and hand out every tier.
+// The weight Shedding counts from: the person's own first weigh-in. Measured
+// against a fixed number, a first weigh-in of 75 kg would count as 35 kg lost and
+// hand out every tier.
 function sheddingBaseline(state: AppState, dates: string[]): number {
-  const hasPlanDays = Object.keys(state.days ?? {}).length > 0;
-  return hasPlanDays || dates.length === 0 ? START_WEIGHT : state.weights[dates[0]];
+  return state.weights[dates[0]];
 }
 
 function sheddingSeries(state: AppState): Sample[] {
@@ -132,25 +130,6 @@ function sheddingSeries(state: AppState): Sample[] {
 function scaleKeeperSeries(state: AppState): Sample[] {
   const dates = Object.keys(state.weights).sort();
   return dates.map((date, i) => ({ date, value: i + 1 }));
-}
-
-// Adds distance from logged workouts to a plan-based km series. With nothing to
-// add the plan series comes back untouched, so plan-only totals do not change.
-function withWorkoutKm(plan: Sample[], scores: WorkoutScore[], pick: (s: WorkoutScore) => number): Sample[] {
-  const extra = scores.filter((s) => pick(s) > 0);
-  if (extra.length === 0) return plan;
-  const dates = Array.from(new Set([...plan.map((p) => p.date), ...extra.map((s) => s.date)])).sort();
-  const out: Sample[] = [];
-  let pi = 0;
-  let ei = 0;
-  let planValue = 0;
-  let extraTotal = 0;
-  for (const date of dates) {
-    while (pi < plan.length && plan[pi].date <= date) planValue = plan[pi++].value;
-    while (ei < extra.length && extra[ei].date <= date) extraTotal += pick(extra[ei++]);
-    out.push({ date, value: planValue + extraTotal });
-  }
-  return out;
 }
 
 // A finished workout is one whose plan was done, so a workout with sets missing does not count.
@@ -205,8 +184,8 @@ function allRounderSeries(scores: WorkoutScore[]): Sample[] {
 const SERIES_BUILDERS: Record<LifetimeFamilyId, (state: AppState, scores: WorkoutScore[]) => Sample[]> = {
   'pushup-path': (_s, w) => pushupPathSeries(w),
   engine: (_s, w) => engineSeries(w),
-  'road-runner': (s, w) => withWorkoutKm(modalityKmSeries(s, 'treadmill'), w, (x) => x.runKm),
-  rider: (s, w) => withWorkoutKm(modalityKmSeries(s, 'cycle'), w, (x) => x.rideKm),
+  'road-runner': (_s, w) => kmSeries(w, (x) => x.runKm),
+  rider: (_s, w) => kmSeries(w, (x) => x.rideKm),
   shedding: (s) => sheddingSeries(s),
   'scale-keeper': (s) => scaleKeeperSeries(s),
   finisher: (_s, w) => finisherSeries(w),

@@ -1,22 +1,20 @@
 // The numbers on Profile that are not the weekly chart: the four stat tiles and
 // the weight card. Pure.
 import { goalStatus } from './goals';
-import { computeStats } from './progress';
 import type { AppState } from './progress';
 import { stateLookup, workoutTotals } from './routines';
 import { computeWorkoutStats, maxWorkoutDate } from './workoutScoring';
 import { trainedDates } from './week';
 
 export type ProfileTiles = {
-  workouts: number; // sessions: logged workouts plus days of the 6-week plan with something ticked
+  workouts: number; // sessions: logged workouts with a ticked set
   volumeKg: number; // lifted in logged workouts
   prs: number; // records
-  cardioKm: number; // logged distance of every kind, plus the km of the 6-week plan
+  cardioKm: number; // logged distance of every kind
 };
 
 export function profileTiles(state: AppState, today: string): ProfileTiles {
   const w = computeWorkoutStats(state, today);
-  const legacy = computeStats(state, today);
   const lookup = stateLookup(state);
   const maxDate = maxWorkoutDate(today);
   let km = 0;
@@ -29,7 +27,7 @@ export function profileTiles(state: AppState, today: string): ProfileTiles {
     workouts: trainedDates(state).length,
     volumeKg: w.volumeKg,
     prs: w.records,
-    cardioKm: km + legacy.treadmillKm + legacy.cycleKm,
+    cardioKm: km,
   };
 }
 

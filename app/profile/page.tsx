@@ -22,7 +22,7 @@ import { weekSummary } from '@/lib/week';
 
 const PAGE = 10;
 
-/** Your workouts, newest first, including days of the 6-week plan. */
+/** Your workouts, newest first. */
 function WorkoutsFeed() {
   const { state, lookup, prefs } = useProgress();
   const [shown, setShown] = useState(PAGE);

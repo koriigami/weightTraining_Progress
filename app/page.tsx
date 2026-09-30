@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { HeroLevel } from '@/components/HeroLevel';
 import { WeekCard } from '@/components/home/WeekCard';
 import { UpNextCard, UpNextRow } from '@/components/home/UpNext';
@@ -12,7 +11,6 @@ import { Button } from '@/components/ui/Button';
 import { Card, SectionLabel } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Screen } from '@/components/ui/Screen';
-import { hasPlanDays } from '@/lib/badgeCards';
 import { buildFeed } from '@/lib/feed';
 import { useDesktopLayout } from '@/lib/useMediaQuery';
 import { useToday } from '@/lib/useToday';
@@ -49,12 +47,6 @@ export default function HomePage() {
         <Button variant="secondary" block onClick={() => setShown((n) => n + PAGE)}>
           Show more workouts
         </Button>
-      )}
-      {/* Only for someone with days logged on the original plan. Everyone can still reach it from Calendar. */}
-      {hasPlanDays(state) && (
-        <Link href="/calendar/plan" className="wt-textbtn" style={{ alignSelf: 'flex-start' }}>
-          Open the 6-week plan calendar
-        </Link>
       )}
     </>
   );

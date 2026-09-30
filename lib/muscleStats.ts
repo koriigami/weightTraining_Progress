@@ -2,14 +2,11 @@
 //
 // Every ticked set counts once for the exercise's main muscle and half for each
 // of its "also works" muscles. Cardio is left out: its sets are minutes, not
-// lifts, and cardio is not a muscle group. Days of the old 6-week plan count
-// too, through the library exercise each plan name maps to.
-import { exerciseById } from '../data/exercises';
+// lifts, and cardio is not a muscle group.
 import type { ExerciseDef, Muscle } from '../data/exercises';
 import { addDaysStr } from './date';
-import { exerciseForKey, isItemTicked, isWorkoutDay, planDay } from './progress';
 import type { AppState } from './progress';
-import { PLAN_NAME_TO_ID, stateLookup } from './routines';
+import { stateLookup } from './routines';
 import type { ExerciseLookup } from './routines';
 import { trainedDates } from './week';
 
@@ -65,19 +62,6 @@ export function muscleSets(state: AppState, today: string, lookup: ExerciseLooku
       const e = lookup(item.exerciseId);
       if (!e || e.metric === 'distance_time' || e.metric === 'intervals') continue;
       add(out, e, item.sets.filter((s) => s.done).length);
-    }
-  }
-
-  for (const [date, log] of Object.entries(state.days ?? {})) {
-    if (!isInLast7Days(date, today)) continue;
-    const day = planDay(date);
-    if (!day || !isWorkoutDay(day)) continue;
-    const keys = [...day.strength.map((_, i) => `s${i}`), ...(day.core ?? []).map((_, i) => `k${i}`)];
-    for (const key of keys) {
-      if (!isItemTicked(day, log, key)) continue;
-      const plan = exerciseForKey(day, key);
-      const e = plan ? exerciseById(PLAN_NAME_TO_ID[plan.name] ?? '') : undefined;
-      if (plan && e) add(out, e, plan.sets);
     }
   }
   return out;

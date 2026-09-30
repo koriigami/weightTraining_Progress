@@ -1,9 +1,7 @@
 // This week at a glance, and which routines are up next. Pure functions.
 //
-// A day counts as trained when there is a logged workout with a ticked set on it,
-// or a day of the old 6-week plan with something ticked. Weeks run Monday to
-// Sunday, like the weekly streak and the weekly goal.
-import { planDay, dayDoneCount, isWorkoutDay } from './progress';
+// A day counts as trained when there is a logged workout with a ticked set on it.
+// Weeks run Monday to Sunday, like the weekly streak and the weekly goal.
 import type { AppState } from './progress';
 import { addDaysStr, mondayOf } from './date';
 import { weeklyStreaks } from './workoutScoring';
@@ -12,15 +10,11 @@ import type { Routine, WorkoutLog } from './routines';
 
 const hasTickedSet = (w: WorkoutLog): boolean => w.items.some((it) => it.sets.some((s) => s.done));
 
-// The date of every training session, one entry per workout or plan day, so two
-// workouts on one day count twice. Oldest first.
-export function trainedDates(state: Pick<AppState, 'workouts' | 'days'>): string[] {
+// The date of every training session, one entry per workout, so two workouts on
+// one day count twice. Oldest first.
+export function trainedDates(state: Pick<AppState, 'workouts'>): string[] {
   const dates: string[] = [];
   for (const w of state.workouts ?? []) if (hasTickedSet(w)) dates.push(w.date);
-  for (const [date, log] of Object.entries(state.days ?? {})) {
-    const day = planDay(date);
-    if (day && isWorkoutDay(day) && (dayDoneCount(day, log) > 0 || log.cardio)) dates.push(date);
-  }
   return dates.sort();
 }
 
