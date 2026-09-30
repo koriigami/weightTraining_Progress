@@ -151,6 +151,13 @@ The user's review of round 1 changed these, all at the same board link:
 - The board's today cells were out of line because two class names collided. The build scopes
   every class and checks the alignment.
 
+### Board 06, round 4
+
+- The phone top bar is option A, the Resource bar, on Home only. Profile keeps its v7 header as
+  the full player card.
+- Done today reuses the Ready layout: the same Today card on the phone and the same three cards
+  on desktop, with a Done chip, ticks on the exercise rows, and View in place of Start.
+
 ## XP Rulebook (rules v2)
 
 `docs/design/xp-reference.html`

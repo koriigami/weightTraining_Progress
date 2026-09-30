@@ -938,6 +938,13 @@ a.cardlink,button.cardlink{display:block;color:inherit;text-decoration:none;text
 .pb-xp em{white-space:nowrap;font-size:10.5px}
 .hud-b .avatar{width:36px;height:36px;font-size:15px}
 .hud-b{gap:6px}
+/* ============ round 4 ============ */
+.donechip{display:inline-flex;align-items:center;gap:3px;height:22px;padding:0 8px;border-radius:11px;background:var(--ok-soft);color:var(--ok-deep);border:1.5px solid #9ED88A;font-family:var(--font-ui);font-weight:800;font-size:12px;letter-spacing:0;vertical-align:4px}
+.rrow .rs.ok{display:inline-flex;align-items:center;gap:4px;color:var(--ok);font-weight:800}
+.wk.ok{background:var(--ok-soft);color:var(--ok-deep)}
+.tsep{height:1px;background:var(--line);margin:2px 0}
+.upcard.done{border-color:#9ED88A;background:linear-gradient(180deg,#F4FFEE,#FFF8E8 60%)}
+.sechead .xpv{font-size:20px!important}
 </style>
 <div class="page-sky sky" aria-hidden="true"><i></i><i></i><i></i></div>
 <main class="board">
@@ -955,12 +962,6 @@ a.cardlink,button.cardlink{display:block;color:inherit;text-decoration:none;text
   <section>
     <div class="sec-h"><h2 class="gt">Home</h2><p>A compact top bar, then Today's workout with a normal-size Start. While a workout runs, the Resume bar floats above the tabs, as it does today. The desktop keeps the big level card.</p></div>
     <div class="shots" data-sec="home"></div>
-  </section>
-
-  <section>
-    <div class="sec-h"><h2 class="gt">Top bar options</h2><p>Three layouts for the level, XP and streak at the top of the phone Home, after Clash Royale's top bar. None of them is the blue card from round 2. Pick one and every Home frame on this board switches to it.</p></div>
-    <div class="desk-state" id="hudPick"></div>
-    <div class="shots" data-sec="hud"></div>
   </section>
 
   <section>
@@ -1241,7 +1242,7 @@ function hero() {
   return `<section class="hero"><div class="hero-row">${shield('D', 54, 7)}<div><div class="lvl gt">Level 7</div><div class="hero-t">D-Rank Hunter</div></div></div><div class="xpbar"><i style="width:55%"></i></div><div class="hero-xp"><span>2,485 / 2,800 XP</span><span>315 to level 8</span></div></section>`;
 }
 let HUD = 'a';
-try { const v = localStorage.getItem('v6-hud'); if (['a', 'b', 'c'].includes(v)) HUD = v; } catch (e) {}
+
 function lvBadge(n, rank, size) {
   const id = 'lb' + (++uid), m = RM[rank];
   return `<svg class="lvb" viewBox="0 0 120 132" width="${size}" height="${Math.round(size * 1.1)}" role="img" aria-label="Level ${n}, ${rank} rank"><defs><linearGradient id="${id}a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${m.rim[0]}"/><stop offset="1" stop-color="${m.rim[1]}"/></linearGradient><linearGradient id="${id}f" x1="0" y1="0" x2=".6" y2="1"><stop offset="0" stop-color="${m.face[0]}"/><stop offset="1" stop-color="${m.face[1]}"/></linearGradient></defs><path d="${SHIELD}" fill="#2A1806"/><path d="${SHIELD}" fill="url(#${id}a)" transform="translate(60 66) scale(.93) translate(-60 -66)"/><path d="${SHIELD}" fill="url(#${id}f)" transform="translate(60 66) scale(.78) translate(-60 -66)"/><path d="M22 20 H98 V46 C78 40 42 52 22 45 Z" fill="#fff" opacity=".16"/><text x="60" y="88" text-anchor="middle" font-family="Lilita One, Arial Rounded MT Bold, sans-serif" font-size="66" fill="#fff" stroke="#2A1806" stroke-width="7" paint-order="stroke">${n}</text></svg>`;
@@ -1263,15 +1264,13 @@ function weekCard(doneToday) {
   return `<a class="card cardlink" href="#cal" data-a="noop" aria-label="This week, open the calendar"><div class="linkhead"><b>This week</b><span>Calendar${ic('chevR', 16)}</span></div><div class="weekrow">${days.map(([d, dn], i) => `<div class="wd ${dn ? 'done' : ''} ${i === 1 ? 'today' : ''}">${L[i]}<i>${dn ? ic('check', 16) : d}</i></div>`).join('')}</div><div class="streakrow"><span><span class="flame">${ic('flame', 18)}</span>3 week streak</span><span>${doneToday ? 2 : 1} of 5 this week</span></div></a>`;
 }
 const thumbs = ids => `<div class="tm-thumbs">${ids.map(id => thumb(byId[id], 38)).join('')}</div>`;
+function doneRows(ids) { return `<div class="rrows">${ids.map(id => { const e = byId[id]; return `<div class="rrow">${thumb(e, 28)}<span class="rn">${e.n}</span><span class="rs ok">${e.m === 'dt' ? '32 min ' : ''}${ic('check', 16)}</span></div>`; }).join('')}</div>`; }
+function doneEntry(t, meta) { return `<div class="today-main"><div class="tm-t"><h3>${t} <span class="donechip">${ic('check', 13)}Done</span></h3><small>${meta}</small></div>${B('t', 'View', { icon: 'eye', a: `aria-label="View ${t}"` })}</div>`; }
+const TILES = () => `<div class="today-alt"><button class="alt">${ic('clipboard', 20)}Other routine</button><button class="alt">${ic('bike', 20)}Cardio</button><button class="alt">${ic('plus', 20)}Custom workout</button></div>`;
 function todayCard(state, w) {
-  if (state === 'done') {
-    const rows = [`<button class="dn-row">${thumb(byId['db-row'], 44)}<div class="flex1"><b>Pull A</b><small>52 min · 12 sets · +105 XP</small></div>${ic('chevR', 18)}</button>`];
-    if (w) rows.push(`<button class="dn-row"><span class="dn-ic">${ic('bike', 22)}</span><div class="flex1"><b>Evening ride</b><small>32 min · 11.2 km · +90 XP</small></div>${ic('chevR', 18)}</button>`);
-    return `<section class="card tcard" aria-label="Today"><div class="today-h"><span class="eyebrow ok">${ic('check', 14)} Done today</span><b class="xpv">+${w ? 195 : 105} XP</b></div><div class="dn-list">${rows.join('')}</div>${w ? '' : `<div class="gentle"><span class="chev">${ic('bike', 20)}</span><div class="flex1">Treadmill from Pull A isn't logged yet.</div><button class="textbtn sm">Log it</button></div>`}<div class="today-next"><div class="flex1"><small>Next time</small><b>Legs</b><small>4 exercises · 12 sets</small></div>${B('t', 'Start', { sm: 1, icon: 'play' })}</div></section>`;
-  }
+  if (state === 'done') return `<section class="card tcard" aria-label="Today"><div class="today-h"><span class="eyebrow ok">${ic('check', 14)} Done today</span><span class="wk ok">+195 XP</span></div>${doneEntry('Pull A', '52 min · 12 sets · +105 XP')}${doneRows(['db-row', 'db-1row', 'db-rfly'])}<div class="tsep"></div>${doneEntry('Evening ride', '11.2 km · +90 XP')}${doneRows(['bike'])}${TILES()}</section>`;
   const main = `<div class="today-h"><span class="eyebrow">Today's workout</span><span class="wk">0 of 1 this week</span></div><div class="today-main"><div class="tm-t"><h3>Pull A</h3><small>5 exercises · 50 min</small></div>${B('p', 'Start', { icon: 'play', a: 'aria-label="Start Pull A"' })}</div>`;
-  const alts = `<div class="today-alt"><button class="alt">${ic('clipboard', 20)}Other routine</button><button class="alt">${ic('bike', 20)}Cardio</button><button class="alt">${ic('plus', 20)}Custom workout</button></div>`;
-  return `<section class="card tcard" aria-label="Today">${main}${rrowsFor(R_ITEMS['Pull A'].slice(0, 3))}${alts}</section>`;
+  return `<section class="card tcard" aria-label="Today">${main}${rrowsFor(R_ITEMS['Pull A'].slice(0, 3))}${TILES()}</section>`;
 }
 function wline(id, text, tag = '') { return `<div class="wc-line">${thumb(byId[id], 32)}<span class="flex1">${text}</span>${tag}</div>`; }
 function feedCard(k) {
@@ -1376,17 +1375,11 @@ function homeScreen(state) {
 }
 const SHOTS = [
   { id: 'home-ready', sec: 'home', t: 'Ready', s: 'Nothing logged today', b: () => homeScreen('ready'),
-    n: ['The top bar is one of the three options below. Pick one there and every Home frame switches.', 'Today\'s workout leads, with a normal-size Start next to the routine name.', 'Other routine, Cardio and Custom workout sit right under it.', 'This week opens the calendar.'] },
+    n: ['The top bar is the Resource bar you picked: level badge, XP bar, streak and this week\'s workouts.', 'Today\'s workout leads, with a normal-size Start next to the routine name.', 'Other routine, Cardio and Custom workout sit right under it.', 'This week opens the calendar.'] },
   { id: 'home-live', sec: 'home', t: 'In progress', s: 'A workout is running', b: () => homeScreen('live'),
     n: ['Exactly as the app works today: the Resume bar floats just above the tabs, on Home and on every other tab.', 'Home itself stays the same while a workout runs.'] },
-  { id: 'home-done', sec: 'home', t: 'Done today', s: 'Pull A finished at the gym', b: () => homeScreen('done'),
-    n: ['Each workout from today with its XP. Tap a row to open it.', 'Pull A earned no finish bonus, since the treadmill wasn\'t done. The gentle row offers the treadmill as its own cardio workout.', 'Next time shows the next routine, quietly.'] },
-  { id: 'hud-a', sec: 'hud', t: 'A · Resource bar', s: 'Clash Royale\'s top row', b: () => hudShot('a'),
-    n: ['A level badge overlaps a dark XP bar, with the numbers inside it.', 'Streak and this week\'s workouts sit to the right as counters, like coins and gems.', 'No card behind it. It sits on the sky.'] },
-  { id: 'hud-b', sec: 'hud', t: 'B · Player plate', s: 'Clash Royale\'s name row', b: () => hudShot('b'),
-    n: ['Who you are first: avatar in its rank frame, name and rank title.', 'The level badge with a small bar for progress inside the level.', 'Reads like a name plate.'] },
-  { id: 'hud-c', sec: 'hud', t: 'C · Level ring', s: 'Circular progress', b: () => hudShot('c'),
-    n: ['XP fills a gold ring around the level number, so no bar is needed.', 'Level and rank in the game font, with XP to the next level under it.', 'The smallest footprint of the three.'] },
+  { id: 'home-done', sec: 'home', t: 'Done today', s: 'Pull A and an evening ride', b: () => homeScreen('done'),
+    n: ['The same card as Ready. Each workout from today gets a Done tick, its XP, and View in place of Start.', 'Exercise rows show ticks instead of sets and reps.', 'The three tiles stay, so starting another workout is still one tap.'] },
   { id: 'start-sheet', sec: 'start', t: 'Start sheet', s: 'The Workout button', b: () => homeScreen('ready') + startSheet(),
     n: ['The center button is Workout with a +, on a wider button with room around the word.', 'Your routines first, with today\'s tagged. Then cardio. Then Custom workout: pick exercises, then start.'] },
   { id: 'picker', sec: 'start', t: 'Custom workout', s: 'Try it: pick exercises', b: pickerScreen, tryit: 1,
@@ -1587,7 +1580,7 @@ function stripes() {
 const DESK = [['home', 'Home'], ['detail', 'Workout page'], ['ride', 'Cardio log'], ['goal', 'Goal date'], ['insights', 'Insights (owner only)']];
 let DV = 'home', DHOME = 'done';
 const DNOTES = {
-  home: ['The big level card stays on desktop, where there is room for it.', 'Today\'s workout is the three-card row from the app today: two routines, then Something else for another routine, cardio or a custom workout.', 'In progress shows in the sidebar above your name, as it does today. Switch states above the browser.'],
+  home: ['The big level card stays on desktop, where there is room for it.', 'Today\'s workout is the three-card row from the app today: two routines, then Something else for another routine, cardio or a custom workout.', 'In progress shows in the sidebar above your name, as it does today.', 'Done today keeps the same three cards: finished workouts get a Done tick and View in place of Start. Switch states above the browser.'],
   detail: ['Main column: stats and every set. Side column: muscles and notes. The XP card is gone, and the eye on the XP tile opens it.', 'Share and Edit in the header. Delete workout sits at the bottom.'],
   ride: ['Discard and Finish stay pinned in the header. No finish bonus chip and no Add lap.', 'Settings sits next to Discard at the end, like on the phone.'],
   goal: ['The goal dialog keeps the calendar inside it, like the phone sheet. Title, reward and buttons stay pinned.'],
@@ -1601,9 +1594,11 @@ function deskFrame(on, head, main, aside, narrow, live) {
   return `<div class="shell">${sidebar(on, live)}<div class="dmain" data-scroll><div class="sky" aria-hidden="true"><i></i><i></i><i></i></div><div class="dtop"><div class="dtop-in ${narrow ? 'narrow' : ''}"><div class="dhead">${head}</div></div></div><div class="dwrap ${narrow ? 'narrow' : ''}">${aside ? `<div class="dgrid"><div class="dcol">${main}</div><div class="dcol">${aside}</div></div>` : `<div class="dcol">${main}</div>`}</div></div></div>`;
 }
 function deskToday(state) {
-  if (state === 'done') return todayCard('done', true);
   const card = (t, line) => `<article class="card upcard"><h4>${t}</h4><small style="color:var(--muted)">${line}</small>${rrowsFor(R_ITEMS[t].slice(0, 3))}${B('p', 'Start', { icon: 'play', a: `aria-label="Start ${t}"` })}</article>`;
-  return `<div class="sechead"><div class="sec-label">Today's workout</div><button class="textbtn sm">All routines</button></div><div class="upnext">${card('Pull A', '5 exercises · 0 of 1 this week')}${card('Legs', '4 exercises · 0 of 1 this week')}<article class="card upcard empty"><b class="gt" style="font-size:20px">Something else</b><small style="color:var(--muted)">Another routine, cardio or a custom workout.</small>${B('t', 'Choose', { icon: 'plus' })}</article></div>`;
+  const done = (t, line, rows) => `<article class="card upcard done"><h4>${t} <span class="donechip">${ic('check', 13)}Done</span></h4><small style="color:var(--muted)">${line}</small>${rows}${B('t', 'View', { icon: 'eye', a: `aria-label="View ${t}"` })}</article>`;
+  const other = `<article class="card upcard empty"><b class="gt" style="font-size:20px">Something else</b><small style="color:var(--muted)">Another routine, cardio or a custom workout.</small>${B('t', 'Choose', { icon: 'plus' })}</article>`;
+  if (state === 'done') return `<div class="sechead"><div class="sec-label">Done today</div><b class="xpv">+195 XP</b></div><div class="upnext">${done('Pull A', '52 min · 12 sets · +105 XP', doneRows(['db-row', 'db-1row', 'db-rfly']))}${done('Evening ride', '11.2 km · +90 XP', doneRows(['bike']))}${other}</div>`;
+  return `<div class="sechead"><div class="sec-label">Today's workout</div><button class="textbtn sm">All routines</button></div><div class="upnext">${card('Pull A', '5 exercises · 0 of 1 this week')}${card('Legs', '4 exercises · 0 of 1 this week')}${other}</div>`;
 }
 function deskView() {
   if (DV === 'home') {

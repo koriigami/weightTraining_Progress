@@ -270,3 +270,21 @@ Status: step 1 is done and committed as c91c74c on the branch. Board 06 is at ht
   - The goal sheet's date picker opens inline.
   - `/insights` returns 404 for a non-owner.
 - No console errors, and screenshots go to `docs/screenshots/stage-v8-*`.
+
+## Board v6 feedback, round 4 (final design decisions)
+- The in-progress state is resolved: the v7 behaviour stays, as shown in round 3.
+- The phone top bar is **A, Resource bar**:
+  - The level badge overlaps a dark XP bar with "2,485 / 2,800" inside.
+  - Streak and this-week counters sit to the right.
+  - It shows on Home only.
+- **Done today reuses the Ready layout** instead of a different design:
+  - Phone:
+    - The same Today card, with the eyebrow "Done today" and "+195 XP".
+    - Each finished workout gets a Done chip, its XP, and View in place of Start.
+    - Exercise rows show ticks instead of sets and reps (cardio rows show minutes with a tick).
+    - The three tiles stay.
+  - Desktop:
+    - The same three-card row, labelled "Done today" with the XP total.
+    - Finished workouts become Done cards with View.
+    - Something else stays.
+- **Profile keeps its v7 header** (avatar in the rank frame, name, rank title, Level, Workouts, Streak). The Resource bar is Home's quick glance, and Profile is the full player card, so the two don't repeat each other.
