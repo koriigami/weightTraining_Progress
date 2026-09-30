@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/Card';
 import { Field, Input } from '@/components/ui/Field';
 
 import { WAITLIST_URL as waitlistUrl } from '@/lib/waitlist';
+import { LegalLinks } from '@/components/legal/LegalLinks';
 
 /** The invite-only note and the waitlist button. Hidden when the waitlist URL is empty. */
 export function Waitlist({ url }: { url: string }) {
@@ -71,6 +72,7 @@ export function SignInScreen({ hasGoogle, hasDev }: { hasGoogle: boolean; hasDev
           </form>
         )}
         {waitlistUrl && <Waitlist url={waitlistUrl} />}
+        <LegalLinks />
       </Card>
     </div>
   );

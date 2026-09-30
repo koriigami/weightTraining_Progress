@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { BarChart3, ChevronRight, Compass, Dumbbell, LogOut, Scale, Target, Volume2, Vibrate, X } from 'lucide-react';
+import { BarChart3, ChevronRight, Compass, Dumbbell, FileText, LogOut, Mail, Scale, ShieldCheck, Target, Volume2, Vibrate, X } from 'lucide-react';
 import { useShell } from '@/components/nav/ShellContext';
 import { AvoidFields, EquipmentFields, UnitsFields, WeeklyGoalFields } from '@/components/prefs/PrefsFields';
 import { useProgress } from '@/components/ProgressProvider';
@@ -17,6 +17,7 @@ import { Switch } from '@/components/ui/Switch';
 import * as feedback from '@/lib/feedback';
 import { avoidSummary, equipmentSummary, unitsSummary, weeklyGoalSummary } from '@/lib/prefsSummary';
 import type { Prefs } from '@/lib/routines';
+import { CONTACT_EMAIL } from '@/lib/legal';
 
 type Editor = 'units' | 'equipment' | 'avoid' | 'goal';
 
@@ -146,6 +147,13 @@ export default function SettingsPage() {
         <SwitchRow icon={<Vibrate size={20} aria-hidden="true" />} label="Haptics" checked={prefs.haptic} onChange={toggleHaptic} />
         <Row icon={<Compass size={20} aria-hidden="true" />} label="Welcome tour" onClick={() => router.push('/onboarding')} />
         {auth?.user?.isOwner && <Row icon={<BarChart3 size={20} aria-hidden="true" />} label="Insights" onClick={() => router.push('/insights')} />}
+      </Card>
+
+      <SectionLabel>About</SectionLabel>
+      <Card className="wt-setpanel">
+        <Row icon={<ShieldCheck size={20} aria-hidden="true" />} label="Privacy policy" onClick={() => router.push('/privacy')} />
+        <Row icon={<FileText size={20} aria-hidden="true" />} label="Terms of use" onClick={() => router.push('/terms')} />
+        <Row icon={<Mail size={20} aria-hidden="true" />} label="Contact us" value={CONTACT_EMAIL} onClick={() => (window.location.href = `mailto:${CONTACT_EMAIL}`)} />
       </Card>
 
       <div className="wt-signout">

@@ -77,6 +77,7 @@ Every route is prerendered as a static shell. Data is read on the client.
 | `/settings` | Account, training, app |
 | `/onboarding` | The first-run flow |
 | `/auth/denied` | Shown to a Google account that is not on the invite list |
+| `/privacy`, `/terms` | Privacy Policy and Terms of Use. Public, readable signed out. Contact and studio details live in `lib/legal.ts` |
 | `/badges`, `/goals` | Redirect to `/rank` and `/profile#goals` |
 | `/insights` | Owner only: group numbers on how people use the app |
 | `/api/state` | A person's own state: `GET` it, `POST` an action |
@@ -187,7 +188,10 @@ owner signs in. The old keys are never changed or deleted.
    app reads through `@upstash/redis`.
 2. In Google Cloud Console, create a project. Under APIs and Services, set up
    the OAuth consent screen (External, Testing) and add each invited person as
-   a test user.
+   a test user. Set the app name to Levl, upload `public/icon-512.png` as the
+   logo, and fill in the home page (`https://<your-domain>/`), privacy policy
+   (`https://<your-domain>/privacy`) and terms (`https://<your-domain>/terms`)
+   links.
 3. Create an OAuth client ID (type: Web application). Add the redirect URI
    `https://<your-domain>/api/auth/callback/google`. Add
    `http://localhost:3000/api/auth/callback/google` too if you want to test

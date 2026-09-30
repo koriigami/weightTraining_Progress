@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import { ProgressProvider, useProgress } from '@/components/ProgressProvider';
 import { WorkoutSessionProvider, useWorkoutSession } from '@/components/WorkoutSessionProvider';
 import { SignInScreen } from '@/components/SignInScreen';
+import { isPublicPath } from '@/lib/legal';
 import { Sidebar } from '@/components/nav/Sidebar';
 import { TabBar } from '@/components/nav/TabBar';
 import { StartSheet } from '@/components/nav/StartSheet';
@@ -105,8 +106,8 @@ export function AppShell({ hasGoogle, hasDev, children }: { hasGoogle: boolean; 
   const { status } = useSession();
   const pathname = usePathname();
 
-  // Public pages such as the invite-only notice render without the shell.
-  if (pathname.startsWith('/auth/')) return <>{children}</>;
+  // Public pages such as the invite-only notice and the Privacy and Terms pages render without the shell.
+  if (pathname.startsWith('/auth/') || isPublicPath(pathname)) return <>{children}</>;
   // The session is fetched on the client, so wait for it before choosing a screen.
   if (status === 'loading') return <ShellSkeleton />;
   if (status === 'unauthenticated') return <SignInScreen hasGoogle={hasGoogle} hasDev={hasDev} />;

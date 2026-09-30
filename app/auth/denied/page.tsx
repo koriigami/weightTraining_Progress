@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Waitlist } from '@/components/SignInScreen';
+import { LegalLinks } from '@/components/legal/LegalLinks';
 
 import { WAITLIST_URL as waitlistUrl } from '@/lib/waitlist';
 
@@ -24,6 +25,7 @@ export default function DeniedPage() {
         >
           Back to sign in
         </Link>
+        <LegalLinks />
       </div>
     </div>
   );

@@ -52,7 +52,7 @@ v8 is built on the branch `claude/home-workout-nutrition-plan-kuyhvx` and is not
 - Custom domain (for example a Levl app domain), then update `metadataBase` (or set `NEXT_PUBLIC_SITE_URL`).
 - Google OAuth consent screen: set the app name and logo to Levl.
 - Rename the Vercel project to Levl.
-- A privacy policy page and a terms page. A public waitlist and Google OAuth verification both need them.
+- Done: `/privacy` and `/terms`, public and linked from sign-in, the invite-only page and Settings. Have a lawyer read them before a public launch, and add an in-app "Delete my account" button so deletion does not need an email.
 - Done: the Tally waitlist form (`https://tally.so/r/kdMyYM`) is the default in `lib/waitlist.ts`.
 - A trademark and name check for "Levl" before public launch.
 - App store style screenshots.
