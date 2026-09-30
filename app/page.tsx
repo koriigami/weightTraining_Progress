@@ -39,7 +39,7 @@ export default function HomePage() {
       ) : (
         <div className="wt-feed">
           {feed.slice(0, shown).map((item) => (
-            <WorkoutCard key={item.id} item={item} weight={prefs.units.weight} />
+            <WorkoutCard key={item.id} item={item} units={prefs.units} />
           ))}
         </div>
       )}

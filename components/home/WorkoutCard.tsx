@@ -1,65 +1,55 @@
 'use client';
 
-import { useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { formatDateShort } from '@/lib/date';
+import Link from 'next/link';
+import { ChevronRight, ClipboardList } from 'lucide-react';
+import { formatWhen } from '@/lib/date';
+import { feedTiles } from '@/lib/feed';
 import type { FeedItem } from '@/lib/feed';
-import { fmtVolume } from '@/lib/units';
-import type { WeightUnit } from '@/lib/units';
-import { Avatar } from '@/components/ui/Avatar';
-import { Card } from '@/components/ui/Card';
+import type { Units } from '@/lib/setColumns';
 import { Thumb } from '@/components/ui/Thumb';
-
-// "19:40" as "7:40 PM".
-function clock(time: string): string {
-  const [h, m] = time.split(':').map(Number);
-  return new Date(2000, 0, 1, h, m).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-}
 
 const SHOWN = 3;
 
-/**
- * A workout in the feed: who, when, the title, time, volume, sets and XP, and the
- * first three exercises with thumbs. Photos are not supported yet.
- */
-export function WorkoutCard({ item, weight }: { item: FeedItem; weight: WeightUnit }) {
-  const { data: auth } = useSession();
-  const [open, setOpen] = useState(false);
-  const name = auth?.user?.name || auth?.user?.email || 'You';
-  const extra = item.exercises.length - SHOWN;
-  const lines = open ? item.exercises : item.exercises.slice(0, SHOWN);
+// "2026-10-10" and "19:40" as the one app-wide format, "Sat 10 Oct · 7:40 pm".
+function whenOf(item: FeedItem): string {
+  return formatWhen(item.time ? `${item.date}T${item.time}` : item.date);
+}
 
+/**
+ * A workout in a list (Home, Profile, Calendar): the whole card is one link to the
+ * workout page. It shows the date, the title, the routine it came from, how many
+ * exercises were added to it, the stats and the first three exercises. The rest are
+ * counted ("+2 more"), since a link cannot hold a button.
+ */
+export function WorkoutCard({ item, units }: { item: FeedItem; units: Units }) {
+  const extra = item.exercises.length - SHOWN;
+  const tiles = feedTiles(item, units);
   return (
-    <Card as="article" className="wt-wcard" aria-label={`${item.title}, ${formatDateShort(item.date)}`}>
+    <Link href={`/workout/view?id=${encodeURIComponent(item.id)}`} className="wt-card wt-wcard" aria-label={`Open ${item.title}, ${whenOf(item)}`}>
       <div className="wt-wc-top">
-        <Avatar name={name} image={auth?.user?.image} size="sm" />
-        <div className="grow">
-          <b>{name}</b>
-          <small>
-            {formatDateShort(item.date)}
-            {item.time ? ` · ${clock(item.time)}` : ''}
-          </small>
-        </div>
+        <span className="grow">{whenOf(item)}</span>
+        <ChevronRight size={18} aria-hidden="true" />
       </div>
       <h3>{item.title}</h3>
+      {(item.routine || item.added > 0) && (
+        <div className="wt-metaline">
+          {item.routine && (
+            <span className="wt-rchip">
+              <ClipboardList size={13} aria-hidden="true" />
+              <span>{item.routine}</span>
+            </span>
+          )}
+          {item.added > 0 && <span className="wt-addtag">+{item.added} added</span>}
+        </div>
+      )}
       {item.notes && <p style={{ margin: 0 }}>{item.notes}</p>}
       <div className="wt-wc-stats">
-        {item.minutes !== null && (
-          <div className="wt-stat">
-            <small>Time</small>
-            <b>{item.minutes} min</b>
+        {tiles.map((t) => (
+          <div key={t.key} className="wt-stat">
+            <small>{t.label}</small>
+            <b>{t.value}</b>
           </div>
-        )}
-        {item.volumeKg !== null && (
-          <div className="wt-stat">
-            <small>Volume</small>
-            <b>{fmtVolume(item.volumeKg, weight)}</b>
-          </div>
-        )}
-        <div className="wt-stat">
-          <small>Sets</small>
-          <b>{item.sets}</b>
-        </div>
+        ))}
         <div className="wt-stat">
           <small>XP</small>
           <b className="wt-xpv">+{item.xp}</b>
@@ -67,21 +57,17 @@ export function WorkoutCard({ item, weight }: { item: FeedItem; weight: WeightUn
       </div>
       {item.exercises.length > 0 && (
         <div className="wt-wc-ex">
-          {lines.map((e) => (
+          {item.exercises.slice(0, SHOWN).map((e) => (
             <div key={e.key} className="wt-wc-line">
               {e.exercise ? <Thumb exercise={e.exercise} size={32} /> : <span className="wt-thumb" style={{ width: 32, height: 32 }} />}
-              <span>
-                {e.detail} {e.name}
-              </span>
+              <span>{e.line}</span>
+              {e.custom && <span className="wt-custag">Custom</span>}
+              {e.added && <span className="wt-addtag">Added</span>}
             </div>
           ))}
-          {extra > 0 && (
-            <button type="button" className="wt-textbtn sm" style={{ alignSelf: 'flex-start' }} aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-              {open ? 'Show fewer' : `See ${extra} more ${extra === 1 ? 'exercise' : 'exercises'}`}
-            </button>
-          )}
+          {extra > 0 && <span className="wt-wc-more">+{extra} more {extra === 1 ? 'exercise' : 'exercises'}</span>}
         </div>
       )}
-    </Card>
+    </Link>
   );
 }

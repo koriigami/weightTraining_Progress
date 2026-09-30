@@ -94,7 +94,7 @@ export function MonthCalendar() {
       ) : (
         <div className="wt-feed">
           {list.map((item) => (
-            <WorkoutCard key={item.id} item={item} weight={prefs.units.weight} />
+            <WorkoutCard key={item.id} item={item} units={prefs.units} />
           ))}
         </div>
       )}
