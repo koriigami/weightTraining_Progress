@@ -2,11 +2,14 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Dumbbell, Flag, Plus, Trash2 } from 'lucide-react';
+import { Dumbbell, Flag, Plus, Settings, Trash2 } from 'lucide-react';
 import { fmtPreviousBest, previousBestSet } from '@/lib/exerciseHistory';
 import { untickedSets } from '@/lib/finishSummary';
+import { liveXp, statTiles } from '@/lib/liveStats';
 import { fillOnTick } from '@/lib/setColumns';
+import { planFromItems } from '@/lib/session';
 import type { SetPatch } from '@/lib/session';
+import { liveMarks, planProgress } from '@/lib/workoutScoring';
 import { useDesktopLayout, useWideLayout } from '@/lib/useMediaQuery';
 import { useProgress } from '@/components/ProgressProvider';
 import { useElapsed, useWorkoutSession } from '@/components/WorkoutSessionProvider';
@@ -31,12 +34,12 @@ type PickerState = { mode: 'add' } | { mode: 'replace'; index: number } | null;
 /**
  * Log workout, laid out like Hevy.
  * Phone: Finish in the top bar, the live stats under it, the exercises, then
- * Add exercise (full width, primary when the workout is empty) and a small
- * "Discard workout" below a dashed line. Nothing is pinned, so the sets get the
+ * Add exercise (full width, primary when the workout is empty) and, below a
+ * dashed line, Settings and "Discard workout" side by side. Nothing is pinned, so the sets get the
  * whole screen.
  * Desktop: a sticky header with Discard and Finish side by side, "+ Add exercise"
  * at the end of the list (it jumps to the library search in the side column),
- * and a Summary card above the library panel.
+ * the same Settings and Discard row, and a Summary card above the library panel.
  */
 export function LogScreen() {
   const router = useRouter();
@@ -71,6 +74,12 @@ export function LogScreen() {
     return out;
   }, [items, workouts, lookup]);
 
+  // Beat last time and Record chips, judged against the saved workouts.
+  const marks = useMemo(() => liveMarks(items ?? [], workouts, lookup), [items, workouts, lookup]);
+  const parts = useMemo(() => liveXp(items ?? [], marks, lookup), [items, marks, lookup]);
+  // The plan as it stands now (older workouts in progress have none: their exercises are the plan).
+  const plan = useMemo(() => (items ? planProgress(session?.plan ?? planFromItems(items), items, lookup) : null), [items, session?.plan, lookup]);
+
   if (!ws.ready) return <Screen header={<PageHeader title="Log workout" back="/" />}>{null}</Screen>;
 
   if (!session && leaving) return <Screen header={<PageHeader title="Log workout" back="/" />}>{null}</Screen>;
@@ -92,6 +101,7 @@ export function LogScreen() {
   const listName = session.title.trim() || 'this workout';
   const empty = session.items.length === 0;
   const unticked = untickedSets(session.items, lookup);
+  const missedNames = (plan?.missing ?? []).map((id) => lookup(id)?.name ?? 'An exercise');
 
   function leave() {
     if (typeof window !== 'undefined' && window.history.length > 1) router.back();
@@ -185,7 +195,8 @@ export function LogScreen() {
   const swapItem = swapping !== null ? session.items[swapping] : undefined;
   const swapEx = swapItem ? lookup(swapItem.exerciseId) : undefined;
 
-  const stats = <WorkoutStats elapsed={elapsed} volumeKg={ws.totals.volume} sets={ws.totals.sets} xp={ws.totals.xp} weight={units.weight} />;
+  const tiles = statTiles(session.items, ws.totals, { elapsed, weight: units.weight, distance: units.distance, lookup });
+  const stats = <WorkoutStats tiles={tiles} xp={parts.total} parts={parts} plan={plan} />;
 
   const blocks = session.items.map((item, i) => {
     const e = lookup(item.exerciseId);
@@ -211,6 +222,8 @@ export function LogScreen() {
           if (error) showToast(error);
         }}
         onToggleSet={(j) => tick(i, j)}
+        mark={marks.find((m) => m.exerciseId === item.exerciseId)}
+        cardio={e.metric === 'distance_time' ? { follow: Boolean(session.follow?.includes(item.exerciseId)), onChange: (patch: SetPatch) => ws.updateCardio(i, patch) } : undefined}
       />
     );
   });
@@ -264,7 +277,7 @@ export function LogScreen() {
         wide ? (
           <>
             <SummaryCard items={session.items}>
-              <WorkoutStats elapsed={elapsed} volumeKg={ws.totals.volume} sets={ws.totals.sets} xp={ws.totals.xp} weight={units.weight} side />
+              <WorkoutStats tiles={tiles} xp={parts.total} parts={parts} plan={plan} side />
             </SummaryCard>
             <LibraryPanel
               ref={panelRef}
@@ -295,13 +308,14 @@ export function LogScreen() {
 
       <div className="wt-log-end">
         {addButton}
-        {!desktop && (
-          <div className="wt-danger-zone">
-            <Button variant="soft-destructive" size="sm" icon={<Trash2 size={16} aria-hidden="true" />} onClick={() => setConfirm('discard')}>
-              Discard workout
-            </Button>
-          </div>
-        )}
+        <div className="wt-end-row">
+          <Button variant="secondary" size="sm" icon={<Settings size={16} aria-hidden="true" />} onClick={() => router.push('/workout/settings')}>
+            Settings
+          </Button>
+          <Button variant="soft-destructive" size="sm" icon={<Trash2 size={16} aria-hidden="true" />} onClick={() => setConfirm('discard')}>
+            Discard workout
+          </Button>
+        </div>
       </div>
 
       <ExerciseMenu
@@ -334,8 +348,8 @@ export function LogScreen() {
 
       <ExerciseInfoSheet exercise={infoId ? lookup(infoId) ?? null : null} onClose={() => setInfoId(null)} />
 
-      <DiscardDialog open={confirm === 'discard'} tickedSets={ws.counts.done} xp={ws.totals.xp} onKeepGoing={() => setConfirm(null)} onDiscard={discard} />
-      <FinishDialog open={confirm === 'finish'} unticked={unticked} saving={saving} onKeepLogging={() => setConfirm(null)} onFinish={() => void finish()} />
+      <DiscardDialog open={confirm === 'discard'} tickedSets={ws.counts.done} xp={parts.total} onKeepLogging={() => setConfirm(null)} onDiscard={discard} />
+      <FinishDialog open={confirm === 'finish'} unticked={unticked} missedPlan={missedNames} saving={saving} onKeepLogging={() => setConfirm(null)} onFinish={() => void finish()} />
     </Screen>
   );
 }

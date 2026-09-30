@@ -15,7 +15,7 @@ import { cn } from '@/components/ui/cn';
  * number when the text is one. An outside change (a replaced exercise, another
  * unit) updates the box, but typing never fights the stored value.
  */
-function NumberCell({ column, set, units, label, onCommit }: { column: SetColumn; set: SetPlan; units: Units; label: string; onCommit: (patch: SetPatch) => void }) {
+export function NumberCell({ column, set, units, label, onCommit, className = 'wt-cell', id }: { column: SetColumn; set: SetPlan; units: Units; label: string; onCommit: (patch: SetPatch) => void; className?: string; id?: string }) {
   const shown = displayValue(column, set, units);
   const [text, setText] = useState(shown);
   const stored = set[column.key];
@@ -30,7 +30,8 @@ function NumberCell({ column, set, units, label, onCommit }: { column: SetColumn
 
   return (
     <input
-      className="wt-cell"
+      id={id}
+      className={className}
       inputMode="decimal"
       autoComplete="off"
       maxLength={7}

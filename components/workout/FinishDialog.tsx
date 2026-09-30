@@ -1,7 +1,7 @@
 'use client';
 
 import { Flag } from 'lucide-react';
-import { fmtUnticked, untickedSentence } from '@/lib/finishSummary';
+import { fmtUnticked, missedPlanSentence, untickedSentence } from '@/lib/finishSummary';
 import type { UntickedRow } from '@/lib/finishSummary';
 import { GameModal } from '@/components/ui/GameModal';
 
@@ -10,9 +10,10 @@ const MAX_ROWS = 5;
 /**
  * The centered green dialog Finish opens. It says how many sets are not ticked
  * and lists them by exercise, so an accidental Finish can be undone with
- * "Keep logging". Both buttons are the same width.
+ * "Keep logging". Both buttons are the same width. When planned exercises are not
+ * done it names them instead, since the finish bonus is what is at stake.
  */
-export function FinishDialog({ open, unticked, saving, onKeepLogging, onFinish }: { open: boolean; unticked: UntickedRow[]; saving: boolean; onKeepLogging: () => void; onFinish: () => void }) {
+export function FinishDialog({ open, unticked, missedPlan, saving, onKeepLogging, onFinish }: { open: boolean; unticked: UntickedRow[]; /** Names of planned exercises that are not done. */ missedPlan: string[]; saving: boolean; onKeepLogging: () => void; onFinish: () => void }) {
   const count = unticked.reduce((n, r) => n + r.sets.length, 0);
   const shown = unticked.slice(0, MAX_ROWS);
   const more = unticked.length - shown.length;
@@ -28,7 +29,7 @@ export function FinishDialog({ open, unticked, saving, onKeepLogging, onFinish }
       onCancel={onKeepLogging}
       onConfirm={onFinish}
       extra={
-        count > 0 ? (
+        missedPlan.length === 0 && count > 0 ? (
           <ul className="wt-gm-list" aria-label="Sets that are not ticked">
             {shown.map((r) => (
               <li key={r.exerciseId}>
@@ -46,7 +47,7 @@ export function FinishDialog({ open, unticked, saving, onKeepLogging, onFinish }
         ) : undefined
       }
     >
-      {untickedSentence(count)}
+      {missedPlan.length > 0 ? missedPlanSentence(missedPlan) : untickedSentence(count)}
     </GameModal>
   );
 }

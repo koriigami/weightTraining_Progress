@@ -1632,6 +1632,65 @@ textarea.wt-input {
 .wt-startrow small {
   color: var(--muted);
 }
+.wt-todaytag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  vertical-align: 1px;
+}
+/* Cardio tiles: the Start sheet's three and the Cardio picker's six. */
+.wt-acts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.wt-act {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 92px;
+  padding: 12px 6px;
+  border-radius: 16px;
+  border: 2px solid var(--line);
+  background: var(--calm);
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1.15;
+  text-align: center;
+}
+.wt-act .ib,
+.wt-customrow .ib {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  flex: none;
+}
+.wt-act[aria-pressed='true'] {
+  border-color: var(--link);
+  background: rgba(43, 164, 56, 0.12);
+  box-shadow: 0 0 0 2px rgba(43, 164, 56, 0.25);
+}
+.wt-customrow {
+  width: 100%;
+  margin-top: 14px;
+  text-align: left;
+  color: var(--ink);
+}
+.wt-customrow .ib {
+  border-radius: 50%;
+}
 
 /* ---- toast: dark wood pill ---- */
 .wt-toast-wrap {
@@ -2070,10 +2129,10 @@ textarea.wt-input {
   margin-top: 4px;
 }
 
-/* Phone tab bar with the raised START button. */
+/* Phone tab bar with the raised WORKOUT button (an auto-width middle column). */
 .wt-tabbar {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: 1fr 1fr auto 1fr 1fr;
   align-items: end;
   background: var(--nav-bg);
   padding: 6px 4px calc(14px + env(safe-area-inset-bottom));
@@ -2112,8 +2171,9 @@ textarea.wt-input {
 .wt-startfab {
   justify-self: center;
   margin-top: -30px;
-  width: 70px;
+  min-width: 96px;
   height: 62px;
+  padding: 0 16px;
   border-radius: 20px;
   border: 3px solid var(--stroke);
   background: linear-gradient(180deg, var(--p1), var(--p2));
@@ -2124,13 +2184,13 @@ textarea.wt-input {
   justify-content: center;
   gap: 1px;
   font-family: var(--font-num);
-  font-size: 14px;
+  font-size: 13px;
   letter-spacing: 0.04em;
+  white-space: nowrap;
   box-shadow: 0 5px 0 var(--p-bevel), 0 0 24px var(--p-glow), inset 0 2px 0 rgba(255, 255, 255, 0.4);
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
   position: relative;
   overflow: hidden;
-  padding: 0;
 }
 .wt-startfab::before {
   content: '';
@@ -2774,6 +2834,19 @@ textarea.wt-input {
   background: var(--bg-app);
   animation: wt-up 0.26s cubic-bezier(0.2, 0.8, 0.2, 1);
   outline: none;
+}
+@media (min-width: 768px) {
+  /* On desktop the picker is a centered panel over a dimmed page, not the whole window. */
+  .wt-picker {
+    inset: 0;
+    margin: auto;
+    width: min(720px, calc(100vw - 48px));
+    height: min(860px, calc(100dvh - 48px));
+    border-radius: 24px;
+    overflow: hidden;
+    border: 2px solid var(--line);
+    box-shadow: 0 0 0 100vmax var(--scrim);
+  }
 }
 .wt-picker-top {
   flex: none;
@@ -4586,4 +4659,252 @@ button.wt-setrow:hover {
   .badge-legend {
     animation: none;
   }
+}
+
+/* ---- log screen: XP info, live chips, cardio card, log end, workout settings ---- */
+.wt-stat small {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.wt-infobtn {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin: -4px 0 -4px 2px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--link);
+}
+.wt-xppop-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+.wt-xppop {
+  position: fixed;
+  z-index: 71;
+  max-width: calc(100vw - 24px);
+  padding: 14px 16px 8px;
+  border-radius: 16px;
+  background: var(--calm);
+  border: 2px solid var(--line);
+  box-shadow: 0 10px 0 -4px #d7ba7c, 0 18px 30px -12px rgba(60, 35, 5, 0.5);
+  outline: none;
+  color: var(--ink);
+}
+.wt-xppop-h {
+  display: block;
+  font-family: var(--font-num);
+  font-weight: 400;
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+.wt-xppop-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+  font-size: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.wt-xppop-row b {
+  color: var(--xp-ink);
+  font-variant-numeric: tabular-nums;
+}
+.wt-xppop-plan {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.wt-xppop-plan svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--link);
+}
+.wt-xppop .wt-textbtn {
+  display: flex;
+  margin-left: auto;
+}
+.wt-mk {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  border: 1px solid var(--ok);
+  background: var(--ok-soft);
+  color: var(--ok-deep);
+}
+.wt-mk.rec {
+  border-color: var(--xp-deep);
+  background: linear-gradient(180deg, #ffe07a, #ffc21a);
+  color: #4a3212;
+}
+.wt-cc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--ok);
+  background: var(--ok-soft);
+  color: var(--ok-deep);
+  font-size: 13px;
+  font-weight: 800;
+}
+.wt-cc-pill.no {
+  border-color: var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+}
+button.wt-cc-pill {
+  cursor: pointer;
+}
+.wt-bigf {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.wt-bf {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--cell);
+  min-width: 0;
+}
+.wt-bf:focus-within {
+  border-color: #d49a2a;
+  box-shadow: 0 0 0 3px rgba(245, 197, 66, 0.35);
+}
+.wt-bf label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.wt-bf .in {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.wt-bigin {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  background: none;
+  outline: none;
+  padding: 0;
+  font-size: 34px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.wt-bigin::placeholder {
+  color: var(--muted);
+  opacity: 0.45;
+}
+.wt-bf .u {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--muted);
+}
+.wt-cc-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0 2px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.wt-cc-meta b {
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.wt-cc-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.wt-cc-note svg {
+  flex: none;
+}
+.wt-end-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding-top: 18px;
+  border-top: 2px dashed rgba(200, 160, 60, 0.5);
+}
+.wt-end-row .wt-btn {
+  min-width: 0;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+.wt-wscard {
+  display: flex;
+  flex-direction: column;
+}
+.wt-wsrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.wt-wsrow:last-child {
+  border-bottom: 0;
+}
+.wt-wsrow b {
+  display: block;
+  font-size: 17px;
+}
+.wt-wsrow small {
+  display: block;
+  color: var(--muted);
+  font-weight: 600;
+  margin-top: 2px;
+}
+.wt-wsnote {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: 14px;
+  padding: 0 4px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+.wt-wsnote svg {
+  flex: none;
+  margin-top: 2px;
 }

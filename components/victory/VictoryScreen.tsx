@@ -40,7 +40,7 @@ type Status = 'idle' | 'saving' | 'saved' | 'error';
 /**
  * Victory: the workout is saved and its XP is already counted, so there is no
  * claim step. It shows the banner, the XP lines, the level card, the details you
- * can still edit (title, date and time, notes), the "Update routine" switch and
+ * can still edit (title, date and time, notes), the "Save weights to <routine>" switch and
  * Share. Done goes Home.
  *
  * A photo for the workout is not built yet: it needs file storage (Vercel Blob),
@@ -362,7 +362,7 @@ function Victory({ finished }: { finished: Finished }) {
       {before.current && showUpdate && (
         <Card className="wt-switchrow">
           <span id="update-label">
-            <b>Update {before.current.title}</b>
+            <b>Save weights to {before.current.title}</b>
             <small>Use today&apos;s weights and reps as next time&apos;s plan.</small>
           </span>
           <button type="button" role="switch" aria-checked={updateOn} aria-labelledby="update-label" className="wt-switch" onClick={toggleUpdate}>
