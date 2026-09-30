@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { exerciseById } from '../data/exercises';
 import { emptyState } from '../lib/progress';
 import type { AppState } from '../lib/progress';
 import { migratePlanDays } from '../lib/migrations/planDays';
-import { heatPercent, isInLast7Days, last7Days, last7Stats, muscleRows, muscleSets } from '../lib/muscleStats';
+import { heatPercent, isInLast7Days, last7Days, last7Stats, muscleRows, muscleSets, workoutMuscleSets } from '../lib/muscleStats';
 import { stateWith, workout } from './helpers';
 
 // Tuesday 29 September 2026: the last 7 days are Wed 23 Sep to Tue 29 Sep.
@@ -68,6 +69,32 @@ describe('muscle sets', () => {
     const state = migratePlanDays({ ...emptyState(), days: { '2026-09-26': { items: { s0: { at: '2026-09-26T08:00:00.000Z' }, s1: { at: '2026-09-26T09:00:00.000Z' } } } } }, { today: TODAY });
     expect(muscleSets(state, TODAY)).toEqual({ quads: 3, glutes: 1.5, chest: 3, triceps: 1.5, shoulders: 1.5, abs: 1.5 });
     expect(muscleSets(state, '2026-10-05')).toEqual({}); // outside the window
+  });
+});
+
+describe('workout muscle sets', () => {
+  it('gives the main muscle every done set and each muscle it also works half of them', () => {
+    const w = workout('2026-09-28', [{ id: 'db-bench', sets: [{ kg: 20, reps: 10 }, { kg: 20, reps: 10 }, { kg: 20, reps: 10 }] }]);
+    expect(workoutMuscleSets(w.items, exerciseById)).toEqual({ chest: 3, triceps: 1.5, shoulders: 1.5 });
+  });
+
+  it('skips sets that were not ticked', () => {
+    const w = workout('2026-09-28', [{ id: 'db-bench', sets: [{ kg: 20, reps: 10 }, { kg: 20, reps: 10 }, { kg: 20, reps: 10 }], undone: [0, 2] }, { id: 'pushup', sets: [{ reps: 10 }], undone: [0] }]);
+    expect(workoutMuscleSets(w.items, exerciseById)).toEqual({ chest: 1, triceps: 0.5, shoulders: 0.5 });
+  });
+
+  it('skips cardio and exercises it does not know', () => {
+    const w = workout('2026-09-28', [{ id: 'run', sets: [{ min: 20, km: 3 }] }, { id: 'runwalk', sets: [{ on: 1, off: 1 }] }, { id: 'no-such-exercise', sets: [{ reps: 10 }] }]);
+    expect(workoutMuscleSets(w.items, exerciseById)).toEqual({});
+    expect(workoutMuscleSets([], exerciseById)).toEqual({});
+  });
+
+  it('adds up exercises that share a muscle, and uses the lookup it is given', () => {
+    const w = workout('2026-09-28', [{ id: 'db-ohp', sets: [{ kg: 5, reps: 10 }, { kg: 5, reps: 10 }] }, { id: 'db-lat', sets: [{ kg: 3, reps: 12 }] }]);
+    expect(workoutMuscleSets(w.items, exerciseById)).toEqual({ shoulders: 3, triceps: 1 });
+    const mine = { id: 'mine', name: 'Mine', equipment: 'bodyweight' as const, primary: 'lats' as const, secondary: [], metric: 'reps' as const };
+    const custom = workout('2026-09-28', [{ id: 'mine', sets: [{ reps: 8 }, { reps: 8 }] }]);
+    expect(workoutMuscleSets(custom.items, (id) => (id === 'mine' ? mine : undefined))).toEqual({ lats: 2 });
   });
 });
 

@@ -80,12 +80,27 @@ export type ShareInput = {
   minutes: number | null;
   xp: number;
   rankTitle: string;
+  kind?: 'strength' | 'mixed' | 'cardio'; // none reads as strength
+  km?: number;
+  rate?: string; // the pace or speed, already formatted: "5:58 /km", "24 km/h"
 };
 
-// The plain text handed to the phone's share sheet, or copied.
-export function shareText(s: ShareInput, weight: WeightUnit = 'kg'): string {
-  const parts = [`${s.sets} ${s.sets === 1 ? 'set' : 'sets'}`];
-  if (s.volumeKg > 0) parts.push(`${fmtVolume(s.volumeKg, weight)} lifted`);
-  if (s.minutes !== null) parts.push(`${s.minutes} min`);
-  return `${s.title}: ${parts.join(', ')}. +${s.xp} XP. Levl, ${s.rankTitle}.`;
+// The plain text handed to the phone's share sheet, or copied. Strength lists the
+// sets and what was lifted. Mixed adds the distance. Cardio leads with the
+// distance, then the time and the pace or speed.
+export function shareText(s: ShareInput, weight: WeightUnit = 'kg', distance: DistanceUnit = 'km'): string {
+  const km = s.km ?? 0;
+  const parts: string[] = [];
+  if (s.kind === 'cardio') {
+    if (km > 0) parts.push(fmtDistance(km, distance));
+    if (s.minutes !== null) parts.push(`${s.minutes} min`);
+    if (s.rate) parts.push(s.rate);
+  } else {
+    parts.push(`${s.sets} ${s.sets === 1 ? 'set' : 'sets'}`);
+    if (s.volumeKg > 0) parts.push(`${fmtVolume(s.volumeKg, weight)} lifted`);
+    if (s.minutes !== null) parts.push(`${s.minutes} min`);
+    if (s.kind === 'mixed' && km > 0) parts.push(fmtDistance(km, distance));
+  }
+  const head = parts.length > 0 ? `${s.title}: ${parts.join(', ')}.` : `${s.title}.`;
+  return `${head} +${s.xp} XP. Levl, ${s.rankTitle}.`;
 }

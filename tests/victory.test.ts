@@ -120,4 +120,46 @@ describe('share text', () => {
   it('has no em dash', () => {
     expect(shareText(s)).not.toContain(String.fromCharCode(0x2014));
   });
+
+  it('reads a strength workout the same whatever distance it is given', () => {
+    expect(shareText({ ...s, kind: 'strength', km: 3 })).toBe(shareText(s));
+    expect(shareText(s, 'kg', 'mi')).toBe(shareText(s));
+  });
+
+  describe('cardio', () => {
+    const run = { title: 'Morning Run', sets: 1, volumeKg: 0, minutes: 31, xp: 46, rankTitle: 'E-Rank Hunter', kind: 'cardio' as const, km: 5.2, rate: '5:58 /km' };
+
+    it('leads with the distance, then the time and the pace', () => {
+      expect(shareText(run)).toBe('Morning Run: 5.2 km, 31 min, 5:58 /km. +46 XP. Levl, E-Rank Hunter.');
+    });
+
+    it('follows the distance unit and takes a speed as the rate', () => {
+      expect(shareText({ ...run, km: 18.4, minutes: 46, rate: '24 km/h' })).toBe('Morning Run: 18.4 km, 46 min, 24 km/h. +46 XP. Levl, E-Rank Hunter.');
+      expect(shareText({ ...run, rate: '9:36 /mi' }, 'kg', 'mi')).toBe('Morning Run: 3.23 mi, 31 min, 9:36 /mi. +46 XP. Levl, E-Rank Hunter.');
+    });
+
+    it('leaves out what is missing and never says 0 km', () => {
+      expect(shareText({ ...run, km: 0, rate: '' })).toBe('Morning Run: 31 min. +46 XP. Levl, E-Rank Hunter.');
+      expect(shareText({ ...run, km: undefined, rate: undefined, minutes: null })).toBe('Morning Run. +46 XP. Levl, E-Rank Hunter.');
+      expect(shareText({ ...run, minutes: null, rate: undefined })).toBe('Morning Run: 5.2 km. +46 XP. Levl, E-Rank Hunter.');
+    });
+
+    it('has no em dash', () => {
+      expect(shareText(run)).not.toContain(String.fromCharCode(0x2014));
+    });
+  });
+
+  describe('mixed', () => {
+    const mixed = { title: 'Legs and a Jog', sets: 14, volumeKg: 1240, minutes: 58, xp: 196, rankTitle: 'D-Rank Hunter', kind: 'mixed' as const, km: 2.1 };
+
+    it('adds the distance after the strength parts', () => {
+      expect(shareText(mixed)).toBe('Legs and a Jog: 14 sets, 1.2 t lifted, 58 min, 2.1 km. +196 XP. Levl, D-Rank Hunter.');
+      expect(shareText(mixed, 'lb', 'mi')).toBe('Legs and a Jog: 14 sets, 2.7k lb lifted, 58 min, 1.3 mi. +196 XP. Levl, D-Rank Hunter.');
+    });
+
+    it('has no distance when there was none', () => {
+      expect(shareText({ ...mixed, km: 0 })).toBe('Legs and a Jog: 14 sets, 1.2 t lifted, 58 min. +196 XP. Levl, D-Rank Hunter.');
+      expect(shareText({ ...mixed, km: undefined })).toBe('Legs and a Jog: 14 sets, 1.2 t lifted, 58 min. +196 XP. Levl, D-Rank Hunter.');
+    });
+  });
 });

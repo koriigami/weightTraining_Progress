@@ -7,7 +7,7 @@ import type { ExerciseDef, Muscle } from '../data/exercises';
 import { addDaysStr } from './date';
 import type { AppState } from './progress';
 import { stateLookup } from './routines';
-import type { ExerciseLookup } from './routines';
+import type { ExerciseLookup, WorkoutItem } from './routines';
 import { trainedDates } from './week';
 
 export const SECONDARY_WEIGHT = 0.5;
@@ -52,16 +52,25 @@ function add(into: MuscleSets, e: Pick<ExerciseDef, 'primary' | 'secondary'>, se
   }
 }
 
+/** Weighted sets per muscle for the ticked sets of one workout's items. Cardio and unknown exercises are left out. */
+export function workoutMuscleSets(items: readonly WorkoutItem[], lookup: ExerciseLookup): MuscleSets {
+  const out: MuscleSets = {};
+  for (const item of items) {
+    const e = lookup(item.exerciseId);
+    if (!e || e.metric === 'distance_time' || e.metric === 'intervals') continue;
+    add(out, e, item.sets.filter((s) => s.done).length);
+  }
+  return out;
+}
+
 /** Weighted sets per muscle over the last 7 days (today included). */
 export function muscleSets(state: AppState, today: string, lookup: ExerciseLookup = stateLookup(state)): MuscleSets {
   const out: MuscleSets = {};
 
   for (const w of state.workouts ?? []) {
     if (!isInLast7Days(w.date, today)) continue;
-    for (const item of w.items) {
-      const e = lookup(item.exerciseId);
-      if (!e || e.metric === 'distance_time' || e.metric === 'intervals') continue;
-      add(out, e, item.sets.filter((s) => s.done).length);
+    for (const [muscle, n] of Object.entries(workoutMuscleSets(w.items, lookup)) as [Muscle, number][]) {
+      out[muscle] = (out[muscle] ?? 0) + n;
     }
   }
   return out;
