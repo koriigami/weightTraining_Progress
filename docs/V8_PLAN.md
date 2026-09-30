@@ -86,6 +86,21 @@ Everything below is agreed with the user. Photos, image share cards, Google Heal
 
 **Round 2 is published at the same links** (board 06 and the XP Rulebook, version 2). It waits for sign-off.
 
+## Board v6 feedback, round 3 (overrides round 2 where they conflict)
+- **Resume stays exactly as in v7:**
+  - Phone: the floating Resume bar sits just above the tab bar on every tab, Home included, and Home's content doesn't change.
+  - Desktop: the "Workout in progress" card sits in the sidebar above the user row.
+  - No green in-progress card anywhere.
+- **Desktop Home goes back to the v7 layout:**
+  - Hero card and This week on top.
+  - Then a "Today's workout" row of three cards: two routines with Start, and a dashed "Something else" card ("Another routine, cardio or a custom workout.", Choose) that opens the Start sheet.
+- **Phone Today card:** Start is a normal-size button beside the routine name, not a big full-width one. The card shows the routine's first 3 exercises and the three tiles.
+- **Phone top bar:** the round-2 blue card is dropped. The board offers three Clash Royale-style options, and the user picks one:
+  - **A, Resource bar:** a level badge overlapping a dark XP bar with the numbers, plus streak and this-week counters.
+  - **B, Player plate:** avatar, name and rank title, level badge with a small bar, and a streak pill.
+  - **C, Level ring:** XP as a ring around the level number.
+- **Calendar and week-row alignment bug:** in the board, the Today card's `.today` class collided with the day cells' `today` state. The build must scope class names (it uses `wt-` prefixes) and check that today and selected cells align with their row at 390 px.
+
 **Insights:** approved as designed, and built last in this iteration.
 
 **Finish bonus rule (replaces the 20 work-minutes rule)**

@@ -686,11 +686,11 @@ button.setrow:hover{background:rgba(255,210,100,.14)}
 /* pinned sub row under a phone bar */
 .bar-sub{flex:none;padding:0 16px 10px;position:relative;z-index:2;box-shadow:0 8px 12px -12px rgba(120,80,20,.6)}
 /* Today card */
-.today{display:flex;flex-direction:column;gap:12px}
+.tcard{display:flex;flex-direction:column;gap:12px}
 .today-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .today-main{display:flex;align-items:center;gap:12px}
-.today-main h3,.today h3{margin:0;font-family:var(--font-num);font-weight:400;font-size:26px;line-height:1.05;letter-spacing:.01em}
-.today-main small,.today small.m{color:var(--muted);font-weight:600}
+.today-main h3,.tcard h3{margin:0;font-family:var(--font-num);font-weight:400;font-size:26px;line-height:1.05;letter-spacing:.01em}
+.today-main small,.tcard small.m{color:var(--muted);font-weight:600}
 .tm-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .tm-thumbs{display:flex}
 .tm-thumbs .thumb{border:2px solid var(--surface);margin-left:-10px}
@@ -698,7 +698,7 @@ button.setrow:hover{background:rgba(255,210,100,.14)}
 .today-alt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .alt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:64px;border-radius:14px;border:1.5px solid var(--s-line);background:var(--s-grad);color:var(--s-ink);box-shadow:0 3px 0 var(--s-bevel);font-weight:800;font-size:13px;line-height:1.15;text-align:center;padding:6px 4px;margin-bottom:3px}
 .alt:active{transform:translateY(2px);box-shadow:0 1px 0 var(--s-bevel)}
-.today.live{background:linear-gradient(180deg,#F1FFE9,#DDF5D2);border-color:#9ED88A}
+.tcard.live{background:linear-gradient(180deg,#F1FFE9,#DDF5D2);border-color:#9ED88A}
 .livedot{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-num);font-size:17px;color:var(--ok-deep)}
 .livedot::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px rgba(43,164,56,.25);animation:pulse 1.4s ease-in-out infinite}
 .dn-list{display:flex;flex-direction:column;border-radius:14px;background:var(--calm);border:1px solid var(--line);overflow:hidden}
@@ -785,7 +785,7 @@ a.cardlink,button.cardlink{display:block;color:inherit;text-decoration:none;text
 .dp-g .dow{font-size:11px;font-weight:800;color:var(--muted);padding:2px 0}
 .dd{height:36px;border-radius:11px;border:0;background:none;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;padding:0}
 .dd:hover:not(:disabled){background:rgba(255,210,100,.25)}
-.dd.today{box-shadow:inset 0 0 0 2px var(--ok)}
+.dd.is-today{box-shadow:inset 0 0 0 2px var(--ok)}
 .dd.sel{background:var(--s-grad);border:1.5px solid var(--s-line);box-shadow:0 3px 0 var(--s-bevel);font-family:var(--font-num);font-weight:400;font-size:16px;color:var(--s-ink)}
 .dd:disabled{color:#C9B48A;cursor:default}
 .dd.blank{visibility:hidden}
@@ -903,6 +903,41 @@ a.cardlink,button.cardlink{display:block;color:inherit;text-decoration:none;text
 .dpm .segmini button{min-width:34px;padding:0 6px}
 .dt-stats{gap:6px}
 .dt-stats .stat b{font-size:14px}
+/* ============ round 3 ============ */
+.wd.done.today i{box-shadow:0 3px 0 var(--p-bevel),inset 0 0 0 2px var(--xp-hi)}
+.today-main .btn{flex:none}
+.tcard .rrows .rrow{padding:6px 10px}
+.hud{flex:none;position:relative;z-index:2;display:flex;align-items:center;gap:8px;margin:2px 12px 8px;padding:0;border:0;background:none;color:#fff;text-align:left;font:inherit;cursor:pointer}
+.hud-xp{position:relative;display:block;flex:1;min-width:0;height:26px;border-radius:13px;background:rgba(42,24,6,.82);border:2px solid #2A1806;box-shadow:inset 0 2px 0 rgba(0,0,0,.35),0 2px 0 rgba(255,255,255,.35);overflow:hidden}
+.hud-xp i{position:absolute;left:0;top:0;bottom:0;display:block;border-radius:0 10px 10px 0;background:linear-gradient(180deg,var(--xp-hi),var(--xp) 55%,var(--xp-deep))}
+.hud-xp em{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-family:var(--font-num);font-size:14px;color:#fff;letter-spacing:.02em;text-shadow:0 1px 0 #2A1806,1px 0 0 #2A1806,-1px 0 0 #2A1806,0 -1px 0 #2A1806}
+.hud-xp.thin{height:10px;border-width:1.5px}
+.hud-pill{flex:none;display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 10px 0 6px;border-radius:16px;background:rgba(42,24,6,.82);border:2px solid #2A1806;box-shadow:inset 0 2px 0 rgba(0,0,0,.35),0 2px 0 rgba(255,255,255,.35);font-family:var(--font-num);font-size:17px;color:#fff;text-shadow:0 1px 0 #000}
+.hud-pill.sm{height:28px;font-size:15px}
+.hud-pill .fl{color:#FF9A3C;display:grid}
+.hud-pill .db{color:#9EE67E;display:grid}
+.hud-a .a-badge{flex:none;position:relative;z-index:1;margin-right:-22px;filter:drop-shadow(0 3px 0 rgba(0,0,0,.25))}
+.hud-a .hud-xp em{padding-left:18px}
+.hud-b{padding:6px 8px 6px 6px;border-radius:18px;background:linear-gradient(180deg,#FFFBEE,#FFF0C8);border:2.5px solid #E3B03A;box-shadow:0 3px 0 #C8932A,0 10px 20px -14px rgba(120,80,20,.6);color:var(--ink)}
+.hud-b .avatar{width:40px;height:40px;font-size:17px}
+.pb-mid{flex:1;min-width:0;display:flex;flex-direction:column}
+.pb-mid b{font-family:var(--font-num);font-weight:400;font-size:18px;line-height:1.1}
+.pb-mid small{display:inline-flex;align-items:center;gap:4px;font-weight:800;font-size:12px;color:var(--muted);white-space:nowrap}
+.pb-lv{display:flex;align-items:center;gap:6px}
+.pb-xp{display:flex;flex-direction:column;gap:2px;width:62px}
+.pb-xp em{font-style:normal;font-weight:800;font-size:11px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.hud-b .hud-pill{background:linear-gradient(180deg,#6E4722,#4A2E13)}
+.hud-c{gap:10px}
+.xpring{flex:none;filter:drop-shadow(0 3px 0 rgba(0,0,0,.2))}
+.c-mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.c-mid b.gt{font-size:21px;line-height:1.1}
+.c-mid small{font-weight:800;font-size:12.5px;color:#0E3A7A}
+.pb-xp .hud-xp{flex:none}
+.pb-mid b,.pb-mid small{overflow:hidden;text-overflow:ellipsis}
+.hud-b .pb-xp{width:54px}
+.pb-xp em{white-space:nowrap;font-size:10.5px}
+.hud-b .avatar{width:36px;height:36px;font-size:15px}
+.hud-b{gap:6px}
 </style>
 <div class="page-sky sky" aria-hidden="true"><i></i><i></i><i></i></div>
 <main class="board">
@@ -918,8 +953,14 @@ a.cardlink,button.cardlink{display:block;color:inherit;text-decoration:none;text
   </header>
 
   <section>
-    <div class="sec-h"><h2 class="gt">Home</h2><p>A compact level strip on top, then Today's workout with one big Start. In progress is a slim bar. The desktop keeps the big level card.</p></div>
+    <div class="sec-h"><h2 class="gt">Home</h2><p>A compact top bar, then Today's workout with a normal-size Start. While a workout runs, the Resume bar floats above the tabs, as it does today. The desktop keeps the big level card.</p></div>
     <div class="shots" data-sec="home"></div>
+  </section>
+
+  <section>
+    <div class="sec-h"><h2 class="gt">Top bar options</h2><p>Three layouts for the level, XP and streak at the top of the phone Home, after Clash Royale's top bar. None of them is the blue card from round 2. Pick one and every Home frame on this board switches to it.</p></div>
+    <div class="desk-state" id="hudPick"></div>
+    <div class="shots" data-sec="hud"></div>
   </section>
 
   <section>
@@ -1199,9 +1240,23 @@ const BEST = { 'db-row': [10, 12], 'db-1row': [12.5, 8], 'db-rfly': [4, 10], 'db
 function hero() {
   return `<section class="hero"><div class="hero-row">${shield('D', 54, 7)}<div><div class="lvl gt">Level 7</div><div class="hero-t">D-Rank Hunter</div></div></div><div class="xpbar"><i style="width:55%"></i></div><div class="hero-xp"><span>2,485 / 2,800 XP</span><span>315 to level 8</span></div></section>`;
 }
-function levelStrip() {
-  return `<button class="lvstrip" aria-label="Level 7, 2,485 of 2,800 XP, 3 week streak. Open Rank">${shield('D', 44, 7)}<span class="lv-mid"><span class="lv-top"><b>Level 7</b><small>D-Rank Hunter</small></span><span class="xpbar lvbar"><i style="width:55%"></i><em>2,485 / 2,800 XP</em></span></span><span class="lv-streak" title="3 week streak">${ic('flame', 18)}3</span></button>`;
+let HUD = 'a';
+try { const v = localStorage.getItem('v6-hud'); if (['a', 'b', 'c'].includes(v)) HUD = v; } catch (e) {}
+function lvBadge(n, rank, size) {
+  const id = 'lb' + (++uid), m = RM[rank];
+  return `<svg class="lvb" viewBox="0 0 120 132" width="${size}" height="${Math.round(size * 1.1)}" role="img" aria-label="Level ${n}, ${rank} rank"><defs><linearGradient id="${id}a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${m.rim[0]}"/><stop offset="1" stop-color="${m.rim[1]}"/></linearGradient><linearGradient id="${id}f" x1="0" y1="0" x2=".6" y2="1"><stop offset="0" stop-color="${m.face[0]}"/><stop offset="1" stop-color="${m.face[1]}"/></linearGradient></defs><path d="${SHIELD}" fill="#2A1806"/><path d="${SHIELD}" fill="url(#${id}a)" transform="translate(60 66) scale(.93) translate(-60 -66)"/><path d="${SHIELD}" fill="url(#${id}f)" transform="translate(60 66) scale(.78) translate(-60 -66)"/><path d="M22 20 H98 V46 C78 40 42 52 22 45 Z" fill="#fff" opacity=".16"/><text x="60" y="88" text-anchor="middle" font-family="Lilita One, Arial Rounded MT Bold, sans-serif" font-size="66" fill="#fff" stroke="#2A1806" stroke-width="7" paint-order="stroke">${n}</text></svg>`;
 }
+function xpRing(n, rank, pct, size) {
+  const r = 22, c = 2 * Math.PI * r, m = RM[rank], id = 'rg' + (++uid);
+  return `<svg class="xpring" viewBox="0 0 56 56" width="${size}" height="${size}" role="img" aria-label="Level ${n}, ${pct}% to level ${n + 1}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${m.face[0]}"/><stop offset="1" stop-color="${m.face[1]}"/></linearGradient></defs><circle cx="28" cy="28" r="${r}" fill="none" stroke="#2A1806" stroke-width="9"/><circle cx="28" cy="28" r="${r}" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="5"/><circle cx="28" cy="28" r="${r}" fill="none" stroke="#FFC21A" stroke-width="5" stroke-linecap="round" stroke-dasharray="${(c * pct / 100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 28 28)"/><circle cx="28" cy="28" r="16" fill="url(#${id})" stroke="#2A1806" stroke-width="2"/><text x="28" y="35" text-anchor="middle" font-family="Lilita One, Arial Rounded MT Bold, sans-serif" font-size="19" fill="#fff" stroke="#2A1806" stroke-width="3" paint-order="stroke">${n}</text></svg>`;
+}
+function levelStrip(v) {
+  v = v || HUD;
+  if (v === 'b') return `<button class="hud hud-b" aria-label="You, D-Rank Hunter, level 7, 2,485 of 2,800 XP. Open Rank"><span class="pb-av"><span class="frame" style="--fr1:#A6F3CF;--fr2:#0F7A4F"><span class="avatar">K</span></span></span><span class="pb-mid"><b>You</b><small>D-Rank Hunter</small></span><span class="pb-lv">${lvBadge(7, 'D', 34)}<span class="pb-xp"><span class="hud-xp thin"><i style="width:55%"></i></span><em>385 / 700</em></span></span><span class="hud-pill sm"><span class="fl">${ic('flame', 16)}</span>3</span></button>`;
+  if (v === 'c') return `<button class="hud hud-c" aria-label="Level 7, D rank, 315 XP to level 8. Open Rank">${xpRing(7, 'D', 55, 54)}<span class="c-mid"><b class="gt">Level 7 · D rank</b><small>315 XP to level 8</small></span><span class="hud-pill"><span class="fl">${ic('flame', 18)}</span>3 wk</span></button>`;
+  return `<button class="hud hud-a" aria-label="Level 7, 2,485 of 2,800 XP, 3 week streak, 2 of 5 workouts this week. Open Rank"><span class="a-badge">${lvBadge(7, 'D', 44)}</span><span class="hud-xp"><i style="width:55%"></i><em>2,485 / 2,800</em></span><span class="hud-pill"><span class="fl">${ic('flame', 18)}</span>3</span><span class="hud-pill"><span class="db">${ic('dumbbell', 18)}</span>2/5</span></button>`;
+}
+const resumeBar = () => `<button class="minibar" aria-label="Resume Pull A">${ic('dumbbell', 20)}<b>Pull A</b><span>31:08</span><span class="r">Resume</span></button>`;
 const liveBar = () => `<button class="livebar" aria-label="Resume Pull A"><span class="livedot">31:08</span><span class="flex1"><b>Pull A</b><small>7 of 13 sets done</small></span><span class="lb-r">Resume${ic('chevR', 16)}</span></button>`;
 function weekCard(doneToday) {
   const days = [[28, 1], [29, doneToday], [30], [1], [2], [3], [4]], L = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -1209,15 +1264,14 @@ function weekCard(doneToday) {
 }
 const thumbs = ids => `<div class="tm-thumbs">${ids.map(id => thumb(byId[id], 38)).join('')}</div>`;
 function todayCard(state, w) {
-  if (state === 'live') return liveBar();
   if (state === 'done') {
     const rows = [`<button class="dn-row">${thumb(byId['db-row'], 44)}<div class="flex1"><b>Pull A</b><small>52 min · 12 sets · +105 XP</small></div>${ic('chevR', 18)}</button>`];
     if (w) rows.push(`<button class="dn-row"><span class="dn-ic">${ic('bike', 22)}</span><div class="flex1"><b>Evening ride</b><small>32 min · 11.2 km · +90 XP</small></div>${ic('chevR', 18)}</button>`);
-    return `<section class="card today" aria-label="Today"><div class="today-h"><span class="eyebrow ok">${ic('check', 14)} Done today</span><b class="xpv">+${w ? 195 : 105} XP</b></div><div class="dn-list">${rows.join('')}</div>${w ? '' : `<div class="gentle"><span class="chev">${ic('bike', 20)}</span><div class="flex1">Treadmill from Pull A isn't logged yet.</div><button class="textbtn sm">Log it</button></div>`}<div class="today-next"><div class="flex1"><small>Next time</small><b>Legs</b><small>4 exercises · 12 sets</small></div>${B('t', 'Start', { sm: 1, icon: 'play' })}</div></section>`;
+    return `<section class="card tcard" aria-label="Today"><div class="today-h"><span class="eyebrow ok">${ic('check', 14)} Done today</span><b class="xpv">+${w ? 195 : 105} XP</b></div><div class="dn-list">${rows.join('')}</div>${w ? '' : `<div class="gentle"><span class="chev">${ic('bike', 20)}</span><div class="flex1">Treadmill from Pull A isn't logged yet.</div><button class="textbtn sm">Log it</button></div>`}<div class="today-next"><div class="flex1"><small>Next time</small><b>Legs</b><small>4 exercises · 12 sets</small></div>${B('t', 'Start', { sm: 1, icon: 'play' })}</div></section>`;
   }
-  const main = `<div class="today-h"><span class="eyebrow">Today's workout</span><span class="wk">0 of 1 this week</span></div><div class="today-main"><div class="tm-t"><h3>Pull A</h3><small>5 exercises · about 50 min</small></div>${thumbs(['db-row', 'db-1row', 'db-rfly', 'db-curl'])}</div>`;
+  const main = `<div class="today-h"><span class="eyebrow">Today's workout</span><span class="wk">0 of 1 this week</span></div><div class="today-main"><div class="tm-t"><h3>Pull A</h3><small>5 exercises · 50 min</small></div>${B('p', 'Start', { icon: 'play', a: 'aria-label="Start Pull A"' })}</div>`;
   const alts = `<div class="today-alt"><button class="alt">${ic('clipboard', 20)}Other routine</button><button class="alt">${ic('bike', 20)}Cardio</button><button class="alt">${ic('plus', 20)}Custom workout</button></div>`;
-  return `<section class="card today" aria-label="Today">${main}${B('p', 'Start Pull A', { lg: 1, block: 1, icon: 'play' })}${alts}</section>`;
+  return `<section class="card tcard" aria-label="Today">${main}${rrowsFor(R_ITEMS['Pull A'].slice(0, 3))}${alts}</section>`;
 }
 function wline(id, text, tag = '') { return `<div class="wc-line">${thumb(byId[id], 32)}<span class="flex1">${text}</span>${tag}</div>`; }
 function feedCard(k) {
@@ -1292,7 +1346,7 @@ function dpHTML(shot, st, o = {}) {
   for (let i = 0; i < lead; i++) cells += `<span class="dd blank"></span>`;
   for (let d = 1; d <= n; d++) {
     const k = iso(st.y, st.m, d), dis = (o.min && k < o.min) || (o.max && k > o.max);
-    cells += `<button class="dd ${k === TODAY ? 'today' : ''} ${k === st.sel ? 'sel' : ''}" ${dis ? 'disabled' : ''} aria-pressed="${k === st.sel}" aria-label="${d} ${MONTHS[st.m]}" data-a="dp-day" data-shot="${shot}" data-d="${k}">${d}</button>`;
+    cells += `<button class="dd ${k === TODAY ? 'is-today' : ''} ${k === st.sel ? 'sel' : ''}" ${dis ? 'disabled' : ''} aria-pressed="${k === st.sel}" aria-label="${d} ${MONTHS[st.m]}" data-a="dp-day" data-shot="${shot}" data-d="${k}">${d}</button>`;
   }
   const selTxt = st.sel ? (() => { const [y, m, d] = st.sel.split('-').map(Number); const wd = new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' }); return `${wd} ${d} ${MONTHS[m - 1].slice(0, 3)}${y !== 2026 ? ' ' + y : ''}`; })() : 'Pick a day';
   return `<div class="dp ${o.flat ? 'flat' : ''}"><div class="dp-h"><button class="backbtn" aria-label="Previous month" data-a="dp-prev" data-shot="${shot}">${ic('chevL', 18)}</button><b>${MONTHS[st.m]} ${st.y}</b><button class="backbtn" aria-label="Next month" data-a="dp-next" data-shot="${shot}">${ic('chevR', 18)}</button></div><div class="dp-g">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(x => `<span class="dow">${x}</span>`).join('')}${cells}</div>${o.time ? `<div class="dp-foot"><span>Time</span><span class="tp"><input class="cell" aria-label="Hour" value="6"><b>:</b><input class="cell" aria-label="Minutes" value="40"><span class="segmini"><button aria-pressed="false">am</button><button aria-pressed="true">pm</button></span></span></div>` : `<div class="dp-foot"><span class="muted">Ends</span><span>${selTxt}</span></div>`}</div>`;
@@ -1316,16 +1370,23 @@ const ST = {
 const R_ITEMS = { 'Pull A': ['db-row', 'db-1row', 'db-rfly', 'db-curl', 'treadmill'], 'Push A': ['pushup', 'db-fly', 'db-ohp', 'db-ohext', 'bike'], 'Legs': ['db-sumo', 'db-goblet', 'db-rdl', 'db-calf'], 'Push B': ['db-floor', 'db-lat', 'db-kick', 'crunch', 'bike'], 'Pull B': ['db-pullover', 'db-row', 'db-spider', 'plank', 'treadmill'], 'Full Body': ['bw-squat', 'pushup', 'db-row', 'db-ohp', 'db-curl', 'treadmill'] };
 const rrowsFor = ids => `<div class="rrows">${ids.map(id => { const e = byId[id]; const s = e.m === 'dt' ? '15 min' : e.m === 't' ? '3 × 40 s' : '3 × 10'; return `<div class="rrow">${thumb(e, 28)}<span class="rn">${e.n}</span><span class="rs">${s}</span></div>`; }).join('')}</div>`;
 
+function hudShot(v) { return levelStrip(v) + scr(`${todayCard('ready')}${weekCard(false)}`) + tabbar('home'); }
 function homeScreen(state) {
-  return levelStrip() + scr(`${todayCard(state)}${weekCard(state === 'done')}<div class="sechead"><div class="sec-label">Recent workouts</div><button class="textbtn sm">See all</button></div>${feedCard('pushA')}`) + tabbar('home');
+  return levelStrip() + scr(`${todayCard(state === 'live' ? 'ready' : state)}${weekCard(state === 'done')}<div class="sechead"><div class="sec-label">Recent workouts</div><button class="textbtn sm">See all</button></div>${feedCard('pushA')}`) + (state === 'live' ? resumeBar() : '') + tabbar('home');
 }
 const SHOTS = [
   { id: 'home-ready', sec: 'home', t: 'Ready', s: 'Nothing logged today', b: () => homeScreen('ready'),
-    n: ['Level, XP and streak sit in one compact strip at the top, like Clash Royale\'s. Tap it for the Rank Road.', 'Today\'s workout is the biggest thing on the screen, with one big Start.', 'Other routine, Cardio and Custom workout sit right under it.', 'This week opens the calendar.'] },
+    n: ['The top bar is one of the three options below. Pick one there and every Home frame switches.', 'Today\'s workout leads, with a normal-size Start next to the routine name.', 'Other routine, Cardio and Custom workout sit right under it.', 'This week opens the calendar.'] },
   { id: 'home-live', sec: 'home', t: 'In progress', s: 'A workout is running', b: () => homeScreen('live'),
-    n: ['A slim green bar replaces the card: clock, routine, sets done, Resume.', 'Every other tab shows the same kind of bar above the tabs, as the app does today.'] },
+    n: ['Exactly as the app works today: the Resume bar floats just above the tabs, on Home and on every other tab.', 'Home itself stays the same while a workout runs.'] },
   { id: 'home-done', sec: 'home', t: 'Done today', s: 'Pull A finished at the gym', b: () => homeScreen('done'),
     n: ['Each workout from today with its XP. Tap a row to open it.', 'Pull A earned no finish bonus, since the treadmill wasn\'t done. The gentle row offers the treadmill as its own cardio workout.', 'Next time shows the next routine, quietly.'] },
+  { id: 'hud-a', sec: 'hud', t: 'A · Resource bar', s: 'Clash Royale\'s top row', b: () => hudShot('a'),
+    n: ['A level badge overlaps a dark XP bar, with the numbers inside it.', 'Streak and this week\'s workouts sit to the right as counters, like coins and gems.', 'No card behind it. It sits on the sky.'] },
+  { id: 'hud-b', sec: 'hud', t: 'B · Player plate', s: 'Clash Royale\'s name row', b: () => hudShot('b'),
+    n: ['Who you are first: avatar in its rank frame, name and rank title.', 'The level badge with a small bar for progress inside the level.', 'Reads like a name plate.'] },
+  { id: 'hud-c', sec: 'hud', t: 'C · Level ring', s: 'Circular progress', b: () => hudShot('c'),
+    n: ['XP fills a gold ring around the level number, so no bar is needed.', 'Level and rank in the game font, with XP to the next level under it.', 'The smallest footprint of the three.'] },
   { id: 'start-sheet', sec: 'start', t: 'Start sheet', s: 'The Workout button', b: () => homeScreen('ready') + startSheet(),
     n: ['The center button is Workout with a +, on a wider button with room around the word.', 'Your routines first, with today\'s tagged. Then cardio. Then Custom workout: pick exercises, then start.'] },
   { id: 'picker', sec: 'start', t: 'Custom workout', s: 'Try it: pick exercises', b: pickerScreen, tryit: 1,
@@ -1526,28 +1587,28 @@ function stripes() {
 const DESK = [['home', 'Home'], ['detail', 'Workout page'], ['ride', 'Cardio log'], ['goal', 'Goal date'], ['insights', 'Insights (owner only)']];
 let DV = 'home', DHOME = 'done';
 const DNOTES = {
-  home: ['The big level card stays on desktop, where there is room for it.', 'Switch the Today card\'s state above the browser. In progress is a slim bar now.', 'This week opens the calendar.'],
+  home: ['The big level card stays on desktop, where there is room for it.', 'Today\'s workout is the three-card row from the app today: two routines, then Something else for another routine, cardio or a custom workout.', 'In progress shows in the sidebar above your name, as it does today. Switch states above the browser.'],
   detail: ['Main column: stats and every set. Side column: muscles and notes. The XP card is gone, and the eye on the XP tile opens it.', 'Share and Edit in the header. Delete workout sits at the bottom.'],
   ride: ['Discard and Finish stay pinned in the header. No finish bonus chip and no Add lap.', 'Settings sits next to Discard at the end, like on the phone.'],
   goal: ['The goal dialog keeps the calendar inside it, like the phone sheet. Title, reward and buttons stay pinned.'],
   insights: ['Owner only. Group numbers, never a person. Groups under 5 people are hidden.', 'Built last in this round.']
 };
-function sidebar(on) {
+function sidebar(on, live) {
   const items = [['home', 'home', 'Home'], ['routines', 'clipboard', 'Routines'], ['library', 'book', 'Exercises'], ['rank', 'shield', 'Rank'], ['profile', 'user', 'Profile']];
-  return `<aside class="side"><div class="logo">${shield('D', 28)}<span class="gt">Home Workout</span></div>${B('p', navLabel(), { lg: 1, icon: NAV === 'train' ? 'dumbbell' : 'plus' })}${items.map(([k, i, l]) => `<button class="navi ${on === k ? 'on' : ''}">${ic(i)}<span>${l}</span></button>`).join('')}<div class="side-foot">${on === 'insights' ? `<button class="navi on">${ic('chart')}<span>Insights</span></button>` : ''}<button class="userrow"><span class="avatar sm">K</span><span class="flex1"><b>You</b><small>Level 7 · D rank</small></span>${ic('more', 18)}</button></div></aside>`;
+  return `<aside class="side"><div class="logo">${shield('D', 28)}<span class="gt">Home Workout</span></div>${B('p', navLabel(), { lg: 1, icon: 'plus' })}${items.map(([k, i, l]) => `<button class="navi ${on === k ? 'on' : ''}">${ic(i)}<span>${l}</span></button>`).join('')}<div class="side-foot">${on === 'insights' ? `<button class="navi on">${ic('chart')}<span>Insights</span></button>` : ''}${live ? `<button class="side-active"><small>Workout in progress</small><b>Pull A · 31:08</b><small>Tap to resume</small></button>` : ''}<button class="userrow"><span class="avatar sm">K</span><span class="flex1"><b>You</b><small>Level 7 · D rank</small></span>${ic('more', 18)}</button></div></aside>`;
 }
-function deskFrame(on, head, main, aside, narrow) {
-  return `<div class="shell">${sidebar(on)}<div class="dmain" data-scroll><div class="sky" aria-hidden="true"><i></i><i></i><i></i></div><div class="dtop"><div class="dtop-in ${narrow ? 'narrow' : ''}"><div class="dhead">${head}</div></div></div><div class="dwrap ${narrow ? 'narrow' : ''}">${aside ? `<div class="dgrid"><div class="dcol">${main}</div><div class="dcol">${aside}</div></div>` : `<div class="dcol">${main}</div>`}</div></div></div>`;
+function deskFrame(on, head, main, aside, narrow, live) {
+  return `<div class="shell">${sidebar(on, live)}<div class="dmain" data-scroll><div class="sky" aria-hidden="true"><i></i><i></i><i></i></div><div class="dtop"><div class="dtop-in ${narrow ? 'narrow' : ''}"><div class="dhead">${head}</div></div></div><div class="dwrap ${narrow ? 'narrow' : ''}">${aside ? `<div class="dgrid"><div class="dcol">${main}</div><div class="dcol">${aside}</div></div>` : `<div class="dcol">${main}</div>`}</div></div></div>`;
 }
 function deskToday(state) {
-  if (state === 'live') return liveBar();
-  if (state === 'ready') return `<section class="card today" aria-label="Today" style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px;align-items:start"><div style="display:flex;flex-direction:column;gap:10px"><div class="today-h"><span class="eyebrow">Today's workout</span><span class="wk">0 of 1 this week</span></div><h3>Pull A</h3><small class="m">5 exercises · 13 sets · about 50 min</small>${rrowsFor(R_ITEMS['Pull A'])}</div><div style="display:flex;flex-direction:column;gap:12px">${B('p', 'Start Pull A', { lg: 1, block: 1, icon: 'play' })}<div class="today-alt"><button class="alt">${ic('clipboard', 20)}Other routine</button><button class="alt">${ic('bike', 20)}Cardio</button><button class="alt">${ic('plus', 20)}Custom workout</button></div></div></section>`;
-  return todayCard(state, true);
+  if (state === 'done') return todayCard('done', true);
+  const card = (t, line) => `<article class="card upcard"><h4>${t}</h4><small style="color:var(--muted)">${line}</small>${rrowsFor(R_ITEMS[t].slice(0, 3))}${B('p', 'Start', { icon: 'play', a: `aria-label="Start ${t}"` })}</article>`;
+  return `<div class="sechead"><div class="sec-label">Today's workout</div><button class="textbtn sm">All routines</button></div><div class="upnext">${card('Pull A', '5 exercises · 0 of 1 this week')}${card('Legs', '4 exercises · 0 of 1 this week')}<article class="card upcard empty"><b class="gt" style="font-size:20px">Something else</b><small style="color:var(--muted)">Another routine, cardio or a custom workout.</small>${B('t', 'Choose', { icon: 'plus' })}</article></div>`;
 }
 function deskView() {
   if (DV === 'home') {
     const main = `<div class="homegrid">${hero()}${weekCard(DHOME === 'done')}</div>${deskToday(DHOME)}<div class="sechead"><div class="sec-label">Recent workouts</div><button class="textbtn sm">See all</button></div><div class="feed2">${feedCard('pushA')}${feedCard('heavy')}</div>`;
-    return deskFrame('home', `<h1 class="gt">Home</h1>`, main);
+    return deskFrame('home', `<h1 class="gt">Home</h1>`, main, null, false, DHOME === 'live');
   }
   if (DV === 'detail') { const d = detailBody(true); return deskFrame('profile', `${back()}<h1 class="gt">Pull A</h1>${B('t', 'Share', { sm: 1, icon: 'share' })}${B('t', 'Edit', { sm: 1, icon: 'pencil' })}`, d.main, d.aside); }
   if (DV === 'ride') { const t = rideTotals(); return deskFrame('home', `${back('chevD', 'Minimize')}<h1 class="gt">Log workout</h1><span class="livedot" style="margin-right:6px">12:40</span>${B('ds', 'Discard', { sm: 1, icon: 'trash' })}${B('p', 'Finish', { sm: 1 })}`, `<div class="card"><div class="logstats" style="padding:0">${statsRow('cardio', t)}</div></div><input class="title-in" aria-label="Workout title" value="Evening ride">${cardioBlock('ride-d', ST.ride)}${logEnd()}`, null, true); }
@@ -1573,12 +1634,14 @@ function renderDesk() {
   $('#deskUrl').textContent = 'weight-training-progress.vercel.app' + ({ home: '', detail: '/workout/w-29-pull-a', ride: '/workout', goal: '/profile', insights: '/insights' }[DV]);
   $('#deskNotes').innerHTML = DNOTES[DV].map(x => `<div>${x}</div>`).join('');
 }
-function renderNavPick() {}
+function renderNavPick() { renderHudPick(); }
+function renderHudPick() { const el = document.getElementById('hudPick'); if (!el) return; el.innerHTML = [['a', 'A · Resource bar'], ['b', 'B · Player plate'], ['c', 'C · Level ring']].map(([k, l]) => `<button class="chip" aria-pressed="${HUD === k}" data-a="hud" data-k="${k}">${l}</button>`).join(''); }
 /* ---------- events ---------- */
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-a]'); if (!t) return;
   const a = t.dataset.a, id = t.dataset.shot;
   if (a === 'noop') { e.preventDefault(); return; }
+  if (a === 'hud') { HUD = t.dataset.k; try { localStorage.setItem('v6-hud', HUD); } catch (err) {} renderHudPick(); SHOTS.forEach(x => renderShot(x.id)); return; }
   if (a === 'dv') { DV = t.dataset.k; renderDesk(); return; }
   if (a === 'dh') { DHOME = t.dataset.k; renderDesk(); return; }
   if (a === 'pick') { const s = ST.picker.sel, k = t.dataset.id, i = s.indexOf(k); if (i >= 0) s.splice(i, 1); else s.push(k); renderShot('picker'); return; }

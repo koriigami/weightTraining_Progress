@@ -139,6 +139,18 @@ The user's review of round 1 changed these, all at the same board link:
 - Profile stays as v7. The goal sheet goes back to the v7 layout with the calendar inside it and
   Pick end date.
 
+### Board 06, round 3
+
+- Resume works exactly as in v7: the floating bar above the tabs on the phone, and the card in
+  the desktop sidebar. No in-progress card on Home.
+- Desktop Home goes back to v7's three cards under the level and week cards, labelled "Today's
+  workout": two routines, then "Something else" for another routine, cardio or a custom workout.
+- The phone Today card uses a normal-size Start beside the routine name.
+- Three Clash Royale-style top bars to choose from on the phone: A Resource bar, B Player plate,
+  C Level ring.
+- The board's today cells were out of line because two class names collided. The build scopes
+  every class and checks the alignment.
+
 ## XP Rulebook (rules v2)
 
 `docs/design/xp-reference.html`
