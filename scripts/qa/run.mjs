@@ -1,6 +1,9 @@
 // npm run qa -- --routes "/,/profile,/workout/view?id=@run" --widths 390,1440 [--out dir] [--full] [--reuse] [--keep-server] [--no-seed] [--owner]
 // Screenshots each route at each width, signed in with seeded data, and prints a JSON
 // summary: files, console errors and horizontal overflow. Exits 1 if anything failed.
+// Shots are at 2x pixel density (a 390 px screen gives a 780 px wide image). Without
+// --full only the first screen is captured; --full also writes one slice per screen
+// height (`-s0.png`, `-s1.png` ...) so long pages stay readable.
 import { join } from 'node:path';
 import { startServer, stopServer, launch, newPage, signIn, seed, settle, overflows, resolveRoute, slug, outDir, BASE, EMAIL, OWNER_EMAIL } from './lib.mjs';
 
@@ -39,7 +42,17 @@ try {
       await settle(page);
       const file = join(dir, `${slug(route)}-${width}.png`);
       await page.screenshot({ path: file, fullPage: opts.full });
-      const shot = { route, width, file, consoleErrors: [...errors], overflow: await overflows(page), ms: Date.now() - t };
+      const slices = [];
+      if (opts.full) {
+        const vp = page.viewportSize();
+        const total = await page.evaluate(() => document.documentElement.scrollHeight);
+        for (let y = 0, i = 0; y < total; y += vp.height, i++) {
+          const path = join(dir, `${slug(route)}-${width}-s${i}.png`);
+          await page.screenshot({ path, fullPage: true, clip: { x: 0, y, width: vp.width, height: Math.min(vp.height, total - y) } });
+          slices.push(path);
+        }
+      }
+      const shot = { route, width, file, ...(slices.length ? { slices } : {}), consoleErrors: [...errors], overflow: await overflows(page), ms: Date.now() - t };
       if (shot.consoleErrors.length || shot.overflow) summary.failed = true;
       summary.shots.push(shot);
     }

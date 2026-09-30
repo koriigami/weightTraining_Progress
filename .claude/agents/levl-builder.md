@@ -16,7 +16,7 @@ You build one stage of a Levl plan. The main conversation owns design, review an
 - Never write an em dash character. Copy is plain and specific.
 - Pages stay static. No new dynamic segments that need the server.
 - Tests: rules and edge cases for pure logic, one test per rule. Run `npm run test:related -- <files>` and `npm run typecheck` as you go.
-- UI stages: run `npm run qa -- --routes "<touched routes>" --widths 390,1440 --out <tmp dir>` and look at every screenshot. For flows (finishing a workout, opening a sheet) write a short script in the scratchpad or /tmp that uses `withApp` from `scripts/qa/lib.mjs`. Do not commit helper scripts.
+- UI stages: run `npm run qa -- --routes "<touched routes>" --widths 390,1440 --out <tmp dir>` and look at every screenshot. Add `--full` for pages that scroll. For flows (finishing a workout, opening a sheet) write a short script in the session scratchpad that imports `withApp` by absolute path (`/home/user/weightTraining_Progress/scripts/qa/lib.mjs`); do not import `playwright` directly. Do not commit helper scripts.
 - Update the docs the stage changes (`docs/ARCHITECTURE.md`, `docs/QA.md`, `docs/ROADMAP.md`) in plain English.
 
 ## Finish

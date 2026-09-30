@@ -26,6 +26,9 @@ workouts, weights, a goal and a routine, and prints console errors and overflow:
 npm run qa -- --routes "/,/profile,/workout/view?id=@strength,/workout/view?id=@run" --widths 390,1440 --out /tmp/levl-qa
 ```
 
+Shots are at 2x pixel density and show the first screen. Add `--full` for pages that
+scroll; it also writes one readable slice per screen height.
+
 ## Every screen, every width
 
 Tick these on each screen below, at 390 px and at 1440 px.

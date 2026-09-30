@@ -17,7 +17,7 @@ invite-only beta heading for a public launch. Production: https://weight-trainin
 | `npm run typecheck` | `tsc --noEmit` | ~3 s |
 | `npm run verify` | typecheck, the full unit suite, the em dash check | ~10 s |
 | `npm run verify:full` | `verify` plus `next build` | ~50 s |
-| `npm run qa -- --routes "/,/workout/view?id=@run" --widths 390,1440` | Screenshots signed in with seeded data; JSON summary of console errors and overflow | ~1 to 2 min |
+| `npm run qa -- --routes "/,/workout/view?id=@run" --widths 390,1440` | Screenshots signed in with seeded data; JSON summary of console errors and overflow | ~20 s to 1.5 min (first visit to a route compiles it) |
 
 There is no linter yet (`npm run lint` is not set up). `tsc` is the static check.
 
@@ -32,9 +32,11 @@ There is no linter yet (`npm run lint` is not set up). `tsc` is the static check
 
 ## QA harness (`scripts/qa/`)
 - `lib.mjs` starts `next dev` on port 3311 with the QA env, signs in over HTTP (dev provider, no clicking), seeds a known state (onboarded prefs, workouts `qa-strength`, `qa-run`, `qa-ride`, `qa-mixed`, weights, a goal, a routine) and opens pages. `withApp(fn, { width })` gives a signed-in page for flows.
-- In routes, `@strength`, `@run`, `@ride` and `@mixed` become the seeded workout ids.
+- In routes, `@strength`, `@run`, `@ride` and `@mixed` become the seeded workout ids. `--owner` signs in as the owner (Insights).
+- Shots are at 2x pixel density and show the first screen only. For any page that scrolls, add `--full`: it also writes one slice per screen height (`-s0.png`, `-s1.png`) that are easy to read. `--out` creates the folder; use the session scratchpad.
+- Flow scripts live in the scratchpad and import the harness by absolute path (`import { withApp } from '/home/user/weightTraining_Progress/scripts/qa/lib.mjs'`). Do not import `playwright` directly; `lib.mjs` loads it.
 - `/workout/done` only renders right after finishing a workout in the same page, and `/workout` needs a workout in progress. Drive those flows through the UI with `withApp`.
-- Stop the server with `fuser -k 3311/tcp`, never `pkill -f`.
+- `npm run qa` and `withApp` stop the server themselves. If a flow crashes or you used `--keep-server`, stop it with `fuser -k 3311/tcp`, never `pkill -f`.
 
 ## Conventions
 - **No em dashes anywhere**: code, comments, copy, docs, commit messages. `npm run check:dashes` enforces it.
