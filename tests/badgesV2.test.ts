@@ -31,11 +31,6 @@ describe('lifetime families', () => {
     expect(computeBadges(stateWith([quick(oct(1))]), TODAY).lifetime.engine.value).toBe(0);
   });
 
-  it('Engine ignores the 6-week plan days', () => {
-    const days = { '2026-09-26': { items: {}, cardio: { minutes: 60, at: '2026-09-26T10:00:00Z' } } };
-    expect(computeBadges({ ...stateWith([]), days }, TODAY).lifetime.engine.value).toBe(0);
-  });
-
   it('Pushup Path counts reps on push-up exercises only', () => {
     const w = workout(oct(1), [
       { id: 'pushup', sets: Array.from({ length: 6 }, () => ({ reps: 10 })) },
@@ -78,8 +73,7 @@ describe('lifetime families', () => {
   it('has no Iron Will or Grinder', () => {
     expect(Object.keys(LIFETIME_FAMILIES)).not.toContain('iron-will');
     expect(Object.keys(LIFETIME_FAMILIES)).not.toContain('grinder');
-    const legacy = { ...stateWith([]), days: { '2026-09-26': { items: { s0: { at: '2026-09-26T10:00:00Z' }, s1: { at: '2026-09-26T10:00:00Z' } } } } } as AppState;
-    const ids = allEarnedBadges(legacy, TODAY).map((b) => b.id);
+    const ids = allEarnedBadges(stateWith([quick('2026-09-26')]), TODAY).map((b) => b.id);
     expect(ids.filter((id) => /iron-will|grinder|awakening|perfect|full-week|program-complete/.test(id))).toEqual([]);
   });
 });

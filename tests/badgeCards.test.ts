@@ -6,18 +6,16 @@ import {
   WORKOUT_FAMILIES,
   badgeCardsFrom,
   buildBadgeCards,
-  hasPlanDays,
   lifetimeCard,
   specialCard,
   tierLabel,
 } from '../lib/badgeCards';
 import { emptyState } from '../lib/progress';
-import type { AppState } from '../lib/progress';
-import legacy from './fixtures/legacyState.json';
+import { migratedPlanState } from './fixtures/legacyPlanState';
 import { stateWith, workout } from './helpers';
 
 const TODAY = '2026-09-30';
-const legacyState = legacy as unknown as AppState;
+const legacyState = migratedPlanState();
 
 const run = (date: string, km: number) => workout(date, [{ id: 'run', sets: [{ min: 30, km }] }]);
 const push = (date: string) => workout(date, [{ id: 'pushup', sets: [{ reps: 10 }] }]);
@@ -153,11 +151,6 @@ describe('badge cards', () => {
       expect(Object.keys(LIFETIME_FAMILIES).sort()).toEqual(['all-rounder', 'engine', 'finisher', 'iron-mover', 'pushup-path', 'record-breaker', 'rider', 'road-runner', 'scale-keeper', 'shedding', 'streak-keeper']);
       expect(Object.keys(MONTHLY_BADGES).sort()).toEqual(['20k-walk-run', '40k-ride', 'cardio-month', 'goal-month', 'month-clear', 'pushup-month', 'weigh-in-month']);
       expect(Object.keys(SPECIAL_BADGES).sort()).toEqual(['clean-sweep', 'goal-getter']);
-    });
-
-    it('a person with any legacy plan day is still told, for the plan link', () => {
-      expect(hasPlanDays(legacyState)).toBe(true);
-      expect(hasPlanDays(emptyState())).toBe(false);
     });
   });
 });

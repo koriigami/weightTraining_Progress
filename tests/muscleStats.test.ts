@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { emptyState } from '../lib/progress';
 import type { AppState } from '../lib/progress';
+import { migratePlanDays } from '../lib/migrations/planDays';
 import { heatPercent, isInLast7Days, last7Days, last7Stats, muscleRows, muscleSets } from '../lib/muscleStats';
 import { stateWith, workout } from './helpers';
 
@@ -62,15 +63,11 @@ describe('muscle sets', () => {
     expect(muscleSets(state, TODAY)).toEqual({});
   });
 
-  it('counts the ticked items of a plan day, by the library exercise each name maps to', () => {
+  it('counts a migrated plan day like any workout', () => {
     // Sat 26 Sep: squats, pushups, rows, lateral raises, curls, 3 sets each. Only the first two ticked here.
-    const state: AppState = { ...emptyState(), days: { '2026-09-26': { items: { s0: { at: '2026-09-26T08:00:00.000Z' }, s1: { at: '2026-09-26T09:00:00.000Z' } } } } };
+    const state = migratePlanDays({ ...emptyState(), days: { '2026-09-26': { items: { s0: { at: '2026-09-26T08:00:00.000Z' }, s1: { at: '2026-09-26T09:00:00.000Z' } } } } }, { today: TODAY });
     expect(muscleSets(state, TODAY)).toEqual({ quads: 3, glutes: 1.5, chest: 3, triceps: 1.5, shoulders: 1.5, abs: 1.5 });
-  });
-
-  it('a plan day outside the window does not count', () => {
-    const state: AppState = { ...emptyState(), days: { '2026-09-26': { items: { s0: { at: '2026-09-26T08:00:00.000Z' } } } } };
-    expect(muscleSets(state, '2026-10-05')).toEqual({});
+    expect(muscleSets(state, '2026-10-05')).toEqual({}); // outside the window
   });
 });
 

@@ -23,10 +23,10 @@ import {
   isAvoided,
   makeLookup,
   pace,
-  seedOwnerRoutines,
   workoutItemsFromRoutine,
 } from '../lib/routines';
 import type { Routine } from '../lib/routines';
+import { seedRoutines } from './fixtures/seedRoutines';
 
 // Which set fields belong to each metric.
 const FIELDS: Record<Metric, string[]> = {
@@ -103,8 +103,8 @@ function checkRoutine(r: Routine) {
   }
 }
 
-describe('owner routines', () => {
-  const seeds = seedOwnerRoutines();
+describe('the owner routines saved before v8', () => {
+  const seeds = seedRoutines();
 
   it('are the six plan sessions, once a week each', () => {
     expect(seeds.map((r) => r.title)).toEqual(['Push A', 'Pull A', 'Legs', 'Push B', 'Pull B', 'Full Body']);
@@ -227,7 +227,7 @@ describe('custom exercises and workout prefill', () => {
   });
 
   it('starts a workout from a routine with nothing ticked', () => {
-    const items = workoutItemsFromRoutine(seedOwnerRoutines()[0]);
+    const items = workoutItemsFromRoutine(seedRoutines()[0]);
     expect(items.length).toBeGreaterThan(0);
     expect(items.every((i) => i.sets.every((s) => s.done === false))).toBe(true);
   });

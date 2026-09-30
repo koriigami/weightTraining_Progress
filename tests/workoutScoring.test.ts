@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeProgress, totalXp, XP } from '../lib/progress';
+import { computeProgress, emptyState, totalXp, XP } from '../lib/progress';
 import { allEarnedBadges, computeBadges } from '../lib/badges';
 import { setXp, workoutTotals, defaultPrefs } from '../lib/routines';
 import { exerciseById } from '../data/exercises';
@@ -11,7 +11,7 @@ import {
   workoutXpTotal,
 } from '../lib/workoutScoring';
 import { stateWith, workout } from './helpers';
-import legacy from './fixtures/legacyState.json';
+import { legacyPlanState } from './fixtures/legacyPlanState';
 import type { AppState } from '../lib/progress';
 
 const ex = (id: string) => exerciseById(id)!;
@@ -257,7 +257,8 @@ describe('weekly streak', () => {
 });
 
 describe('progress with workouts', () => {
-  const s0 = legacy as unknown as AppState;
+  // Weigh-ins and goals but no workouts: the plan days are not part of a state any more.
+  const s0: AppState = { ...emptyState(), weights: legacyPlanState.weights, goals: legacyPlanState.goals };
   const today = '2026-10-25';
   const workouts = [
     workout('2026-10-20', [
@@ -271,7 +272,7 @@ describe('progress with workouts', () => {
   ];
   const s1: AppState = { ...s0, workouts };
 
-  it('adds workout XP and new badge XP on top of the legacy total', () => {
+  it('adds workout XP and new badge XP on top of the weigh-in total', () => {
     const before = totalXp(s0, today);
     const after = totalXp(s1, today);
     const newBadges = allEarnedBadges(s1, today).filter((b) => !allEarnedBadges(s0, today).some((o) => o.id === b.id));

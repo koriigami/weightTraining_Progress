@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { emptyState, planDay, xpForDay } from '../lib/progress';
-import type { AppState, DayLog } from '../lib/progress';
+import { emptyState } from '../lib/progress';
 import { CHART_WEEKS, metricValue, niceMax, weekLabels, weeklySeries } from '../lib/weekly';
 import { stateWith, workout } from './helpers';
 
@@ -47,31 +46,6 @@ describe('weeklySeries', () => {
   it('ignores a workout with no ticked set', () => {
     const w = workout('2026-09-30', [{ id: 'db-bench', sets: [{ kg: 20, reps: 10 }], undone: [0] }]);
     expect(weeklySeries(stateWith([w]), TODAY)[7].xp).toBe(0);
-  });
-
-  it('adds days of the old 6-week plan with their legacy XP and sets, and no volume', () => {
-    // Saturday 26 Sep, the first plan day: 5 strength items of 3 sets each.
-    const log: DayLog = { items: Object.fromEntries([0, 1, 2, 3, 4].map((i) => [`s${i}`, { at: '2026-09-26T08:00:00.000Z' }])) };
-    const state: AppState = { ...emptyState(), days: { '2026-09-26': log } };
-    const s = weeklySeries(state, TODAY);
-    // 5 x 15, the day-cleared bonus (50 + 10 for a streak of 1) and the perfect-day bonus (25).
-    expect(xpForDay(planDay('2026-09-26')!, log, 1)).toBe(160);
-    expect(s[6]).toMatchObject({ monday: '2026-09-21', xp: 160, sets: 15, volumeKg: 0 });
-    expect(s[7].xp).toBe(0);
-  });
-
-  it('a plan day with only part ticked counts only the ticked sets', () => {
-    const state: AppState = { ...emptyState(), days: { '2026-09-28': { items: { s0: { at: '2026-09-28T08:00:00.000Z' }, s1: { at: '2026-09-28T09:00:00.000Z' } } } } };
-    const p = weeklySeries(state, TODAY)[7];
-    expect(p.xp).toBe(30);
-    expect(p.sets).toBe(planDay('2026-09-28')!.strength.slice(0, 2).reduce((n, e) => n + e.sets, 0));
-  });
-
-  it('puts workouts and plan days of the same week together', () => {
-    const log: DayLog = { items: { s0: { at: '2026-09-28T08:00:00.000Z' } } };
-    const state = stateWith([bench('2026-09-29')], { days: { '2026-09-28': log } });
-    const p = weeklySeries(state, TODAY)[7];
-    expect(p.xp).toBe(20 + 15);
   });
 
   it('metricValue picks the value for a metric', () => {

@@ -28,7 +28,8 @@ import {
 import type { Session, SessionResult } from '../lib/session';
 import { applyRoutineAction } from '../lib/routineActions';
 import { emptyState } from '../lib/progress';
-import { LIMITS, availableEquipment, defaultPrefs, isAvoided, ownerPrefs, resolvePrefs, seedOwnerRoutines, weeklyGoalOf } from '../lib/routines';
+import { LIMITS, availableEquipment, defaultPrefs, isAvoided, ownerPrefs, resolvePrefs, weeklyGoalOf } from '../lib/routines';
+import { seedRoutines } from './fixtures/seedRoutines';
 import type { Routine } from '../lib/routines';
 import { makeLookup } from '../lib/routines';
 import { newUserState } from '../lib/store';
@@ -382,7 +383,7 @@ describe('owner defaults', () => {
     expect(have.has('dumbbell')).toBe(true);
     expect(have.has('cardio-machine')).toBe(true);
     expect(have.has('barbell')).toBe(false);
-    for (const r of seedOwnerRoutines()) {
+    for (const r of seedRoutines()) {
       for (const item of r.items) {
         const e = exerciseById(item.exerciseId)!;
         expect(have.has(e.equipment), `${r.title}: ${e.name}`).toBe(true);

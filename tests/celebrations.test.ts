@@ -8,7 +8,7 @@ import { VICTORY_HOLD_MS, eventKey, mergeQueue, momentCopy, orderEvents, rankMom
 import type { CelebrationEvent } from '../lib/celebrations';
 import { xpForLevel } from '../lib/progress';
 import type { AppState } from '../lib/progress';
-import legacy from './fixtures/legacyState.json';
+import { migratedPlanState } from './fixtures/legacyPlanState';
 import { stateWith, workout } from './helpers';
 
 // Built from its code, so this file has no em dash in it.
@@ -135,7 +135,7 @@ describe('badge medal for the unlock moment', () => {
 
 describe('replaying a badge', () => {
   const today = '2026-09-30';
-  const legacyState = legacy as unknown as AppState;
+  const legacyState = migratedPlanState();
 
   it('every earned card maps back to an earned badge, and locked cards do not', () => {
     const cards = buildBadgeCards(legacyState, today);

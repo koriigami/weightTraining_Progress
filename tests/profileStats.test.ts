@@ -2,11 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { emptyState } from '../lib/progress';
 import type { AppState, Goal } from '../lib/progress';
 import { profileTiles, weightSummary } from '../lib/profileStats';
-import legacy from './fixtures/legacyState.json';
+import { legacyPlanState, migratedPlanState } from './fixtures/legacyPlanState';
 import { stateWith, workout } from './helpers';
 
 const TODAY = '2026-09-30';
-const legacyState = legacy as unknown as AppState;
 
 describe('profile tiles', () => {
   it('is all zeros for someone new', () => {
@@ -23,9 +22,9 @@ describe('profile tiles', () => {
     expect(profileTiles(state, TODAY)).toEqual({ workouts: 3, volumeKg: 400 + 200, prs: 1, cardioKm: 6 });
   });
 
-  it('adds the days and the km of the 6-week plan', () => {
-    const t = profileTiles(legacyState, '2026-11-02');
-    expect(t.workouts).toBe(Object.keys(legacyState.days).length);
+  it('counts the migrated days of the old plan as workouts, with their km', () => {
+    const t = profileTiles(migratedPlanState(), '2026-11-02');
+    expect(t.workouts).toBe(Object.keys(legacyPlanState.days!).length);
     expect(t.volumeKg).toBe(0);
     expect(t.cardioKm).toBeGreaterThan(0);
   });

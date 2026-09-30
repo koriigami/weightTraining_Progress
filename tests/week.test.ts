@@ -36,22 +36,12 @@ describe('week dots', () => {
 });
 
 describe('trained dates', () => {
-  it('counts logged workouts with a ticked set and plan days with something ticked', () => {
-    const state: AppState = stateWith(
-      [
-        workout('2026-10-10', [{ id: 'pushup', sets: [{ reps: 10 }] }]),
-        workout('2026-10-11', [{ id: 'pushup', sets: [{ reps: 10 }], undone: [0] }]), // nothing ticked
-      ],
-      {
-        days: {
-          '2026-09-28': { items: { s0: { at: '2026-09-28T08:00:00.000Z' } } },
-          '2026-09-29': { items: {}, cardio: { minutes: 10, at: '2026-09-29T08:00:00.000Z' } },
-          '2026-09-30': { items: {} }, // nothing ticked
-          '2026-09-21': { items: { s0: { at: '2026-09-21T08:00:00.000Z' } } }, // a pre-start day, not a workout day
-        },
-      }
-    );
-    expect(trainedDates(state)).toEqual(['2026-09-28', '2026-09-29', '2026-10-10']);
+  it('counts logged workouts with a ticked set', () => {
+    const state: AppState = stateWith([
+      workout('2026-10-10', [{ id: 'pushup', sets: [{ reps: 10 }] }]),
+      workout('2026-10-11', [{ id: 'pushup', sets: [{ reps: 10 }], undone: [0] }]), // nothing ticked
+    ]);
+    expect(trainedDates(state)).toEqual(['2026-10-10']);
   });
 
   it('two workouts on one day count twice', () => {

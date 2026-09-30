@@ -3,7 +3,8 @@ import { applyRoutineAction } from '../lib/routineActions';
 import type { ActionResult } from '../lib/routineActions';
 import { emptyState } from '../lib/progress';
 import type { AppState } from '../lib/progress';
-import { LIMITS, defaultPrefs, seedOwnerRoutines } from '../lib/routines';
+import { LIMITS, defaultPrefs } from '../lib/routines';
+import { seedRoutines } from './fixtures/seedRoutines';
 import type { WorkoutLog } from '../lib/routines';
 import { isValidDate, isValidWhen, parsePrefs, parseRoutine, parseWorkoutInput } from '../lib/routineValidation';
 import { exerciseById } from '../data/exercises';
@@ -116,7 +117,7 @@ describe('saveRoutine', () => {
 
 describe('deleteRoutine', () => {
   it('removes by id and ignores an id that is not there', () => {
-    const s: AppState = { ...emptyState(), routines: seedOwnerRoutines() };
+    const s: AppState = { ...emptyState(), routines: seedRoutines() };
     const next = expectOk(run(s, { action: 'deleteRoutine', id: 'seed-legs' }));
     expect(next.routines!.map((r) => r.id)).not.toContain('seed-legs');
     expect(next.routines).toHaveLength(5);

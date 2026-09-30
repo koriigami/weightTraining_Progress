@@ -41,15 +41,12 @@ describe('day lookup', () => {
       workout('2026-09-29', [{ id: 'plank', sets: [{ sec: 30 }] }], { id: 'b', title: 'Core' }),
       workout('2026-10-02', [{ id: 'pushup', sets: [{ reps: 10 }] }], { id: 'c', title: 'Push B' }),
       workout('2026-10-03', [{ id: 'pushup', sets: [{ reps: 10 }], undone: [0] }], { id: 'd', title: 'Nothing ticked' }),
-    ],
-    { days: { '2026-09-28': { items: { s0: { at: '2026-09-28T08:00:00.000Z' } } } } }
+    ]
   );
   const by = sessionsByDate(state);
 
-  it('lists every workout and plan day on a date', () => {
+  it('lists every workout on a date', () => {
     expect(sessionsOn(by, '2026-09-29').map((i) => i.title).sort()).toEqual(['Core', 'Push A']);
-    expect(sessionsOn(by, '2026-09-28')).toHaveLength(1);
-    expect(sessionsOn(by, '2026-09-28')[0].kind).toBe('plan');
   });
 
   it('is empty on a day with nothing, and for a workout with no ticked set', () => {
@@ -58,7 +55,7 @@ describe('day lookup', () => {
   });
 
   it('counts sessions per month', () => {
-    expect(monthSessionCount(by, '2026-09')).toBe(3);
+    expect(monthSessionCount(by, '2026-09')).toBe(2);
     expect(monthSessionCount(by, '2026-10')).toBe(1);
     expect(monthSessionCount(by, '2026-11')).toBe(0);
   });
