@@ -109,6 +109,15 @@ ul.plain li::marker{color:var(--xp-deep)}
 .wk .on{background:linear-gradient(180deg,#86EA64,#2BA438);color:#fff}
 .wk .on small{color:#fff}
 .wk .rest{background:#F4E9D2;color:#795F3F;font-size:12px}
+.wk .open{background:transparent;color:var(--muted)}
+.wk.month .d{font-size:15px;padding:10px 0;position:relative}
+.wk.month .d.rest{font-size:15px}
+.wk .dot::after{content:'';position:absolute;bottom:4px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:#2BA438}
+.lgd{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:13px;color:var(--muted);font-weight:700}
+.lgd i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-1px}
+.xpbar{position:relative;height:28px;border-radius:14px;background:#3A2410;border:2px solid #2A1806;overflow:hidden}
+.xpbar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(180deg,#FFE08A,#F5C542 55%,#C9921A)}
+.xpbar b{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-family:var(--font-num);font-weight:400;font-size:15px;text-shadow:0 1px 0 #2A1806,1px 0 0 #2A1806,-1px 0 0 #2A1806,0 -1px 0 #2A1806}
 :focus-visible{outline:2px solid var(--xp-deep);outline-offset:2px}
 </style>
 
@@ -185,13 +194,30 @@ ul.plain li::marker{color:var(--xp-deep)}
         <div class="wk" aria-label="Example week: trained Monday, Tuesday and Thursday, goal of 3 met">
           <div class="d on"><small>M</small><b>&#10003;</b></div><div class="d on"><small>T</small><b>&#10003;</b></div><div class="d rest"><small>W</small><b>Rest</b></div><div class="d on"><small>T</small><b>&#10003;</b></div><div class="d rest"><small>F</small><b>Rest</b></div><div class="d rest"><small>S</small><b>Rest</b></div><div class="d rest"><small>S</small><b>Rest</b></div>
         </div>
-        <p style="margin-top:10px;color:var(--muted);font-weight:600;font-size:14px">Days off before today show "Rest". Once the weekly goal is met, the rest of the week shows "Rest" too. Before that, the days ahead stay open.</p>
+        <p style="margin-top:10px;color:var(--muted);font-weight:600;font-size:14px">Days off before today show "Rest", counting from your first workout. Once the weekly goal is met, the rest of the week shows "Rest" too. Before that, the days ahead stay open.</p>
       </div>
       <div class="card"><h3>While you log</h3>
         <div class="ex-row"><span>XP so far</span><b>+45</b></div>
         <div class="ex-row"><span>Daily bonus</span><span>12 of 20 min today</span></div>
         <div class="ex-row"><span>After 3 more sets</span><span class="mk mk-beat">Daily bonus earned</span></div>
         <p style="margin-top:10px;color:var(--muted);font-weight:600;font-size:14px">Tap XP during a workout. The minutes include anything you already trained today.</p>
+      </div>
+    </div>
+    <div class="two">
+      <div class="card"><h3>Calendar, Profile and Statistics</h3>
+        <div class="wk month" aria-label="Example fortnight: training days in green, rest days in sand, a short workout marked with a dot">
+          <div class="d on">1</div><div class="d rest">2</div><div class="d rest">3</div><div class="d on">4</div><div class="d rest dot">5</div><div class="d on">6</div><div class="d rest">7</div>
+          <div class="d rest">8</div><div class="d on">9</div><div class="d open" style="box-shadow:inset 0 0 0 2px #F5C542">10</div><div class="d open">11</div><div class="d open">12</div><div class="d open">13</div><div class="d open">14</div>
+        </div>
+        <div class="lgd"><span><i style="background:#2BA438"></i>Training day</span><span><i style="background:#F4E9D2"></i>Rest day</span><span><i style="background:#2BA438;border-radius:50%;width:6px;height:6px;vertical-align:1px"></i>Under 20 min</span></div>
+        <p style="margin-top:10px;color:var(--muted);font-weight:600;font-size:14px">Every page that shows days uses the same rule as Home. Rest days count from your first workout, so the months before you joined stay plain. A day with a short workout is a rest day; the Calendar marks it with a dot so you can still open it.</p>
+      </div>
+      <div class="card"><h3>The XP bar</h3>
+        <div class="xpbar" role="img" aria-label="Level 7, 282 of 300 XP"><i style="width:94%"></i><b>282 / 300</b></div>
+        <div class="ex-row" style="margin-top:8px"><span>Into level 7</span><b>282 XP</b></div>
+        <div class="ex-row"><span>Level 7 takes</span><b>300 XP</b></div>
+        <div class="ex-row"><span>To level 8</span><b>18 XP</b></div>
+        <p style="margin-top:10px;color:var(--muted);font-weight:600;font-size:14px">The bar shows how far you are into your level and what the next one needs, not your total. The Rank Road shows "XP to go" for each level above you.</p>
       </div>
     </div>
     <div class="note"><span>Streak: Monday to Sunday weeks in a row with at least one training day. The week you're in keeps the streak alive until it ends, so rest days never break it. A day with only a few sets (under 20 minutes) still earns its XP but isn't a training day.</span></div>
@@ -335,8 +361,10 @@ ul.plain li::marker{color:var(--xp-deep)}
         <tr><td><b>Log workout</b></td><td>+5 pops as you tick sets, Beat last time and Record chips on each exercise, live XP in the stats row. Tap XP to see what you have so far and how much of today's 20 minutes is done.</td></tr>
         <tr><td><b>Victory</b></td><td>The XP lines for the workout that just finished, then level up, rank up and badge moments</td></tr>
         <tr><td><b>Workout page</b></td><td>The eye on the XP tile opens where the XP came from, line by line. It updates after an edit.</td></tr>
-        <tr><td><b>Home and Rank</b></td><td>Your level, XP bar and rank. This week with training days and rest days, and a comeback hint after a week off. The Rank Road with every gate.</td></tr>
-        <tr><td><b>Profile</b></td><td>XP per week on the chart, goals and their rewards</td></tr>
+        <tr><td><b>Home and Rank</b></td><td>Your level and rank, and the XP bar with XP into your level over what the level takes. This week with training days and rest days, and a comeback hint after a week off. The Rank Road with every gate and the XP to go for each level.</td></tr>
+        <tr><td><b>Calendar</b></td><td>Training days in green, rest days in sand, a dot on days with a workout under 20 minutes, and the month's training days. Tap a day to see its workouts and minutes.</td></tr>
+        <tr><td><b>Profile</b></td><td>XP per week on the chart, goals and their rewards, and this month's training and rest days</td></tr>
+        <tr><td><b>Statistics</b></td><td>The last 7 days with training days and rest days, above the muscle map</td></tr>
         <tr><td><b>Insights (owner only)</b></td><td>How fast the group climbs, to check the pace</td></tr>
       </tbody>
     </table></div>

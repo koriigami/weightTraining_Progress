@@ -354,6 +354,25 @@ Rules v3, in `docs/design/xp-reference.html` (republished to the same artifact).
 - **Plans** are kept only for the Clean Sweep badge, and removing a planned exercise no longer
   shrinks them.
 
+### v10.1: rest days on every page, and the level XP bar
+
+Agreed in the conversation after a UI check of v10 (no board; the plan is in `docs/V10_PLAN.md`).
+
+- **Why.** Only Home's week strip knew about rest days. The Calendar, the Profile month strip and
+  the Statistics day chips still marked any workout, so a 6 minute day was "Rest" on Home and
+  green everywhere else.
+- **One rule.** Training day (green), rest day (the same sand as Home), or open (plain). Rest days
+  count from the first logged workout, so the months before someone joined are not a wall of
+  rest, and a brand new account no longer starts the week with two rest days. A short-workout day
+  is a rest day; the Calendar adds a small dot so it can still be opened, and its day list says
+  "6 of 20 min, so this counts as a rest day".
+- **Calendar keeps its numbers.** A month grid needs dates, so rest is the sand tile plus a legend
+  rather than the word "Rest" in every cell. The Statistics chips have room for the word, like Home.
+- **XP bar inside the level.** The phone bar showed total XP over the next threshold ("582 / 600").
+  It now shows XP into the level over what the level takes ("282 / 300"), like Clash Royale and
+  like the desktop card, Rank, Victory and the level-up moment already did. The Rank Road's level
+  rows show "XP to go" instead of total thresholds, since the total is no longer shown anywhere.
+
 ## Where the chat lives
 
 The conversation is not stored in the repo. Long chats are summarized when the

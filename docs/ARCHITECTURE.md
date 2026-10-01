@@ -149,11 +149,19 @@ rules are the XP Rulebook (`docs/design/xp-reference.html`), called rules v3:
     bonus, the comeback and the weekly goal. A daily bonus of 0 says why: already
     earned today, or N of 20 min today. The Finish dialog only warns about
     unticked sets.
-  - *The Home week strip* (`weekDots` in `lib/week.ts`) ticks training days and
-    shows "Rest" on past days without one. Once the weekly goal is met the days
-    still to come show "Rest" too. Today keeps its marker until it is a training
-    day. `comebackPending` drives the "Comeback bonus" hint on the Today card:
+  - *Every day view* uses one rule, `dayRules` and `dayKind` in `lib/week.ts`:
+    a day is `training`, `rest` or `open`. Rest is a past day without a training
+    day on or after the first logged workout, or a day still to come this week
+    once the weekly goal is met. Today stays open until it is a training day, and
+    days before the first workout are open. `weekSummary` returns the rules, and
+    the Home week strip (`weekDots`), the Calendar, the Profile month strip and
+    the Statistics day chips (`last7Days` in `lib/muscleStats.ts`) all read them.
+    The Calendar adds a dot on days with a workout under 20 minutes.
+    `comebackPending` drives the "Comeback bonus" hint on the Today card:
     last week and this week have no training day and an earlier one exists.
+  - *XP bars* show XP into the level over what the level takes (`xpIntoLevel` in
+    `lib/progress.ts`), never the running total. The Rank Road's level rows show
+    the XP to go (`LevelRow.xpToGo` in `lib/rankRoad.ts`).
 - **Training days drive the rest.** `weeklyStreaks` takes training-day dates, and
   the weekly goal, the Finisher, Month Clear, Goal Month and Streak Keeper badges,
   and the workouts and weekly streak goals all count training days. A day under

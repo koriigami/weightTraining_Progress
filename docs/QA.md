@@ -61,7 +61,9 @@ Tick these on each screen below, at 390 px and at 1440 px.
 ## Home `/`
 
 - [ ] Phone: the Resource bar on top (level shield and XP bar, week streak,
-      weekly goal count). Desktop: the hunter card and the week card.
+      weekly goal count). The XP bar reads XP into the level over what the level
+      takes ("282 / 300"), the same numbers as the desktop hunter card and Rank.
+      Desktop: the hunter card and the week card.
 - [ ] Ready: the Today card names one routine ("Today's workout") with a normal
       size Start and its first 3 exercises. Desktop shows three cards: two
       routines and a dashed "Something else".
@@ -73,7 +75,8 @@ Tick these on each screen below, at 390 px and at 1440 px.
       (desktop).
 - [ ] This week opens `/calendar`. Training days show a tick, past days
       without one show "Rest", and once the weekly goal is met the rest of the
-      week shows "Rest". Today keeps its ring until it is a training day.
+      week shows "Rest". Today keeps its ring until it is a training day. Days
+      before the first logged workout show their number, not "Rest".
 - [ ] After a week with no training day (and none yet this week) the Today card
       says "Comeback bonus: +25 XP on your first training day". It is gone once
       this week has a training day.
@@ -215,7 +218,8 @@ For each of Level up, Rank up and Badge unlock:
 
 ## Rank `/rank`
 
-- [ ] The road opens with your level centered.
+- [ ] The road opens with your level centered. Levels above yours show "N XP
+      to go", levels below show "Cleared".
 - [ ] All four gate states: unlocked earlier (sky card, gold frame), your rank
       (gold glow and progress to the next rank), next (levels to go and a
       progress bar), locked (padlock, "Reach level N").
@@ -247,17 +251,21 @@ For each of Level up, Rank up and Badge unlock:
 - [ ] A goal stays achieved after a workout behind it is deleted.
 - [ ] Weight: log a weight, the change and sparkline update, the value is in
       your unit. Out-of-range values are refused.
-- [ ] This month strip, and Calendar opens the full month.
+- [ ] This month strip: training days green, rest days sand, a legend, "N
+      training days in October". Calendar opens the full month.
 - [ ] Workouts feed, newest first. A workout opens with its details.
 - [ ] Desktop: Goals, Weight and This month sit in a sticky side column.
 
 ## Statistics `/stats`, Calendar `/calendar`
 
 - [ ] Statistics: the body heat map (front and back) and sets per muscle for the
-      last seven days, with an accessible text summary.
+      last seven days, with an accessible text summary. The day chips put a dot
+      on training days and "Rest" on rest days, the same days as Home.
 - [ ] Calendar: a month grid whose today cells line up with the header, previous
-      and next month, a day list, days with a workout marked. There is no plan
-      link.
+      and next month, a day list. Training days green, rest days sand, a dot on a
+      day with a workout under 20 minutes, a legend under the grid, and "N
+      training days" in the header. Tap the short day: its workout, then "6 of
+      20 min, so this counts as a rest day". There is no plan link.
 
 ## Settings `/settings`
 

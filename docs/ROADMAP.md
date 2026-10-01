@@ -1,12 +1,13 @@
 # v7 roadmap: routines like Hevy, plus Solo Leveling gamification
 
-## Status (updated after v10 stage 3)
+## Status (updated after v10.1)
 
 v7 and v8 are live. Since then: v9 (the share card as a picture, `docs/V9_PLAN.md`), the Levl
 brand, Privacy and Terms, dev tooling (`CLAUDE.md`, `npm run qa`, agents, CI) and v10 (one daily
 bonus, training days, rest days and a comeback bonus, `docs/V10_PLAN.md`, rules v3 in
-`docs/design/xp-reference.html`). v10 is built on `claude/home-workout-nutrition-plan-kuyhvx`
-and waits for the user's word to merge.
+`docs/design/xp-reference.html`), then v10.1 (rest days on the Calendar, Profile and Statistics
+too, and the XP bar shows progress inside the level). v10 and v10.1 are built on
+`claude/home-workout-nutrition-plan-kuyhvx` and wait for the user's word to merge.
 
 | Stage | What | State |
 |---|---|---|
@@ -29,6 +30,7 @@ and waits for the user's word to merge.
 | v8 release | Merged to `main` | Done, live |
 | v9 | Share card as a picture: random sky, body figure, Share image and Save image | Done, live |
 | v10 | Rules v3: one +50 daily bonus at 20 minutes a day (strength and cardio together), training days for the weekly goal, streak and badges, Rest on the week strip, +25 comeback after a week off | Done on branch, waiting to merge |
+| v10.1 | One rest-day rule on Home, Calendar, Profile and Statistics; the XP bar shows XP into the level; Rank Road shows XP to go | Done on branch, waiting to merge |
 
 
 ### Next
