@@ -1,12 +1,12 @@
 # Levl
 
 Levl is a game-style workout tracker by Kagadmodyaa Studio (Nagpur, India). People log
-strength and cardio workouts, earn XP, level up and climb ranks E to S. It is an
-invite-only beta heading for a public launch. Production: https://weight-training-progress.vercel.app
+strength and cardio workouts, earn XP, level up and climb ranks E to S. It is in early
+access with open sign-ups. Production: https://weight-training-progress.vercel.app
 
 ## Stack
 - Next.js 15 App Router, React 19, TypeScript (strict), Tailwind plus hand-written CSS in `app/globals.css`.
-- Auth.js v5: Google in production, a dev credentials provider locally (`auth.ts`). Invite list in `ALLOWED_EMAILS`, owner in `OWNER_EMAIL`.
+- Auth.js v5: Google in production, a dev credentials provider locally (`auth.ts`). Sign-ups are open to any Google account; `SIGNUPS=invite` limits sign-in to `ALLOWED_EMAILS` (`lib/signups.ts`). Owner in `OWNER_EMAIL`.
 - Upstash Redis, one key per person: `wt:user:{sub}:state` and `:profile`. A dev memory store is used when no Redis env is set (`lib/store.ts`).
 - Vercel hosting. `main` deploys to production.
 

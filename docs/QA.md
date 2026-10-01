@@ -49,8 +49,11 @@ Tick these on each screen below, at 390 px and at 1440 px.
 ## Sign-in and onboarding
 
 - [ ] Signed out: the sign-in screen shows the Dev sign-in form (development) or
-      the Google button. An email not on the invite list is refused and lands on
-      `/auth/denied`.
+      the Google button, with no waitlist button: sign-ups are open, so any email
+      signs in and a new one goes to onboarding.
+- [ ] With `SIGNUPS=invite`: the waitlist button is back, an email not in
+      `ALLOWED_EMAILS` is refused and lands on `/auth/denied` ("Invite only" and
+      the waitlist). Without it, `/auth/denied` reads "Couldn't sign you in".
 - [ ] A new person is sent to `/onboarding` from every route until they finish.
 - [ ] Four screens: units, equipment, things to avoid, how to start. Back and
       Continue work, Continue is pinned at the bottom on the phone.

@@ -3,14 +3,11 @@ import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
 import type { Provider } from 'next-auth/providers';
 import { isOwnerEmail } from '@/lib/owner';
+import { canSignIn, signupMode } from '@/lib/signups';
 import { saveProfile } from '@/lib/store';
 
-export function allowedEmails(): string[] {
-  return (process.env.ALLOWED_EMAILS ?? '')
-    .split(',')
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-}
+// Sign-ups are open unless SIGNUPS=invite, which limits sign-in to ALLOWED_EMAILS (lib/signups.ts).
+export const inviteOnly = signupMode() === 'invite';
 
 export const hasGoogle = Boolean(process.env.AUTH_GOOGLE_ID);
 // Dev sign-in exists only outside production and only when Google is not configured.
@@ -26,7 +23,7 @@ if (hasDevProvider) {
       credentials: { email: { label: 'Email', type: 'email' } },
       async authorize(credentials) {
         const email = String(credentials?.email ?? '').trim().toLowerCase();
-        if (!email || !allowedEmails().includes(email)) return null;
+        if (!canSignIn(email)) return null;
         return { id: `dev:${email}`, email, name: email.split('@')[0] };
       },
     })
@@ -40,9 +37,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: { signIn: '/', error: '/auth/denied' },
   callbacks: {
     async signIn({ user }) {
-      const email = user.email?.trim().toLowerCase();
-      if (!email || !allowedEmails().includes(email)) return false;
-      return true;
+      return canSignIn(user.email);
     },
     async jwt({ token, user, account }) {
       // On sign-in, `user.id` is the Google sub (or the dev id).

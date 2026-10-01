@@ -8,6 +8,7 @@ bonus, training days, rest days and a comeback bonus, `docs/V10_PLAN.md`, rules 
 `docs/design/xp-reference.html`), then v10.1 (rest days on the Calendar, Profile and Statistics
 too, and the XP bar shows progress inside the level) and v10.2 (the Home header as a mini hunter
 card, day tiles of one height, no penalty for time away). All of v10 is live since 1 October 2026.
+Sign-ups are open to any Google account since 1 October 2026 (`SIGNUPS=invite` closes them).
 
 | Stage | What | State |
 |---|---|---|
@@ -36,14 +37,11 @@ card, day tiles of one height, no penalty for time away). All of v10 is live sin
 
 ### Next
 
-These three come first, in this order (agreed after v10):
+These two come first, in this order (agreed when sign-ups opened):
 
-1. **Account deletion and data export in the app.** Both app stores require deletion when
-   accounts can be created, India's DPDP Act and GDPR expect it, and it replaces the email-only
-   route in the Privacy Policy. A launch blocker.
-2. **An in-app feedback box.** "Send feedback" in Settings, stored per person. The cheapest
+1. **An in-app feedback box.** "Send feedback" in Settings, stored per person. The cheapest
    source of roadmap signal, and what feedback triage needs later (`docs/AGENTS.md`).
-3. **Retention analytics.** Privacy-friendly events for sign-up, first workout, training days
+2. **Retention analytics.** Privacy-friendly events for sign-up, first workout, training days
    per week, week 1 and week 4 retention and shares. Owner Insights shows totals; events show
    where people drop.
 
@@ -70,15 +68,21 @@ Then:
 9. **Dev tooling.** Done: `CLAUDE.md`, `npm run verify`, the QA harness (`npm run qa`), the
    `levl-builder` and `levl-ui-check` agents, the `levl-release` and `levl-board` skills, and CI on
    every push. What to add later and when: `docs/AGENTS.md`.
+10. **Account deletion and data export in the app** (last, by the user's call when sign-ups
+   opened). Needed before an app store listing: both stores require in-app deletion when accounts
+   can be created. Until then the Privacy Policy's email route (a reply within 30 days) covers
+   deletion and copies for the web app.
 
 ## Brand and launch essentials
 
 - Custom domain (for example a Levl app domain), then update `metadataBase` (or set `NEXT_PUBLIC_SITE_URL`).
-- Google OAuth consent screen: set the app name and logo to Levl.
+- Done: the Google OAuth consent screen is published ("In production"), without a logo. Adding the Levl logo needs Google's brand verification, which needs a domain we own: do it with the custom domain.
 - Rename the Vercel project to Levl.
-- Done: `/privacy` and `/terms`, public and linked from sign-in, the invite-only page and Settings. Have a lawyer read them before a public launch, and add an in-app "Delete my account" button so deletion does not need an email.
+- Done: `/privacy` and `/terms`, public and linked from sign-in, the invite-only page and Settings. Have a lawyer read them, and add the in-app "Delete my account" button before an app store listing (Next, item 10).
 - Done: the Tally waitlist form (`https://tally.so/r/kdMyYM`) is the default in `lib/waitlist.ts`.
-- A trademark and name check for "Levl" before public launch.
+- A trademark and name check for "Levl".
+- Vercel's Hobby plan is for non-commercial use only: move to Pro before charging, running ads or counting Levl as studio revenue.
+- Upstash's free tier is 256 MB and 500,000 commands a month, a few hundred daily users. Watch its dashboard as sign-ups grow.
 - App store style screenshots.
 - An OG image per shared workout (image share cards, already possible in Next).
 

@@ -21,7 +21,7 @@ Fonts are Figtree (reading) and Lilita One (game titles).
 | `data/` | `exercises.ts`: the library, muscle groups, equipment and metrics. |
 | `tests/` | Vitest, over `lib/` and the store. `tests/fixtures/` holds an old plan-era state for the migration tests. |
 | `docs/` | This file, the roadmap, the design history, `design/` (the boards) and `screenshots/`. |
-| `auth.ts` | Auth.js config: Google, the invite list, a dev-only email sign-in, and the session's `isOwner` flag. |
+| `auth.ts` | Auth.js config: Google, who may sign in (`lib/signups.ts`), a dev-only email sign-in, and the session's `isOwner` flag. |
 
 ## Providers
 
@@ -39,6 +39,18 @@ Mounted in `app/layout.tsx` and `components/AppShell.tsx`, outermost first:
 4. `ProgressProvider`. The person's whole state, derived progress, and every
    action that changes it. `useProgress()` is what almost every screen reads.
 5. `WorkoutSessionProvider`. The workout in progress, kept in localStorage.
+
+## Who may sign in
+
+Sign-ups are open: any Google account can sign in, and a new person goes through onboarding.
+The `SIGNUPS` env var is the switch. `SIGNUPS=invite` limits sign-in to `ALLOWED_EMAILS`, and any
+value other than empty or `open` also means invite, so a typo closes sign-ups rather than opening
+them (`signupMode` and `canSignIn` in `lib/signups.ts`, used by the `signIn` callback and the dev
+provider). A refused sign-in lands on `/auth/denied`: in invite mode it says "Invite only" and
+shows the Tally waitlist; while open it says "Couldn't sign you in" with Try again. The sign-in
+card shows the waitlist only in invite mode. Changing `SIGNUPS` on Vercel needs a redeploy, and
+sessions already signed in are not affected. Google's own consent screen is "In production", so
+Google allows any account; showing the Levl logo there needs Google's brand verification.
 
 ## Data flow
 

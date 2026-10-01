@@ -115,8 +115,9 @@ Ordered by how soon the trigger is likely. None of these should be built early.
 What growing consumer fitness apps invest in beyond features, mapped to Levl:
 
 1. **Account deletion and data export in the app.** Required by both app stores if
-   accounts can be created, expected under the DPDP Act and GDPR, and it replaces the
-   email-only process in the Privacy Policy. A launch blocker.
+   accounts can be created, and expected under the DPDP Act and GDPR. Needed before a
+   store listing; for the web app the email process in the Privacy Policy covers it, so
+   it moved to the back of the roadmap when sign-ups opened.
 2. **In-app feedback.** A "Send feedback" entry in Settings, stored per person. The
    cheapest source of roadmap signal, and the input item 4 needs.
 3. **Product analytics events.** Privacy-friendly events for sign-up, first workout,

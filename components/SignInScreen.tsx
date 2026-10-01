@@ -30,7 +30,8 @@ export function Waitlist({ url }: { url: string }) {
   );
 }
 
-export function SignInScreen({ hasGoogle, hasDev }: { hasGoogle: boolean; hasDev: boolean }) {
+/** The sign-in card. The waitlist shows only while sign-ups are invite-only (SIGNUPS=invite). */
+export function SignInScreen({ hasGoogle, hasDev, inviteOnly }: { hasGoogle: boolean; hasDev: boolean; inviteOnly: boolean }) {
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const router = useRouter();
@@ -71,7 +72,7 @@ export function SignInScreen({ hasGoogle, hasDev }: { hasGoogle: boolean; hasDev
             </Button>
           </form>
         )}
-        {waitlistUrl && <Waitlist url={waitlistUrl} />}
+        {inviteOnly && waitlistUrl && <Waitlist url={waitlistUrl} />}
         <LegalLinks />
       </Card>
     </div>

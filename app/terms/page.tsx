@@ -31,7 +31,7 @@ export default function TermsPage() {
       <LegalSection n={2} title="Who can use Levl">
         <ul>
           <li>You must be {MIN_AGE} or older.</li>
-          <li>Levl is invite only during early access. You sign in with a Google account, and your account is for you alone.</li>
+          <li>Levl is in early access, and sign-ups may be paused at times. You sign in with a Google account, and your account is for you alone.</li>
           <li>You are responsible for what happens under your account, so keep your Google account secure.</li>
         </ul>
       </LegalSection>

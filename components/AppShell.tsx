@@ -102,7 +102,7 @@ function Frame({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function AppShell({ hasGoogle, hasDev, children }: { hasGoogle: boolean; hasDev: boolean; children: React.ReactNode }) {
+export function AppShell({ hasGoogle, hasDev, inviteOnly, children }: { hasGoogle: boolean; hasDev: boolean; inviteOnly: boolean; children: React.ReactNode }) {
   const { status } = useSession();
   const pathname = usePathname();
 
@@ -110,7 +110,7 @@ export function AppShell({ hasGoogle, hasDev, children }: { hasGoogle: boolean; 
   if (pathname.startsWith('/auth/') || isPublicPath(pathname)) return <>{children}</>;
   // The session is fetched on the client, so wait for it before choosing a screen.
   if (status === 'loading') return <ShellSkeleton />;
-  if (status === 'unauthenticated') return <SignInScreen hasGoogle={hasGoogle} hasDev={hasDev} />;
+  if (status === 'unauthenticated') return <SignInScreen hasGoogle={hasGoogle} hasDev={hasDev} inviteOnly={inviteOnly} />;
 
   return (
     <ProgressProvider>

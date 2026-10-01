@@ -4,7 +4,7 @@ import './globals.css';
 import { CelebrationProvider } from '@/components/celebrate/CelebrationProvider';
 import { SessionProvider } from 'next-auth/react';
 import { AppShell } from '@/components/AppShell';
-import { hasDevProvider, hasGoogle } from '@/auth';
+import { hasDevProvider, hasGoogle, inviteOnly } from '@/auth';
 import { Sky } from '@/components/ui/Sky';
 
 const figtree = Figtree({ subsets: ['latin'], variable: '--font-figtree', display: 'swap' });
@@ -69,7 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Sky />
         <SessionProvider>
           <CelebrationProvider>
-            <AppShell hasGoogle={hasGoogle} hasDev={hasDevProvider}>
+            <AppShell hasGoogle={hasGoogle} hasDev={hasDevProvider} inviteOnly={inviteOnly}>
               {children}
             </AppShell>
           </CelebrationProvider>
