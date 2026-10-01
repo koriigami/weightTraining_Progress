@@ -39,7 +39,9 @@ decisions are made, so it is not delegated.
 Ordered by how soon the trigger is likely. None of these should be built early.
 
 ### 1. XP integrity check (skill plus a script)
-- **Trigger:** the next change to scoring, badges, goal rewards or rank thresholds.
+- **Trigger:** the next change to scoring, badges, goal rewards or rank thresholds. It fired with v10
+  (rules v3); the rescore was checked by hand with a before and after script on
+  `tests/fixtures/legacyPlanState.ts` (level 11 to 12). Make it a committed script before the next rules change.
 - **Why Levl needs it:** XP and rank are the product. A rule change silently
   re-scores everyone's history (it happened in v8). Strava had to build integrity
   checks once leaderboards mattered.

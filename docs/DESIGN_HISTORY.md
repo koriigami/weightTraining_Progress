@@ -331,6 +331,29 @@ code and the measured Lilita One widths are in `docs/design/share-card/`.
 - **Buttons.** Share image (green) and Save image (gold). No Copy text. Where a
   browser can't share pictures, only Save image shows.
 
+## Daily bonus and rest days (v10)
+
+Rules v3, in `docs/design/xp-reference.html` (republished to the same artifact).
+
+- **Why.** The finish bonus needed the whole plan. Routines seeded from the old 6-week plan end
+  with a treadmill, so skipping it, or logging the run as its own workout, lost the bonus ("Treadmill
+  isn't done"). Two bonuses a day read as one for lifting and one for cardio. And removing an
+  exercise mid-workout shrank the plan, so the bonus could be kept by deleting what you skipped.
+- **One daily bonus.** +50 once a day when the day adds up to 20 minutes: 3 minutes a ticked set,
+  cardio its minutes, every workout that day together. No plan check at all. Picked over "finish
+  your plan once a day" (still loses the bonus to a skipped treadmill) and "any workout" (one set
+  would earn it).
+- **Training days.** A day that reached 20 minutes. The weekly goal, the streak, Finisher, Month
+  Clear and "Training days" goals count them.
+- **Streak stays weekly.** Strength training works best 2 to 4 days a week with rest (ACSM 2026,
+  WHO, NHS), so a daily streak would reward skipping recovery. Strava, Hevy and Peloton are weekly
+  too. One training day keeps the week; the weekly goal is the stretch target.
+- **Rest days and comeback.** Days off show "Rest" on Home, and after the goal is met the rest of
+  the week does too. +25 for the first training day after a week with none, because rewarding
+  the return worked better than punishing the gap in the StepUp megastudy.
+- **Plans** are kept only for the Clean Sweep badge, and removing a planned exercise no longer
+  shrinks them.
+
 ## Where the chat lives
 
 The conversation is not stored in the repo. Long chats are summarized when the

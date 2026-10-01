@@ -1,10 +1,12 @@
 # v7 roadmap: routines like Hevy, plus Solo Leveling gamification
 
-## Status (updated after v8 stage F)
+## Status (updated after v10 stage 3)
 
-The v7 redesign was merged to `main` (304f149) and is live. v8 fixes what day-to-day use turned
-up, moves XP to rules v2 and removes the 6-week plan. Its plan is in `docs/V8_PLAN.md`. All of
-v8 is built on the branch `claude/home-workout-nutrition-plan-kuyhvx` and is not merged yet.
+v7 and v8 are live. Since then: v9 (the share card as a picture, `docs/V9_PLAN.md`), the Levl
+brand, Privacy and Terms, dev tooling (`CLAUDE.md`, `npm run qa`, agents, CI) and v10 (one daily
+bonus, training days, rest days and a comeback bonus, `docs/V10_PLAN.md`, rules v3 in
+`docs/design/xp-reference.html`). v10 is built on `claude/home-workout-nutrition-plan-kuyhvx`
+and waits for the user's word to merge.
 
 | Stage | What | State |
 |---|---|---|
@@ -24,10 +26,25 @@ v8 is built on the branch `claude/home-workout-nutrition-plan-kuyhvx` and is not
 | v8 D | Home (Resource bar, Today card, Done today), Routines menu, pinned tabs, Rank re-centre | Done, on branch, not merged |
 | v8 E | Goals and dates: the date picker, the goal sheet, weekly streak goals | Done, on branch, not merged |
 | v8 F | Owner-only Insights, docs and screenshots | Done, on branch, not merged |
-| v8 release | Opus review, then a fast-forward merge to `main` once the user says yes | Waiting |
+| v8 release | Merged to `main` | Done, live |
+| v9 | Share card as a picture: random sky, body figure, Share image and Save image | Done, live |
+| v10 | Rules v3: one +50 daily bonus at 20 minutes a day (strength and cardio together), training days for the weekly goal, streak and badges, Rest on the week strip, +25 comeback after a week off | Done on branch, waiting to merge |
 
 
 ### Next
+
+These three come first, in this order (agreed after v10):
+
+1. **Account deletion and data export in the app.** Both app stores require deletion when
+   accounts can be created, India's DPDP Act and GDPR expect it, and it replaces the email-only
+   route in the Privacy Policy. A launch blocker.
+2. **An in-app feedback box.** "Send feedback" in Settings, stored per person. The cheapest
+   source of roadmap signal, and what feedback triage needs later (`docs/AGENTS.md`).
+3. **Retention analytics.** Privacy-friendly events for sign-up, first workout, training days
+   per week, week 1 and week 4 retention and shares. Owner Insights shows totals; events show
+   where people drop.
+
+Then:
 
 1. **Level-pace review.** After about 3 weeks of tester data, open Insights (days to D, C and B
    rank, workouts a week) and decide whether the level curve `50 * n * (n - 1)` and the XP rules
