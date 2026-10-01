@@ -374,6 +374,28 @@ Agreed in the conversation after a UI check of v10 (no board; the plan is in `do
   like the desktop card, Rank, Victory and the level-up moment already did. The Rank Road's level
   rows show "XP to go" instead of total thresholds, since the total is no longer shown anywhere.
 
+## 08 Home header (v10.2)
+
+`docs/design/08-home-header-board.html`, published as an artifact.
+
+- **Why.** The phone's Home header was dark wood pills on a light sky, the XP bar was 26 px, and the
+  level was only a number on a rank-coloured shield, which did not read as a level.
+- **Round 1.** Four options: A cream bar with a LEVEL tag on the shield (my pick), B a rank-coloured
+  "Lv 4" chip with no shield, C a mini hunter card (the desktop card made compact), D A's layout in
+  frosted white. Each was shown above the Today card and in four states at 360 px.
+- **Picked: C, amended.** Since "Level 4" is written out, the shield shows the rank letter, and the
+  "287 XP to level 5" line is dropped because the bar's "113 / 400" says it.
+- **Round 2** recorded the amended header, plus two things raised with it:
+  - **Day tiles.** The green training-day tiles drew their bevel 3 px below the tile, so they looked
+    taller than their neighbours and covered the bottom of the gold today ring. The bevel now sits
+    inside the tile on the Home week strip, the Calendar, the Profile strip and the date picker's
+    selected day; today gets a full ring with a small gap; rest days get a thin border. Buttons and
+    chips keep the bevel below, where it is the press cue.
+  - **Time away.** Asked whether missed days should cost XP or rank, Solo Leveling style. No: XP comes
+    only from logged workouts, so time away already never lowers XP, level or rank, and losing rank
+    while away would punish people at the moment they might return. A week off ends the streak and
+    misses the weekly goal; the comeback bonus pays for coming back. The rulebook says so in one line.
+
 ## Where the chat lives
 
 The conversation is not stored in the repo. Long chats are summarized when the

@@ -114,27 +114,137 @@ ol.decide b{color:var(--ink)}
 .D .bar{position:relative;flex:1;min-width:0;height:44px;border-radius:22px;padding:8px 9px 8px 32px}
 .D .track{background:rgba(29,95,191,.13);box-shadow:inset 0 2px 0 rgba(29,95,191,.12)}
 .D .pill{flex:none;display:inline-flex;align-items:center;gap:5px;height:44px;padding:0 12px 0 9px;border-radius:22px;font-family:var(--display);font-size:18px}
+
+/* ---- Round 2: the signed-off header (C amended) ---- */
+.F .card{display:flex;align-items:center;gap:10px;background:var(--paper);border-radius:20px;box-shadow:inset 0 0 0 3px rgba(255,255,255,.6),0 4px 0 var(--bevel);padding:9px 12px 10px 10px}
+.F .badge{filter:none}
+.F .mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.F .mid b{font-family:var(--display);font-weight:400;font-size:19px;line-height:1.1}
+.F .track{display:block;position:relative;height:22px;border-radius:11px;background:var(--surface-2);box-shadow:inset 0 2px 0 rgba(120,80,20,.16);overflow:hidden}
+.F .txt{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:13.5px;color:var(--ink)}
+.F .stats{flex:none;display:flex;flex-direction:column;gap:5px;padding-left:10px;border-left:1.5px solid var(--line)}
+.F .stat{display:flex;align-items:center;gap:5px;font-family:var(--display);font-size:17px;line-height:1.15}
+.final{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,402px),1fr));gap:22px;align-items:start}
+.final .states{grid-template-columns:1fr}
+
+/* ---- Round 2: day tiles, before and after ---- */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:18px 26px}
+.tset{display:flex;flex-direction:column;gap:8px;min-width:0}
+.tset h3{font-size:18px}
+.tbox{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:14px 12px;display:flex;flex-direction:column;gap:12px;box-shadow:0 3px 0 var(--bevel)}
+.tlab{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tlab.bad{color:#c8322a}.tlab.good{color:var(--green-deep)}
+.trow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));justify-items:center;align-items:center;row-gap:6px}
+.trow small{font-size:12px;font-weight:700;color:var(--muted)}
+/* week strip */
+.wd{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:var(--surface-2);color:var(--muted);font-family:var(--display);font-size:15px}
+.wd.done{background:linear-gradient(180deg,var(--green-hi),var(--green));color:#fff}
+.wd.rest{background:#f4e9d2;font-family:var(--body);font-size:11px;font-weight:800}
+.old .wd.done{box-shadow:0 3px 0 var(--green-deep)}
+.old .wd.now{box-shadow:inset 0 0 0 2px var(--gold)}
+.old .wd.done.now{box-shadow:0 3px 0 var(--green-deep),0 0 0 2px var(--gold)}
+.new .wd.done{box-shadow:inset 0 -3px 0 var(--green-deep)}
+.new .wd.rest{box-shadow:inset 0 0 0 1.5px var(--line)}
+.new .wd.now{box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--gold)}
+.new .wd.done.now{box-shadow:inset 0 -3px 0 var(--green-deep),0 0 0 2px var(--paper),0 0 0 4px var(--gold)}
+/* calendar cells */
+.dc{position:relative;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-weight:600;font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
+.dc.w{background:linear-gradient(180deg,var(--green-hi),var(--green));color:#fff}
+.dc.rest{background:#f4e9d2;color:var(--muted)}
+.dc.fut{color:var(--muted)}
+.dc.logged::after{content:'';position:absolute;bottom:4px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:#27a844}
+.old .dc.w{box-shadow:0 3px 0 var(--green-deep)}
+.old .dc.w.now{box-shadow:0 3px 0 var(--green-deep),0 0 0 2px var(--gold)}
+.new .dc.w{box-shadow:inset 0 -3px 0 var(--green-deep)}
+.new .dc.rest{box-shadow:inset 0 0 0 1.5px var(--line)}
+.new .dc.w.now{box-shadow:inset 0 -3px 0 var(--green-deep),0 0 0 2px var(--paper),0 0 0 4px var(--gold)}
+/* profile strip */
+.ms{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:5px}
+.ms i{aspect-ratio:1;border-radius:6px;background:var(--surface-2);display:block}
+.ms i.w{background:linear-gradient(180deg,#86ea64,#2ba438)}
+.ms i.r{background:#f4e9d2}
+.ms i.f{background:transparent;border:1.5px dashed var(--line)}
+.old .ms i.w{box-shadow:0 2px 0 #186a20}
+.old .ms i.w.t{box-shadow:0 2px 0 #186a20,0 0 0 2px #f5c542}
+.new .ms i.w{box-shadow:inset 0 -2px 0 #186a20}
+.new .ms i.r{box-shadow:inset 0 0 0 1.5px var(--line)}
+.new .ms i.w.t{box-shadow:inset 0 -2px 0 #186a20,0 0 0 1.5px var(--paper),0 0 0 3.5px #f5c542}
+/* date picker */
+.dp{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-weight:700;font-size:14px;color:var(--ink);border:1.5px solid transparent;box-sizing:border-box}
+.dp.now{box-shadow:inset 0 0 0 2px var(--green)}
+.dp.sel{background:linear-gradient(180deg,#ffe9a0,#ffd970 50%,#f2b940);border-color:#d49a2a;font-family:var(--display);font-weight:400;font-size:16px;color:#4a3212}
+.old .dp.sel{box-shadow:0 3px 0 #b8862e}
+.new .dp.sel{box-shadow:inset 0 -3px 0 #b8862e}
+.guide{position:relative}
+.guide::after{content:'';position:absolute;left:0;right:0;top:50%;border-top:1px dashed rgba(200,50,42,.55);pointer-events:none}
+.away{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px}
+.away .card{background:var(--calm);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.away .card h3{font-size:18px;margin-bottom:6px}
+.away .card p{margin:0;font-size:14px;color:var(--muted)}
+.away .card p b{color:var(--ink)}
+.r1{border-top:2px dashed var(--line);padding-top:18px}
 </style>
 </head>
 <body>
 <main class="wrap">
   <header>
     <h1>Home header</h1>
+    <p class="lede"><b>Round 2, signed off:</b> option C, the mini hunter card, with the rank letter on the shield and no "XP to level" line. Also the day tiles, fixed everywhere, and what happens when you are away. Round 1 is kept below for the record.</p>
+  </header>
+
+  <section class="sec" id="final">
+    <h2>1. The header</h2>
+    <p>One cream card, the same cream, white edge and gold bevel as the Today card. The <b>shield shows your rank letter</b> (E, D, C, B, A or S), <b>"Level 4"</b> is written next to it, and the bar below says <b>113 / 400</b>: XP into the level over what the level takes. Streak and this week's training days sit stacked on the right. The whole card opens Rank. Desktop keeps its hunter card.</p>
+    <div class="final">
+      <div class="ctx" data-ctx="F"></div>
+      <div class="states" id="finalstates"></div>
+    </div>
+  </section>
+
+  <section class="sec" id="tiles">
+    <h2>2. Day tiles, the same everywhere</h2>
+    <p>The green training-day tiles had their bevel drawn <b>below</b> the tile, 3 px, so they looked taller than the rest and the bevel covered the bottom of the gold ring that marks today. Now the bevel sits <b>inside</b> the tile, every tile in a row is the same height, today gets a <b>complete gold ring with a small gap</b>, and rest days get a <b>thin border</b>. The red dashed line runs through the middle of each row to show the alignment. Buttons and chips keep their bevel below: there it says "press me". The Statistics chips already had a border, so they only change colour on rest days.</p>
+    <div class="tiles" id="tilesets"></div>
+  </section>
+
+  <section class="sec" id="away">
+    <h2>3. Time away</h2>
+    <p>In Solo Leveling a missed daily quest sends you to the penalty zone. Levl does not do that, and that is already how it works today, so nothing changes in the app.</p>
+    <div class="away">
+      <div class="card"><h3>XP, level and rank never drop with time</h3><p>XP comes only from what you log. The Streak Keeper badge counts your <b>best</b> streak and goals stay achieved, so a month away leaves your level and rank exactly where they were. They only drop if you delete or edit workouts, a weigh-in or your weekly goal.</p></div>
+      <div class="card"><h3>What a week off costs</h3><p>A Monday to Sunday week with no training day ends the <b>streak</b>, and that week's <b>+50 weekly goal</b> isn't earned. That is the whole cost.</p></div>
+      <div class="card"><h3>Coming back pays</h3><p>The first training day after a week off earns the <b>+25 comeback bonus</b>, and Home says so while you're away.</p></div>
+      <div class="card"><h3>No "missed days"</h3><p>Days off show as <b>Rest</b>, never "missed": strength training works best 2 to 4 days a week. Losing rank for being away shames people at the moment they might come back, so there is no decay and no penalty.</p></div>
+    </div>
+  </section>
+
+  <section class="sec" id="signed">
+    <h2>4. Signed off</h2>
+    <ol class="decide">
+      <li><b>Header:</b> C, the mini hunter card. Rank letter on the shield, "Level N", the bar with "N / M", streak and week stacked. No "XP to level" line.</li>
+      <li><b>Day tiles:</b> bevel inside the tile, a complete gold ring with a gap for today, a thin border on rest days. Home week strip, Calendar, Profile strip, Statistics chips and the date picker.</li>
+      <li><b>Time away:</b> no missed days, no decay, no penalty. The rulebook says so in one line.</li>
+    </ol>
+    <p>Answer in the chat: comments on this page don't reach me.</p>
+  </section>
+
+  <h2 class="r1">Round 1</h2>
+  <header style="display:none">
     <p class="lede">The bar at the top of Home on the phone: your level, the XP bar, the week streak and this week's training days. Three changes: <b>colours that match the cards</b> instead of dark brown, <b>a taller XP bar</b> with more room above and below, and <b>the level said in words</b>, since the number on the shield doesn't read as a level. The rank stays as the shield's colour only. The bar shows XP into your level, the change already on the branch. Desktop keeps its hunter card, which already says "Level 4".</p>
   </header>
 
   <section class="sec" id="now">
-    <h2>1. Today</h2>
+    <h2>Before</h2>
     <p>Dark wood pills on a light sky, a 26 px bar, and the level only as a number on a grey shield. Shown with the new numbers: level 4 is 113 of 400 XP in.</p>
     <div class="ctx" data-ctx="N"></div>
   </section>
 
   <section class="sec" id="options">
-    <h2>2. Four options</h2>
+    <h2>Four options</h2>
     <p>All four keep one row of parts you already know, open Rank when tapped, and fit a 360 px phone with level 31 numbers. A and D differ only in material, so you can pick the colour on its own.</p>
     <div class="opts">
       <div class="opt">
-        <h3>A. Cream bar <span class="tag">My pick</span></h3>
+        <h3>A. Cream bar <span class="tag grey">My pick then</span></h3>
         <div class="ctx" data-ctx="A"></div>
         <p class="cap"><b>The cards' cream and gold bevel, a 44 px bar with a gold track inside it, and a LEVEL tag on the shield.</b> Closest to Clash Royale: badge, bar, resources. The smallest change, and the header now looks like part of the page.</p>
         <ul class="pc"><li><b>For:</b> matches every card and the gold buttons; the number stays big on the shield.</li><li><b>Against:</b> the LEVEL tag is small (11 px), though it is bold and short.</li></ul>
@@ -146,7 +256,7 @@ ol.decide b{color:var(--ink)}
         <ul class="pc"><li><b>For:</b> clearest level, compact, no tiny label.</li><li><b>Against:</b> loses the shield, which is how rank looks everywhere else in Levl.</li></ul>
       </div>
       <div class="opt">
-        <h3>C. Mini hunter card</h3>
+        <h3>C. Mini hunter card <span class="tag">Chosen</span></h3>
         <div class="ctx" data-ctx="C"></div>
         <p class="cap"><b>One cream card: shield, "Level 4" and how far to level 5, the bar below, streak and week stacked on the right.</b> The phone version of the desktop hunter card.</p>
         <ul class="pc"><li><b>For:</b> says the most, and matches desktop.</li><li><b>Against:</b> the tallest (about 20 px more), on a header that stays on screen as you scroll.</li></ul>
@@ -161,20 +271,18 @@ ol.decide b{color:var(--ink)}
   </section>
 
   <section class="sec" id="states">
-    <h2>3. Every state, at 360 px</h2>
+    <h2>Every state, at 360 px</h2>
     <p>A new account, level 4 (E rank), level 12 (C rank) with the weekly goal met, and level 31 (S rank) with the longest numbers.</p>
     <div class="states" id="statecols"></div>
   </section>
 
   <section class="sec" id="decide">
-    <h2>4. What I need from you</h2>
+    <h2>Round 1 answers</h2>
     <ol class="decide">
-      <li><b>Which option?</b> My pick: <b>A, Cream bar</b>. It fixes all three things with the least change and keeps the shield.</li>
-      <li><b>How the level reads.</b> A and D: the number on the shield with a LEVEL tag. B: an "Lv 4" chip. C: "Level 4" as a title. My pick: the LEVEL tag on the shield.</li>
-      <li><b>Show "287 XP to level 5"?</b> Only C has room for it. My pick: no, the bar's numbers say it, and Rank and the desktop card show it.</li>
-      <li>Tapping the header still opens Rank, and screen readers hear "Level 4, 113 of 400 XP to level 5, 2 week streak, 2 of 5 training days this week". No change there.</li>
+      <li><b>Option:</b> C, the mini hunter card (I had picked A).</li>
+      <li><b>The level:</b> written as "Level 4", so the shield shows the rank letter instead of the number.</li>
+      <li><b>"287 XP to level 5":</b> dropped, the bar's numbers say it.</li>
     </ol>
-    <p>Answer in the chat: comments on this page don't reach me.</p>
   </section>
 </main>
 
@@ -205,6 +313,24 @@ function shield(rank, size, level) {
   </svg>`;
 }
 // lucide-react Flame and Dumbbell, as in the app.
+// RankShield as in components/RankShield.tsx with no level: the rank letter only.
+const LETTER_DX = { C: -3, D: 3, B: 1.5 };
+function rankShield(rank, size) {
+  const id = 'rs' + uid++;
+  const m = MAT[rank];
+  const glow = rank === 'S' ? `<filter id="${id}g" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7"/></filter>` : '';
+  return `<svg viewBox="0 0 120 132" width="${size}" height="${size}" aria-hidden="true"><defs>
+    <linearGradient id="${id}a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${m.rim[0]}"/><stop offset="1" stop-color="${m.rim[1]}"/></linearGradient>
+    <linearGradient id="${id}f" x1="0" y1="0" x2=".6" y2="1"><stop offset="0" stop-color="${m.face[0]}"/><stop offset="1" stop-color="${m.face[1]}"/></linearGradient>
+    <clipPath id="${id}c"><path d="${SHIELD}" transform="translate(60 66) scale(.82) translate(-60 -66)"/></clipPath>${glow}
+    <filter id="${id}t" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="0" flood-color="#000" flood-opacity=".35"/></filter></defs>
+    ${rank === 'S' ? `<path d="${SHIELD}" fill="#FF4D6D" opacity=".55" filter="url(#${id}g)"/>` : ''}
+    <path d="${SHIELD}" fill="url(#${id}a)"/>
+    <path d="${SHIELD}" fill="url(#${id}f)" transform="translate(60 66) scale(.82) translate(-60 -66)"/>
+    <g clip-path="url(#${id}c)"><path d="M0 0 H120 V52 C80 44 40 60 0 50 Z" fill="#fff" opacity=".16"/></g>
+    <path d="${SHIELD}" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.3" transform="translate(60 66) scale(.82) translate(-60 -66)"/>
+    <text x="${60 + (LETTER_DX[rank] || 0)}" y="83" text-anchor="middle" font-family="Levl Display, Arial Rounded MT Bold, sans-serif" font-size="60" fill="#fff" filter="url(#${id}t)">${rank}</text></svg>`;
+}
 const FLAME = (s) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`;
 const DUMB = (s) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.4 14.4 9.6 9.6"/><path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"/><path d="m21.5 21.5-1.4-1.4"/><path d="M3.9 3.9 2.5 2.5"/><path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"/></svg>`;
 
@@ -253,6 +379,13 @@ const R = {
       ${pills(s, 'pill', 'glass')}</div>`,
 };
 
+R.F = (s) => `<div class="F"><div class="card">
+      <span class="badge">${rankShield(s.rank, 46)}</span>
+      <span class="mid"><b>Level ${s.level}</b>
+      <span class="track"><i class="fillg" style="width:${fillW(s)}"></i><span class="txt">${fmt(s.cur)} / ${fmt(s.need)}</span></span></span>
+      <span class="stats"><span class="stat"><span class="ico fl">${FLAME(18)}</span>${s.streak}</span><span class="stat"><span class="ico db">${DUMB(18)}</span>${s.wk}/${s.goal}</span></span>
+    </div></div>`;
+
 const TODAY = `<div class="today"><div class="eh"><span class="ey">Today's workout</span><span class="pl">0 of 1 this week</span></div>
   <div class="tr"><div><div class="t">Pull A</div><div class="m">5 exercises · 50 min</div></div><span class="go">Start</span></div></div>`;
 
@@ -264,6 +397,32 @@ const NAMES = { A: 'A. Cream bar', B: 'B. Level chip', C: 'C. Mini hunter card',
 document.getElementById('statecols').innerHTML = Object.keys(NAMES)
   .map((k) => `<div class="stcol"><h3>${NAMES[k]}</h3>${STATES.map((s) => `<div class="slab">${s.label}</div><div class="strip"><div class="hdr">${R[k](s)}</div></div>`).join('')}</div>`)
   .join('');
+
+document.getElementById('finalstates').innerHTML = STATES.map((s) => `<div class="slab">${s.label}</div><div class="strip"><div class="hdr">${R.F(s)}</div></div>`).join('');
+
+// Day tiles: the same days drawn with the old and the new rules.
+const CHECK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+const LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const tile = (d) => (d.c && d.c.includes('done') ? CHECK : d.c && d.c.includes('rest') ? 'Rest' : d.n);
+const weekRow = (days) => `<div class="trow">${LABELS.map((l) => `<small>${l}</small>`).join('')}</div><div class="trow guide">${days.map((d) => `<span class="wd ${d.c || ''}">${tile(d)}</span>`).join('')}</div>`;
+const WEEK_A = [{ n: 28, c: 'done' }, { n: 29, c: 'rest' }, { n: 30, c: 'done now' }, { n: 1 }, { n: 2 }, { n: 3 }, { n: 4 }];
+const WEEK_B = [{ n: 28, c: 'done' }, { n: 29, c: 'rest' }, { n: 30, c: 'now' }, { n: 1 }, { n: 2 }, { n: 3 }, { n: 4 }];
+const CAL = [['28', 'w'], ['29', 'rest logged'], ['30', 'w'], ['1', 'w now'], ['2', 'rest'], ['3', 'fut'], ['4', 'fut']];
+const calRow = () => `<div class="trow guide">${CAL.map(([n, c]) => `<span class="dc ${c}">${n}</span>`).join('')}</div>`;
+const stripKind = (d) => (d === 3 || d === 7 ? 'r' : d < 9 ? 'w' : d === 9 ? 'w t' : 'f');
+const strip = () => `<div class="ms">${Array.from({ length: 30 }, (_, i) => `<i class="${stripKind(i + 1)}"></i>`).join('')}</div>`;
+const DP = [['11', ''], ['12', ''], ['13', 'now'], ['14', 'sel'], ['15', ''], ['16', ''], ['17', '']];
+const dpRow = () => `<div class="trow guide">${DP.map(([n, c]) => `<span class="dp ${c}">${n}</span>`).join('')}</div>`;
+const SETS = [
+  ['Home: this week, trained today', () => weekRow(WEEK_A)],
+  ['Home: this week, not yet today', () => weekRow(WEEK_B)],
+  ['Calendar', calRow],
+  ['Profile: this month', strip],
+  ['Date picker: the selected day', dpRow],
+];
+document.getElementById('tilesets').innerHTML = SETS.map(([title, fn]) => `<div class="tset"><h3>${title}</h3>
+  <div class="tbox old"><span class="tlab bad">Before</span>${fn()}</div>
+  <div class="tbox new"><span class="tlab good">After</span>${fn()}</div></div>`).join('');
 
 // Scale each mock down when the screen is narrower than the phone it shows, so it never clips.
 function fit() {
