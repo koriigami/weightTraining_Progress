@@ -153,7 +153,7 @@ describe('monthly badges', () => {
 
   it('has the v2 badges and not Perfect Month', () => {
     expect(Object.keys(MONTHLY_BADGES)).not.toContain('perfect-month');
-    expect(MONTHLY_BADGES['month-clear'].rule).toBe('Trained on 25 days');
+    expect(MONTHLY_BADGES['month-clear'].rule).toBe('25 training days');
     expect(MONTHLY_BADGES['goal-month'].name).toBe('Goal Month');
   });
 });

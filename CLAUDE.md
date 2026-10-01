@@ -31,8 +31,8 @@ There is no linter yet (`npm run lint` is not set up). `tsc` is the static check
 - CI (`.github/workflows/ci.yml`) runs `verify` and `build` on every push.
 
 ## QA harness (`scripts/qa/`)
-- `lib.mjs` starts `next dev` on port 3311 with the QA env, signs in over HTTP (dev provider, no clicking), seeds a known state (onboarded prefs, workouts `qa-strength`, `qa-run`, `qa-ride`, `qa-mixed`, weights, a goal, a routine) and opens pages. `withApp(fn, { width })` gives a signed-in page for flows.
-- In routes, `@strength`, `@run`, `@ride` and `@mixed` become the seeded workout ids. `--owner` signs in as the owner (Insights).
+- `lib.mjs` starts `next dev` on port 3311 with the QA env, signs in over HTTP (dev provider, no clicking), seeds a known state (onboarded prefs, workouts `qa-strength` (a training day), `qa-short` (6 minutes, not a training day), `qa-run`, `qa-ride`, `qa-mixed`, weights, a goal, a routine) and opens pages. `withApp(fn, { width })` gives a signed-in page for flows.
+- In routes, `@strength`, `@short`, `@run`, `@ride` and `@mixed` become the seeded workout ids. `--owner` signs in as the owner (Insights).
 - Shots are at 2x pixel density and show the first screen only. For any page that scrolls, add `--full`: it also writes one slice per screen height (`-s0.png`, `-s1.png`) that are easy to read. `--out` creates the folder; use the session scratchpad.
 - Flow scripts live in the scratchpad and import the harness by absolute path (`import { withApp } from '/home/user/weightTraining_Progress/scripts/qa/lib.mjs'`). Do not import `playwright` directly; `lib.mjs` loads it.
 - `/workout/done` only renders right after finishing a workout in the same page, and `/workout` needs a workout in progress. Drive those flows through the UI with `withApp`.

@@ -233,7 +233,7 @@ function familyProgress(id: LifetimeFamilyId, state: AppState, scores: WorkoutSc
 export type MonthlyBadgeId = 'month-clear' | 'goal-month' | 'pushup-month' | 'cardio-month' | '20k-walk-run' | '40k-ride' | 'weigh-in-month';
 
 export const MONTHLY_BADGES: Record<MonthlyBadgeId, { name: string; icon?: string; text?: string; rule: string; colorKey: string }> = {
-  'month-clear': { name: 'Month Clear', icon: 'week', rule: 'Trained on 25 days', colorKey: 'clear' },
+  'month-clear': { name: 'Month Clear', icon: 'week', rule: '25 training days', colorKey: 'clear' },
   'goal-month': { name: 'Goal Month', icon: 'target', rule: 'Weekly goal met every week', colorKey: 'goal' },
   'pushup-month': { name: 'Pushup Month', text: '1000', rule: '1,000 push-up reps', colorKey: 'pushup' },
   'cardio-month': { name: 'Cardio Month', text: '600', rule: '600 cardio minutes', colorKey: 'cardio' },

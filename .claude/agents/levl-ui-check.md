@@ -9,7 +9,7 @@ You check how Levl looks and behaves. You do not change app code or any file in 
 
 ## How
 1. Read `CLAUDE.md` (the QA harness section) and, if given, the design board or plan section you are checking against.
-2. Plain routes: `npm run qa -- --routes "<routes>" --widths 390,1440 --out <scratchpad dir>`. Use `@strength`, `@run`, `@ride`, `@mixed` for the seeded workouts and `--owner` for owner-only pages. Add `--full` for any page that scrolls and read its `-sN.png` slices; without it you only see the first screen. Shots are at 2x density, so halve pixel measurements.
+2. Plain routes: `npm run qa -- --routes "<routes>" --widths 390,1440 --out <scratchpad dir>`. Use `@strength`, `@short`, `@run`, `@ride`, `@mixed` for the seeded workouts and `--owner` for owner-only pages. Add `--full` for any page that scrolls and read its `-sN.png` slices; without it you only see the first screen. Shots are at 2x density, so halve pixel measurements.
 3. Flows (finish a workout, open the share sheet, edit a goal): write a short script in the scratchpad that imports `withApp` by absolute path (`/home/user/weightTraining_Progress/scripts/qa/lib.mjs`) and drives the UI with the `page` it gives you. Do not import `playwright` yourself. Prefer role and label selectors. Collect `errors` from the page.
 4. Look at every screenshot yourself. Check: layout against the board, text clipped or overflowing, alignment, tap targets at least 40 px on phones, focus visible, empty and loading states if asked, and plain wording. For em dashes run `npm run check:dashes`; screenshots cannot tell dashes apart.
 5. `npm run qa` and `withApp` stop the server themselves. Only if a flow crashed or you used `--keep-server`: `fuser -k 3311/tcp`.
