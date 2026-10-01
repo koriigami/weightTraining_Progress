@@ -103,14 +103,20 @@ tr.gate td{background:#FFF6DA;font-weight:800}
 .note{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1.5px dashed #D4A43A;border-radius:14px;padding:12px 14px;font-weight:600;font-size:14.5px}
 ul.plain{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
 ul.plain li::marker{color:var(--xp-deep)}
+.wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.wk .d{display:flex;flex-direction:column;align-items:center;gap:2px;border-radius:12px;padding:8px 0;font-weight:800}
+.wk .d small{font-size:12px;color:var(--muted)}
+.wk .on{background:linear-gradient(180deg,#86EA64,#2BA438);color:#fff}
+.wk .on small{color:#fff}
+.wk .rest{background:#F4E9D2;color:#795F3F;font-size:12px}
 :focus-visible{outline:2px solid var(--xp-deep);outline-offset:2px}
 </style>
 
 <main class="wrap">
   <header>
     <h1 class="gt">XP Rulebook</h1>
-    <p>How Home Workout turns training into XP, levels, ranks and badges. These are rules v2, the version we agreed in chat. Nothing here is built yet.</p>
-    <div class="status"><span class="pill new">New in v2</span><span class="pill" style="background:#FFF2C9;border-color:#E3B03A;color:#6B4410">Changed in v2</span><span class="pill">Unchanged</span></div>
+    <p>How Levl turns training into XP, levels, ranks and badges. These are rules v3 (October 2026): one daily bonus for 20 minutes of training, strength and cardio together, training days for the weekly goal and the streak, rest days and a comeback bonus.</p>
+    <div class="status"><span class="pill new">New in v3</span><span class="pill" style="background:#FFF2C9;border-color:#E3B03A;color:#6B4410">Changed in v3</span><span class="pill">Unchanged</span></div>
   </header>
 
   <section aria-labelledby="p">
@@ -118,7 +124,7 @@ ul.plain li::marker{color:var(--xp-deep)}
     <div class="principles">
       <div class="card"><b>Effort, not load</b><span>A set earns the same 5 XP at 2 kg or 200 kg. How heavy you lift never scales XP.</span></div>
       <div class="card"><b>Beat yourself</b><span>Extra XP comes from doing better than your own last time, or your own best ever. Nobody is compared with anybody else.</span></div>
-      <div class="card"><b>Finish what you planned</b><span>The finish bonus pays when every planned exercise is done. It's worth the XP of the planned sets, up to 50, so a tiny plan can't farm it.</span></div>
+      <div class="card"><b>Show up, rest, come back</b><span>The daily bonus pays once a day when you train 20 minutes, lifting and cardio together. Rest days never cost you anything, and coming back after a week off pays extra.</span></div>
     </div>
   </section>
 
@@ -128,19 +134,67 @@ ul.plain li::marker{color:var(--xp-deep)}
     <div class="tbl"><table>
       <thead><tr><th>Source</th><th>XP</th><th>Rule</th><th>Status</th></tr></thead>
       <tbody>
-        <tr><td><b>Strength set</b></td><td class="xp">+5</td><td>Each ticked set with at least 1 rep, or a hold of 5 seconds or more. Weight and reps don't change it.</td><td><span class="tag chg">Changed</span><small>Needs 1 rep or 5 s now</small></td></tr>
-        <tr><td><b>Cardio</b></td><td class="xp">+1 a min</td><td>Each minute of a cardio set, up to 30 per set. Interval sets count work plus easy minutes, with the same cap.</td><td><span class="tag chg">Changed</span><small>Intervals were uncapped</small></td></tr>
+        <tr><td><b>Strength set</b></td><td class="xp">+5</td><td>Each ticked set with at least 1 rep, or a hold of 5 seconds or more. Weight and reps don't change it.</td><td><span class="tag same">Unchanged</span></td></tr>
+        <tr><td><b>Cardio</b></td><td class="xp">+1 a min</td><td>Each minute of a cardio set, up to 30 per set. Interval sets count work plus easy minutes, with the same cap.</td><td><span class="tag same">Unchanged</span></td></tr>
         <tr><td><b>Distance</b></td><td class="xp">+10</td><td>A cardio set that logs a distance above 0.</td><td><span class="tag same">Unchanged</span></td></tr>
-        <tr><td><b>Beat last time</b></td><td class="xp">+10</td><td>Once per exercise per workout, when your best set beats the last workout that had that exercise. See the table below.</td><td><span class="tag new">New</span></td></tr>
-        <tr><td><b>Record</b></td><td class="xp">+25</td><td>Once per exercise per workout, when your best set beats every earlier workout. Paid instead of the +10, never both.</td><td><span class="tag chg">Changed</span><small>Now every kind of exercise</small></td></tr>
-        <tr><td><b>Finish bonus</b></td><td class="xp">up to +50</td><td>Every exercise and set you planned is ticked. The plan is the routine, or what you picked before Start workout. Exercises you add on top don't count against you. It's worth the XP of the planned sets, up to 50: a 15-set routine pays 50, 3 sets of curls pay 15, a planned 30-minute ride with distance pays 40. At most 2 a day.</td><td><span class="tag chg">Changed</span><small>Was any workout</small></td></tr>
-        <tr><td><b>Weekly goal</b></td><td class="xp">+50</td><td>The first time in a Monday to Sunday week that your count of workouts that finished their plan reaches your weekly goal.</td><td><span class="tag chg">Changed</span><small>Only finished plans count</small></td></tr>
+        <tr><td><b>Beat last time</b></td><td class="xp">+10</td><td>Once per exercise per workout, when your best set beats the last workout that had that exercise. See the table below.</td><td><span class="tag same">Unchanged</span></td></tr>
+        <tr><td><b>Record</b></td><td class="xp">+25</td><td>Once per exercise per workout, when your best set beats every earlier workout. Paid instead of the +10, never both.</td><td><span class="tag same">Unchanged</span></td></tr>
+        <tr><td><b>Daily bonus</b></td><td class="xp">+50</td><td>Once a day, when the day's training adds up to 20 minutes. Each ticked strength set counts 3 minutes, cardio counts its minutes, and every workout that day adds up. It's paid on the workout that reaches 20 minutes. Plans don't matter: a skipped treadmill or a removed exercise changes nothing.</td><td><span class="tag new">New</span><small>Replaces the finish bonus (up to 50, 2 a day, needed the whole plan)</small></td></tr>
+        <tr><td><b>Training day</b></td><td class="xp">0</td><td>A day that reached 20 minutes. The weekly goal, the streak and some badges count training days.</td><td><span class="tag new">New</span></td></tr>
+        <tr><td><b>Weekly goal</b></td><td class="xp">+50</td><td>The first time in a Monday to Sunday week that your training days reach your weekly goal.</td><td><span class="tag chg">Changed</span><small>Was workouts that finished their plan</small></td></tr>
+        <tr><td><b>Comeback</b></td><td class="xp">+25</td><td>Your first training day after a whole Monday to Sunday week with none. Not paid for your very first training day.</td><td><span class="tag new">New</span></td></tr>
         <tr><td><b>Weigh-in</b></td><td class="xp">+10</td><td>Each day you log your weight.</td><td><span class="tag same">Unchanged</span></td></tr>
-        <tr><td><b>Badges</b></td><td class="xp">25 to 500</td><td>Each badge tier: Bronze 25, Silver 50, Gold 100, Diamond 200, Master 350, Legend 500. Monthly badges 75, special badges 50.</td><td><span class="tag same">Unchanged</span><small>The catalogue changes</small></td></tr>
-        <tr><td><b>Goals</b></td><td class="xp">25 to 1000</td><td>Paid when a goal is achieved. See the goals table.</td><td><span class="tag chg">Changed</span><small>Counts workouts now</small></td></tr>
-        <tr><td><b>How long a workout lasts</b></td><td class="xp">0</td><td>The clock itself never gives XP.</td><td><span class="tag same">Unchanged</span></td></tr>
+        <tr><td><b>Badges</b></td><td class="xp">25 to 500</td><td>Each badge tier: Bronze 25, Silver 50, Gold 100, Diamond 200, Master 350, Legend 500. Monthly badges 75, special badges 50.</td><td><span class="tag same">Unchanged</span></td></tr>
+        <tr><td><b>Goals</b></td><td class="xp">25 to 1000</td><td>Paid when a goal is achieved. See the goals table.</td><td><span class="tag chg">Changed</span><small>Counts training days</small></td></tr>
+        <tr><td><b>How long a workout lasts</b></td><td class="xp">0</td><td>The clock itself never gives XP. Training minutes come from sets and cardio, not the clock.</td><td><span class="tag same">Unchanged</span></td></tr>
       </tbody>
     </table></div>
+  </section>
+
+  <section aria-labelledby="day">
+    <h2 class="gt" id="day">Daily bonus, rest days and the streak</h2>
+    <p class="lede">Strength training works best 2 to 4 days a week with rest in between, so nothing in Levl asks you to train every day. The streak is weekly, rest days are shown as rest, and a week off is answered with a comeback bonus, not a penalty.</p>
+    <div class="two">
+      <div class="card"><h3>Lift in the morning, run at night</h3>
+        <div class="ex-row"><span>Morning: 5 sets</span><span>15 min</span></div>
+        <div class="ex-row"><span>Evening: 10 minute run</span><span>25 min today</span></div>
+        <div class="ex-row"><span>Result</span><span class="mk mk-beat">Daily bonus +50 on the run</span></div>
+        <p style="margin-top:10px;color:var(--muted);font-weight:600;font-size:14px">Strength and cardio add up. Neither workout reached 20 minutes alone; together they did.</p>
+      </div>
+      <div class="card"><h3>Skipped the treadmill</h3>
+        <div class="ex-row"><span>Push A: 14 sets ticked</span><span>42 min</span></div>
+        <div class="ex-row"><span>Planned treadmill</span><span>not done</span></div>
+        <div class="ex-row"><span>Result</span><span class="mk mk-beat">Daily bonus +50</span></div>
+        <p style="margin-top:10px;color:var(--muted);font-weight:600;font-size:14px">Under v2 this paid nothing: the plan wasn't finished. Plans no longer decide the bonus.</p>
+      </div>
+      <div class="card"><h3>Two workouts in one day</h3>
+        <div class="ex-row"><span>Gym, 45 min</span><span class="mk mk-beat">+50</span></div>
+        <div class="ex-row"><span>Swim, 40 min</span><span>already earned</span></div>
+        <div class="ex-row"><span>Result</span><span>One daily bonus</span></div>
+        <p style="margin-top:10px;color:var(--muted);font-weight:600;font-size:14px">The second workout still earns its set and cardio XP, records and beat last time.</p>
+      </div>
+      <div class="card"><h3>Back after a week off</h3>
+        <div class="ex-row"><span>Last week</span><span>no training day</span></div>
+        <div class="ex-row"><span>Monday: 30 minutes</span><span>training day</span></div>
+        <div class="ex-row"><span>Result</span><span class="mk mk-rec">Daily bonus +50, Comeback +25</span></div>
+        <p style="margin-top:10px;color:var(--muted);font-weight:600;font-size:14px">The streak starts again at 1. The comeback bonus makes the restart feel like a win.</p>
+      </div>
+    </div>
+    <div class="two">
+      <div class="card"><h3>Home: this week</h3>
+        <div class="wk" aria-label="Example week: trained Monday, Tuesday and Thursday, goal of 3 met">
+          <div class="d on"><small>M</small><b>&#10003;</b></div><div class="d on"><small>T</small><b>&#10003;</b></div><div class="d rest"><small>W</small><b>Rest</b></div><div class="d on"><small>T</small><b>&#10003;</b></div><div class="d rest"><small>F</small><b>Rest</b></div><div class="d rest"><small>S</small><b>Rest</b></div><div class="d rest"><small>S</small><b>Rest</b></div>
+        </div>
+        <p style="margin-top:10px;color:var(--muted);font-weight:600;font-size:14px">Days off before today show "Rest". Once the weekly goal is met, the rest of the week shows "Rest" too. Before that, the days ahead stay open.</p>
+      </div>
+      <div class="card"><h3>While you log</h3>
+        <div class="ex-row"><span>XP so far</span><b>+45</b></div>
+        <div class="ex-row"><span>Daily bonus</span><span>12 of 20 min today</span></div>
+        <div class="ex-row"><span>After 3 more sets</span><span class="mk mk-beat">Daily bonus earned</span></div>
+        <p style="margin-top:10px;color:var(--muted);font-weight:600;font-size:14px">Tap XP during a workout. The minutes include anything you already trained today.</p>
+      </div>
+    </div>
+    <div class="note"><span>Streak: Monday to Sunday weeks in a row with at least one training day. The week you're in keeps the streak alive until it ends, so rest days never break it. A day with only a few sets (under 20 minutes) still earns its XP but isn't a training day.</span></div>
   </section>
 
   <section aria-labelledby="beat">
@@ -175,7 +229,7 @@ ul.plain li::marker{color:var(--xp-deep)}
 
   <section aria-labelledby="calc">
     <h2 class="gt" id="calc">Try a workout</h2>
-    <p class="lede">Change the numbers to see what a workout earns. The finish bonus needs every planned set ticked, and is worth the planned sets' XP, up to 50.</p>
+    <p class="lede">Change the numbers to see what a workout earns. The daily bonus pays once the day reaches 20 minutes: 3 minutes a set plus cardio minutes, counting anything you already trained today.</p>
     <div class="calc">
       <div class="card" id="controls"></div>
       <div class="result" aria-live="polite" id="result"></div>
@@ -187,10 +241,10 @@ ul.plain li::marker{color:var(--xp-deep)}
     <p class="lede">Both train 4 times a week, 15 sets a session, and beat last time on 2 exercises each session, with one record a week. One lifts 8 kg dumbbells, the other lifts 40 kg.</p>
     <div class="two">
       <div class="card person"><header><span class="av" style="background:linear-gradient(160deg,#5AA2FF,#14318F)">S</span><div><b>College student</b><small>8 kg dumbbells</small></div></header>
-        <div class="ex-row"><span>60 sets</span><b>+300</b></div><div class="ex-row"><span>Beat last time, 7 times</span><b>+70</b></div><div class="ex-row"><span>1 record</span><b>+25</b></div><div class="ex-row"><span>4 finish bonuses</span><b>+200</b></div><div class="ex-row"><span>Weekly goal</span><b>+50</b></div><div class="ex-row total"><span><b style="font-family:var(--font-ui);font-size:15px">This week</b></span><b>645 XP</b></div>
+        <div class="ex-row"><span>60 sets</span><b>+300</b></div><div class="ex-row"><span>Beat last time, 7 times</span><b>+70</b></div><div class="ex-row"><span>1 record</span><b>+25</b></div><div class="ex-row"><span>4 daily bonuses</span><b>+200</b></div><div class="ex-row"><span>Weekly goal</span><b>+50</b></div><div class="ex-row total"><span><b style="font-family:var(--font-ui);font-size:15px">This week</b></span><b>645 XP</b></div>
       </div>
       <div class="card person"><header><span class="av" style="background:linear-gradient(160deg,#FF5C7C,#6E0B27)">B</span><div><b>Bodybuilder</b><small>40 kg dumbbells</small></div></header>
-        <div class="ex-row"><span>60 sets</span><b>+300</b></div><div class="ex-row"><span>Beat last time, 7 times</span><b>+70</b></div><div class="ex-row"><span>1 record</span><b>+25</b></div><div class="ex-row"><span>4 finish bonuses</span><b>+200</b></div><div class="ex-row"><span>Weekly goal</span><b>+50</b></div><div class="ex-row total"><span><b style="font-family:var(--font-ui);font-size:15px">This week</b></span><b>645 XP</b></div>
+        <div class="ex-row"><span>60 sets</span><b>+300</b></div><div class="ex-row"><span>Beat last time, 7 times</span><b>+70</b></div><div class="ex-row"><span>1 record</span><b>+25</b></div><div class="ex-row"><span>4 daily bonuses</span><b>+200</b></div><div class="ex-row"><span>Weekly goal</span><b>+50</b></div><div class="ex-row total"><span><b style="font-family:var(--font-ui);font-size:15px">This week</b></span><b>645 XP</b></div>
       </div>
     </div>
     <div class="card"><h3>Why Iron Mover changed</h3><p>The old Iron Mover badge counted tonnes lifted. Its 6 tiers are worth 1,225 XP. Weeks until each of them earns the last tier:</p>
@@ -220,10 +274,10 @@ ul.plain li::marker{color:var(--xp-deep)}
     <div class="tbl"><table>
       <thead><tr><th>Lifetime badge</th><th>Counts</th><th class="num">Bronze</th><th class="num">Silver</th><th class="num">Gold</th><th class="num">Diamond</th><th class="num">Master</th><th class="num">Legend</th><th>Status</th></tr></thead>
       <tbody>
-        <tr><td><b>Finisher</b></td><td>Workouts that finished their plan</td><td class="num">1</td><td class="num">10</td><td class="num">25</td><td class="num">50</td><td class="num">100</td><td class="num">250</td><td><span class="tag chg">Changed</span></td></tr>
+        <tr><td><b>Finisher</b></td><td>Training days</td><td class="num">1</td><td class="num">10</td><td class="num">25</td><td class="num">50</td><td class="num">100</td><td class="num">250</td><td><span class="tag chg">Changed</span></td></tr>
         <tr><td><b>Iron Mover</b></td><td>Sets logged</td><td class="num">50</td><td class="num">250</td><td class="num">500</td><td class="num">1,000</td><td class="num">2,500</td><td class="num">5,000</td><td><span class="tag chg">Changed</span><small>Was tonnes</small></td></tr>
         <tr><td><b>Record Breaker</b></td><td>Records</td><td class="num">1</td><td class="num">5</td><td class="num">15</td><td class="num">30</td><td class="num">60</td><td class="num">100</td><td><span class="tag same">Unchanged</span></td></tr>
-        <tr><td><b>Streak Keeper</b></td><td>Weeks in a row with a workout</td><td class="num">2</td><td class="num">4</td><td class="num">8</td><td class="num">12</td><td class="num">26</td><td class="num">52</td><td><span class="tag same">Unchanged</span></td></tr>
+        <tr><td><b>Streak Keeper</b></td><td>Weeks in a row with a training day</td><td class="num">2</td><td class="num">4</td><td class="num">8</td><td class="num">12</td><td class="num">26</td><td class="num">52</td><td><span class="tag same">Unchanged</span></td></tr>
         <tr><td><b>All-Rounder</b></td><td>Muscle groups trained</td><td class="num">3</td><td class="num">6</td><td class="num">9</td><td class="num">12</td><td class="num">14</td><td class="num">16</td><td><span class="tag same">Unchanged</span></td></tr>
         <tr><td><b>Engine</b></td><td>Cardio minutes</td><td class="num">60</td><td class="num">300</td><td class="num">600</td><td class="num">1,200</td><td class="num">2,500</td><td class="num">5,000</td><td><span class="tag chg">Changed</span><small>Counts workouts now</small></td></tr>
         <tr><td><b>Road Runner</b></td><td>Km run or walked</td><td class="num">10</td><td class="num">50</td><td class="num">100</td><td class="num">250</td><td class="num">500</td><td class="num">1,000</td><td><span class="tag same">Unchanged</span></td></tr>
@@ -237,7 +291,7 @@ ul.plain li::marker{color:var(--xp-deep)}
       <div class="tbl"><table style="min-width:0">
         <thead><tr><th>Monthly badge (75 XP)</th><th>In one calendar month</th></tr></thead>
         <tbody>
-          <tr><td><b>Month Clear</b> <span class="tag chg">Changed</span></td><td>Trained on 25 days or more</td></tr>
+          <tr><td><b>Month Clear</b> <span class="tag chg">Changed</span></td><td>25 training days or more</td></tr>
           <tr><td><b>Goal Month</b> <span class="tag new">New</span></td><td>Weekly goal met in every week of the month</td></tr>
           <tr><td><b>Cardio Month</b> <span class="tag chg">Changed</span></td><td>600 cardio minutes (150 a week)</td></tr>
           <tr><td><b>50K Walk/Run</b> <span class="tag chg">Changed</span></td><td>50 km run or walked</td></tr>
@@ -249,7 +303,7 @@ ul.plain li::marker{color:var(--xp-deep)}
       <div class="tbl"><table style="min-width:0">
         <thead><tr><th>Special badge (50 XP)</th><th>Earned once</th></tr></thead>
         <tbody>
-          <tr><td><b>Clean Sweep</b> <span class="tag new">New</span></td><td>Finish a routine with every planned set ticked</td></tr>
+          <tr><td><b>Clean Sweep</b> <span class="tag new">New</span></td><td>Finish a routine with every planned set ticked. Removing a planned exercise counts as not done.</td></tr>
           <tr><td><b>Goal Getter</b> <span class="tag same">Unchanged</span></td><td>Your first goal achieved</td></tr>
         </tbody>
       </table></div>
@@ -259,11 +313,11 @@ ul.plain li::marker{color:var(--xp-deep)}
 
   <section aria-labelledby="gl">
     <h2 class="gt" id="gl">Goals</h2>
-    <p class="lede">Goals now count your logged workouts. Only progress logged after you create a goal counts, and once a goal is achieved it stays achieved. The reward is rounded to the nearest 5 and kept between 25 and 1,000.</p>
+    <p class="lede">Goals count your training: days that reached 20 minutes, sets, minutes and distance. Only progress logged after you create a goal counts, and once a goal is achieved it stays achieved. The reward is rounded to the nearest 5 and kept between 25 and 1,000.</p>
     <div class="tbl"><table>
       <thead><tr><th>Goal</th><th>Reward</th><th>Example</th></tr></thead>
       <tbody>
-        <tr><td><b>Workouts</b></td><td>25 × workouts</td><td>12 workouts by 31 Oct: 300 XP</td></tr>
+        <tr><td><b>Training days</b> <span class="tag chg">Changed</span></td><td>25 × training days</td><td>12 training days by 31 Oct: 300 XP</td></tr>
         <tr><td><b>Weekly streak</b> <span class="tag new">New</span></td><td>50 × weeks</td><td>8 weeks in a row: 400 XP</td></tr>
         <tr><td><b>Cardio minutes</b></td><td>1 × minutes</td><td>600 minutes this month: 600 XP</td></tr>
         <tr><td><b>Distance</b></td><td>8 × km</td><td>50 km by the end of the month: 400 XP</td></tr>
@@ -278,10 +332,10 @@ ul.plain li::marker{color:var(--xp-deep)}
     <div class="tbl"><table>
       <thead><tr><th>Screen</th><th>What it shows</th></tr></thead>
       <tbody>
-        <tr><td><b>Log workout</b></td><td>+5 pops as you tick sets, Beat last time and Record chips on each exercise, live XP in the stats row. Tap XP to see what you have so far and what's left of the plan.</td></tr>
+        <tr><td><b>Log workout</b></td><td>+5 pops as you tick sets, Beat last time and Record chips on each exercise, live XP in the stats row. Tap XP to see what you have so far and how much of today's 20 minutes is done.</td></tr>
         <tr><td><b>Victory</b></td><td>The XP lines for the workout that just finished, then level up, rank up and badge moments</td></tr>
         <tr><td><b>Workout page</b></td><td>The eye on the XP tile opens where the XP came from, line by line. It updates after an edit.</td></tr>
-        <tr><td><b>Home and Rank</b></td><td>Your level, XP bar and rank. The Rank Road with every gate.</td></tr>
+        <tr><td><b>Home and Rank</b></td><td>Your level, XP bar and rank. This week with training days and rest days, and a comeback hint after a week off. The Rank Road with every gate.</td></tr>
         <tr><td><b>Profile</b></td><td>XP per week on the chart, goals and their rewards</td></tr>
         <tr><td><b>Insights (owner only)</b></td><td>How fast the group climbs, to check the pace</td></tr>
       </tbody>
@@ -300,17 +354,17 @@ ul.plain li::marker{color:var(--xp-deep)}
         <tr><td><b>You change your weekly goal</b><small>Past weeks are checked again</small></td><td>The weekly goal editor says so before you save. The same toast after.</td></tr>
         <tr><td><b>You delete a weigh-in</b></td><td>The same toast.</td></tr>
         <tr><td><b>Badge tiers are lost</b><small>Only through the deletes above</small></td><td>The badge shows as not earned again, with no moment.</td></tr>
-        <tr><td><b>v2 goes live</b></td><td>One note on Home the first time: "XP was worked out again with the new rules."</td></tr>
+        <tr><td><b>v3 goes live</b></td><td>One note on Home the first time: "XP was worked out again with the new daily bonus."</td></tr>
       </tbody>
     </table></div>
     <div class="note"><span>Goals no longer drop: once achieved, a goal keeps its XP and badge. Reaching a level again after a drop doesn't replay its level up moment.</span></div>
   </section>
 
   <section aria-labelledby="ch">
-    <h2 class="gt" id="ch">When v2 goes live</h2>
+    <h2 class="gt" id="ch">When v3 goes live</h2>
     <div class="card"><ul class="plain">
-      <li>Every workout is scored again with the v2 rules, so levels can move a little. Level up moments you already saw don't play again.</li>
-      <li>Your 6-week plan days become normal past workouts first, so they are scored the same way as everything else. A copy of your data is saved before that happens.</li>
+      <li>Every workout is scored again with the v3 rules, so levels can move a little. Days that lost the finish bonus to an unfinished plan earn the daily bonus; days with two finish bonuses keep one. Level up moments you already saw don't play again.</li>
+      <li>Nothing you logged changes: only how it is scored. Plans are still kept, for the Clean Sweep badge.</li>
       <li>Guards stay in place: workouts dated after tomorrow don't count, the server works out all XP itself, and there are limits on sets per exercise and exercises per workout.</li>
     </ul></div>
   </section>
@@ -331,20 +385,24 @@ let rows='';for(let n=1;n<=35;n++){const r=rankFor(n),gate=GATES.some(g=>g[0]===
 document.getElementById('levels').innerHTML=rows;
 
 /* calculator */
-const S={plan:15,sets:15,min:0,km:0,beats:2,recs:0,prior:0};
-const F=[['plan','Strength sets in the plan','From the routine, or what you picked',0,40,1],['sets','Strength sets ticked','5 XP each',0,40,1],['min','Cardio minutes (planned and done)','1 XP a minute, 30 at most per set',0,90,5],['km','Distance logged','Adds 10 XP when above 0',0,1,1],['beats','Exercises that beat last time','10 XP each',0,8,1],['recs','Exercises with a record','25 XP each, instead of 10',0,8,1]];
-function ctrlHTML(){return F.map(([k,l,s,lo,hi,st])=>k==='km'?`<div class="ctrl"><label>${l}<small>${s}</small></label><div class="seg" role="group" aria-label="${l}"><button aria-pressed="${!S.km}" data-k="km" data-v="0">No</button><button aria-pressed="${!!S.km}" data-k="km" data-v="1">Yes</button></div></div>`:`<div class="ctrl"><label for="o-${k}">${l}<small>${s}</small></label><div class="step"><button aria-label="Less" data-k="${k}" data-d="-${st}">−</button><output id="o-${k}">${S[k]}</output><button aria-label="More" data-k="${k}" data-d="${st}">+</button></div></div>`).join('')+`<div class="ctrl"><label>Finish bonuses already earned today<small>2 a day at most</small></label><div class="seg" role="group" aria-label="Finish bonuses already earned today">${[0,1,2].map(v=>`<button aria-pressed="${S.prior===v}" data-k="prior" data-v="${v}">${v}</button>`).join('')}</div></div>`;}
+const S={sets:15,min:0,km:0,beats:2,recs:0,prior:0,back:0};
+const F=[['sets','Strength sets ticked','5 XP and 3 minutes each',0,40,1],['min','Cardio minutes','1 XP a minute, 30 at most per set',0,90,5],['km','Distance logged','Adds 10 XP when above 0',0,1,1],['beats','Exercises that beat last time','10 XP each',0,8,1],['recs','Exercises with a record','25 XP each, instead of 10',0,8,1]];
+function seg(k,label,sub,opts){return `<div class="ctrl"><label>${label}<small>${sub}</small></label><div class="seg" role="group" aria-label="${label}">${opts.map(([v,t])=>`<button aria-pressed="${S[k]===v}" data-k="${k}" data-v="${v}">${t}</button>`).join('')}</div></div>`;}
+function ctrlHTML(){return F.map(([k,l,s,lo,hi,st])=>k==='km'?`<div class="ctrl"><label>${l}<small>${s}</small></label><div class="seg" role="group" aria-label="${l}"><button aria-pressed="${!S.km}" data-k="km" data-v="0">No</button><button aria-pressed="${!!S.km}" data-k="km" data-v="1">Yes</button></div></div>`:`<div class="ctrl"><label for="o-${k}">${l}<small>${s}</small></label><div class="step"><button aria-label="Less" data-k="${k}" data-d="-${st}">−</button><output id="o-${k}">${S[k]}</output><button aria-label="More" data-k="${k}" data-d="${st}">+</button></div></div>`).join('')
+  +seg('prior','Already trained today','Earlier workouts today',[[0,'0 min'],[10,'10 min'],[20,'20 min or more']])
+  +seg('back','Last week','A week with no training day',[[0,'Trained'],[1,'Week off']]);}
 function calc(){
   const cx=S.min>0?Math.min(30,S.min)+(S.km?10:0):0, setXp=S.sets*5, beats=Math.max(0,S.beats), recs=Math.max(0,S.recs);
-  const planXp=S.plan*5+cx, done=S.sets>=S.plan&&(S.plan>0||S.min>0), capped=S.prior>=2, fin=done&&!capped?Math.min(50,planXp):0;
-  const total=setXp+cx+beats*10+recs*25+fin;
-  const finTxt=!done?`${Math.min(S.sets,S.plan)} of ${S.plan} planned sets ticked`:capped?'2 already today':`the plan's XP is ${planXp}, capped at 50`;
-  const lines=[['Sets',`${S.sets} × 5`,setXp],['Cardio',S.min>0?`${Math.min(30,S.min)} min${S.min>30?' (30 cap)':''}${S.km?' + distance':''}`:'none',cx],['Beat last time',`${beats} × 10`,beats*10],['Records',`${recs} × 25`,recs*25],['Finish bonus',finTxt,fin]];
-  const pct=S.plan>0?Math.min(100,S.sets/S.plan*100):(S.min>0?100:0);
-  document.getElementById('result').innerHTML=`<div style="font-weight:800;opacity:.9">This workout earns</div><div class="big">+${total} XP</div><div class="fb ${done?'ready':''}"><span>${done?(capped?'Plan finished, but the daily limit is reached':'Plan finished: finish bonus earned'):'Finish the plan for the bonus'}</span></div><div class="fb ${done?'ready':''}" style="margin-top:6px"><span class="tr"><i style="width:${pct}%"></i></span><span style="font-variant-numeric:tabular-nums">${Math.min(S.sets,S.plan)} / ${S.plan} sets</span></div><div class="lines">${lines.map(([a,b,c])=>`<div class="ex-row"><span>${a}<small style="display:block;opacity:.85;font-weight:600">${b}</small></span><b>+${c}</b></div>`).join('')}</div>`;
+  const mins=S.sets*3+S.min, day=S.prior+mins, already=S.prior>=20, earns=!already&&day>=20;
+  const daily=earns?50:0, comeback=earns&&S.back?25:0;
+  const total=setXp+cx+beats*10+recs*25+daily+comeback;
+  const dTxt=already?'already earned today':earns?`${Math.min(day,999)} min today`:`${day} of 20 min today`;
+  const lines=[['Sets',`${S.sets} × 5`,setXp],['Cardio',S.min>0?`${Math.min(30,S.min)} min${S.min>30?' (30 cap)':''}${S.km?' + distance':''}`:'none',cx],['Beat last time',`${beats} × 10`,beats*10],['Records',`${recs} × 25`,recs*25],['Daily bonus',dTxt,daily]].concat(S.back?[['Comeback',earns?'first training day after a week off':'needs today to reach 20 min',comeback]]:[]);
+  const pct=Math.min(100,day/20*100);
+  document.getElementById('result').innerHTML=`<div style="font-weight:800;opacity:.9">This workout earns</div><div class="big">+${total} XP</div><div class="fb ${already||earns?'ready':''}"><span>${already?'Daily bonus already earned today':earns?'Training day: daily bonus earned':'Train 20 minutes today for the daily bonus'}</span></div><div class="fb ${already||earns?'ready':''}" style="margin-top:6px"><span class="tr"><i style="width:${pct}%"></i></span><span style="font-variant-numeric:tabular-nums">${Math.min(day,20)} / 20 min</span></div><div class="lines">${lines.map(([a,b,c])=>`<div class="ex-row"><span>${a}<small style="display:block;opacity:.85;font-weight:600">${b}</small></span><b>+${c}</b></div>`).join('')}</div>`;
 }
 function draw(){document.getElementById('controls').innerHTML=ctrlHTML();calc();}
-document.getElementById('controls').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k;if(b.dataset.v!==undefined)S[k]=+b.dataset.v;else{const f=F.find(x=>x[0]===k);S[k]=Math.max(f[3],Math.min(f[4],S[k]+(+b.dataset.d)));}if(S.recs+S.beats>8){if(k==='recs')S.beats=8-S.recs;else S.recs=8-S.beats;}if(k==='plan'&&S.sets>S.plan)S.sets=S.plan;if(k==='sets'&&S.sets>S.plan)S.plan=S.sets;draw();});
+document.getElementById('controls').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k;if(b.dataset.v!==undefined)S[k]=+b.dataset.v;else{const f=F.find(x=>x[0]===k);S[k]=Math.max(f[3],Math.min(f[4],S[k]+(+b.dataset.d)));}if(S.recs+S.beats>8){if(k==='recs')S.beats=8-S.recs;else S.recs=8-S.beats;}draw();});
 draw();
 })();
 </script>
