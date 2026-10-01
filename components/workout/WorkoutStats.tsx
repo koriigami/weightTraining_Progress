@@ -2,10 +2,8 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Flag, Info } from 'lucide-react';
-import { planLine } from '@/lib/liveStats';
-import type { LiveXp, StatTile } from '@/lib/liveStats';
-import type { PlanProgress } from '@/lib/workoutScoring';
+import { Check, Info } from 'lucide-react';
+import type { DailyBonusLive, LiveXp, StatTile } from '@/lib/liveStats';
 import { cn } from '@/components/ui/cn';
 
 function XpValue({ xp }: { xp: number }) {
@@ -24,13 +22,12 @@ function XpValue({ xp }: { xp: number }) {
 
 const POP_W = 288;
 
-/** "XP so far": where the XP came from, and how far along the plan is. Opens from the info icon on the XP tile. */
-function XpPopover({ anchor, parts, plan, onClose }: { anchor: HTMLElement; parts: LiveXp; plan: PlanProgress | null; onClose: () => void }) {
+/** "XP so far": where the XP came from, and how far today is towards the daily bonus. Opens from the info icon on the XP tile. */
+function XpPopover({ anchor, parts, bonus, onClose }: { anchor: HTMLElement; parts: LiveXp; bonus: DailyBonusLive; onClose: () => void }) {
   const id = useId();
   const ref = useRef<HTMLDivElement>(null);
   const rect = anchor.getBoundingClientRect();
   const left = Math.max(12, Math.min(rect.right - POP_W, window.innerWidth - POP_W - 12));
-  const line = plan ? planLine(plan) : '';
   const rows: [string, number][] = [
     ['Sets ticked', parts.sets],
     ['Records and beat last time', parts.marks],
@@ -62,10 +59,17 @@ function XpPopover({ anchor, parts, plan, onClose }: { anchor: HTMLElement; part
             <b>+{value}</b>
           </div>
         ))}
-        {line && (
-          <div className="wt-xppop-plan">
-            <Flag size={16} aria-hidden="true" />
-            <span>{line}</span>
+        {bonus.state === 'earned' ? (
+          <div className="wt-xppop-day">
+            <span className="wt-mk">
+              <Check size={14} aria-hidden="true" />
+              {bonus.text}
+            </span>
+          </div>
+        ) : (
+          <div className="wt-xppop-row day">
+            <span>Daily bonus</span>
+            <span>{bonus.text}</span>
           </div>
         )}
         <button type="button" className="wt-textbtn sm" onClick={onClose}>
@@ -82,7 +86,7 @@ function XpPopover({ anchor, parts, plan, onClose }: { anchor: HTMLElement; part
  * (see statTiles) and the last one is always XP, with an info icon that opens the
  * "XP so far" popover. `side` is the two-by-two version for the desktop Summary card.
  */
-export function WorkoutStats({ tiles, xp, parts, plan, side }: { tiles: StatTile[]; xp: number; parts: LiveXp; plan: PlanProgress | null; side?: boolean }) {
+export function WorkoutStats({ tiles, xp, parts, bonus, side }: { tiles: StatTile[]; xp: number; parts: LiveXp; bonus: DailyBonusLive; side?: boolean }) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   return (
     <div className={cn('wt-logstats', side && 'side')} data-testid="log-stats">
@@ -111,7 +115,7 @@ export function WorkoutStats({ tiles, xp, parts, plan, side }: { tiles: StatTile
         </small>
         <XpValue xp={xp} />
       </div>
-      {anchor && <XpPopover anchor={anchor} parts={parts} plan={plan} onClose={() => setAnchor(null)} />}
+      {anchor && <XpPopover anchor={anchor} parts={parts} bonus={bonus} onClose={() => setAnchor(null)} />}
     </div>
   );
 }

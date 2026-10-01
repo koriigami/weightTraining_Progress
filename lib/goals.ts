@@ -168,12 +168,12 @@ export function recentNumbers(state: AppState, today: string, weeks = 4): Recent
   };
 }
 
-/** The short hint under a goal's amount, in plain workout terms. Null when there is nothing to say. `kmText` is the distance already in the person's unit. */
+/** The short hint under a goal's amount, in plain terms. Null when there is nothing to say. `kmText` is the distance already in the person's unit. */
 export function goalHint(type: Goal['type'], n: RecentNumbers, weeks = 4, kmText?: string): string | null {
   const span = `in the last ${weeks} weeks`;
   switch (type) {
     case 'workouts':
-      return `You logged ${n.workouts} ${n.workouts === 1 ? 'workout' : 'workouts'} ${span}.`;
+      return `You trained ${n.workouts} ${n.workouts === 1 ? 'day' : 'days'} ${span}.`;
     case 'streak':
       return `You trained in ${n.weeksTrained} of the last ${weeks} weeks.`;
     case 'pushups':
@@ -286,7 +286,7 @@ export function goalTitle(goal: Goal, units: GoalUnits = METRIC): string {
     case 'streak':
       return `${goal.target} ${goal.target === 1 ? 'week' : 'weeks'} in a row`;
     case 'workouts':
-      return `${goal.target} ${goal.target === 1 ? 'workout' : 'workouts'}`;
+      return `${goal.target} training ${goal.target === 1 ? 'day' : 'days'}`;
     case 'pushups':
       return `${goal.target} push-ups`;
     case 'cardio-minutes':

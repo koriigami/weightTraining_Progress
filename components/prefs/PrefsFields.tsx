@@ -131,8 +131,8 @@ export function AvoidFields({ avoid, limits, onChange }: { avoid: string[]; limi
 export function WeeklyGoalFields({ value, onChange }: { value: number; onChange: (value: number) => void }) {
   return (
     <div className={cn('wt-wgoal')}>
-      <Stepper label="Weekly goal" value={value} min={1} max={7} onChange={onChange} format={(v) => `${v} ${v === 1 ? 'workout' : 'workouts'}`} />
-      <p>A week runs Monday to Sunday. Reach your goal and you earn a 50 XP bonus. Nothing forces a schedule.</p>
+      <Stepper label="Weekly goal" value={value} min={1} max={7} onChange={onChange} format={(v) => `${v} training ${v === 1 ? 'day' : 'days'}`} />
+      <p>A week runs Monday to Sunday. A day counts once you have trained for 20 minutes. Reach your goal and you earn a 50 XP bonus. Nothing forces a schedule.</p>
     </div>
   );
 }

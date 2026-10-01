@@ -62,7 +62,7 @@ export default function HomePage() {
           <HeroLevel />
           <WeekCard week={week} />
         </div>
-        <DesktopToday model={model} routines={due} hasRoutines={routines.length > 0} />
+        <DesktopToday model={model} routines={due} hasRoutines={routines.length > 0} comeback={week.comeback} />
         {feedBlock}
       </Screen>
     );
@@ -71,7 +71,7 @@ export default function HomePage() {
   return (
     <Screen header={<ResourceBar week={week} />}>
       <RulesNote />
-      <TodayCard model={model} />
+      <TodayCard model={model} comeback={week.comeback} />
       <WeekCard week={week} />
       {feedBlock}
     </Screen>

@@ -1,6 +1,7 @@
 // The numbers on the Victory screen: the XP lines a finished workout earned, and
 // the text of the Share card. Pure functions.
 import { exerciseById } from '../data/exercises';
+import { minutesTodayText } from './liveStats';
 import { setXp, WORKOUT_XP } from './routines';
 import type { ExerciseLookup, WorkoutLog, WorkoutMark } from './routines';
 import { fmtDistance, fmtNumber, fmtVolume, fmtWeight } from './units';
@@ -20,8 +21,27 @@ export function markText(mark: WorkoutMark, weight: WeightUnit = 'kg', distance:
   return `${fmtNumber(mark.reps ?? 0)} reps`;
 }
 
+// The bonus lines that follow the sets, cardio and marks: the daily bonus, the
+// comeback and the weekly goal. Shared by the Victory screen and the workout page.
+// The daily bonus always has a line. It is worth 50 on the workout that takes the
+// day to 20 minutes, and otherwise 0 with the reason: an earlier workout already
+// paid it, or the day is still short. `minutes` is this workout's own training
+// minutes and `dayMinutes` the date's total once it is counted.
+export function bonusLines(p: { dailyXp: number; comebackXp: number; weeklyXp: number; minutes: number; dayMinutes: number; weeklyGoal: number }): XpLine[] {
+  const lines: XpLine[] = [];
+  if (p.dailyXp > 0) {
+    lines.push({ key: 'daily', title: 'Daily bonus', xp: p.dailyXp });
+  } else {
+    const paidBefore = p.dayMinutes - p.minutes >= WORKOUT_XP.dailyMinutes;
+    lines.push({ key: 'daily', title: 'Daily bonus', xp: 0, sub: paidBefore ? 'Already earned today' : minutesTodayText(p.dayMinutes) });
+  }
+  if (p.comebackXp > 0) lines.push({ key: 'comeback', title: 'Comeback', xp: p.comebackXp, sub: 'First training day after a week off' });
+  if (p.weeklyXp > 0) lines.push({ key: 'weekly', title: 'Weekly goal', xp: p.weeklyXp, sub: `${p.weeklyGoal} of ${p.weeklyGoal} training ${p.weeklyGoal === 1 ? 'day' : 'days'} this week` });
+  return lines;
+}
+
 // The XP lines, in the order the design shows them: sets done, cardio minutes,
-// beat last time, records, the finish bonus (or what was missed), weekly goal.
+// beat last time, records, then the daily bonus, comeback and weekly goal.
 // `score` is the workout's own score (from scoreState). Without it (a workout
 // that does not count yet) only the set lines show.
 export function xpLines(workout: Pick<WorkoutLog, 'items'>, score: WorkoutScore | undefined, lookup: ExerciseLookup = exerciseById, weeklyGoal = 3, weight: WeightUnit = 'kg', distance: DistanceUnit = 'km'): XpLine[] {
@@ -58,12 +78,7 @@ export function xpLines(workout: Pick<WorkoutLog, 'items'>, score: WorkoutScore 
       });
     }
   }
-  if (score.planComplete) {
-    lines.push({ key: 'finish', title: 'Workout finished', xp: score.dailyXp, ...(score.dailyXp === 0 ? { sub: 'Finish bonus is paid once a day' } : {}) });
-  } else if (score.planMissing.length > 0) {
-    lines.push({ key: 'missed', title: `Missed: ${score.planMissing.map(nameOf).join(', ')} not done`, xp: 0 });
-  }
-  if (score.weeklyXp > 0) lines.push({ key: 'weekly', title: 'Weekly goal hit', xp: score.weeklyXp, sub: `${weeklyGoal} workouts this week` });
+  lines.push(...bonusLines({ dailyXp: score.dailyXp, comebackXp: score.comebackXp, weeklyXp: score.weeklyXp, minutes: score.minutes, dayMinutes: score.dayMinutes, weeklyGoal }));
   return lines;
 }
 

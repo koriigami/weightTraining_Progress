@@ -125,43 +125,58 @@ describe('the XP breakdown', () => {
       over
     );
 
-  it('lists sets, record, beat, missed finish and the total', () => {
+  it('lists sets, record, beat, the daily bonus and the total', () => {
     const w = row({
-      xp: 60,
+      xp: 50,
       xpParts: { sets: 15, cardio: 0, beat: 10, record: 25, finish: 0, weekly: 0 },
       marks: [
         { exerciseId: 'db-row', kind: 'record', kg: 12.5, reps: 10 },
         { exerciseId: 'db-curl', kind: 'beat', kg: 7.5, reps: 10 },
       ],
-      planComplete: false,
-      planMissing: ['run'],
     });
     const b = xpBreakdown(w);
     expect(b.lines.map((l) => [l.key, l.title, l.xp])).toEqual([
       ['sets', '3 sets', 15],
       ['record', 'Record', 25],
       ['beat', 'Beat last time', 10],
-      ['finish', 'Finish bonus', 0],
+      ['daily', 'Daily bonus', 0],
     ]);
     expect(b.lines[0].sub).toBe('5 XP a set');
     expect(b.lines[1].sub).toBe('Bent Over Row (Dumbbell), 12.5 kg × 10');
     expect(b.lines[2].sub).toBe('Bicep Curl (Dumbbell)');
-    expect(b.lines[3].sub).toMatch(/^Missed: .+ (wasn't|weren't) done$/);
-    expect(b.total).toBe(60);
+    expect(b.lines[3].sub).toBe('9 of 20 min today'); // three sets, nothing else that day
+    expect(b.total).toBe(50);
   });
 
-  it('pays the finish bonus and the weekly goal when earned, and names several misses', () => {
-    const paid = xpBreakdown(row({ xp: 130, xpParts: { sets: 15, cardio: 0, beat: 0, record: 0, finish: 15, weekly: 50 }, planComplete: true, planMissing: [] }), { weeklyGoal: 3 });
-    expect(paid.lines.map((l) => [l.key, l.xp])).toEqual([['sets', 15], ['finish', 15], ['weekly', 50]]);
-    expect(paid.lines[2].sub).toBe('3 workouts this week');
-    const missed = xpBreakdown(row({ xpParts: { sets: 15, cardio: 0, beat: 0, record: 0, finish: 0, weekly: 0 }, planComplete: false, planMissing: ['pushup', 'plank'] }));
-    expect(missed.lines[1].sub).toBe("Missed: Push Up, Plank weren't done");
+  it('pays the daily bonus, the comeback and the weekly goal when earned', () => {
+    const paid = xpBreakdown(row({ xp: 140, xpParts: { sets: 15, cardio: 0, beat: 0, record: 0, finish: 50, weekly: 50, comeback: 25 } }), { weeklyGoal: 3 });
+    expect(paid.lines.map((l) => [l.key, l.title, l.xp])).toEqual([
+      ['sets', '3 sets', 15],
+      ['daily', 'Daily bonus', 50],
+      ['comeback', 'Comeback', 25],
+      ['weekly', 'Weekly goal', 50],
+    ]);
+    expect(paid.lines[2].sub).toBe('First training day after a week off');
+    expect(paid.lines[3].sub).toBe('3 of 3 training days this week');
+  });
+
+  it('says why the daily bonus is 0: already earned earlier that day, or the day is still short', () => {
+    const w = row({ xp: 15, xpParts: { sets: 15, cardio: 0, beat: 0, record: 0, finish: 0, weekly: 0 } });
+    // The day reached 30 minutes with this workout, which has 9 of them: an earlier workout paid.
+    expect(xpBreakdown(w, { dayMinutes: 30 }).lines.find((l) => l.key === 'daily')!.sub).toBe('Already earned today');
+    // An earlier 6 minute workout and this one's 9 make 15.
+    expect(xpBreakdown(w, { dayMinutes: 15 }).lines.find((l) => l.key === 'daily')!.sub).toBe('15 of 20 min today');
+  });
+
+  it('a workout stored before the comeback bonus has no comeback line', () => {
+    const b = xpBreakdown(row({ xp: 65, xpParts: { sets: 15, cardio: 0, beat: 0, record: 0, finish: 50, weekly: 0 } }));
+    expect(b.lines.map((l) => l.key)).toEqual(['sets', 'daily']);
   });
 
   it('puts cardio on its own line', () => {
-    const w = workout('2026-09-29', [{ id: 'run', sets: [{ min: 30, km: 5 }] }], { xp: 40, xpParts: { sets: 0, cardio: 40, beat: 0, record: 0, finish: 0, weekly: 0 } });
+    const w = workout('2026-09-29', [{ id: 'run', sets: [{ min: 30, km: 5 }] }], { xp: 90, xpParts: { sets: 0, cardio: 40, beat: 0, record: 0, finish: 50, weekly: 0 } });
     const b = xpBreakdown(w);
-    expect(b.lines.map((l) => [l.key, l.xp])).toEqual([['cardio', 40]]);
+    expect(b.lines.map((l) => [l.key, l.xp])).toEqual([['cardio', 40], ['daily', 50]]);
   });
 
   it('writes a set as a line for every kind', () => {

@@ -9,7 +9,7 @@ import type { WeekSummary } from '@/lib/week';
 /**
  * The phone's Home top bar: the level badge over the left end of the XP bar
  * ("total XP / XP for the next level"), then the weekly streak and this week's
- * workouts as two dark pills. No card, it sits on the sky. The whole bar opens Rank.
+ * training days as two dark pills. No card, it sits on the sky. The whole bar opens Rank.
  */
 export function ResourceBar({ week }: { week: WeekSummary }) {
   const { progress } = useProgress();
@@ -22,7 +22,7 @@ export function ResourceBar({ week }: { week: WeekSummary }) {
       <Link
         href="/rank"
         className="wt-rbar"
-        aria-label={`Level ${progress.level}, ${xp} XP, ${week.streak} week streak, ${week.count} of ${week.goal} workouts this week. Open Rank`}
+        aria-label={`Level ${progress.level}, ${xp} XP, ${week.streak} week streak, ${week.count} of ${week.goal} training days this week. Open Rank`}
       >
         <span className="wt-rbar-badge">
           <LevelBadge rank={progress.rank} level={progress.level} />

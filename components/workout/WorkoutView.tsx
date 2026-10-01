@@ -9,6 +9,8 @@ import { deleteSentence, deletedToast, setLine, xpBreakdown } from '@/lib/histor
 import { musclesOfExercises } from '@/lib/muscles';
 import { WORKOUT_XP } from '@/lib/routines';
 import { shareCardData } from '@/lib/shareCard';
+import { scoreState } from '@/lib/workoutScoring';
+import { useToday } from '@/lib/useToday';
 import type { ExerciseDef } from '@/data/exercises';
 import { useDesktopLayout, useWideLayout } from '@/lib/useMediaQuery';
 import { useProgress } from '@/components/ProgressProvider';
@@ -74,7 +76,8 @@ export function WorkoutView() {
   const leave = useLeave();
   const desktop = useDesktopLayout();
   const wide = useWideLayout();
-  const { workouts, routines, lookup, prefs, progress, loading, deleteWorkout, showToast } = useProgress();
+  const { state, workouts, routines, lookup, prefs, progress, loading, deleteWorkout, showToast } = useProgress();
+  const today = useToday();
   const [xpOpen, setXpOpen] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -90,7 +93,12 @@ export function WorkoutView() {
     () => (w ? shareCardData({ workout: w, lookup, units, rank: progress.rank, level: progress.level }) : null),
     [w, lookup, units, progress.rank, progress.level]
   );
-  const breakdown = useMemo(() => (w ? xpBreakdown(w, { lookup, weight: units.weight, distance: units.distance, weeklyGoal: prefs.weeklyGoal }) : null), [w, lookup, units, prefs.weeklyGoal]);
+  // The date's training minutes once this workout is counted, for the daily bonus line.
+  const dayMinutes = useMemo(() => (w ? scoreState(state, today).find((s) => s.id === w.id)?.dayMinutes : undefined), [state, today, w]);
+  const breakdown = useMemo(
+    () => (w ? xpBreakdown(w, { lookup, weight: units.weight, distance: units.distance, weeklyGoal: prefs.weeklyGoal, dayMinutes }) : null),
+    [w, lookup, units, prefs.weeklyGoal, dayMinutes]
+  );
 
   if (leaving || (loading && !w)) return <Screen header={<PageHeader title="Workout" back />}>{null}</Screen>;
   if (!w || !summary || !breakdown) return <WorkoutNotFound />;

@@ -93,8 +93,8 @@ describe('moment wording', () => {
 
   it('a badge says its name, tier and what it measures, and the XP only the first time', () => {
     const b: EarnedBadgeSummary = { id: 'lifetime:finisher:bronze', kind: 'lifetime', family: 'finisher', tier: 'bronze', earnedAt: '2026-09-27' };
-    expect(momentCopy({ kind: 'badge', badge: b }).announce).toBe('New badge. Finisher, Bronze. Workouts finished: 1 workout. Plus 25 XP. Tap to continue.');
-    expect(momentCopy({ kind: 'badge', badge: b, replay: true }).announce).toBe('New badge. Finisher, Bronze. Workouts finished: 1 workout. Tap to continue.');
+    expect(momentCopy({ kind: 'badge', badge: b }).announce).toBe('New badge. Finisher, Bronze. Training days: 1 training day. Plus 25 XP. Tap to continue.');
+    expect(momentCopy({ kind: 'badge', badge: b, replay: true }).announce).toBe('New badge. Finisher, Bronze. Training days: 1 training day. Tap to continue.');
   });
 });
 

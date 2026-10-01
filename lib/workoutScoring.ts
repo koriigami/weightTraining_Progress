@@ -196,51 +196,18 @@ export function planOf(w: Pick<WorkoutLog, 'plan' | 'items'>): PlanItem[] {
     .filter((p) => p.sets >= 1);
 }
 
-type PlanResult = { complete: boolean; missing: string[]; xp: number };
+type PlanResult = { complete: boolean; missing: string[] };
 
-// Done means at least `sets` qualifying sets of that exercise. xp is what the
-// sets that fill the plan earned, best sets first.
+// Done means at least `sets` qualifying sets of that exercise.
 function checkPlan(plan: PlanItem[], items: WorkoutItem[], lookup: ExerciseLookup): PlanResult {
   const missing: string[] = [];
-  let xp = 0;
   for (const p of plan) {
     const e = lookup(p.exerciseId);
     const item = items.find((i) => i.exerciseId === p.exerciseId);
-    const xps = e && item ? item.sets.filter((s) => qualifies(e, s)).map((s) => setXp(e, s)).sort((a, b) => b - a) : [];
-    if (xps.length < p.sets) missing.push(p.exerciseId);
-    xp += xps.slice(0, p.sets).reduce((sum, x) => sum + x, 0);
+    const done = e && item ? item.sets.filter((s) => qualifies(e, s)).length : 0;
+    if (done < p.sets) missing.push(p.exerciseId);
   }
-  return { complete: plan.length > 0 && missing.length === 0, missing, xp };
-}
-
-// How far a plan is along, for the live popover. `done` counts plan items with
-// enough qualifying sets, `bonus` is the XP of the sets that fill the plan (an
-// unticked set counts as if it were ticked, and a planned strength set with
-// nothing typed yet as the flat strength XP), capped at 50. The finish bonus it
-// once previewed is gone: the popover's plan line stays until the daily bonus
-// popover replaces it.
-const PLAN_PREVIEW_CAP = 50;
-
-export type PlanProgress = { total: number; done: number; missing: string[]; complete: boolean; bonus: number };
-
-export function planProgress(plan: PlanItem[], items: WorkoutItem[], lookup: ExerciseLookup = exerciseById): PlanProgress {
-  const check = checkPlan(plan, items, lookup);
-  let potential = 0;
-  for (const p of plan) {
-    const e = lookup(p.exerciseId);
-    if (!e) continue;
-    const item = items.find((i) => i.exerciseId === p.exerciseId);
-    const xps = (item?.sets ?? []).map((s) => setXp(e, s)).sort((a, b) => b - a);
-    const flat = e.metric === 'distance_time' || e.metric === 'intervals' ? 0 : WORKOUT_XP.strengthSet;
-    for (let k = 0; k < p.sets; k++) potential += xps[k] || flat;
-  }
-  return {
-    total: plan.length,
-    done: plan.length - check.missing.length,
-    missing: check.missing,
-    complete: check.complete,
-    bonus: Math.min(PLAN_PREVIEW_CAP, check.complete ? check.xp : potential),
-  };
+  return { complete: plan.length > 0 && missing.length === 0, missing };
 }
 
 // ---------------- Live marks ----------------

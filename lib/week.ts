@@ -24,21 +24,41 @@ export type WeekDot = {
   date: string;
   label: string; // M T W T F S S
   day: number; // day of the month
-  done: boolean;
+  done: boolean; // a training day
+  rest: boolean; // shown as "Rest": a past day without a training day, or any day still to come once the weekly goal is met
   today: boolean;
   future: boolean;
 };
 
 const LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
-// Monday to Sunday of the week that holds `today`.
-export function weekDots(dates: readonly string[], today: string): WeekDot[] {
+// Monday to Sunday of the week that holds `today`. `dates` are training days.
+// Past days of the week without one are rest days. Once `goal` training days are
+// in, the days still to come are rest days too, so the week reads as done. Before
+// that the days ahead stay open. Today is never a rest day: it keeps its marker
+// until it becomes a training day.
+export function weekDots(dates: readonly string[], today: string, goal?: number): WeekDot[] {
   const monday = mondayOf(today);
+  const sunday = addDaysStr(monday, 6);
   const set = new Set(dates);
+  const inWeek = dates.filter((d) => d >= monday && d <= sunday).length;
+  const goalMet = goal !== undefined && inWeek >= goal;
   return LABELS.map((label, i) => {
     const date = addDaysStr(monday, i);
-    return { date, label, day: Number(date.slice(8, 10)), done: set.has(date), today: date === today, future: date > today };
+    const done = set.has(date);
+    const future = date > today;
+    const rest = !done && (date < today || (future && goalMet));
+    return { date, label, day: Number(date.slice(8, 10)), done, rest, today: date === today, future };
   });
+}
+
+// True when the next training day pays the comeback bonus: this week has none yet,
+// last week had none, and there was a training day before that. `dates` are
+// training days. This is the same test scoreWorkouts uses to pay it.
+export function comebackPending(dates: readonly string[], today: string): boolean {
+  const monday = mondayOf(today);
+  const lastMonday = addDaysStr(monday, -7);
+  return dates.some((d) => d < lastMonday) && !dates.some((d) => d >= lastMonday);
 }
 
 export type WeekSummary = {
@@ -46,17 +66,20 @@ export type WeekSummary = {
   count: number; // training days this week
   goal: number;
   streak: number; // weeks in a row with at least one training day
+  comeback: boolean; // the next training day pays the comeback bonus
 };
 
 export function weekSummary(state: AppState, today: string): WeekSummary {
   const dates = trainingDaysOf(state, today);
   const monday = mondayOf(today);
   const sunday = addDaysStr(monday, 6);
+  const goal = weeklyGoalOf(state);
   return {
-    dots: weekDots(dates, today),
+    dots: weekDots(dates, today, goal),
     count: dates.filter((d) => d >= monday && d <= sunday).length,
-    goal: weeklyGoalOf(state),
+    goal,
     streak: weeklyStreaks(dates, today).current,
+    comeback: comebackPending(dates, today),
   };
 }
 

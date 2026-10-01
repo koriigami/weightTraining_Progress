@@ -10,16 +10,17 @@ import { useStartRoutine } from '@/components/routines/useStartRoutine';
 import { useShell } from '@/components/nav/ShellContext';
 import { Button } from '@/components/ui/Button';
 import { Card, SectionLabel } from '@/components/ui/Card';
-import { DoneChip, DoneRows, ViewLink } from './TodayCard';
+import { ComebackHint, DoneChip, DoneRows, ViewLink } from './TodayCard';
 
 const SLOTS = 3;
 
 /**
  * Desktop: "Today's workout" as a row of three cards. Ready is two routines and a
  * dashed "Something else". Done today turns finished workouts into green Done cards,
- * keeps "Something else", and fills what is left with routines still to do.
+ * keeps "Something else", and fills what is left with routines still to do. After a
+ * week with no training day a calm comeback hint sits under the heading.
  */
-export function DesktopToday({ model, routines, hasRoutines }: { model: TodayModel; routines: UpNextItem[]; hasRoutines: boolean }) {
+export function DesktopToday({ model, routines, hasRoutines, comeback = false }: { model: TodayModel; routines: UpNextItem[]; hasRoutines: boolean; comeback?: boolean }) {
   const start = useStartRoutine();
   const { openStart } = useShell();
 
@@ -61,6 +62,7 @@ export function DesktopToday({ model, routines, hasRoutines }: { model: TodayMod
     return (
       <>
         <SectionLabel right={<b className="wt-xpv">+{model.xp} XP</b>}>Done today</SectionLabel>
+        {comeback && <ComebackHint />}
         <div className="wt-upnext">
           {done}
           {fill}
@@ -81,6 +83,7 @@ export function DesktopToday({ model, routines, hasRoutines }: { model: TodayMod
       >
         Today&apos;s workout
       </SectionLabel>
+      {comeback && <ComebackHint />}
       <div className="wt-upnext">
         {routines.slice(0, SLOTS - 1).map(routineCard)}
         {!hasRoutines && (

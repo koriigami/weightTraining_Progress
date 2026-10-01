@@ -1,31 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import { markText, shareText, xpLines, xpTotal } from '../lib/victory';
+import { bonusLines, markText, shareText, xpLines, xpTotal } from '../lib/victory';
 import { scoreState } from '../lib/workoutScoring';
-import { stateWith, workout } from './helpers';
+import { stateWith, trainingDay, workout } from './helpers';
 
 describe('victory XP lines', () => {
-  it('lists sets done, finish and the total matches the workout XP', () => {
+  it('bonus paid: sets done, then Daily bonus +50, and the total matches the workout XP', () => {
     const state = stateWith([workout('2026-10-10', [{ id: 'db-ohp', sets: [{ kg: 5, reps: 10 }, { kg: 5, reps: 10 }, { kg: 5, reps: 10 }, { kg: 5, reps: 10 }] }, { id: 'pushup', sets: [{ reps: 10 }, { reps: 10 }, { reps: 10 }] }])]);
     const score = scoreState(state)[0];
     const lines = xpLines(state.workouts![0], score);
-    expect(lines.map((l) => [l.title, l.xp])).toEqual([
-      ['7 sets done', 35],
-      ['Workout finished', 50], // seven sets are 21 minutes: the daily bonus
+    // Seven sets are 21 minutes: the daily bonus.
+    expect(lines).toEqual([
+      { key: 'sets', title: '7 sets done', xp: 35, sub: '5 XP a set' },
+      { key: 'daily', title: 'Daily bonus', xp: 50 },
     ]);
-    expect(lines[0].sub).toBe('5 XP a set');
     expect(xpTotal(lines, score.xp)).toEqual({ total: score.xp, other: 0 });
+    // None of the old finish wording is left.
+    expect(JSON.stringify(lines)).not.toMatch(/finish|missed/i);
   });
 
   it('splits cardio from strength', () => {
     const state = stateWith([workout('2026-10-10', [{ id: 'pushup', sets: [{ reps: 10 }] }, { id: 'run', sets: [{ min: 20, km: 3 }] }, { id: 'runwalk', sets: [{ on: 1, off: 1.5 }] }])]);
     const score = scoreState(state)[0];
     const lines = xpLines(state.workouts![0], score);
-    expect(lines.map((l) => l.key)).toEqual(['sets', 'cardio', 'finish']);
+    expect(lines.map((l) => l.key)).toEqual(['sets', 'cardio', 'daily']);
     expect(lines[1]).toMatchObject({ title: 'Cardio, 22.5 min', xp: 20 + 10 + 3 });
     expect(xpTotal(lines, score.xp).total).toBe(score.xp);
   });
 
-  it('adds a line for each record and for the weekly goal', () => {
+  it('weekly goal: a record line, the daily bonus and Weekly goal +50 on the third training day', () => {
     // Three training days in one week reach the default goal of 3. The last one is a record.
     const seven = (kg: number, reps: number) => Array.from({ length: 7 }, () => ({ kg, reps }));
     const w1 = workout('2026-10-05', [{ id: 'db-ohp', sets: seven(5, 10) }]);
@@ -34,9 +36,9 @@ describe('victory XP lines', () => {
     const state = stateWith([w1, w2, w3]);
     const score = scoreState(state).find((s) => s.id === w3.id)!;
     const lines = xpLines(w3, score, undefined, 3);
-    expect(lines.map((l) => l.key)).toEqual(['sets', 'record-db-ohp', 'finish', 'weekly']);
+    expect(lines.map((l) => l.key)).toEqual(['sets', 'record-db-ohp', 'daily', 'weekly']);
     expect(lines.find((l) => l.key === 'record-db-ohp')).toMatchObject({ title: 'New record', xp: 25, sub: 'Shoulder Press (Dumbbell): 7.5 kg × 8' });
-    expect(lines.find((l) => l.key === 'weekly')).toMatchObject({ title: 'Weekly goal hit', xp: 50, sub: '3 workouts this week' });
+    expect(lines.find((l) => l.key === 'weekly')).toEqual({ key: 'weekly', title: 'Weekly goal', xp: 50, sub: '3 of 3 training days this week' });
     expect(xpTotal(lines, score.xp).total).toBe(score.xp);
   });
 
@@ -55,29 +57,62 @@ describe('victory XP lines', () => {
     const w3 = workout('2026-10-07', [{ id: 'db-ohp', sets: [{ kg: 10, reps: 10 }] }, { id: 'pushup', sets: [{ reps: 13 }] }, planks]);
     const scores = scoreState(stateWith([w1, w2, w3]));
     const l2 = xpLines(w2, scores[1]);
-    expect(l2.map((l) => [l.key, l.xp])).toEqual([['sets', 35], ['record-db-ohp', 25], ['record-pushup', 25], ['finish', 50]]);
+    expect(l2.map((l) => [l.key, l.xp])).toEqual([['sets', 35], ['record-db-ohp', 25], ['record-pushup', 25], ['daily', 50]]);
     // Ten kilos for 10 reps is not heavier than 12 kg, so no record. Fewer kilos than last time is no beat either.
     const l3 = xpLines(w3, scores[2]);
-    expect(l3.map((l) => l.key)).toEqual(['sets', 'record-pushup', 'finish', 'weekly']); // the third training day of the week
+    expect(l3.map((l) => l.key)).toEqual(['sets', 'record-pushup', 'daily', 'weekly']); // the third training day of the week
     const beat = xpLines(w3, { ...scores[2], marks: [{ exerciseId: 'pushup', kind: 'beat', reps: 13 }], beatXp: 10 });
     expect(beat.find((l) => l.key === 'beat-pushup')).toMatchObject({ title: 'Beat last time', xp: 10, sub: 'Push Up: 13 reps' });
   });
 
-  it('says what was missed, with no XP, when the plan is not finished', () => {
-    const w = workout('2026-10-05', [{ id: 'pushup', sets: [{ reps: 10 }] }], { plan: [{ exerciseId: 'pushup', sets: 2 }, { exerciseId: 'plank', sets: 1 }] });
+  it('short day: Daily bonus 0 with the minutes so far, and no mention of a plan', () => {
+    // Two sets are 6 minutes. A plan with a skipped exercise changes nothing.
+    const w = workout('2026-10-05', [{ id: 'pushup', sets: [{ reps: 10 }, { reps: 10 }] }], { plan: [{ exerciseId: 'pushup', sets: 2 }, { exerciseId: 'plank', sets: 1 }] });
     const score = scoreState(stateWith([w]))[0];
     const lines = xpLines(w, score);
-    expect(lines.map((l) => [l.key, l.xp])).toEqual([['sets', 5], ['missed', 0]]);
-    expect(lines[1].title).toBe('Missed: Push Up, Plank not done');
+    expect(lines).toEqual([
+      { key: 'sets', title: '2 sets done', xp: 10, sub: '5 XP a set' },
+      { key: 'daily', title: 'Daily bonus', xp: 0, sub: '6 of 20 min today' },
+    ]);
+    expect(xpTotal(lines, score.xp)).toEqual({ total: 10, other: 0 });
+    // A second short workout the same day adds up: 12 of 20.
+    const second = workout('2026-10-05', [{ id: 'pushup', sets: [{ reps: 10 }, { reps: 10 }] }], { when: '2026-10-05T20:00', startedAt: '2026-10-05T20:00:00.000Z' });
+    const both = scoreState(stateWith([w, second]));
+    expect(xpLines(second, both[1]).find((l) => l.key === 'daily')).toMatchObject({ xp: 0, sub: '12 of 20 min today' });
   });
 
-  it('shows a finish line worth 0 once the day already paid its daily bonus', () => {
+  it('already earned today: Daily bonus 0 on the workouts after the one that paid it', () => {
     const day = (h: string) => workout('2026-10-05', [{ id: 'pushup', sets: Array.from({ length: 7 }, () => ({ reps: 10 })) }], { when: `2026-10-05T${h}:00`, startedAt: `2026-10-05T${h}:00:00.000Z` });
     const ws = [day('08'), day('12'), day('18')];
     const scores = scoreState(stateWith(ws));
-    expect(xpLines(ws[0], scores[0]).find((l) => l.key === 'finish')!.xp).toBe(50);
-    expect(xpLines(ws[1], scores[1]).find((l) => l.key === 'finish')).toMatchObject({ xp: 0 });
-    expect(xpLines(ws[2], scores[2]).find((l) => l.key === 'finish')).toMatchObject({ xp: 0 });
+    expect(xpLines(ws[0], scores[0]).find((l) => l.key === 'daily')).toEqual({ key: 'daily', title: 'Daily bonus', xp: 50 });
+    const later = xpLines(ws[1], scores[1]);
+    expect(later).toEqual([
+      { key: 'sets', title: '7 sets done', xp: 35, sub: '5 XP a set' },
+      { key: 'daily', title: 'Daily bonus', xp: 0, sub: 'Already earned today' },
+    ]);
+    expect(xpLines(ws[2], scores[2]).find((l) => l.key === 'daily')).toMatchObject({ xp: 0, sub: 'Already earned today' });
+    expect(xpTotal(later, scores[1].xp)).toEqual({ total: 35, other: 0 });
+  });
+
+  it('comeback: Comeback +25 on the first training day after a week off, never on the first ever', () => {
+    // Monday 14 September, then nothing in the week of the 21st, then Wednesday 30 September.
+    const first = trainingDay('2026-09-14');
+    const back = trainingDay('2026-09-30');
+    const scores = scoreState(stateWith([first, back]));
+    expect(xpLines(first, scores[0]).map((l) => l.key)).toEqual(['sets', 'daily']);
+    const lines = xpLines(back, scores[1]);
+    expect(lines).toEqual([
+      { key: 'sets', title: '7 sets done', xp: 35, sub: '5 XP a set' },
+      { key: 'daily', title: 'Daily bonus', xp: 50 },
+      { key: 'comeback', title: 'Comeback', xp: 25, sub: 'First training day after a week off' },
+    ]);
+    expect(xpTotal(lines, scores[1].xp)).toEqual({ total: 110, other: 0 });
+  });
+
+  it('writes the weekly goal for a goal of one training day in the singular', () => {
+    const lines = bonusLines({ dailyXp: 50, comebackXp: 0, weeklyXp: 50, minutes: 21, dayMinutes: 21, weeklyGoal: 1 });
+    expect(lines.find((l) => l.key === 'weekly')!.sub).toBe('1 of 1 training day this week');
   });
 
   it('describes a mark by its metric', () => {

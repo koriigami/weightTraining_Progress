@@ -52,14 +52,15 @@ describe('goal hints from real workouts', () => {
 
   it('writes plain hints', () => {
     const n = recentNumbers(state, TODAY);
-    expect(goalHint('workouts', n)).toBe('You logged 1 workout in the last 4 weeks.');
+    expect(goalHint('workouts', n)).toBe('You trained 1 day in the last 4 weeks.');
     expect(goalHint('streak', n)).toBe('You trained in 1 of the last 4 weeks.');
     expect(goalHint('pushups', n)).toBe('You did 120 push-ups in the last 4 weeks.');
     expect(goalHint('weight', n)).toBeNull();
   });
 
-  it('says one workout in the singular', () => {
-    expect(goalHint('workouts', { workouts: 1, pushups: 0, cardioMinutes: 0, km: 0, weeksTrained: 1 })).toBe('You logged 1 workout in the last 4 weeks.');
+  it('says training days, and one day in the singular', () => {
+    expect(goalHint('workouts', { workouts: 1, pushups: 0, cardioMinutes: 0, km: 0, weeksTrained: 1 })).toBe('You trained 1 day in the last 4 weeks.');
+    expect(goalHint('workouts', { workouts: 9, pushups: 0, cardioMinutes: 0, km: 0, weeksTrained: 4 })).toBe('You trained 9 days in the last 4 weeks.');
   });
 });
 

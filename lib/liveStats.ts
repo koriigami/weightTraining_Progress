@@ -1,11 +1,11 @@
 // What the log screen's stats row shows, and the numbers behind the XP popover.
 // Pure functions: the screen only lays them out.
 import { exerciseById, isCardioExercise } from '../data/exercises';
-import { pace, workoutTotals } from './routines';
+import { WORKOUT_XP, pace, workoutTotals } from './routines';
 import type { ExerciseLookup, WorkoutItem, WorkoutTotals } from './routines';
 import { fmtDistance, fmtNumber, fmtVolume } from './units';
 import type { DistanceUnit, WeightUnit } from './units';
-import type { LiveMark, PlanProgress } from './workoutScoring';
+import type { LiveMark } from './workoutScoring';
 
 // strength: no cardio in the workout. cardio: nothing but cardio. mixed: both.
 // An empty workout reads as strength.
@@ -117,9 +117,24 @@ export function liveXp(items: readonly WorkoutItem[], marks: readonly LiveMark[]
   return { sets: all - cardio, marks: bonus, cardio, total: all + bonus };
 }
 
-// The popover's line about the plan.
-export function planLine(p: Pick<PlanProgress, 'total' | 'done' | 'complete' | 'bonus'>): string {
-  if (p.total === 0) return '';
-  if (p.complete) return `Every planned exercise is done: +${p.bonus} when you finish.`;
-  return `${p.done} of ${p.total} planned ${p.total === 1 ? 'exercise' : 'exercises'} done. Finish ${p.total === 1 ? 'it' : 'them all'} for +${p.bonus}.`;
+// ---------------- The daily bonus, live ----------------
+
+/** "12 of 20 min today". Whole minutes, rounded down, so it never reads 20 of 20 before the bar is reached. */
+export function minutesTodayText(minutes: number): string {
+  return `${Math.floor(Math.max(0, minutes))} of ${WORKOUT_XP.dailyMinutes} min today`;
+}
+
+// short: still under the bar. earned: this workout takes the day over it.
+// paid: an earlier workout today already paid the bonus.
+export type DailyBonusLive = { state: 'short' | 'earned' | 'paid'; text: string };
+
+/**
+ * The popover's daily bonus line. `minutes` is the whole day: the saved workouts
+ * of today plus the one in progress (dayMinutes). `paidBefore` is true when the
+ * saved workouts alone already reached the bar (dailyBonusPaid).
+ */
+export function dailyBonusLive(minutes: number, paidBefore: boolean): DailyBonusLive {
+  if (paidBefore) return { state: 'paid', text: 'Already earned today' };
+  if (minutes >= WORKOUT_XP.dailyMinutes) return { state: 'earned', text: 'Daily bonus earned' };
+  return { state: 'short', text: minutesTodayText(minutes) };
 }

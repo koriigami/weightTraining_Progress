@@ -60,7 +60,7 @@ export function avoidSummary(prefs: Pick<Prefs, 'avoid' | 'limits'>): string {
 }
 
 export function weeklyGoalSummary(n: number): string {
-  return `${n} ${n === 1 ? 'workout' : 'workouts'} a week`;
+  return `${n} training ${n === 1 ? 'day' : 'days'} a week`;
 }
 
 /** The chips to show: the standard list for the unit, plus any saved weight that is not on it, in order. */

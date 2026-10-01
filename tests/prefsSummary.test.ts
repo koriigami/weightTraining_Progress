@@ -33,8 +33,8 @@ describe('summaries', () => {
   });
 
   it('weekly goal', () => {
-    expect(weeklyGoalSummary(1)).toBe('1 workout a week');
-    expect(weeklyGoalSummary(3)).toBe('3 workouts a week');
+    expect(weeklyGoalSummary(1)).toBe('1 training day a week');
+    expect(weeklyGoalSummary(3)).toBe('3 training days a week');
   });
 });
 

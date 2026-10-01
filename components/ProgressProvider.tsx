@@ -81,8 +81,10 @@ type ProgressContextValue = {
   updateWorkout: (patch: WorkoutPatchInput) => Promise<WorkoutChange>;
   deleteWorkout: (id: string) => Promise<WorkoutChange>;
   savePrefs: (prefs: Prefs) => Promise<string | null>;
-  /** Puts the "XP was worked out again" note on Home away for good. */
+  /** Puts the "XP was worked out again with the new rules" note on Home away for good. */
   dismissRulesNote: () => Promise<string | null>;
+  /** The same for the "new daily bonus" note. */
+  dismissRulesV3Note: () => Promise<string | null>;
   addCustomExercise: (exercise: CustomExerciseInput) => Promise<AddCustomExerciseResult>;
   logWeight: (date: string, kg: number) => void;
   addGoal: (goal: Omit<Goal, 'id' | 'createdAt'>) => Promise<string | null>;
@@ -500,6 +502,11 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     return r.ok ? null : r.error;
   }, [runRoutineAction]);
 
+  const dismissRulesV3Note = useCallback(async (): Promise<string | null> => {
+    const r = await runRoutineAction({ action: 'setRulesV3Note', value: false });
+    return r.ok ? null : r.error;
+  }, [runRoutineAction]);
+
   const addCustomExercise = useCallback(
     async (exercise: CustomExerciseInput): Promise<AddCustomExerciseResult> => {
       // The id is picked here so the optimistic copy and the server's agree.
@@ -552,6 +559,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     deleteWorkout,
     savePrefs,
     dismissRulesNote,
+    dismissRulesV3Note,
     addCustomExercise,
     logWeight,
     addGoal,

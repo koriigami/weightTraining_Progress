@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { Bike, Check, ChevronRight, ClipboardList, Play, Plus } from 'lucide-react';
+import { Bike, Check, ChevronRight, ClipboardList, Play, Plus, Sparkles } from 'lucide-react';
 import { fmtMinutes } from '@/lib/liveStats';
+import { WORKOUT_XP } from '@/lib/routines';
 import { routineLine, weekChip } from '@/lib/todayCard';
 import type { DoneRow, DoneWorkout, TodayModel } from '@/lib/todayCard';
 import { ExerciseRows } from '@/components/routines/ExerciseRows';
@@ -52,6 +53,16 @@ export function DoneRows({ rows }: { rows: DoneRow[] }) {
   );
 }
 
+/** A calm line for someone who has been away a week: the next training day pays the comeback bonus. */
+export function ComebackHint() {
+  return (
+    <p className="wt-comeback">
+      <Sparkles size={15} aria-hidden="true" />
+      Comeback bonus: +{WORKOUT_XP.comeback} XP on your first training day
+    </p>
+  );
+}
+
 /** Other routine, Cardio and Custom workout: starting something else is one tap away. */
 function Tiles() {
   const { openStart, openCardio, openCustom } = useShell();
@@ -93,9 +104,10 @@ function DoneEntry({ w }: { w: DoneWorkout }) {
 /**
  * Phone: the Today card. Ready leads with the routine that is due and a normal-size
  * Start. Done today is the same card with each finished workout, its XP and a View link.
- * The three tiles stay in both.
+ * The three tiles stay in both. After a week with no training day a calm comeback
+ * hint sits above them.
  */
-export function TodayCard({ model }: { model: TodayModel }) {
+export function TodayCard({ model, comeback = false }: { model: TodayModel; comeback?: boolean }) {
   const start = useStartRoutine();
 
   if (model.kind === 'done') {
@@ -113,6 +125,7 @@ export function TodayCard({ model }: { model: TodayModel }) {
             <DoneEntry w={w} />
           </div>
         ))}
+        {comeback && <ComebackHint />}
         <Tiles />
       </Card>
     );
@@ -148,6 +161,7 @@ export function TodayCard({ model }: { model: TodayModel }) {
           </ButtonLink>
         </div>
       )}
+      {comeback && <ComebackHint />}
       <Tiles />
     </Card>
   );

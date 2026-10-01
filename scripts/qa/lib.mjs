@@ -22,7 +22,7 @@ export const OWNER_EMAIL = 'qa-owner@example.com';
 export const SIZES = { 390: { width: 390, height: 844 }, 1440: { width: 1440, height: 900 } };
 
 // Fixed ids for the seeded workouts, so routes can say /workout/view?id=@run.
-export const IDS = { strength: 'qa-strength', run: 'qa-run', ride: 'qa-ride', mixed: 'qa-mixed' };
+export const IDS = { strength: 'qa-strength', run: 'qa-run', ride: 'qa-ride', mixed: 'qa-mixed', short: 'qa-short' };
 
 const require = createRequire(import.meta.url);
 function loadPlaywright() {
@@ -137,7 +137,12 @@ function workout(id, daysAgo, title, minutes, items, plan) {
 
 const three = (kg, reps) => [{ kg, reps }, { kg, reps }, { kg, reps }];
 
-/** The `basic` preset: onboarded prefs, a strength, run, ride and mixed workout, weights, a goal, a routine. Safe to run twice. */
+/**
+ * The `basic` preset: onboarded prefs, a strength, run, ride, mixed and short workout, weights, a goal, a routine. Safe to run twice.
+ * Training days (20 minutes or more): strength today (7 sets), run yesterday, ride 3 days ago, mixed 4 days ago.
+ * The short workout is 2 sets (6 minutes) 2 days ago, so that day is a rest day on Home and its workout page shows "6 of 20 min today".
+ * "Rest" on the week strip needs a past day in the current week, so it shows from Wednesday on.
+ */
 export async function seed(context) {
   const state = await getState(context);
   const have = new Set((state.workouts ?? []).map((w) => w.id));
@@ -154,13 +159,14 @@ export async function seed(context) {
     },
   });
   const workouts = [
-    workout(IDS.strength, 0, 'Push and Legs', 45, [['db-bench', three(20, 10)], ['bb-squat', three(60, 8)]], [
-      { exerciseId: 'db-bench', sets: 3 },
+    workout(IDS.strength, 0, 'Push and Legs', 45, [['db-bench', [...three(20, 10), { kg: 20, reps: 10 }]], ['bb-squat', three(60, 8)]], [
+      { exerciseId: 'db-bench', sets: 4 },
       { exerciseId: 'bb-squat', sets: 3 },
     ]),
     workout(IDS.run, 1, 'Morning Run', 31, [['run', [{ min: 31, km: 5.2 }]]]),
-    workout(IDS.ride, 2, 'Evening Ride', 46, [['cycle', [{ min: 46, km: 18.4 }]]]),
-    workout(IDS.mixed, 3, 'Legs and a Jog', 58, [['bb-squat', three(70, 6)], ['run', [{ min: 12, km: 2.1 }]]]),
+    workout(IDS.short, 2, 'Quick Push-ups', 8, [['pushup', [{ reps: 12 }, { reps: 10 }]]]),
+    workout(IDS.ride, 3, 'Evening Ride', 46, [['cycle', [{ min: 46, km: 18.4 }]]]),
+    workout(IDS.mixed, 4, 'Legs and a Jog', 58, [['bb-squat', three(70, 6)], ['run', [{ min: 12, km: 2.1 }]]]),
   ];
   for (const w of workouts) if (!have.has(w.id)) await api(context, 'saveWorkout', { workout: w });
   await api(context, 'weight', { date: dayStr(7), kg: 82.4 });
@@ -194,8 +200,8 @@ export async function newPage(browser, width = 390) {
   return { context, page, errors };
 }
 
-/** `@strength`, `@run`, `@ride`, `@mixed` in a route become the seeded ids. */
-export const resolveRoute = (route) => route.replace(/@(strength|run|ride|mixed)\b/g, (_, k) => IDS[k]);
+/** `@strength`, `@run`, `@ride`, `@mixed`, `@short` in a route become the seeded ids. */
+export const resolveRoute = (route) => route.replace(/@(strength|run|ride|mixed|short)\b/g, (_, k) => IDS[k]);
 
 export async function settle(page) {
   await page.waitForLoadState('load');

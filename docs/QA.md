@@ -71,11 +71,18 @@ Tick these on each screen below, at 390 px and at 1440 px.
       The total "+N XP" shows in the section title.
 - [ ] A workout in progress shows a Resume bar (phone) or the sidebar card
       (desktop).
-- [ ] This week opens `/calendar`.
+- [ ] This week opens `/calendar`. Training days show a tick, past days
+      without one show "Rest", and once the weekly goal is met the rest of the
+      week shows "Rest". Today keeps its ring until it is a training day.
+- [ ] After a week with no training day (and none yet this week) the Today card
+      says "Comeback bonus: +25 XP on your first training day". It is gone once
+      this week has a training day.
 - [ ] Recent workouts: a card per workout with Time, Volume, Sets and XP (cardio
       shows Distance and Pace). Tapping one opens its workout page.
 - [ ] For someone who had workouts before v8, the "XP was worked out again" note
-      shows once and does not come back after it is dismissed.
+      shows once and does not come back after it is dismissed. Someone who has
+      both notes waiting sees only "XP was worked out again with the new daily
+      bonus", and dismissing it clears both.
 - [ ] Phone: the tab bar has Home, Routines, a raised WORKOUT button, Rank,
       Profile.
 
@@ -114,7 +121,12 @@ Tick these on each screen below, at 390 px and at 1440 px.
       Sets and XP.
 - [ ] Sets are prefilled with last time's numbers (Workout settings can turn
       that off). Ticking a set pops "+5 XP".
-- [ ] The XP info button opens the popover: XP so far and plan progress.
+- [ ] The XP info button opens the popover: XP so far, then "Daily bonus" with
+      "N of 20 min today" (today's saved workouts count too). It turns to
+      "Daily bonus earned" when the day reaches 20 minutes, and says "Already
+      earned today" when an earlier workout paid it.
+- [ ] Finish asks only about sets that are not ticked. It never mentions a plan
+      or a bonus.
 - [ ] "Beat last time" and "Record" chips appear on an exercise as soon as its
       ticked set earns them, never the first time an exercise is logged.
 - [ ] Cardio card: Time follows the clock until you type in it (only when the
@@ -153,8 +165,10 @@ Tick these on each screen below, at 390 px and at 1440 px.
       sooner. Never on top of the banner at once.
 - [ ] Order: level up or rank up first, then new badges, one at a time.
 - [ ] Edit the title, date and time, and notes. The changes save. (There is no photo control yet: it waits for file storage.)
-- [ ] The XP lines follow rules v2: sets, cardio, beat or record, finish bonus
-      and weekly goal only when earned.
+- [ ] The XP lines follow rules v3: sets, cardio, beat or record, then Daily
+      bonus (0 with "Already earned today" or "N of 20 min today" when not paid),
+      Comeback and Weekly goal only when earned. No "Workout finished" or
+      "Missed" line.
 - [ ] Share opens the sheet with the share card as the preview: a random sky,
       the muscles worked, the stats and the workout's own XP. A renamed title
       shows on the card. The dice on the card's corner rolls a new sky; closing

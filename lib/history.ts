@@ -7,7 +7,8 @@ import { WORKOUT_XP } from './routines';
 import type { ExerciseLookup, LoggedSet, WorkoutLog } from './routines';
 import { fmtDistance, fmtNumber, fmtWeight } from './units';
 import type { DistanceUnit, WeightUnit } from './units';
-import { markText } from './victory';
+import { bonusLines, markText } from './victory';
+import { trainingMinutes } from './workoutScoring';
 
 // ---------------- Delete ----------------
 
@@ -47,11 +48,14 @@ export type BreakdownLine = { key: string; title: string; sub?: string; xp: numb
 const num = (v: number | undefined): number => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
 
 // The lines of "XP earned", in the order of the design: sets, cardio, record,
-// beat last time, finish bonus (or what was missed), weekly goal. The total is
-// the workout's own XP. Lines with nothing behind them are left out.
+// beat last time, daily bonus, comeback, weekly goal. The total is the workout's
+// own XP. Lines with nothing behind them are left out, except the daily bonus,
+// which always says why it paid or did not. `dayMinutes` is the date's training
+// minutes once this workout is counted (WorkoutScore.dayMinutes). Without it the
+// day is taken to be this workout alone.
 export function xpBreakdown(
-  w: Pick<WorkoutLog, 'items' | 'marks' | 'xpParts' | 'xp' | 'planComplete' | 'planMissing'>,
-  opts: { lookup?: ExerciseLookup; weight?: WeightUnit; distance?: DistanceUnit; weeklyGoal?: number } = {}
+  w: Pick<WorkoutLog, 'items' | 'marks' | 'xpParts' | 'xp'>,
+  opts: { lookup?: ExerciseLookup; weight?: WeightUnit; distance?: DistanceUnit; weeklyGoal?: number; dayMinutes?: number } = {}
 ): { lines: BreakdownLine[]; total: number } {
   const lookup = opts.lookup ?? exerciseById;
   const parts = w.xpParts ?? { sets: 0, cardio: 0, beat: 0, record: 0, finish: 0, weekly: 0, comeback: 0 };
@@ -78,13 +82,10 @@ export function xpBreakdown(
     lines.push({ key: 'record', title: 'Record', sub: records.map((m) => `${nameOf(m.exerciseId)}, ${markText(m, opts.weight, opts.distance)}`).join('; '), xp: parts.record });
   }
   if (beats.length > 0) lines.push({ key: 'beat', title: 'Beat last time', sub: beats.map((m) => nameOf(m.exerciseId)).join(', '), xp: parts.beat });
-  if (w.planComplete) {
-    lines.push({ key: 'finish', title: 'Finish bonus', ...(parts.finish === 0 ? { sub: 'Paid once a day' } : {}), xp: parts.finish });
-  } else if ((w.planMissing ?? []).length > 0) {
-    const missing = (w.planMissing ?? []).map(nameOf);
-    lines.push({ key: 'finish', title: 'Finish bonus', sub: `Missed: ${missing.join(', ')} ${missing.length === 1 ? "wasn't" : "weren't"} done`, xp: 0 });
-  }
-  if (parts.weekly > 0) lines.push({ key: 'weekly', title: 'Weekly goal', sub: `${opts.weeklyGoal ?? 3} workouts this week`, xp: parts.weekly });
+  const minutes = trainingMinutes(w.items, lookup);
+  lines.push(
+    ...bonusLines({ dailyXp: parts.finish, comebackXp: parts.comeback ?? 0, weeklyXp: parts.weekly, minutes, dayMinutes: opts.dayMinutes ?? minutes, weeklyGoal: opts.weeklyGoal ?? 3 })
+  );
   return { lines, total: w.xp };
 }
 

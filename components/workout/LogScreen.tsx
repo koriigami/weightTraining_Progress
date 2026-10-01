@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 import { Dumbbell, Flag, Plus, Settings, Trash2 } from 'lucide-react';
 import { fmtPreviousBest, previousBestSet } from '@/lib/exerciseHistory';
 import { untickedSets } from '@/lib/finishSummary';
-import { liveXp, statTiles } from '@/lib/liveStats';
+import { dailyBonusLive, liveXp, statTiles } from '@/lib/liveStats';
 import { fillOnTick } from '@/lib/setColumns';
-import { planFromItems } from '@/lib/session';
 import type { SetPatch } from '@/lib/session';
-import { liveMarks, planProgress } from '@/lib/workoutScoring';
+import { dailyBonusPaid, dayMinutes, liveMarks } from '@/lib/workoutScoring';
 import { useDesktopLayout, useWideLayout } from '@/lib/useMediaQuery';
+import { useToday } from '@/lib/useToday';
 import { useProgress } from '@/components/ProgressProvider';
 import { useElapsed, useWorkoutSession } from '@/components/WorkoutSessionProvider';
 import { ExerciseInfoSheet } from '@/components/exercises/ExerciseDetail';
@@ -49,6 +49,7 @@ export function LogScreen() {
   const desktop = useDesktopLayout();
   const wide = useWideLayout();
   const elapsed = useElapsed(ws.session?.startedAt);
+  const today = useToday();
   const panelRef = useRef<LibraryPanelHandle>(null);
 
   const [confirm, setConfirm] = useState<'finish' | 'discard' | null>(null);
@@ -77,8 +78,8 @@ export function LogScreen() {
   // Beat last time and Record chips, judged against the saved workouts.
   const marks = useMemo(() => liveMarks(items ?? [], workouts, lookup), [items, workouts, lookup]);
   const parts = useMemo(() => liveXp(items ?? [], marks, lookup), [items, marks, lookup]);
-  // The plan as it stands now (older workouts in progress have none: their exercises are the plan).
-  const plan = useMemo(() => (items ? planProgress(session?.plan ?? planFromItems(items), items, lookup) : null), [items, session?.plan, lookup]);
+  // The daily bonus so far: today's saved workouts and this one add up towards 20 minutes.
+  const bonus = useMemo(() => dailyBonusLive(dayMinutes(workouts, today, items ?? [], lookup), dailyBonusPaid(workouts, today, lookup)), [workouts, today, items, lookup]);
 
   if (!ws.ready) return <Screen header={<PageHeader title="Log workout" back="/" />}>{null}</Screen>;
 
@@ -101,7 +102,6 @@ export function LogScreen() {
   const listName = session.title.trim() || 'this workout';
   const empty = session.items.length === 0;
   const unticked = untickedSets(session.items, lookup);
-  const missedNames = (plan?.missing ?? []).map((id) => lookup(id)?.name ?? 'An exercise');
 
   function leave() {
     if (typeof window !== 'undefined' && window.history.length > 1) router.back();
@@ -196,7 +196,7 @@ export function LogScreen() {
   const swapEx = swapItem ? lookup(swapItem.exerciseId) : undefined;
 
   const tiles = statTiles(session.items, ws.totals, { elapsed, weight: units.weight, distance: units.distance, lookup });
-  const stats = <WorkoutStats tiles={tiles} xp={parts.total} parts={parts} plan={plan} />;
+  const stats = <WorkoutStats tiles={tiles} xp={parts.total} parts={parts} bonus={bonus} />;
 
   const blocks = session.items.map((item, i) => {
     const e = lookup(item.exerciseId);
@@ -277,7 +277,7 @@ export function LogScreen() {
         wide ? (
           <>
             <SummaryCard items={session.items}>
-              <WorkoutStats tiles={tiles} xp={parts.total} parts={parts} plan={plan} side />
+              <WorkoutStats tiles={tiles} xp={parts.total} parts={parts} bonus={bonus} side />
             </SummaryCard>
             <LibraryPanel
               ref={panelRef}
@@ -349,7 +349,7 @@ export function LogScreen() {
       <ExerciseInfoSheet exercise={infoId ? lookup(infoId) ?? null : null} onClose={() => setInfoId(null)} />
 
       <DiscardDialog open={confirm === 'discard'} tickedSets={ws.counts.done} xp={parts.total} onKeepLogging={() => setConfirm(null)} onDiscard={discard} />
-      <FinishDialog open={confirm === 'finish'} unticked={unticked} missedPlan={missedNames} saving={saving} onKeepLogging={() => setConfirm(null)} onFinish={() => void finish()} />
+      <FinishDialog open={confirm === 'finish'} unticked={unticked} saving={saving} onKeepLogging={() => setConfirm(null)} onFinish={() => void finish()} />
     </Screen>
   );
 }

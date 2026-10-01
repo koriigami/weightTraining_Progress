@@ -139,6 +139,21 @@ rules are the XP Rulebook (`docs/design/xp-reference.html`), called rules v3:
   rest. `trainingDays`, `trainingDaysOf`, `trainingMinutes`, `dayMinutes` and
   `dailyBonusPaid` are the helpers the screens use: the training days of a state,
   and the minutes a date has so far (saved workouts plus the one in progress).
+- **Where the daily bonus shows.**
+  - *The XP popover while logging* (`dailyBonusLive` in `lib/liveStats.ts`) says
+    "N of 20 min today" from today's saved workouts plus the live sets,
+    "Daily bonus earned" once the total reaches 20, and "Already earned today"
+    when a saved workout already paid it.
+  - *The Victory screen and the workout page* (`bonusLines` in `lib/victory.ts`,
+    used by `xpLines` and by `xpBreakdown` in `lib/history.ts`) list the daily
+    bonus, the comeback and the weekly goal. A daily bonus of 0 says why: already
+    earned today, or N of 20 min today. The Finish dialog only warns about
+    unticked sets.
+  - *The Home week strip* (`weekDots` in `lib/week.ts`) ticks training days and
+    shows "Rest" on past days without one. Once the weekly goal is met the days
+    still to come show "Rest" too. Today keeps its marker until it is a training
+    day. `comebackPending` drives the "Comeback bonus" hint on the Today card:
+    last week and this week have no training day and an earlier one exists.
 - **Training days drive the rest.** `weeklyStreaks` takes training-day dates, and
   the weekly goal, the Finisher, Month Clear, Goal Month and Streak Keeper badges,
   and the workouts and weekly streak goals all count training days. A day under
@@ -166,7 +181,8 @@ rules are the XP Rulebook (`docs/design/xp-reference.html`), called rules v3:
   again with the new rules". `rulesV3Note` does the same for the daily bonus
   rules: true when the state has workouts the first time it is read, false
   otherwise. Seeing a note sets its flag to false (`setRulesNote`,
-  `setRulesV3Note`). The pass that sets `rulesV3Note` also works the stored `xp`
+  `setRulesV3Note`). Home's `RulesNote` shows the v3 note when it is set (and
+  then clears both flags on "Got it"), else the v2 note. The pass that sets `rulesV3Note` also works the stored `xp`
   and `xpParts` of every workout out again, so the workout pages match the new
   rules at once. Reading again changes nothing.
 
@@ -286,7 +302,7 @@ no component test suite. Screens are checked two ways:
 
 - `npm run qa` (`scripts/qa/`): starts the dev server, signs in over HTTP with
   the dev provider, seeds a known state through `/api/state` (workouts
-  `qa-strength`, `qa-run`, `qa-ride`, `qa-mixed`, weights, a goal, a routine),
+  `qa-strength`, `qa-run`, `qa-ride`, `qa-mixed`, `qa-short`, weights, a goal, a routine),
   screenshots the given routes at 390 and 1440 px, and reports console errors
   and horizontal overflow. `withApp` in `scripts/qa/lib.mjs` gives a signed-in
   page for flows such as finishing a workout.

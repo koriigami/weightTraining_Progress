@@ -17,13 +17,12 @@ import {
   updateCardio,
 } from '../lib/session';
 import type { Session, SessionResult } from '../lib/session';
-import { cardioRate, distanceCardio, fmtMinutes, fmtSpeed, liveXp, planLine, statTiles, statsKind } from '../lib/liveStats';
+import { cardioRate, dailyBonusLive, distanceCardio, fmtMinutes, fmtSpeed, liveXp, minutesTodayText, statTiles, statsKind } from '../lib/liveStats';
 import { lastWorkoutSets } from '../lib/exerciseHistory';
-import { liveMarks, planProgress } from '../lib/workoutScoring';
+import { dailyBonusPaid, dayMinutes, liveMarks } from '../lib/workoutScoring';
 import { defaultPrefs, resolvePrefs, workoutTotals } from '../lib/routines';
 import type { Routine } from '../lib/routines';
 import { parsePrefs } from '../lib/routineValidation';
-import { missedPlanSentence } from '../lib/finishSummary';
 import { workout } from './helpers';
 
 const NOW = new Date(2026, 9, 10, 18, 0, 0);
@@ -281,37 +280,30 @@ describe('live chips and the XP popover', () => {
     expect(liveXp(items, marks)).toEqual({ sets: 10, marks: 25, cardio: 30, total: 65 });
   });
 
-  it('plan progress counts done items and the bonus it would pay', () => {
-    const plan = [
-      { exerciseId: 'pushup', sets: 2 },
-      { exerciseId: 'db-ohp', sets: 1 },
-    ];
-    const items = [
-      { exerciseId: 'pushup', sets: [{ reps: 10, done: true }, { reps: 10, done: true }] },
-      { exerciseId: 'db-ohp', sets: [{ kg: 5, reps: 10, done: false }] },
-    ];
-    const p = planProgress(plan, items);
-    expect(p).toMatchObject({ total: 2, done: 1, complete: false, missing: ['db-ohp'], bonus: 15 });
-    expect(planLine(p)).toBe('1 of 2 planned exercises done. Finish them all for +15.');
-    const done = planProgress(plan, [items[0], { exerciseId: 'db-ohp', sets: [{ kg: 5, reps: 10, done: true }] }]);
-    expect(done.complete).toBe(true);
-    expect(planLine(done)).toBe('Every planned exercise is done: +15 when you finish.');
-    expect(planLine({ total: 0, done: 0, complete: false, bonus: 0 })).toBe('');
+  it('the daily bonus line counts up from the minutes today, rounded down', () => {
+    expect(dailyBonusLive(12, false)).toEqual({ state: 'short', text: '12 of 20 min today' });
+    expect(dailyBonusLive(0, false).text).toBe('0 of 20 min today');
+    expect(dailyBonusLive(19.5, false).text).toBe('19 of 20 min today');
+    expect(minutesTodayText(6)).toBe('6 of 20 min today');
   });
 
-  it('caps the bonus at 50', () => {
-    const plan = Array.from({ length: 12 }, (_, i) => ({ exerciseId: `x${i}`, sets: 1 }));
-    expect(planProgress(plan, []).bonus).toBe(0);
-    const real = [{ exerciseId: 'pushup', sets: 20 }];
-    expect(planProgress(real, []).bonus).toBe(50);
+  it('the daily bonus line says earned once the day reaches 20 minutes', () => {
+    expect(dailyBonusLive(20, false)).toEqual({ state: 'earned', text: 'Daily bonus earned' });
+    expect(dailyBonusLive(45, false).state).toBe('earned');
   });
-});
 
-describe('the finish confirm sentence', () => {
-  it('names up to two, then counts the rest', () => {
-    expect(missedPlanSentence(['Treadmill'])).toBe("Treadmill isn't done, so this workout won't get the finish bonus.");
-    expect(missedPlanSentence(['Treadmill', 'Push Up'])).toBe("Treadmill and Push Up aren't done, so this workout won't get the finish bonus.");
-    expect(missedPlanSentence(['A', 'B', 'C', 'D'])).toBe("A, B and 2 more aren't done, so this workout won't get the finish bonus.");
+  it('the daily bonus line says already earned when an earlier workout paid it, whatever this one adds', () => {
+    expect(dailyBonusLive(24, true)).toEqual({ state: 'paid', text: 'Already earned today' });
+    expect(dailyBonusLive(3, true).state).toBe('paid');
+  });
+
+  it('feeds the line from the saved workouts of today plus the sets being logged', () => {
+    const saved = [workout('2026-10-10', [{ id: 'pushup', sets: [{ reps: 10 }, { reps: 10 }] }]), workout('2026-10-09', [{ id: 'pushup', sets: Array.from({ length: 9 }, () => ({ reps: 10 })) }])];
+    const live = [{ exerciseId: 'db-ohp', sets: Array.from({ length: 4 }, () => ({ kg: 5, reps: 10, done: true })) }];
+    expect(dayMinutes(saved, '2026-10-10', live)).toBe(18); // 6 saved today, 12 live, yesterday not counted
+    expect(dailyBonusLive(dayMinutes(saved, '2026-10-10', live), dailyBonusPaid(saved, '2026-10-10')).text).toBe('18 of 20 min today');
+    const more = [{ ...live[0], sets: [...live[0].sets, { kg: 5, reps: 10, done: true }] }];
+    expect(dailyBonusLive(dayMinutes(saved, '2026-10-10', more), dailyBonusPaid(saved, '2026-10-10')).state).toBe('earned');
   });
 });
 

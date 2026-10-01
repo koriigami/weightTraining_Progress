@@ -14,6 +14,11 @@ describe('goals in the person\'s units', () => {
     expect(goalTitle(km, { weight: 'kg', distance: 'km' })).toBe('20 km cardio distance');
   });
 
+  it('a workouts goal is written as training days', () => {
+    expect(goalTitle({ ...km, type: 'workouts', target: 12 })).toBe('12 training days');
+    expect(goalTitle({ ...km, type: 'workouts', target: 1 })).toBe('1 training day');
+  });
+
   it('a pounds person reads the same goal in pounds', () => {
     const g: Goal = { ...weightGoal, target: 72.73 };
     expect(goalTitle(g, { weight: 'lb', distance: 'km' })).toBe('Lose 5.0 lb, to 160.3 lb');

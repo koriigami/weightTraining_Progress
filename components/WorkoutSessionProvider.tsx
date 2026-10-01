@@ -18,7 +18,7 @@ type WorkoutSessionValue = {
   session: Session | null;
   /** False until the stored session has been read. Wait for it before redirecting away from /workout. */
   ready: boolean;
-  /** Ticked sets, volume and XP so far (set XP only, without the finish bonus). */
+  /** Ticked sets, volume and XP so far (set XP only, without the daily bonus). */
   totals: WorkoutTotals;
   counts: { done: number; total: number; unticked: number };
   /** The last workout finish() saved, for the Victory screen. Lives in memory only. */

@@ -3457,6 +3457,13 @@ textarea.wt-input {
   color: #fff;
   box-shadow: 0 3px 0 var(--p-bevel);
 }
+.wt-wd.rest i {
+  background: #f4e9d2;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
 .wt-wd.today i {
   box-shadow: inset 0 0 0 2px var(--xp);
 }
@@ -4825,22 +4832,14 @@ button.wt-setrow:hover {
   color: var(--xp-ink);
   font-variant-numeric: tabular-nums;
 }
-.wt-xppop-plan {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  margin-top: 10px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: var(--surface-2);
-  font-size: 13px;
+.wt-xppop-row.day span:last-child {
+  color: var(--muted);
   font-weight: 700;
-  line-height: 1.35;
+  text-align: right;
 }
-.wt-xppop-plan svg {
-  flex: none;
-  margin-top: 1px;
-  color: var(--link);
+.wt-xppop-day {
+  display: flex;
+  padding: 8px 0 4px;
 }
 .wt-xppop .wt-textbtn {
   display: flex;
@@ -5617,6 +5616,22 @@ button.wt-frow:focus-visible {
 }
 .wt-tcard .wt-rrow {
   padding: 6px 10px;
+}
+.wt-comeback {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--muted);
+  text-wrap: balance;
+}
+.wt-comeback svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--xp-ink);
 }
 .wt-tc-alt {
   display: grid;

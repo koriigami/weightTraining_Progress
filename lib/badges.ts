@@ -53,7 +53,7 @@ export const LIFETIME_FAMILIES: Record<
     unit: '',
   },
   // The families below score the workout itself: training days, sets, records, weeks and muscles.
-  finisher: { name: 'Finisher', metric: 'Workouts finished', shape: 'shield', icon: 'target', tiers: [1, 10, 25, 50, 100, 250], unit: 'workouts' },
+  finisher: { name: 'Finisher', metric: 'Training days', shape: 'shield', icon: 'target', tiers: [1, 10, 25, 50, 100, 250], unit: 'training days' },
   'iron-mover': { name: 'Iron Mover', metric: 'Sets logged', shape: 'hex', icon: 'dumbbell', tiers: [50, 250, 500, 1000, 2500, 5000], unit: 'sets' },
   'record-breaker': {
     name: 'Record Breaker',
@@ -66,7 +66,7 @@ export const LIFETIME_FAMILIES: Record<
   },
   'streak-keeper': {
     name: 'Streak Keeper',
-    metric: 'Best weekly streak',
+    metric: 'Weeks in a row with a training day',
     shape: 'square',
     icon: 'week',
     tiers: [2, 4, 8, 12, 26, 52],

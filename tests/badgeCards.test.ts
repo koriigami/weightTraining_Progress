@@ -31,9 +31,9 @@ describe('badge cards', () => {
 
   it('a family nobody has started is locked, drawn in its first tier, with progress towards it', () => {
     const c = buildBadgeCards(emptyState(), TODAY).workouts[0];
-    expect(c).toMatchObject({ earned: false, tierName: 'Locked', value: 0, target: 1, pct: 0, progressText: '0 of 1 workouts' });
+    expect(c).toMatchObject({ earned: false, tierName: 'Locked', value: 0, target: 1, pct: 0, progressText: '0 of 1 training day' });
     expect(c.art.tier).toBe('bronze');
-    expect(c.hint).toBe('Bronze unlocks at 1 workouts. You are at 0 workouts. Workouts finished.');
+    expect(c.hint).toBe('Bronze unlocks at 1 training day. You are at 0 training days. Training days.');
     const iron = buildBadgeCards(legacyState, TODAY).lifetime[0];
     expect(iron.name).toBe('Pushup Path');
   });
@@ -41,10 +41,10 @@ describe('badge cards', () => {
   it('an earned tier shows its name, and the bar counts towards the next one', () => {
     const state = stateWith([push('2026-09-28'), push('2026-09-29'), push('2026-09-30')]);
     const c = buildBadgeCards(state, TODAY).workouts[0];
-    expect(c).toMatchObject({ earned: true, tierName: 'Bronze', value: 3, target: 10, pct: 30, progressText: '3 of 10 workouts' });
+    expect(c).toMatchObject({ earned: true, tierName: 'Bronze', value: 3, target: 10, pct: 30, progressText: '3 of 10 training days' });
     expect(c.art.tier).toBe('bronze');
     expect(c.earnedAt).toBe('2026-09-28');
-    expect(c.hint).toBe('Bronze tier. Workouts finished. 3 workouts so far. Silver unlocks at 10 workouts.');
+    expect(c.hint).toBe('Bronze tier. Training days. 3 training days so far. Silver unlocks at 10 training days.');
     expect(c.ladder.map((l) => [l.tier, l.threshold, l.earned])).toEqual([
       ['bronze', 1, true],
       ['silver', 10, false],
@@ -66,8 +66,13 @@ describe('badge cards', () => {
   it('the top tier has no next target', () => {
     const fam: FamilyProgress = { id: 'finisher', value: 300, tierIndex: 6, earned: [], nextThreshold: null, progressToNext: null };
     const c = lifetimeCard('finisher', fam);
-    expect(c).toMatchObject({ earned: true, tierName: 'Legend', target: null, pct: 100, progressText: '300 workouts, top tier' });
-    expect(c.hint).toBe('Legend tier, the top one. Workouts finished. 300 workouts so far.');
+    expect(c).toMatchObject({ earned: true, tierName: 'Legend', target: null, pct: 100, progressText: '300 training days, top tier' });
+    expect(c.hint).toBe('Legend tier, the top one. Training days. 300 training days so far.');
+  });
+
+  it('Finisher counts training days and Streak Keeper weeks in a row with one', () => {
+    expect(LIFETIME_FAMILIES.finisher.metric).toBe('Training days');
+    expect(LIFETIME_FAMILIES['streak-keeper'].metric).toBe('Weeks in a row with a training day');
   });
 
   it('Road Runner and Rider say they count logged km, and count them', () => {

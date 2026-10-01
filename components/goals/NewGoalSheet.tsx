@@ -18,7 +18,7 @@ import type { EndPreset } from '@/lib/goals';
 import type { Goal, GoalType } from '@/lib/progress';
 
 const TYPES: { id: GoalType; label: string; Icon: ComponentType<{ size?: number }> }[] = [
-  { id: 'workouts', label: 'Workouts', Icon: Dumbbell },
+  { id: 'workouts', label: 'Training days', Icon: Dumbbell },
   { id: 'streak', label: 'Weekly streak', Icon: Flame },
   { id: 'cardio-minutes', label: 'Cardio minutes', Icon: Timer },
   { id: 'cardio-km', label: 'Distance', Icon: Route },
@@ -302,7 +302,7 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
               </Group>
               <div className="wt-goal-summary">
                 <b>{endsLabel(streakDl)}</b>
-                <span>{isEdit ? `Started ${formatDay(streakStart)}` : 'Starts this week'}. Any workout keeps a week alive.</span>
+                <span>{isEdit ? `Started ${formatDay(streakStart)}` : 'Starts this week'}. Any training day keeps a week alive.</span>
               </div>
               <span className="wt-field-hint">{ANTI_FARM}</span>
             </>
@@ -384,7 +384,7 @@ export function NewGoalSheet({ open, onClose, editGoal }: { open: boolean; onClo
                   <span className="wt-field-hint">{endsLabel(periodEndDate)}</span>
                 )}
               </Group>
-              <Group label={type === 'workouts' ? 'Workouts' : type === 'pushups' ? 'Push-ups' : type === 'cardio-minutes' ? 'Cardio minutes' : du === 'mi' ? 'Miles' : 'Kilometres'}>
+              <Group label={type === 'workouts' ? 'Training days' : type === 'pushups' ? 'Push-ups' : type === 'cardio-minutes' ? 'Cardio minutes' : du === 'mi' ? 'Miles' : 'Kilometres'}>
                 <Stepper label="Amount" value={amount} min={1} max={100000} onChange={setAmountOverride} />
                 <span className="wt-field-hint">{goalHint(type, recent, 4, `${fmtNumber(kmToUnit(recent.km, du))} ${du}`)}</span>
                 <span className="wt-field-hint">{ANTI_FARM}</span>

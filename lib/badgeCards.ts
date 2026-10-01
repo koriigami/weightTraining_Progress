@@ -52,7 +52,11 @@ export const LEGACY_FAMILIES: LifetimeFamilyId[] = ['pushup-path', 'engine', 'ro
 
 const pct = (value: number, target: number | null): number => (target === null ? 100 : target <= 0 ? 0 : Math.max(0, Math.min(100, Math.round((value / target) * 100))));
 
-const withUnit = (n: number, unit: string): string => `${fmtNumber(n)}${unit ? ` ${unit}` : ''}`;
+// "1 training day", "5 training days", "3 kg". A lone 1 drops the plural s.
+const withUnit = (n: number, unit: string): string => {
+  const u = n === 1 && unit.endsWith('s') ? unit.slice(0, -1) : unit;
+  return `${fmtNumber(n)}${u ? ` ${u}` : ''}`;
+};
 
 export function lifetimeCard(id: LifetimeFamilyId, fam: FamilyProgress): BadgeCard {
   const meta = LIFETIME_FAMILIES[id];
