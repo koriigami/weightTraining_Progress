@@ -1,17 +1,19 @@
 // This week at a glance, and which routines are up next. Pure functions.
 //
-// A day counts as trained when there is a logged workout with a ticked set on it.
-// Weeks run Monday to Sunday, like the weekly streak and the weekly goal.
+// A day counts as trained when it is a training day: its workouts add up to 20
+// minutes (see scoreWorkouts). Weeks run Monday to Sunday, like the weekly streak
+// and the weekly goal.
 import type { AppState } from './progress';
 import { addDaysStr, mondayOf } from './date';
-import { weeklyStreaks } from './workoutScoring';
+import { trainingDaysOf, weeklyStreaks } from './workoutScoring';
 import { weeklyGoalOf } from './routines';
 import type { Routine, WorkoutLog } from './routines';
 
 const hasTickedSet = (w: WorkoutLog): boolean => w.items.some((it) => it.sets.some((s) => s.done));
 
-// The date of every training session, one entry per workout, so two workouts on
-// one day count twice. Oldest first.
+// The date of every logged workout with a ticked set, one entry per workout, so
+// two workouts on one day count twice. Oldest first. This counts sessions (the
+// Profile tile), not training days.
 export function trainedDates(state: Pick<AppState, 'workouts'>): string[] {
   const dates: string[] = [];
   for (const w of state.workouts ?? []) if (hasTickedSet(w)) dates.push(w.date);
@@ -41,20 +43,20 @@ export function weekDots(dates: readonly string[], today: string): WeekDot[] {
 
 export type WeekSummary = {
   dots: WeekDot[];
-  count: number; // sessions this week
+  count: number; // training days this week
   goal: number;
-  streak: number; // weeks in a row with at least one session
+  streak: number; // weeks in a row with at least one training day
 };
 
 export function weekSummary(state: AppState, today: string): WeekSummary {
-  const dates = trainedDates(state);
+  const dates = trainingDaysOf(state, today);
   const monday = mondayOf(today);
   const sunday = addDaysStr(monday, 6);
   return {
     dots: weekDots(dates, today),
     count: dates.filter((d) => d >= monday && d <= sunday).length,
     goal: weeklyGoalOf(state),
-    streak: weeklyStreaks([...new Set(dates)], today).current,
+    streak: weeklyStreaks(dates, today).current,
   };
 }
 

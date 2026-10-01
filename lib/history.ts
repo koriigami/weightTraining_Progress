@@ -54,7 +54,7 @@ export function xpBreakdown(
   opts: { lookup?: ExerciseLookup; weight?: WeightUnit; distance?: DistanceUnit; weeklyGoal?: number } = {}
 ): { lines: BreakdownLine[]; total: number } {
   const lookup = opts.lookup ?? exerciseById;
-  const parts = w.xpParts ?? { sets: 0, cardio: 0, beat: 0, record: 0, finish: 0, weekly: 0 };
+  const parts = w.xpParts ?? { sets: 0, cardio: 0, beat: 0, record: 0, finish: 0, weekly: 0, comeback: 0 };
   const nameOf = (id: string) => lookup(id)?.name ?? 'Exercise';
   let strengthSets = 0;
   let cardioMinutes = 0;
@@ -79,7 +79,7 @@ export function xpBreakdown(
   }
   if (beats.length > 0) lines.push({ key: 'beat', title: 'Beat last time', sub: beats.map((m) => nameOf(m.exerciseId)).join(', '), xp: parts.beat });
   if (w.planComplete) {
-    lines.push({ key: 'finish', title: 'Finish bonus', ...(parts.finish === 0 ? { sub: `Paid ${WORKOUT_XP.finishPerDay} times a day` } : {}), xp: parts.finish });
+    lines.push({ key: 'finish', title: 'Finish bonus', ...(parts.finish === 0 ? { sub: 'Paid once a day' } : {}), xp: parts.finish });
   } else if ((w.planMissing ?? []).length > 0) {
     const missing = (w.planMissing ?? []).map(nameOf);
     lines.push({ key: 'finish', title: 'Finish bonus', sub: `Missed: ${missing.join(', ')} ${missing.length === 1 ? "wasn't" : "weren't"} done`, xp: 0 });

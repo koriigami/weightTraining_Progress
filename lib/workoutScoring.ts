@@ -1,6 +1,6 @@
-// XP, records and weekly streaks for logged workouts. Pure functions.
+// XP, records, training days and weekly streaks for logged workouts. Pure functions.
 //
-// Rules (v2):
+// Rules (v3):
 //   +5 XP per ticked strength set that has a rep (or a 5 second hold). Cardio is
 //   1 XP a minute (30 at most a set) plus 10 when a distance is logged. An
 //   interval set is its work plus easy minutes, also capped at 30. See setXp in
@@ -8,15 +8,20 @@
 //   +10 for beating last time and +25 for an all-time record, once per exercise
 //   per workout. A record replaces the beat. The first time an exercise shows up
 //   there is nothing to beat, so it earns neither.
-//   +50 at most for finishing the plan: every planned exercise done for its
-//   planned sets. It pays the XP of the sets that fill the plan, capped at 50,
-//   and at most twice a day.
-//   +50 the workout that makes the Monday to Sunday week's count of finished
-//   plans reach the weekly goal.
+//   +50 daily bonus, once a day, on the workout that takes the day's training to
+//   20 minutes. Every workout of the date adds up, strength and cardio together:
+//   a ticked strength set that earns XP counts 3 minutes, cardio counts its own
+//   minutes (not capped, only the XP is). The plan does not matter. A date that
+//   reaches 20 minutes is a training day.
+//   +50 on the workout that makes the Monday to Sunday week's training days
+//   reach the weekly goal.
+//   +25 comeback on the first training day after a whole Monday to Sunday week
+//   with none, never for a person's first training day.
 //
 // Everything is derived from the workouts, in date order, so deleting or moving
 // a workout re-scores the rest. A workout with no ticked sets scores nothing,
 // and a workout dated after tomorrow is ignored (tomorrow allows for time zones).
+// The plan a workout set out to do is kept only for the Clean Sweep badge.
 import { exerciseById } from '../data/exercises';
 import type { ExerciseDef, Muscle } from '../data/exercises';
 import { addDaysStr, mondayOf } from './date';
@@ -180,6 +185,8 @@ function markOf(e: ExerciseDef, exerciseId: string, kind: WorkoutMark['kind'], p
 
 // ---------------- The plan ----------------
 
+// The plan is kept for the Clean Sweep badge only. It does not decide any XP.
+
 // The plan a workout is judged against: the snapshot taken at Start, or for
 // older workouts what they ticked.
 export function planOf(w: Pick<WorkoutLog, 'plan' | 'items'>): PlanItem[] {
@@ -192,7 +199,7 @@ export function planOf(w: Pick<WorkoutLog, 'plan' | 'items'>): PlanItem[] {
 type PlanResult = { complete: boolean; missing: string[]; xp: number };
 
 // Done means at least `sets` qualifying sets of that exercise. xp is what the
-// sets that fill the plan earned, best sets first, before the 50 cap.
+// sets that fill the plan earned, best sets first.
 function checkPlan(plan: PlanItem[], items: WorkoutItem[], lookup: ExerciseLookup): PlanResult {
   const missing: string[] = [];
   let xp = 0;
@@ -207,9 +214,13 @@ function checkPlan(plan: PlanItem[], items: WorkoutItem[], lookup: ExerciseLooku
 }
 
 // How far a plan is along, for the live popover. `done` counts plan items with
-// enough qualifying sets, `bonus` is what the finish bonus would pay: the XP of
-// the sets that fill the plan (an unticked set counts as if it were ticked, and
-// a planned strength set with nothing typed yet as the flat strength XP), capped.
+// enough qualifying sets, `bonus` is the XP of the sets that fill the plan (an
+// unticked set counts as if it were ticked, and a planned strength set with
+// nothing typed yet as the flat strength XP), capped at 50. The finish bonus it
+// once previewed is gone: the popover's plan line stays until the daily bonus
+// popover replaces it.
+const PLAN_PREVIEW_CAP = 50;
+
 export type PlanProgress = { total: number; done: number; missing: string[]; complete: boolean; bonus: number };
 
 export function planProgress(plan: PlanItem[], items: WorkoutItem[], lookup: ExerciseLookup = exerciseById): PlanProgress {
@@ -228,7 +239,7 @@ export function planProgress(plan: PlanItem[], items: WorkoutItem[], lookup: Exe
     done: plan.length - check.missing.length,
     missing: check.missing,
     complete: check.complete,
-    bonus: Math.min(WORKOUT_XP.finishCap, check.complete ? check.xp : potential),
+    bonus: Math.min(PLAN_PREVIEW_CAP, check.complete ? check.xp : potential),
   };
 }
 
@@ -268,6 +279,42 @@ export function isPushup(e: ExerciseDef | undefined): boolean {
   return Boolean(e && /push[ -]?up/i.test(e.name));
 }
 
+// ---------------- Training minutes and days ----------------
+
+// What a set of items counts towards the daily bonus: every ticked strength set
+// that earns XP is minutesPerSet minutes, and cardio is the minutes it says (an
+// interval set is its work plus easy minutes). Cardio minutes are not capped,
+// only the XP for them is.
+export function trainingMinutes(items: readonly WorkoutItem[], lookup: ExerciseLookup = exerciseById): number {
+  let minutes = 0;
+  for (const item of items) {
+    const e = lookup(item.exerciseId);
+    if (!e) continue;
+    for (const s of item.sets) {
+      if (!s.done) continue;
+      if (e.metric === 'distance_time') minutes += num(s.min);
+      else if (e.metric === 'intervals') minutes += num(s.on) + num(s.off);
+      else if (setXp(e, s) > 0) minutes += WORKOUT_XP.minutesPerSet;
+    }
+  }
+  return minutes;
+}
+
+// Minutes trained on a date: the saved workouts dated that day, plus the items of
+// a workout still in progress. This is the number the live popover counts up to 20.
+export function dayMinutes(workouts: readonly WorkoutLog[], date: string, live?: readonly WorkoutItem[], lookup: ExerciseLookup = exerciseById): number {
+  let minutes = live ? trainingMinutes(live, lookup) : 0;
+  for (const w of workouts) if (w.date === date) minutes += trainingMinutes(w.items, lookup);
+  return minutes;
+}
+
+// True when the saved workouts of a date have already paid its daily bonus, so a
+// workout finished now will not pay it again. A workout still in progress is
+// never counted: it finishes after the ones already saved.
+export function dailyBonusPaid(workouts: readonly WorkoutLog[], date: string, lookup: ExerciseLookup = exerciseById): boolean {
+  return dayMinutes(workouts, date, undefined, lookup) >= WORKOUT_XP.dailyMinutes;
+}
+
 // ---------------- Scoring ----------------
 
 export type WorkoutScore = {
@@ -280,12 +327,16 @@ export type WorkoutScore = {
   setXp: number; // sets and cardio, before any bonus
   beatXp: number;
   recordXp: number;
-  finishXp: number;
+  dailyXp: number; // the daily bonus, paid on the workout that takes the day to 20 minutes
   weeklyXp: number;
+  comebackXp: number;
   xp: number;
   parts: XpParts;
   marks: WorkoutMark[];
   records: number; // marks that are records
+  minutes: number; // this workout's training minutes
+  dayMinutes: number; // the date's training minutes once this workout is counted
+  trainingDay: boolean; // this workout is the one that made its date a training day
   planComplete: boolean;
   planMissing: string[];
   cleanSweep: boolean; // a routine's own plan, every planned set ticked
@@ -308,8 +359,10 @@ export function scoreWorkouts(workouts: WorkoutLog[], opts: ScoreOptions): Worko
   const lookup = opts.lookup ?? exerciseById;
   const lastByExercise = new Map<string, Perf>();
   const bestByExercise = new Map<string, Perf>();
-  const weekCounts = new Map<string, number>();
-  const finishesByDate = new Map<string, number>();
+  const minutesByDate = new Map<string, number>();
+  const trainingDaysByWeek = new Map<string, number>();
+  const trainingDates = new Set<string>();
+  let firstTrainingDay: string | null = null;
   const scores: WorkoutScore[] = [];
 
   for (const w of chronological(workouts)) {
@@ -319,7 +372,7 @@ export function scoreWorkouts(workouts: WorkoutLog[], opts: ScoreOptions): Worko
 
     const muscles = new Set<Muscle>();
     const inWorkout = new Map<string, { e: ExerciseDef; perf: Perf }>();
-    const parts: XpParts = { sets: 0, cardio: 0, beat: 0, record: 0, finish: 0, weekly: 0 };
+    const parts: XpParts = { sets: 0, cardio: 0, beat: 0, record: 0, finish: 0, weekly: 0, comeback: 0 };
     const marks: WorkoutMark[] = [];
     let runKm = 0;
     let rideKm = 0;
@@ -362,19 +415,29 @@ export function scoreWorkouts(workouts: WorkoutLog[], opts: ScoreOptions): Worko
       bestByExercise.set(exerciseId, bestOf(e, best, perf));
     }
 
+    // The daily bonus: every workout of the date adds its minutes, and the one
+    // that takes the day to the bar pays once and makes the date a training day.
+    // That moment also counts towards the weekly goal and can pay the comeback.
+    const minutes = trainingMinutes(w.items, lookup);
+    const dayTotal = (minutesByDate.get(w.date) ?? 0) + minutes;
+    minutesByDate.set(w.date, dayTotal);
+    let trainingDay = false;
+    if (!trainingDates.has(w.date) && dayTotal >= WORKOUT_XP.dailyMinutes) {
+      trainingDay = true;
+      trainingDates.add(w.date);
+      parts.finish = WORKOUT_XP.daily;
+      const week = mondayOf(w.date);
+      const inWeek = (trainingDaysByWeek.get(week) ?? 0) + 1;
+      trainingDaysByWeek.set(week, inWeek);
+      if (inWeek === opts.weeklyGoal) parts.weekly = WORKOUT_XP.weeklyGoal;
+      // First training day of its week, the week before it was empty, and there
+      // was training before that.
+      if (inWeek === 1 && !trainingDaysByWeek.has(addDaysStr(week, -7)) && firstTrainingDay !== null && firstTrainingDay < w.date) parts.comeback = WORKOUT_XP.comeback;
+      if (firstTrainingDay === null || w.date < firstTrainingDay) firstTrainingDay = w.date;
+    }
+
     const plan = planOf(w);
     const check = checkPlan(plan, w.items, lookup);
-    if (check.complete) {
-      const done = finishesByDate.get(w.date) ?? 0;
-      if (done < WORKOUT_XP.finishPerDay) {
-        finishesByDate.set(w.date, done + 1);
-        parts.finish = Math.min(WORKOUT_XP.finishCap, check.xp);
-      }
-      const week = mondayOf(w.date);
-      const count = (weekCounts.get(week) ?? 0) + 1;
-      weekCounts.set(week, count);
-      if (count === opts.weeklyGoal) parts.weekly = WORKOUT_XP.weeklyGoal;
-    }
 
     scores.push({
       id: w.id,
@@ -386,12 +449,16 @@ export function scoreWorkouts(workouts: WorkoutLog[], opts: ScoreOptions): Worko
       setXp: parts.sets + parts.cardio,
       beatXp: parts.beat,
       recordXp: parts.record,
-      finishXp: parts.finish,
+      dailyXp: parts.finish,
       weeklyXp: parts.weekly,
-      xp: parts.sets + parts.cardio + parts.beat + parts.record + parts.finish + parts.weekly,
+      comebackXp: parts.comeback ?? 0,
+      xp: parts.sets + parts.cardio + parts.beat + parts.record + parts.finish + parts.weekly + (parts.comeback ?? 0),
       parts,
       marks,
       records: marks.filter((m) => m.kind === 'record').length,
+      minutes,
+      dayMinutes: dayTotal,
+      trainingDay,
       planComplete: check.complete,
       planMissing: check.missing,
       cleanSweep: Boolean(w.routineId) && w.plan !== undefined && check.complete,
@@ -429,7 +496,7 @@ export function rescoreWorkouts(state: AppState, workouts: WorkoutLog[], today?:
     void _old;
     const s = byId.get(w.id);
     if (!s) {
-      return { ...rest, xp: 0, marks: [], xpParts: { sets: 0, cardio: 0, beat: 0, record: 0, finish: 0, weekly: 0 }, planComplete: false, planMissing: [] };
+      return { ...rest, xp: 0, marks: [], xpParts: { sets: 0, cardio: 0, beat: 0, record: 0, finish: 0, weekly: 0, comeback: 0 }, planComplete: false, planMissing: [] };
     }
     return { ...rest, xp: s.xp, marks: s.marks, xpParts: s.parts, planComplete: s.planComplete, planMissing: s.planMissing };
   });
@@ -442,8 +509,21 @@ export function workoutXpTotal(state: AppState, today?: string): number {
 
 // ---------------- Weekly streak ----------------
 
-// Consecutive Monday to Sunday weeks with at least one workout that has a ticked set. A week
-// that has not had a workout yet keeps the streak alive until it ends.
+// The dates that are training days (a date that reached 20 minutes), oldest first,
+// one per day.
+export function trainingDays(scores: readonly WorkoutScore[]): string[] {
+  return scores.filter((s) => s.trainingDay).map((s) => s.date).sort();
+}
+
+// The training days of an app state. Pass today to drop future-dated workouts.
+export function trainingDaysOf(state: AppState, today?: string): string[] {
+  return trainingDays(scoreState(state, today));
+}
+
+// Consecutive Monday to Sunday weeks with at least one training day. Pass the
+// training days (trainingDays), not every workout date: a week with only a short
+// workout does not count. A week that has not had a training day yet keeps the
+// streak alive until it ends.
 export function weeklyStreaks(dates: string[], today: string): { current: number; best: number } {
   const weeks = new Set(dates.map(mondayOf));
   if (weeks.size === 0) return { current: 0, best: 0 };
@@ -475,7 +555,7 @@ export type WorkoutStats = {
   records: number;
   weeklyStreak: number;
   bestWeeklyStreak: number;
-  thisWeek: number; // finished workouts this Monday to Sunday week
+  thisWeek: number; // training days this Monday to Sunday week
   weeklyGoal: number;
   musclesTrained: Muscle[];
   runKm: number;
@@ -485,10 +565,7 @@ export type WorkoutStats = {
 
 export function computeWorkoutStats(state: AppState, today: string): WorkoutStats {
   const scores = scoreState(state, today);
-  const streaks = weeklyStreaks(
-    scores.map((s) => s.date),
-    today
-  );
+  const streaks = weeklyStreaks(trainingDays(scores), today);
   const monday = mondayOf(today);
   const sunday = addDaysStr(monday, 6);
   const muscles = new Set<Muscle>();
@@ -513,7 +590,7 @@ export function computeWorkoutStats(state: AppState, today: string): WorkoutStat
     stats.runKm += s.runKm;
     stats.rideKm += s.rideKm;
     stats.xp += s.xp;
-    if (s.date >= monday && s.date <= sunday) stats.thisWeek++;
+    if (s.trainingDay && s.date >= monday && s.date <= sunday) stats.thisWeek++;
     s.muscles.forEach((m) => muscles.add(m));
   }
   stats.musclesTrained = [...muscles];

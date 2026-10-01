@@ -292,13 +292,13 @@ describe('editing a saved workout', () => {
     expect(buildWorkoutPatch(w, draftOf(w, { session: s }))).toEqual({ ok: false, error: 'Tick at least one set first.' });
   });
 
-  it('removing an exercise removes its plan slot', () => {
+  it('removing an exercise leaves the plan alone, so the edit does not move it', () => {
     const w = NOW_WORKOUT();
     const removal = removeExercise(sessionFromWorkout(w), 1)!;
-    expect(removal.session.plan).toEqual([{ exerciseId: 'db-row', sets: 2 }]);
+    expect(removal.session.plan).toEqual(sessionFromWorkout(w).plan);
     const built = buildWorkoutPatch(w, draftOf(w, { session: removal.session }));
     if (!built.ok) throw new Error(built.error);
-    expect(built.patch.plan).toEqual([{ exerciseId: 'db-row', sets: 2 }]);
+    expect(built.patch.plan).toBeUndefined();
     expect(built.patch.items.map((i) => i.exerciseId)).toEqual(['db-row']);
   });
 
@@ -348,14 +348,14 @@ describe('the server rescores an edit', () => {
   it('takes new items and works the XP out itself, ignoring what the client says', () => {
     const r = run({
       xp: 9999,
-      items: [{ exerciseId: 'db-row', sets: [{ kg: 10, reps: 10, done: true }, { kg: 10, reps: 10, done: true }, { kg: 10, reps: 10, done: true }] }],
+      items: [{ exerciseId: 'db-row', sets: Array.from({ length: 7 }, () => ({ kg: 10, reps: 10, done: true })) }],
     });
     if (!r.ok) throw new Error(r.error);
     const w = r.state.workouts![0];
-    expect(w.items[0].sets).toHaveLength(3);
-    // 15 for the sets and 15 for the finish bonus: the workout's own items are its plan.
-    expect(w.xp).toBe(30);
-    expect(w.xpParts).toMatchObject({ sets: 15, finish: 15 });
+    expect(w.items[0].sets).toHaveLength(7);
+    // 35 for the sets and 50 for the daily bonus: seven sets are 21 minutes.
+    expect(w.xp).toBe(85);
+    expect(w.xpParts).toMatchObject({ sets: 35, finish: 50 });
   });
 
   it('moves the date, the length and the plan', () => {

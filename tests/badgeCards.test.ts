@@ -12,13 +12,13 @@ import {
 } from '../lib/badgeCards';
 import { emptyState } from '../lib/progress';
 import { migratedPlanState } from './fixtures/legacyPlanState';
-import { stateWith, workout } from './helpers';
+import { stateWith, trainingDay, workout } from './helpers';
 
 const TODAY = '2026-09-30';
 const legacyState = migratedPlanState();
 
 const run = (date: string, km: number) => workout(date, [{ id: 'run', sets: [{ min: 30, km }] }]);
-const push = (date: string) => workout(date, [{ id: 'pushup', sets: [{ reps: 10 }] }]);
+const push = (date: string) => trainingDay(date);
 
 describe('badge cards', () => {
   it('shows every family: the 5 that score the workout, then the other 6', () => {

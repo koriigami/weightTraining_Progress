@@ -4,7 +4,7 @@ import { emptyState } from '../lib/progress';
 import type { AppState } from '../lib/progress';
 import { defaultPrefs } from '../lib/routines';
 import type { Routine } from '../lib/routines';
-import { stateWith, workout } from './helpers';
+import { stateWith, trainingDay, workout } from './helpers';
 
 // Tuesday 29 September 2026. Its week runs Monday 28 Sep to Sunday 4 Oct.
 const TODAY = '2026-09-29';
@@ -36,7 +36,7 @@ describe('week dots', () => {
 });
 
 describe('trained dates', () => {
-  it('counts logged workouts with a ticked set', () => {
+  it('counts logged workouts with a ticked set, as sessions', () => {
     const state: AppState = stateWith([
       workout('2026-10-10', [{ id: 'pushup', sets: [{ reps: 10 }] }]),
       workout('2026-10-11', [{ id: 'pushup', sets: [{ reps: 10 }], undone: [0] }]), // nothing ticked
@@ -51,12 +51,13 @@ describe('trained dates', () => {
 });
 
 describe('week summary', () => {
-  it('counts this week, the goal and the weekly streak', () => {
+  it('counts this week, the goal and the weekly streak, in training days', () => {
     const state = stateWith(
       [
-        workout('2026-09-14', [{ id: 'pushup', sets: [{ reps: 10 }] }]), // two weeks ago
-        workout('2026-09-22', [{ id: 'pushup', sets: [{ reps: 10 }] }]), // last week
-        workout('2026-09-28', [{ id: 'pushup', sets: [{ reps: 10 }] }]),
+        trainingDay('2026-09-14'), // two weeks ago
+        trainingDay('2026-09-22'), // last week
+        trainingDay('2026-09-28'),
+        trainingDay('2026-09-28'), // a second workout the same day is the same training day
       ],
       { prefs: { ...defaultPrefs(), weeklyGoal: 4 } }
     );
@@ -67,14 +68,23 @@ describe('week summary', () => {
     expect(s.dots[0].done).toBe(true);
   });
 
+  it('a day under 20 minutes is not marked, counted or kept in the streak', () => {
+    const state = stateWith([trainingDay('2026-09-22'), workout('2026-09-28', [{ id: 'pushup', sets: [{ reps: 10 }, { reps: 10 }] }])]);
+    const s = weekSummary(state, TODAY);
+    expect(s.count).toBe(0);
+    expect(s.dots[0].done).toBe(false);
+    expect(s.streak).toBe(1); // last week; this week has no training day yet but is still open
+    expect(weekSummary(state, '2026-10-07').streak).toBe(0);
+  });
+
   it('is empty for a new user, with the default goal', () => {
     const s = weekSummary(emptyState(), TODAY);
     expect(s).toMatchObject({ count: 0, goal: 3, streak: 0 });
     expect(s.dots.every((d) => !d.done)).toBe(true);
   });
 
-  it('a week without a workout yet keeps the streak alive until it ends', () => {
-    const state = stateWith([workout('2026-09-22', [{ id: 'pushup', sets: [{ reps: 10 }] }])]);
+  it('a week without a training day yet keeps the streak alive until it ends', () => {
+    const state = stateWith([trainingDay('2026-09-22')]);
     expect(weekSummary(state, TODAY).streak).toBe(1);
     expect(weekSummary(state, '2026-10-07').streak).toBe(0);
   });

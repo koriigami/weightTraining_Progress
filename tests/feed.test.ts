@@ -50,7 +50,7 @@ describe('workouts in the feed', () => {
   it('shows the workout XP saved with it', () => {
     const state = stateWith([workout('2026-10-10', [{ id: 'pushup', sets: [{ reps: 10 }] }])]);
     const scored = { ...state, workouts: state.workouts!.map((w) => ({ ...w, xp: scoreState(state)[0].xp })) };
-    expect(buildFeed(scored)[0].xp).toBe(5 + 5);
+    expect(buildFeed(scored)[0].xp).toBe(5); // one set is 3 minutes, so no daily bonus
   });
 });
 

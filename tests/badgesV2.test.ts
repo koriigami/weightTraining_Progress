@@ -5,7 +5,7 @@ import type { MonthlyBadgeId } from '../lib/badges';
 import { defaultPrefs } from '../lib/routines';
 import type { WorkoutLog } from '../lib/routines';
 import type { AppState } from '../lib/progress';
-import { stateWith, workout } from './helpers';
+import { stateWith, trainingDay, workout } from './helpers';
 
 const TODAY = '2026-10-31';
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -49,12 +49,14 @@ describe('lifetime families', () => {
     expect(computeBadges(stateWith([w]), TODAY).lifetime['pushup-path'].value).toBe(50);
   });
 
-  it('Finisher counts workouts that finished their plan', () => {
-    const missed = quick(oct(1), { plan: [{ exerciseId: 'pushup', sets: 3 }] });
-    const done = quick(oct(2), { plan: [{ exerciseId: 'pushup', sets: 1 }] });
-    const b = computeBadges(stateWith([missed, done]), TODAY);
+  it('Finisher counts training days: a day that reached 20 minutes, once, whatever the plan', () => {
+    const short = quick(oct(1));
+    const unfinishedPlan = trainingDay(oct(2), { plan: [{ exerciseId: 'pushup', sets: 30 }] });
+    const sameDay = trainingDay(oct(2));
+    const b = computeBadges(stateWith([short, unfinishedPlan, sameDay]), TODAY);
     expect(b.lifetime.finisher.value).toBe(1);
     expect(b.lifetime.finisher.earned[0].earnedAt).toBe(oct(2));
+    expect(computeBadges(stateWith([short, unfinishedPlan, sameDay, trainingDay(oct(3))]), TODAY).lifetime.finisher.value).toBe(2);
     expect(LIFETIME_FAMILIES.finisher.tiers).toEqual([1, 10, 25, 50, 100, 250]);
   });
 
@@ -63,11 +65,11 @@ describe('lifetime families', () => {
     expect(computeBadges(stateWith(ws), TODAY).lifetime['record-breaker'].value).toBe(2);
   });
 
-  it('Streak Keeper counts weeks with any workout', () => {
-    const missed = (d: string) => quick(d, { plan: [{ exerciseId: 'pushup', sets: 9 }] });
-    const b = computeBadges(stateWith([missed('2026-10-05'), missed('2026-10-12')]), TODAY);
+  it('Streak Keeper counts weeks with a training day, so a week of short workouts is a break', () => {
+    const b = computeBadges(stateWith([trainingDay('2026-10-05'), trainingDay('2026-10-12'), quick('2026-10-19'), trainingDay('2026-10-26')]), TODAY);
     expect(b.lifetime['streak-keeper'].value).toBe(2);
     expect(b.lifetime['streak-keeper'].tierIndex).toBe(1);
+    expect(computeBadges(stateWith([trainingDay('2026-10-05'), trainingDay('2026-10-12'), trainingDay('2026-10-19')]), TODAY).lifetime['streak-keeper'].value).toBe(3);
   });
 
   it('has no Iron Will or Grinder', () => {
@@ -79,35 +81,37 @@ describe('lifetime families', () => {
 });
 
 describe('monthly badges', () => {
-  it('Month Clear is 25 different days of training in the month', () => {
-    const days = (n: number) => Array.from({ length: n }, (_, i) => quick(oct(i + 1)));
+  it('Month Clear is 25 training days in the month', () => {
+    const days = (n: number) => Array.from({ length: n }, (_, i) => trainingDay(oct(i + 1)));
     expect(info(stateWith(days(24)), 'month-clear')).toMatchObject({ earned: false, value: 24, target: 25 });
     const full = info(stateWith(days(25)), 'month-clear');
     expect(full).toMatchObject({ earned: true, value: 25, earnedAt: oct(25) });
     // Two workouts on one day are one day.
-    expect(info(stateWith([...days(24), quick(oct(24))]), 'month-clear').value).toBe(24);
+    expect(info(stateWith([...days(24), trainingDay(oct(24))]), 'month-clear').value).toBe(24);
+    // A day under 20 minutes is not a training day.
+    expect(info(stateWith([...days(24), quick(oct(25))]), 'month-clear')).toMatchObject({ earned: false, value: 24 });
     // Days in another month do not count.
-    expect(info(stateWith([...days(24), quick('2026-09-30')]), 'month-clear').earned).toBe(false);
+    expect(info(stateWith([...days(24), trainingDay('2026-09-30')]), 'month-clear').earned).toBe(false);
   });
 
   it('Goal Month needs the weekly goal met in every Monday to Sunday week that starts in the month', () => {
     const prefs = { ...defaultPrefs(), weeklyGoal: 2 };
     // Mondays in October 2026: 5, 12, 19 and 26. The week of Sep 28 starts in September.
-    const week = (monday: number) => [quick(oct(monday)), quick(oct(monday + 2))];
+    const week = (monday: number) => [trainingDay(oct(monday)), trainingDay(oct(monday + 2))];
     const all = [...week(5), ...week(12), ...week(19), ...week(26)];
     const b = info(stateWith(all, { prefs }), 'goal-month');
     expect(b).toMatchObject({ earned: true, value: 4, target: 4, earnedAt: oct(28) });
-    // A week with one workout short breaks it.
-    const short = info(stateWith([...week(5), ...week(12), quick(oct(19)), ...week(26)], { prefs }), 'goal-month');
+    // A week with one training day short breaks it.
+    const short = info(stateWith([...week(5), ...week(12), trainingDay(oct(19)), ...week(26)], { prefs }), 'goal-month');
     expect(short).toMatchObject({ earned: false, value: 3, target: 4 });
   });
 
-  it('Goal Month counts only workouts that finished their plan, and lets a week run into the next month', () => {
+  it('Goal Month counts only training days, and lets a week run into the next month', () => {
     const prefs = { ...defaultPrefs(), weeklyGoal: 2 };
-    const missed = (d: string) => quick(d, { plan: [{ exerciseId: 'pushup', sets: 4 }] });
+    const missed = (d: string) => quick(d);
     // September 2026 has Mondays 7, 14, 21 and 28. The last week ends on Sunday Oct 4.
     const sep = (day: number) => `2026-09-${pad(day)}`;
-    const good = [quick(sep(7)), quick(sep(8)), quick(sep(14)), quick(sep(15)), quick(sep(21)), quick(sep(22)), quick(sep(28)), quick('2026-10-01')];
+    const good = [trainingDay(sep(7)), trainingDay(sep(8)), trainingDay(sep(14)), trainingDay(sep(15)), trainingDay(sep(21)), trainingDay(sep(22)), trainingDay(sep(28)), trainingDay('2026-10-01')];
     expect(info(stateWith(good, { prefs }), 'goal-month', '2026-09').earned).toBe(true);
     const spoiled = [...good.slice(0, 7), missed('2026-10-01')];
     expect(info(stateWith(spoiled, { prefs }), 'goal-month', '2026-09')).toMatchObject({ earned: false, value: 3, target: 4 });
@@ -170,6 +174,14 @@ describe('special badges', () => {
     expect(special([workout(oct(3), [two], { plan })])['clean-sweep']).toBeUndefined(); // no routine
     expect(special([workout(oct(3), [two], { routineId: 'r1' })])['clean-sweep']).toBeUndefined(); // no plan snapshot
     expect(special([workout(oct(3), [{ id: 'pushup', sets: [{ reps: 10 }, { reps: 10 }], undone: [1] }], { routineId: 'r1', plan })])['clean-sweep']).toBeUndefined();
+  });
+
+  it('needs every planned exercise: a removed one denies it even when the day paid its daily bonus', () => {
+    const sevenSets = { id: 'pushup', sets: Array.from({ length: 7 }, () => ({ reps: 10 })) };
+    const removed = workout(oct(3), [sevenSets], { routineId: 'r1', plan: [{ exerciseId: 'pushup', sets: 7 }, { exerciseId: 'plank', sets: 1 }] });
+    expect(special([removed])['clean-sweep']).toBeUndefined();
+    const withPlank = workout(oct(3), [sevenSets, { id: 'plank', sets: [{ sec: 30 }] }], { routineId: 'r1', plan: [{ exerciseId: 'pushup', sets: 7 }, { exerciseId: 'plank', sets: 1 }] });
+    expect(special([withPlank])['clean-sweep']).toEqual({ earnedAt: oct(3) });
   });
 
   it('has only Clean Sweep and Goal Getter', () => {

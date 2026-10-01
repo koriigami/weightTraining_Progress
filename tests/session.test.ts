@@ -138,6 +138,7 @@ describe('adding and removing exercises', () => {
     const s = sessionFromRoutine(routine, NOW);
     const r = removeExercise(s, 0)!;
     expect(r.session.items.map((i) => i.exerciseId)).toEqual(['db-ohp']);
+    expect(r.session.plan).toEqual(s.plan); // the plan keeps the removed exercise
     expect(r.removed.exerciseId).toBe('pushup');
     const back = restoreExercise(r.session, r.removed, r.index);
     expect(back.items.map((i) => i.exerciseId)).toEqual(['pushup', 'db-ohp']);
@@ -321,6 +322,36 @@ describe('finishing', () => {
     expect(w.xp).toBe(10);
     expect(w.planComplete).toBe(false);
     expect(w.planMissing).toEqual(['pushup', 'db-ohp']);
+  });
+
+  it('removing a planned exercise mid-workout leaves the plan intact and does not change the daily bonus', () => {
+    const lift: Routine = {
+      id: 'lift',
+      title: 'Lift',
+      items: [
+        { exerciseId: 'pushup', sets: [{ reps: 10 }, { reps: 10 }] },
+        { exerciseId: 'db-ohp', sets: Array.from({ length: 8 }, () => ({ kg: 5, reps: 10 })) },
+        { exerciseId: 'plank', sets: [{ sec: 30 }] },
+      ],
+    };
+    const finish = (removePlank: boolean) => {
+      let s = sessionFromRoutine(lift, NOW);
+      for (const [item, count] of [[0, 2], [1, 8]]) for (let i = 0; i < count; i++) s = toggleSet(s, item, i);
+      if (removePlank) s = removeExercise(s, 2)!.session;
+      const r = buildWorkoutInput(s, { now: NOW });
+      if (!r.ok) throw new Error(r.error);
+      const saved = applyRoutineAction(emptyState(), { action: 'saveWorkout', workout: r.workout }, { today: '2026-10-10' });
+      if (!saved.ok) throw new Error(saved.error);
+      return { plan: r.workout.plan, scored: saved.state.workouts![0] };
+    };
+    const left = finish(false); // the plank is still there, never ticked
+    const removed = finish(true);
+    expect(removed.plan).toEqual(left.plan);
+    expect(removed.plan).toContainEqual({ exerciseId: 'plank', sets: 1 });
+    // Ten sets are 30 minutes: the bonus is paid either way, and the plank is not done either way.
+    expect(removed.scored.xpParts).toMatchObject({ sets: 50, finish: 50 });
+    expect(removed.scored.xp).toBe(left.scored.xp);
+    expect(removed.scored.planMissing).toEqual(['plank']);
   });
 
   it('a payload with a routine id and custom title still parses', () => {

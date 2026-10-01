@@ -52,7 +52,7 @@ export const LIFETIME_FAMILIES: Record<
     tiers: [7, 30, 60, 100, 200, 365],
     unit: '',
   },
-  // The families below score the workout itself: sets finished, plan done, records, weeks and muscles.
+  // The families below score the workout itself: training days, sets, records, weeks and muscles.
   finisher: { name: 'Finisher', metric: 'Workouts finished', shape: 'shield', icon: 'target', tiers: [1, 10, 25, 50, 100, 250], unit: 'workouts' },
   'iron-mover': { name: 'Iron Mover', metric: 'Sets logged', shape: 'hex', icon: 'dumbbell', tiers: [50, 250, 500, 1000, 2500, 5000], unit: 'sets' },
   'record-breaker': {
@@ -132,12 +132,12 @@ function scaleKeeperSeries(state: AppState): Sample[] {
   return dates.map((date, i) => ({ date, value: i + 1 }));
 }
 
-// A finished workout is one whose plan was done, so a workout with sets missing does not count.
+// Finisher counts training days: a date that reached 20 minutes, counted once.
 function finisherSeries(scores: WorkoutScore[]): Sample[] {
   let total = 0;
   const out: Sample[] = [];
   for (const s of scores) {
-    if (!s.planComplete) continue;
+    if (!s.trainingDay) continue;
     total++;
     out.push({ date: s.date, value: total });
   }
@@ -160,17 +160,20 @@ function recordBreakerSeries(scores: WorkoutScore[]): Sample[] {
   });
 }
 
+// Weeks in a row with a training day. A week with only a short workout does not count.
 function streakKeeperSeries(scores: WorkoutScore[]): Sample[] {
   const weeks = new Set<string>();
   let best = 0;
-  return scores.map((s) => {
-    const week = mondayOf(s.date);
-    weeks.add(week);
-    let run = 0;
-    for (let cur = week; weeks.has(cur); cur = addDaysStr(cur, -7)) run++;
-    best = Math.max(best, run);
-    return { date: s.date, value: best };
-  });
+  return scores
+    .filter((s) => s.trainingDay)
+    .map((s) => {
+      const week = mondayOf(s.date);
+      weeks.add(week);
+      let run = 0;
+      for (let cur = week; weeks.has(cur); cur = addDaysStr(cur, -7)) run++;
+      best = Math.max(best, run);
+      return { date: s.date, value: best };
+    });
 }
 
 function allRounderSeries(scores: WorkoutScore[]): Sample[] {
@@ -270,8 +273,8 @@ function runningTotal(scores: WorkoutScore[], target: number, pick: (s: WorkoutS
 }
 
 // Goal Month: every Monday to Sunday week that starts in the month has as many
-// finished workouts (plan done) as the weekly goal, whatever month they fall in.
-// The month is earned on the date the last of those weeks reached its goal.
+// training days as the weekly goal, whatever month they fall in. The month is
+// earned on the date the last of those weeks reached its goal.
 function goalMonth(month: string, allScores: WorkoutScore[], weeklyGoal: number): { value: number; target: number; earnedAt?: string } {
   const first = `${month}-01`;
   const last = lastDayOfMonth(first);
@@ -281,7 +284,7 @@ function goalMonth(month: string, allScores: WorkoutScore[], weeklyGoal: number)
   let earnedAt: string | undefined;
   for (const monday of weeks) {
     const sunday = addDaysStr(monday, 6);
-    const done = allScores.filter((s) => s.planComplete && s.date >= monday && s.date <= sunday);
+    const done = allScores.filter((s) => s.trainingDay && s.date >= monday && s.date <= sunday);
     if (done.length < weeklyGoal) continue;
     met++;
     const hit = done[weeklyGoal - 1].date;
@@ -296,7 +299,7 @@ function monthProgress(month: string, state: AppState, allScores: WorkoutScore[]
     .filter((d) => monthKey(d) === month)
     .sort();
 
-  const days = Array.from(new Set(scores.map((s) => s.date))).sort();
+  const days = scores.filter((s) => s.trainingDay).map((s) => s.date);
   const clearTarget = 25;
   const clear = { value: days.length, earnedAt: days.length >= clearTarget ? days[clearTarget - 1] : undefined };
   const goal = goalMonth(month, allScores, weeklyGoalOf(state));

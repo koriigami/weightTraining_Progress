@@ -210,7 +210,7 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
       commit(removal.session);
       return () => {
         const now = sessionRef.current;
-        if (now) commit(S.restoreExercise(now, removal.removed, removal.index, removal.planSlot));
+        if (now) commit(S.restoreExercise(now, removal.removed, removal.index));
       };
     },
     [commit]

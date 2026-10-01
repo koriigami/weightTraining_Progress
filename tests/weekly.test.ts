@@ -25,10 +25,12 @@ describe('weeklySeries', () => {
   });
 
   it('adds XP, sets and volume of logged workouts to their week', () => {
-    // 2 sets of 20 kg x 10: 10 XP for the sets and 10 for finishing (the finish bonus is the XP of the planned sets).
+    // 2 sets of 20 kg x 10 are 10 XP. Under 20 minutes, so no daily bonus.
     const s = weeklySeries(stateWith([bench('2026-09-30'), bench('2026-08-12', 3)]), TODAY);
-    expect(s[7]).toMatchObject({ xp: 20, sets: 2, volumeKg: 400 });
-    expect(s[0]).toMatchObject({ xp: 30, sets: 3, volumeKg: 600 });
+    expect(s[7]).toMatchObject({ xp: 10, sets: 2, volumeKg: 400 });
+    expect(s[0]).toMatchObject({ xp: 15, sets: 3, volumeKg: 600 });
+    // Seven sets are 21 minutes and pay the daily bonus once.
+    expect(weeklySeries(stateWith([bench('2026-09-30', 7)]), TODAY)[7]).toMatchObject({ xp: 35 + 50, sets: 7 });
     expect(s[3]).toMatchObject({ xp: 0, sets: 0, volumeKg: 0 });
   });
 

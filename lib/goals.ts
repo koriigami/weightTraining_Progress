@@ -55,8 +55,8 @@ export function streakDeadline(start: string, weeks: number): string {
   return addDaysStr(mondayOf(start), 7 * weeks - 1);
 }
 
-// Walk the goal's weeks from the start. A week with a workout adds one. A week
-// that is over with none fails the goal, and the current week does not count
+// Walk the goal's weeks from the start. A week with a training day adds one. A
+// week that is over with none fails the goal, and the current week does not count
 // against it until it ends.
 export function streakProgress(
   goal: Goal,
@@ -68,7 +68,11 @@ export function streakProgress(
   // and never runs past tomorrow (workouts can be dated a day ahead).
   const end = streakDeadline(goal.start, goal.target);
   const limit = addDaysStr(today, 1);
-  const weeks = new Set(goalScores({ ...goal, deadline: end < limit ? end : limit }, state, scores).map((s) => mondayOf(s.date)));
+  const weeks = new Set(
+    goalScores({ ...goal, deadline: end < limit ? end : limit }, state, scores)
+      .filter((s) => s.trainingDay)
+      .map((s) => mondayOf(s.date))
+  );
   let consecutive = 0;
   for (let i = 0; i < goal.target; i++) {
     const monday = addDaysStr(mondayOf(goal.start), 7 * i);
@@ -88,7 +92,8 @@ export function periodGoalValue(goal: Goal, state: AppState, scores?: WorkoutSco
   const list = goalScores(goal, state, scores);
   switch (goal.type) {
     case 'workouts':
-      return list.length;
+      // The goal keeps its stored type id. It counts training days.
+      return list.filter((s) => s.trainingDay).length;
     case 'pushups':
       return list.reduce((sum, s) => sum + s.pushupReps, 0);
     case 'cardio-minutes':
@@ -147,18 +152,19 @@ export function endPresetDate(preset: EndPreset, today: string): string {
 /** "Ends Sat 31 Oct", the line under the calendar and under a weekly streak goal. */
 export const endsLabel = (date: string): string => `Ends ${formatDay(date)}`;
 
-/** How much a person did in the 4 weeks up to today, to size a new goal from. Read from real workouts. */
+/** How much a person did in the 4 weeks up to today, to size a new goal from. Read from real workouts. `workouts` is training days. */
 export type RecentNumbers = { workouts: number; pushups: number; cardioMinutes: number; km: number; weeksTrained: number };
 
 export function recentNumbers(state: AppState, today: string, weeks = 4): RecentNumbers {
   const from = addDaysStr(today, -(7 * weeks - 1));
   const list = scoreState(state).filter((s) => s.date >= from && s.date <= today);
+  const days = list.filter((s) => s.trainingDay);
   return {
-    workouts: list.length,
+    workouts: days.length,
     pushups: list.reduce((sum, s) => sum + s.pushupReps, 0),
     cardioMinutes: Math.round(list.reduce((sum, s) => sum + s.cardioMinutes, 0)),
     km: Math.round(list.reduce((sum, s) => sum + s.km, 0) * 10) / 10,
-    weeksTrained: new Set(list.map((s) => mondayOf(s.date))).size,
+    weeksTrained: new Set(days.map((s) => mondayOf(s.date))).size,
   };
 }
 
@@ -302,7 +308,7 @@ export function daysLeft(goal: Goal, today: string): number {
 
 // ---------------- Goal XP reward ----------------
 
-// Deterministic from the goal's own fields (never stored): 25 a workout, 50 a
+// Deterministic from the goal's own fields (never stored): 25 a training day, 50 a
 // week of streak, 1 a cardio minute, 8 a km, a quarter of a push-up, 120 a kg
 // (a quarter more at an ambitious pace). Rounded to 5 and kept within 25 to 1000.
 export function goalReward(goal: Goal): number {

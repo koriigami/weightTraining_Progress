@@ -9,7 +9,7 @@ import type { CelebrationEvent } from '../lib/celebrations';
 import { xpForLevel } from '../lib/progress';
 import type { AppState } from '../lib/progress';
 import { migratedPlanState } from './fixtures/legacyPlanState';
-import { stateWith, workout } from './helpers';
+import { stateWith, trainingDay } from './helpers';
 
 // Built from its code, so this file has no em dash in it.
 const EM_DASH = String.fromCharCode(8212);
@@ -156,7 +156,7 @@ describe('replaying a badge', () => {
   });
 
   it('a workout badge replays at the tier the card shows', () => {
-    const state = stateWith([workout('2026-09-28', [{ id: 'pushup', sets: [{ reps: 10 }] }])]);
+    const state = stateWith([trainingDay('2026-09-28')]);
     const finisher = buildBadgeCards(state, today).workouts[0];
     expect(cardToEarned(finisher)).toMatchObject({ kind: 'lifetime', family: 'finisher', tier: 'bronze', id: 'lifetime:finisher:bronze' });
   });

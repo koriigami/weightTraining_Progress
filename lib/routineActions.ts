@@ -26,6 +26,7 @@ export const ROUTINE_ACTIONS = [
   'savePrefs',
   'addCustomExercise',
   'setRulesNote',
+  'setRulesV3Note',
 ] as const;
 
 export type RoutineAction = (typeof ROUTINE_ACTIONS)[number];
@@ -141,6 +142,11 @@ export function applyRoutineAction(
       // The note can only be put away here. Only the migration raises it.
       if (body.value !== false) return fail('invalid note flag');
       return { ok: true, state: { ...state, rulesV2Note: false } };
+    }
+    case 'setRulesV3Note': {
+      // The same for the v3 note: it can only be put away here, and the store raises it.
+      if (body.value !== false) return fail('invalid note flag');
+      return { ok: true, state: { ...state, rulesV3Note: false } };
     }
     default:
       return fail('unknown action');

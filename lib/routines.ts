@@ -63,8 +63,11 @@ export type WorkoutMark = {
   min?: number;
 };
 
-// Where a workout's XP came from, worked out by rescoreWorkouts.
-export type XpParts = { sets: number; cardio: number; beat: number; record: number; finish: number; weekly: number };
+// Where a workout's XP came from, worked out by rescoreWorkouts. `finish` is the
+// key the finish bonus was stored under before rules v3. It now holds the daily
+// bonus, so nothing stored needs to move. `comeback` was added in v3: workouts
+// scored before then have none, and a missing value reads as 0.
+export type XpParts = { sets: number; cardio: number; beat: number; record: number; finish: number; weekly: number; comeback?: number };
 
 export type WorkoutLog = {
   id: string;
@@ -123,11 +126,16 @@ export const WORKOUT_XP = {
   cardioMinuteCap: 30,
   cardioDistanceBonus: 10,
   intervalCap: 30,
-  finishCap: 50,
-  finishPerDay: 2,
   beat: 10,
   record: 25,
   weeklyGoal: 50,
+  // The daily bonus: once a day, when the day's training adds up to dailyMinutes.
+  // A ticked strength set that earns XP counts minutesPerSet minutes, cardio counts
+  // its own minutes. The first training day after a whole empty week pays comeback.
+  daily: 50,
+  dailyMinutes: 20,
+  minutesPerSet: 3,
+  comeback: 25,
 };
 
 // A ticked strength set only earns XP with something behind it: a rep, or a
@@ -261,7 +269,7 @@ export function setXp(e: ExerciseDef, s: SetPlan): number {
 export type WorkoutTotals = {
   sets: number; // ticked sets
   volume: number; // kg lifted, weight_reps only
-  xp: number; // set XP only, without beat, record, finish or weekly bonuses
+  xp: number; // set XP only, without beat, record, daily, weekly or comeback bonuses
   exercises: number; // exercises with at least one ticked set
   cardioMinutes: number;
   km: number;

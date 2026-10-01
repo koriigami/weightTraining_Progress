@@ -98,7 +98,7 @@ missing field reads as empty:
 - `prefs`: units, equipment, things to avoid, weekly goal, workout settings, onboarding.
 - `customExercises`: the person's own exercises, next to the library in
   `data/exercises.ts`.
-- `rulesV2Note`: whether the "XP was worked out again" note is waiting on Home.
+- `rulesV2Note`, `rulesV3Note`: whether an "XP was worked out again" note is waiting on Home (the second one is for the daily bonus rules).
 
 Weight and distance are always stored in kg and km. Units in Settings change
 what the screens show and what a typed number means. Profile info (name,
@@ -137,9 +137,9 @@ neither a beat nor a record.
 | D, C, B, A | levels 5, 10, 15 and 20 |
 | S-Rank Hunter | level 30 and up |
 
-Streaks are weekly: a week counts if you trained at least once.
+Streaks are weekly: a week counts if it has a training day (20 minutes of training).
 
-Badge families: Finisher (finished plans), Iron Mover (sets), Record Breaker,
+Badge families: Finisher (training days), Iron Mover (sets), Record Breaker,
 Streak Keeper, All-Rounder, Road Runner, Rider, Engine (cardio minutes),
 Pushup Path (push-up reps), Scale Keeper and Shedding, plus monthly badges (Month
 Clear, Goal Month, Cardio Month and more) and specials (Clean Sweep, Goal Getter).

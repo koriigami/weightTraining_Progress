@@ -79,12 +79,14 @@ describe('plan snapshot', () => {
     ]);
   });
 
-  it('removing an exercise removes it from the plan, and Undo puts the slot back', () => {
+  it('removing an exercise leaves the plan as it was, so the workout cannot shrink its own plan, and Undo puts the exercise back', () => {
     const s = sessionFromRoutine(routine, NOW);
     const removal = removeExercise(s, 0);
-    expect(removal?.session.plan).toEqual([{ exerciseId: 'db-ohp', sets: 3 }]);
-    const back = restoreExercise(removal!.session, removal!.removed, removal!.index, removal!.planSlot);
+    expect(removal?.session.items.map((i) => i.exerciseId)).toEqual(['db-ohp']);
+    expect(removal?.session.plan).toEqual(s.plan);
+    const back = restoreExercise(removal!.session, removal!.removed, removal!.index);
     expect(back.plan).toEqual(s.plan);
+    expect(back.items.map((i) => i.exerciseId)).toEqual(s.items.map((i) => i.exerciseId));
   });
 
   it('adding exercises or sets mid-workout does not change the plan', () => {

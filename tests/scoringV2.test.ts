@@ -1,8 +1,8 @@
-// Scoring rules v2: beat last time vs record, the finish bonus and the weekly goal.
+// Scoring rules: beat last time vs record, the daily bonus, training days, the weekly goal, the weekly streak and the comeback.
 import { describe, expect, it } from 'vitest';
-import { computeWorkoutStats, planOf, rescoreWorkouts, scoreWorkouts } from '../lib/workoutScoring';
+import { computeWorkoutStats, dailyBonusPaid, dayMinutes, planOf, rescoreWorkouts, scoreWorkouts, trainingDays, trainingDaysOf, trainingMinutes } from '../lib/workoutScoring';
 import type { WorkoutLog } from '../lib/routines';
-import { stateWith, workout } from './helpers';
+import { stateWith, trainingDay, workout } from './helpers';
 
 const opts = { weeklyGoal: 3 };
 
@@ -124,58 +124,195 @@ describe('intervals', () => {
   });
 });
 
-describe('the finish bonus', () => {
-  const plan = (items: [string, number][]) => items.map(([exerciseId, sets]) => ({ exerciseId, sets }));
+describe('the daily bonus', () => {
+  const sets = (n: number) => Array.from({ length: n }, () => ({ reps: 10 }));
+  const lift = (date: string, n: number, over: Partial<WorkoutLog> = {}) => workout(date, [{ id: 'pushup', sets: sets(n) }], over);
+  const at = (date: string, h: string, id: string, items: Parameters<typeof workout>[1]) => workout(date, items, { id, when: `${date}T${h}:00`, startedAt: `${date}T${h}:00:00.000Z` });
 
-  it('pays the XP of the planned sets when the plan is done', () => {
-    const w = workout('2026-10-05', [{ id: 'db-ohp', sets: [{ kg: 5, reps: 10 }, { kg: 5, reps: 10 }, { kg: 5, reps: 10 }] }], { plan: plan([['db-ohp', 3]]) });
-    const [s] = scoreWorkouts([w], opts);
-    expect(s.planComplete).toBe(true);
-    expect(s.planMissing).toEqual([]);
-    expect(s.finishXp).toBe(15);
-    expect(s.xp).toBe(15 + 15);
+  it('is paid when strength sets alone reach 20 minutes: each ticked set that earns XP counts 3', () => {
+    const [short, full] = scoreWorkouts([lift('2026-10-05', 6), lift('2026-10-06', 7)], opts);
+    expect([short.minutes, short.dailyXp, short.trainingDay]).toEqual([18, 0, false]);
+    expect([full.minutes, full.dailyXp, full.trainingDay]).toEqual([21, 50, true]);
+    expect(full.xp).toBe(35 + 50);
   });
 
-  it('pays nothing when a planned set is missing, and names what is missing', () => {
-    const w = workout('2026-10-05', [{ id: 'db-ohp', sets: [{ kg: 5, reps: 10 }, { kg: 5, reps: 10 }, { kg: 5, reps: 10 }], undone: [2] }, { id: 'pushup', sets: [{ reps: 10 }] }], {
-      plan: plan([['db-ohp', 3], ['pushup', 1], ['plank', 1]]),
-    });
+  it('only counts ticked sets that earn XP', () => {
+    // Seven sets, but one is not ticked and one has no rep: 5 count, 15 minutes.
+    const w = workout('2026-10-05', [{ id: 'pushup', sets: [...sets(5), { reps: 10 }, { reps: 0 }], undone: [5] }]);
     const [s] = scoreWorkouts([w], opts);
+    expect(s.minutes).toBe(15);
+    expect(s.dailyXp).toBe(0);
+  });
+
+  it('is paid when cardio alone reaches 20 minutes, intervals counting work plus easy minutes', () => {
+    const [short, run, intervals] = scoreWorkouts(
+      [
+        workout('2026-10-05', [{ id: 'run', sets: [{ min: 19, km: 3 }] }]),
+        workout('2026-10-06', [{ id: 'run', sets: [{ min: 20 }] }]),
+        workout('2026-10-07', [{ id: 'runwalk', sets: Array.from({ length: 8 }, () => ({ on: 1, off: 1.5 })) }]),
+      ],
+      opts
+    );
+    expect(short.dailyXp).toBe(0);
+    expect([run.minutes, run.dailyXp]).toEqual([20, 50]);
+    expect([intervals.minutes, intervals.dailyXp]).toEqual([20, 50]);
+  });
+
+  it('counts cardio minutes in full even though the XP for a set is capped at 30', () => {
+    const items = [{ exerciseId: 'treadmill', sets: [{ min: 45, done: true }] }];
+    expect(trainingMinutes(items)).toBe(45);
+    const [s] = scoreWorkouts([workout('2026-10-05', [{ id: 'treadmill', sets: [{ min: 45 }] }])], opts);
+    expect(s.setXp).toBe(30);
+    expect(s.minutes).toBe(45);
+  });
+
+  it('adds strength and cardio across two workouts the same day, and is paid on the second', () => {
+    const morning = at('2026-10-05', '07', 'am', [{ id: 'pushup', sets: sets(5) }]);
+    const evening = at('2026-10-05', '19', 'pm', [{ id: 'run', sets: [{ min: 10 }] }]);
+    const scores = scoreWorkouts([evening, morning], opts); // saved out of order
+    expect(scores.map((s) => s.id)).toEqual(['am', 'pm']);
+    expect(scores.map((s) => s.dayMinutes)).toEqual([15, 25]);
+    expect(scores.map((s) => s.dailyXp)).toEqual([0, 50]);
+    expect(scores.map((s) => s.trainingDay)).toEqual([false, true]);
+  });
+
+  it('is paid once a day, and the next day pays again', () => {
+    const scores = scoreWorkouts([at('2026-10-05', '07', 'a', [{ id: 'pushup', sets: sets(7) }]), at('2026-10-05', '12', 'b', [{ id: 'pushup', sets: sets(7) }]), at('2026-10-05', '19', 'c', [{ id: 'pushup', sets: sets(7) }]), lift('2026-10-06', 7)], opts);
+    expect(scores.map((s) => s.dailyXp)).toEqual([50, 0, 0, 50]);
+    expect(scores.map((s) => s.xp)).toEqual([85, 35, 35, 85]);
+    expect(trainingDays(scores)).toEqual(['2026-10-05', '2026-10-06']);
+  });
+
+  it('is still paid when a planned treadmill was skipped', () => {
+    const plan = [{ exerciseId: 'pushup', sets: 14 }, { exerciseId: 'treadmill', sets: 1 }];
+    const [s] = scoreWorkouts([lift('2026-10-05', 14, { plan })], opts);
     expect(s.planComplete).toBe(false);
-    expect(s.planMissing).toEqual(['db-ohp', 'plank']);
-    expect(s.finishXp).toBe(0);
-    expect(s.xp).toBe(15);
+    expect(s.planMissing).toEqual(['treadmill']);
+    expect(s.dailyXp).toBe(50);
+    expect(s.trainingDay).toBe(true);
   });
 
-  it('is sized to the planned sets, not to every set done', () => {
-    const w = workout('2026-10-05', [{ id: 'db-ohp', sets: [{ kg: 5, reps: 10 }, { kg: 5, reps: 10 }, { kg: 5, reps: 10 }, { kg: 5, reps: 10 }] }], { plan: plan([['db-ohp', 2]]) });
-    const [s] = scoreWorkouts([w], opts);
-    expect(s.setXp).toBe(20);
-    expect(s.finishXp).toBe(10);
+  it('does not look at the plan at all', () => {
+    const plan = [{ exerciseId: 'pushup', sets: 30 }];
+    expect(scoreWorkouts([lift('2026-10-05', 7, { plan })], opts)[0].dailyXp).toBe(50);
+    expect(scoreWorkouts([lift('2026-10-05', 7, { plan: [{ exerciseId: 'pushup', sets: 1 }] })], opts)[0].dailyXp).toBe(50);
+    expect(scoreWorkouts([lift('2026-10-05', 7)], opts)[0].dailyXp).toBe(50); // a workout saved before v8 has no plan
   });
 
-  it('ignores exercises that were not in the plan', () => {
-    const w = workout('2026-10-05', [{ id: 'db-ohp', sets: [{ kg: 5, reps: 10 }] }, { id: 'pushup', sets: [{ reps: 10 }, { reps: 10 }] }], { plan: plan([['db-ohp', 1]]) });
-    const [s] = scoreWorkouts([w], opts);
-    expect(s.planComplete).toBe(true);
-    expect(s.finishXp).toBe(5);
+  it('is stored on the workout by rescoring, under the finish key', () => {
+    const w = lift('2026-10-05', 7);
+    const [r] = rescoreWorkouts(stateWith([w]), [w], '2026-10-30');
+    expect(r.xpParts).toEqual({ sets: 35, cardio: 0, beat: 0, record: 0, finish: 50, weekly: 0, comeback: 0 });
+    expect(r.xp).toBe(85);
   });
 
-  it('is capped at 50', () => {
-    const sets = Array.from({ length: 12 }, () => ({ reps: 10 }));
-    const w = workout('2026-10-05', [{ id: 'pushup', sets }], { plan: plan([['pushup', 12]]) });
-    const [s] = scoreWorkouts([w], opts);
-    expect(s.setXp).toBe(60);
-    expect(s.finishXp).toBe(50);
+  it('is told by the helpers the live popover uses: minutes of a date, with items in progress, and whether it is paid', () => {
+    const saved = [lift('2026-10-05', 4), workout('2026-10-04', [{ id: 'run', sets: [{ min: 30 }] }])];
+    const live = [{ exerciseId: 'pushup', sets: [{ reps: 10, done: true }, { reps: 10, done: true }, { reps: 10, done: false }] }];
+    expect(dayMinutes(saved, '2026-10-05')).toBe(12);
+    expect(dayMinutes(saved, '2026-10-05', live)).toBe(18);
+    expect(dailyBonusPaid(saved, '2026-10-05')).toBe(false);
+    expect(dailyBonusPaid(saved, '2026-10-04')).toBe(true);
+    // Items in progress never count as already paid: they finish after what is saved.
+    expect(dailyBonusPaid([], '2026-10-05')).toBe(false);
+  });
+});
+
+describe('training days and the weekly goal', () => {
+  it('count dates that reached 20 minutes, not workouts', () => {
+    const scores = scoreWorkouts([trainingDay('2026-10-05'), workout('2026-10-06', [{ id: 'pushup', sets: [{ reps: 10 }] }]), trainingDay('2026-10-05')], opts);
+    expect(trainingDays(scores)).toEqual(['2026-10-05']);
+    expect(trainingDaysOf(stateWith([trainingDay('2026-10-07'), trainingDay('2026-10-05')]))).toEqual(['2026-10-05', '2026-10-07']);
+    // Workouts dated after tomorrow are left out when today is given.
+    expect(trainingDaysOf(stateWith([trainingDay('2026-10-05'), trainingDay('2026-11-20')]), '2026-10-30')).toEqual(['2026-10-05']);
   });
 
-  it('counts cardio minutes, and a set with no rep does not fill the plan', () => {
-    const cardio = workout('2026-10-05', [{ id: 'run', sets: [{ min: 25, km: 4 }] }], { plan: plan([['run', 1]]) });
-    expect(scoreWorkouts([cardio], opts)[0].finishXp).toBe(35);
-    const empty = workout('2026-10-06', [{ id: 'pushup', sets: [{ reps: 10 }, { reps: 0 }] }], { plan: plan([['pushup', 2]]) });
-    const [s] = scoreWorkouts([empty], opts);
-    expect(s.planComplete).toBe(false);
-    expect(s.planMissing).toEqual(['pushup']);
+  it('pay +50 on the workout that makes the week reach the goal, counting training days only', () => {
+    const short = (date: string) => workout(date, [{ id: 'pushup', sets: [{ reps: 10 }] }]);
+    const scores = scoreWorkouts([short('2026-10-05'), trainingDay('2026-10-06'), trainingDay('2026-10-06'), short('2026-10-07'), trainingDay('2026-10-08'), trainingDay('2026-10-09')], { weeklyGoal: 3 });
+    // Training days: Tue, Thu and Fri. Short workouts and a second workout on Tuesday add nothing.
+    expect(scores.map((s) => s.weeklyXp)).toEqual([0, 0, 0, 0, 0, 50]);
+  });
+
+  it('are never reached by workouts that stay under 20 minutes', () => {
+    const short = (date: string) => workout(date, [{ id: 'pushup', sets: [{ reps: 10 }, { reps: 10 }] }]);
+    const scores = scoreWorkouts([short('2026-10-05'), short('2026-10-06'), short('2026-10-07')], opts);
+    expect(scores.map((s) => s.weeklyXp)).toEqual([0, 0, 0]);
+  });
+
+  it('are reached on the workout that tops up a day, when two short ones add up', () => {
+    const at = (h: string, id: string, n: number) => workout('2026-10-05', [{ id: 'pushup', sets: Array.from({ length: n }, () => ({ reps: 10 })) }], { id, when: `2026-10-05T${h}:00`, startedAt: `2026-10-05T${h}:00:00.000Z` });
+    const scores = scoreWorkouts([at('07', 'a', 4), at('19', 'b', 3)], { weeklyGoal: 1 });
+    expect(scores.map((s) => [s.dailyXp, s.weeklyXp])).toEqual([[0, 0], [50, 50]]);
+  });
+});
+
+describe('the weekly streak', () => {
+  it('is fed training days: a week with only a 5 minute workout does not keep it', () => {
+    const short = workout('2026-10-14', [{ id: 'run', sets: [{ min: 5, km: 1 }] }]);
+    const state = stateWith([trainingDay('2026-10-05'), short, trainingDay('2026-10-21')]);
+    const stats = computeWorkoutStats(state, '2026-10-23');
+    expect(stats.weeklyStreak).toBe(1);
+    expect(stats.bestWeeklyStreak).toBe(1);
+    expect(stats.workouts).toBe(3);
+    expect(computeWorkoutStats(stateWith([trainingDay('2026-10-05'), trainingDay('2026-10-14'), trainingDay('2026-10-21')]), '2026-10-23').weeklyStreak).toBe(3);
+  });
+
+  it('counts the training days of this week in the stats', () => {
+    const stats = computeWorkoutStats(stateWith([trainingDay('2026-10-19'), trainingDay('2026-10-19'), trainingDay('2026-10-20'), workout('2026-10-21', [{ id: 'pushup', sets: [{ reps: 10 }] }])]), '2026-10-23');
+    expect(stats.thisWeek).toBe(2);
+  });
+
+  it('counts records in the stats', () => {
+    const stats = computeWorkoutStats(stateWith([workout('2026-10-05', [{ id: 'pushup', sets: [{ reps: 10 }] }]), workout('2026-10-06', [{ id: 'pushup', sets: [{ reps: 12 }] }])]), '2026-10-30');
+    expect(stats.records).toBe(1);
+  });
+});
+
+describe('the comeback bonus', () => {
+  it('is paid once, on the first training day after a whole week with none', () => {
+    // Training in the week of Oct 5, nothing in the week of Oct 12, then two training days in the week of Oct 19.
+    const scores = scoreWorkouts([trainingDay('2026-10-06'), trainingDay('2026-10-19'), trainingDay('2026-10-20')], opts);
+    expect(scores.map((s) => s.comebackXp)).toEqual([0, 25, 0]);
+    expect(scores[1].xp).toBe(85 + 25);
+    expect(scores[1].parts.comeback).toBe(25);
+  });
+
+  it('is never paid for a first training day, or when the week before had one', () => {
+    const first = scoreWorkouts([trainingDay('2026-10-19')], opts);
+    expect(first[0].comebackXp).toBe(0);
+    // A week of short workouts is not a training week, so the first training day after it is still the first ever.
+    const afterShort = scoreWorkouts([workout('2026-10-06', [{ id: 'pushup', sets: [{ reps: 10 }] }]), trainingDay('2026-10-19')], opts);
+    expect(afterShort.map((s) => s.comebackXp)).toEqual([0, 0]);
+    // Training the week before, even once, means no week was missed.
+    expect(scoreWorkouts([trainingDay('2026-10-06'), trainingDay('2026-10-13'), trainingDay('2026-10-20')], opts).map((s) => s.comebackXp)).toEqual([0, 0, 0]);
+    // A short gap inside a week is not a week off.
+    expect(scoreWorkouts([trainingDay('2026-10-06'), trainingDay('2026-10-11'), trainingDay('2026-10-12')], opts).map((s) => s.comebackXp)).toEqual([0, 0, 0]);
+  });
+
+  it('is paid on the workout that makes the day a training day, with the daily bonus', () => {
+    const at = (h: string, id: string, n: number) => workout('2026-10-19', [{ id: 'pushup', sets: Array.from({ length: n }, () => ({ reps: 10 })) }], { id, when: `2026-10-19T${h}:00`, startedAt: `2026-10-19T${h}:00:00.000Z` });
+    const scores = scoreWorkouts([trainingDay('2026-10-06'), at('07', 'a', 3), at('19', 'b', 5)], opts);
+    expect(scores.map((s) => [s.dailyXp, s.comebackXp])).toEqual([[50, 0], [0, 0], [50, 25]]);
+  });
+
+  it('works again after a second break, and counts a break longer than a week once', () => {
+    const scores = scoreWorkouts([trainingDay('2026-10-05'), trainingDay('2026-10-19'), trainingDay('2026-10-26'), trainingDay('2026-11-23')], opts);
+    expect(scores.map((s) => s.comebackXp)).toEqual([0, 25, 0, 25]);
+  });
+});
+
+describe('Clean Sweep and the plan', () => {
+  const plan = [{ exerciseId: 'pushup', sets: 7 }, { exerciseId: 'plank', sets: 1 }];
+
+  it('still needs every planned exercise done, so a removed one denies it even when the daily bonus is paid', () => {
+    const removed = trainingDay('2026-10-05', { routineId: 'r1', plan });
+    const [r] = scoreWorkouts([removed], opts);
+    expect(r.dailyXp).toBe(50);
+    expect(r.planMissing).toEqual(['plank']);
+    expect(r.cleanSweep).toBe(false);
+    const full = workout('2026-10-05', [{ id: 'pushup', sets: Array.from({ length: 7 }, () => ({ reps: 10 })) }, { id: 'plank', sets: [{ sec: 30 }] }], { routineId: 'r1', plan });
+    expect(scoreWorkouts([full], opts)[0].cleanSweep).toBe(true);
   });
 
   it('a workout saved before v8 has no plan: what it ticked stands in as the plan', () => {
@@ -183,63 +320,13 @@ describe('the finish bonus', () => {
     expect(planOf(w)).toEqual([{ exerciseId: 'db-ohp', sets: 2 }, { exerciseId: 'pushup', sets: 1 }]);
     const [s] = scoreWorkouts([w], opts);
     expect(s.planComplete).toBe(true);
-    expect(s.finishXp).toBe(15);
+    expect(s.cleanSweep).toBe(false); // no routine and no plan snapshot
   });
 
-  it('is paid at most twice a calendar day, in time order, and the third still counts as finished', () => {
-    const at = (h: string, i: number) =>
-      workout('2026-10-05', [{ id: 'pushup', sets: [{ reps: 10 }, { reps: 10 }] }], { id: `d${i}`, when: `2026-10-05T${h}:00`, startedAt: `2026-10-05T${h}:00:00.000Z` });
-    const [a, b, c] = [at('07', 1), at('12', 2), at('19', 3)];
-    const scores = scoreWorkouts([c, a, b], opts); // saved out of order
-    expect(scores.map((s) => s.id)).toEqual(['d1', 'd2', 'd3']);
-    expect(scores.map((s) => s.finishXp)).toEqual([10, 10, 0]);
-    expect(scores.map((s) => s.planComplete)).toEqual([true, true, true]);
-    // A different day starts over.
-    const next = workout('2026-10-06', [{ id: 'pushup', sets: [{ reps: 10 }, { reps: 10 }] }]);
-    expect(scoreWorkouts([a, b, c, next], opts)[3].finishXp).toBe(10);
-  });
-
-  it('is stored on the workout by rescoring', () => {
-    const w = workout('2026-10-05', [{ id: 'pushup', sets: [{ reps: 10 }] }], { plan: plan([['pushup', 2]]) });
-    const [r] = rescoreWorkouts(stateWith([w]), [w], '2026-10-30');
-    expect(r).toMatchObject({ planComplete: false, planMissing: ['pushup'], xp: 5 });
-    expect(r.xpParts).toEqual({ sets: 5, cardio: 0, beat: 0, record: 0, finish: 0, weekly: 0 });
-  });
-});
-
-describe('the weekly goal', () => {
-  const day = (date: string, done = true): WorkoutLog =>
-    workout(date, [{ id: 'pushup', sets: [{ reps: 10 }, { reps: 10 }], undone: done ? [] : [1] }], { plan: [{ exerciseId: 'pushup', sets: 2 }] });
-
-  it('counts only workouts that finished their plan', () => {
-    const scores = scoreWorkouts([day('2026-10-05'), day('2026-10-06', false), day('2026-10-07', false), day('2026-10-08')], { weeklyGoal: 2 });
-    expect(scores.map((s) => s.weeklyXp)).toEqual([0, 0, 0, 50]);
-  });
-
-  it('is never reached by workouts that missed their plan', () => {
-    const scores = scoreWorkouts([day('2026-10-05', false), day('2026-10-06', false), day('2026-10-07', false)], opts);
-    expect(scores.map((s) => s.weeklyXp)).toEqual([0, 0, 0]);
-  });
-
-  it('a third finish on the same day still counts towards the week', () => {
-    const at = (h: string, i: number) => workout('2026-10-05', [{ id: 'pushup', sets: [{ reps: 10 }] }], { id: `s${i}`, when: `2026-10-05T${h}:00`, startedAt: `2026-10-05T${h}:00:00.000Z` });
-    const scores = scoreWorkouts([at('07', 1), at('12', 2), at('19', 3)], opts);
-    expect(scores.map((s) => s.weeklyXp)).toEqual([0, 0, 50]);
-  });
-});
-
-describe('the weekly streak', () => {
-  it('counts a week with any workout that has a ticked set, finished plan or not', () => {
-    const missed = (date: string) => workout(date, [{ id: 'pushup', sets: [{ reps: 10 }] }], { plan: [{ exerciseId: 'pushup', sets: 5 }] });
-    const state = stateWith([missed('2026-10-05'), missed('2026-10-14'), missed('2026-10-21')]);
-    const stats = computeWorkoutStats(state, '2026-10-23');
-    expect(stats.weeklyStreak).toBe(3);
-    expect(stats.bestWeeklyStreak).toBe(3);
-    expect(stats.workouts).toBe(3);
-  });
-
-  it('counts records in the stats', () => {
-    const stats = computeWorkoutStats(stateWith([workout('2026-10-05', [{ id: 'pushup', sets: [{ reps: 10 }] }]), workout('2026-10-06', [{ id: 'pushup', sets: [{ reps: 12 }] }])]), '2026-10-30');
-    expect(stats.records).toBe(1);
+  it('names what is missing and counts a set with no rep as not done', () => {
+    const w = workout('2026-10-05', [{ id: 'pushup', sets: [{ reps: 10 }, { reps: 0 }] }], { plan: [{ exerciseId: 'pushup', sets: 2 }] });
+    const [s] = scoreWorkouts([w], opts);
+    expect(s.planComplete).toBe(false);
+    expect(s.planMissing).toEqual(['pushup']);
   });
 });

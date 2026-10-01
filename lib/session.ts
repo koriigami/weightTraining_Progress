@@ -165,8 +165,8 @@ export function addExercise(session: Session, exerciseId: string, lookup: Exerci
   return ok({ ...session, items });
 }
 
-// Where the removed exercise sat in the plan, so an Undo can put it back.
-export type Removal = { session: Session; removed: WorkoutItem; index: number; planSlot?: { index: number; item: PlanItem } };
+// What removeExercise hands back, so the caller can offer an Undo.
+export type Removal = { session: Session; removed: WorkoutItem; index: number };
 
 const without = (list: string[] | undefined, id: string): string[] | undefined => {
   const next = list?.filter((x) => x !== id);
@@ -179,34 +179,27 @@ function tidy(session: Session): Session {
   return { ...rest, ...(plan && plan.length > 0 ? { plan } : {}), ...(follow && follow.length > 0 ? { follow } : {}) };
 }
 
-// The removed item comes back so the caller can offer an Undo. Removing an
-// exercise removes it from the plan too.
+// The removed item comes back so the caller can offer an Undo. The plan is left
+// as it was: removing a planned exercise counts as not done (Clean Sweep), so the
+// workout cannot shrink its own plan.
 export function removeExercise(session: Session, index: number): Removal | null {
   if (!within(session.items, index)) return null;
   const removed = session.items[index];
-  const planIndex = session.plan?.findIndex((p) => p.exerciseId === removed.exerciseId) ?? -1;
-  const planSlot = planIndex >= 0 && session.plan ? { index: planIndex, item: session.plan[planIndex] } : undefined;
   const next: Session = {
     ...session,
     items: session.items.filter((_, i) => i !== index),
-    ...(session.plan ? { plan: session.plan.filter((p) => p.exerciseId !== removed.exerciseId) } : {}),
     follow: without(session.follow, removed.exerciseId),
   };
-  return { session: tidy(next), removed, index, ...(planSlot ? { planSlot } : {}) };
+  return { session: tidy(next), removed, index };
 }
 
 // Undo of removeExercise. If the same exercise has been added since, nothing changes.
-export function restoreExercise(session: Session, removed: WorkoutItem, index: number, planSlot?: Removal['planSlot']): Session {
+export function restoreExercise(session: Session, removed: WorkoutItem, index: number): Session {
   if (session.items.some((i) => i.exerciseId === removed.exerciseId)) return session;
   const at = Math.max(0, Math.min(index, session.items.length));
   const items = [...session.items];
   items.splice(at, 0, removed);
-  let plan = session.plan;
-  if (planSlot && !plan?.some((p) => p.exerciseId === planSlot.item.exerciseId)) {
-    plan = [...(plan ?? [])];
-    plan.splice(Math.max(0, Math.min(planSlot.index, plan.length)), 0, planSlot.item);
-  }
-  return { ...session, items, ...(plan ? { plan } : {}) };
+  return { ...session, items };
 }
 
 // Swap an exercise for another. It keeps the number of sets, with fresh blank
@@ -490,7 +483,7 @@ export function buildWorkoutPatch(original: WorkoutLog, draft: EditDraft, lookup
     patch.finishedAt = finished;
     patch.startedAt = new Date(Date.parse(finished) - draft.minutes * 60_000).toISOString();
   }
-  // The plan only moves when an exercise was removed from it.
+  // The plan only moves when an exercise was swapped for another.
   const before = original.plan ?? planFromItems(original.items.map((i) => ({ exerciseId: i.exerciseId, sets: i.sets.filter((s) => s.done) })));
   const after = draft.session.plan ?? [];
   if (JSON.stringify(before) !== JSON.stringify(after)) patch.plan = after;

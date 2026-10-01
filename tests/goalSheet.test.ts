@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { END_PRESETS, endPresetDate, endsLabel, goalDistanceKm, goalHint, goalReward, recentNumbers, streakDeadline } from '../lib/goals';
 import type { Goal } from '../lib/progress';
-import { stateWith, workout } from './helpers';
+import { stateWith, trainingDay, workout } from './helpers';
 
 const TODAY = '2026-09-30';
 
@@ -38,22 +38,23 @@ describe('end date wording', () => {
 describe('goal hints from real workouts', () => {
   const state = stateWith([
     workout('2026-09-29', [{ id: 'pushup', sets: [{ reps: 20 }] }]),
-    workout('2026-09-22', [{ id: 'pushup', sets: [{ reps: 30 }] }]),
+    trainingDay('2026-09-22'),
+    workout('2026-09-24', [{ id: 'pushup', sets: [{ reps: 30 }] }]),
     workout('2026-09-01', [{ id: 'pushup', sets: [{ reps: 99 }] }]),
   ]);
 
-  it('counts only the last 4 weeks', () => {
+  it('counts only the last 4 weeks, and training days for workouts and weeks', () => {
     const n = recentNumbers(state, TODAY);
-    expect(n.workouts).toBe(2);
-    expect(n.pushups).toBe(50);
-    expect(n.weeksTrained).toBe(2);
+    expect(n.workouts).toBe(1);
+    expect(n.pushups).toBe(20 + 70 + 30);
+    expect(n.weeksTrained).toBe(1);
   });
 
   it('writes plain hints', () => {
     const n = recentNumbers(state, TODAY);
-    expect(goalHint('workouts', n)).toBe('You logged 2 workouts in the last 4 weeks.');
-    expect(goalHint('streak', n)).toBe('You trained in 2 of the last 4 weeks.');
-    expect(goalHint('pushups', n)).toBe('You did 50 push-ups in the last 4 weeks.');
+    expect(goalHint('workouts', n)).toBe('You logged 1 workout in the last 4 weeks.');
+    expect(goalHint('streak', n)).toBe('You trained in 1 of the last 4 weeks.');
+    expect(goalHint('pushups', n)).toBe('You did 120 push-ups in the last 4 weeks.');
     expect(goalHint('weight', n)).toBeNull();
   });
 

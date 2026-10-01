@@ -11,6 +11,7 @@ import { goalReward, goalStatus } from '../lib/goals';
 import { createStore } from '../lib/store';
 import type { KV } from '../lib/store';
 import { workoutXpTotal } from '../lib/workoutScoring';
+import { trainingDay } from './helpers';
 import { legacyPlanState } from './fixtures/legacyPlanState';
 import { seedRoutines } from './fixtures/seedRoutines';
 
@@ -330,9 +331,44 @@ describe('the store on read', () => {
   });
 
   it('leaves the flag alone once the note has been seen', async () => {
-    const kv = memoryKv({ [STATE]: { ...emptyState(), workouts: [byDate(migrate(legacyPlanState), '2026-09-26')], rulesV2Note: false } });
+    const kv = memoryKv({ [STATE]: { ...emptyState(), workouts: [byDate(migrate(legacyPlanState), '2026-09-26')], rulesV2Note: false, rulesV3Note: false } });
     expect((await createStore(kv).getState('sub', 'x@example.com')).rulesV2Note).toBe(false);
     expect(kv.writes).toEqual([]);
+  });
+
+  it('sets the daily bonus note flag for a state that has workouts, and for nobody else', async () => {
+    const w = trainingDay('2026-10-05');
+    const seen = { ...emptyState(), rulesV2Note: false };
+    expect((await createStore(memoryKv({ [STATE]: { ...seen, workouts: [w] } })).getState('sub', 'x@example.com')).rulesV3Note).toBe(true);
+
+    // A saved state with no workouts is marked as having no note, so a first workout later does not trigger it.
+    const kv = memoryKv({ [STATE]: seen });
+    const store = createStore(kv);
+    expect((await store.getState('sub', 'x@example.com')).rulesV3Note).toBe(false);
+    await store.saveState('sub', { ...(kv.data.get(STATE) as AppState), workouts: [w] });
+    expect((await store.getState('sub', 'x@example.com')).rulesV3Note).toBe(false);
+
+    // New users and a brand new owner start without it.
+    expect((await createStore(memoryKv()).getState('sub', 'new@example.com')).rulesV3Note).toBe(false);
+    expect((await createStore(memoryKv()).getState('sub', OWNER)).rulesV3Note).toBe(false);
+  });
+
+  it('works the stored XP of every workout out again with the flag, once', async () => {
+    // Saved under the old rules: the finish bonus was 5 for a seven set day, and there was no comeback.
+    // The dates are well in the past: the store scores against the real clock, and a workout dated after tomorrow does not count.
+    const old = { ...trainingDay('2025-03-11'), xp: 40, xpParts: { sets: 35, cardio: 0, beat: 0, record: 0, finish: 5, weekly: 0 } };
+    const later = { ...trainingDay('2025-03-25'), xp: 40, xpParts: { sets: 35, cardio: 0, beat: 0, record: 0, finish: 5, weekly: 0 } };
+    const kv = memoryKv({ [STATE]: { ...emptyState(), workouts: [old, later], rulesV2Note: false } });
+    const store = createStore(kv);
+    const s = await store.getState('sub', 'x@example.com');
+    expect(s.rulesV3Note).toBe(true);
+    expect(s.workouts!.map((w) => w.xp)).toEqual([85, 110]); // the second is a comeback after the empty week of 17 Mar
+    expect(s.workouts![1].xpParts).toEqual({ sets: 35, cardio: 0, beat: 0, record: 0, finish: 50, weekly: 0, comeback: 25 });
+    expect(kv.data.get(STATE)).toEqual(s);
+    // Reading again finds nothing to do: no write, same state.
+    const writes = kv.writes.length;
+    expect(await store.getState('sub', 'x@example.com')).toEqual(s);
+    expect(kv.writes).toHaveLength(writes);
   });
 
   it('never seeds routines: an owner keeps what they have and starts with none otherwise', async () => {

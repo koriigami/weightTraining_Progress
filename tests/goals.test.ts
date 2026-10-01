@@ -5,7 +5,7 @@ import { allEarnedBadges, computeBadges } from '../lib/badges';
 import { XP, emptyState, totalXp } from '../lib/progress';
 import type { AppState, Goal } from '../lib/progress';
 import { applyRoutineAction } from '../lib/routineActions';
-import { stateWith, workout } from './helpers';
+import { stateWith, trainingDay, workout } from './helpers';
 
 const TODAY = '2026-10-14';
 const CREATED = '2026-10-05T06:00:00.000Z';
@@ -14,6 +14,8 @@ const goal = (over: Partial<Goal>): Goal => ({ id: 'g1', type: 'workouts', targe
 // A workout finished after the goal was created unless said otherwise.
 const done = (date: string, items: Parameters<typeof workout>[1], finishedAt = `${date}T20:00:00.000Z`) => workout(date, items, { finishedAt });
 const push = (date: string, reps = 10, finishedAt?: string) => done(date, [{ id: 'pushup', sets: [{ reps }] }], finishedAt);
+// A training day (21 minutes of sets), finished after the goal was created unless said otherwise.
+const day = (date: string, finishedAt = `${date}T20:00:00.000Z`) => trainingDay(date, { finishedAt });
 const withGoal = (g: Goal, ws: ReturnType<typeof workout>[]): AppState => ({ ...stateWith(ws), goals: [g] });
 
 describe('goal rewards', () => {
@@ -45,16 +47,16 @@ describe('goal rewards', () => {
 });
 
 describe('goal progress from workouts', () => {
-  it('a workouts goal counts workouts with a ticked set inside its window', () => {
-    const ws = [push('2026-10-06'), push('2026-10-08'), push('2026-10-08'), push('2026-10-26'), push('2026-10-03', 10, '2026-10-03T20:00:00.000Z')];
+  it('a workouts goal counts training days inside its window, once a day, and not short workouts', () => {
+    const ws = [day('2026-10-06'), day('2026-10-08'), day('2026-10-08'), day('2026-10-09'), push('2026-10-10'), day('2026-10-26'), day('2026-10-03', '2026-10-03T20:00:00.000Z')];
     const s = withGoal(goal({}), ws);
     expect(goalProgressValue(goal({}), s, TODAY)).toBe(3);
     expect(goalStatus(goal({}), s, TODAY)).toBe('achieved');
   });
 
   it('only progress finished at or after createdAt counts', () => {
-    const before = push('2026-10-06', 10, '2026-10-05T05:59:59.000Z');
-    const at = push('2026-10-06', 10, CREATED);
+    const before = day('2026-10-06', '2026-10-05T05:59:59.000Z');
+    const at = day('2026-10-07', CREATED);
     const s = withGoal(goal({ target: 2 }), [before, at]);
     expect(goalProgressValue(goal({ target: 2 }), s, TODAY)).toBe(1);
     expect(goalStatus(goal({ target: 2 }), s, TODAY)).toBe('active');
@@ -73,25 +75,27 @@ describe('goal progress from workouts', () => {
     expect(goalProgressValue(goal({ type: 'cardio-km', target: 20 }), withGoal(goal({}), ws), TODAY)).toBe(19.5);
   });
 
-  it('a streak goal counts weeks in a row with any workout, from the week it started', () => {
+  it('a streak goal counts weeks in a row with a training day, from the week it started', () => {
     const g = goal({ type: 'streak', target: 3, start: '2026-10-05', deadline: streakDeadline('2026-10-05', 3) });
     expect(g.deadline).toBe('2026-10-25');
-    const ws = [push('2026-10-07'), push('2026-10-13')];
+    const ws = [day('2026-10-07'), day('2026-10-13')];
     expect(goalProgressValue(g, withGoal(g, ws), TODAY)).toBe(2);
     expect(goalStatus(g, withGoal(g, ws), TODAY)).toBe('active');
-    expect(goalStatus(g, withGoal(g, [...ws, push('2026-10-20')]), '2026-10-21')).toBe('achieved');
+    expect(goalStatus(g, withGoal(g, [...ws, day('2026-10-20')]), '2026-10-21')).toBe('achieved');
   });
 
-  it('a streak goal fails once a whole week passes with no workout', () => {
+  it('a streak goal fails once a whole week passes with no training day, a short workout does not save it', () => {
     const g = goal({ type: 'streak', target: 3, start: '2026-10-05', deadline: '2026-10-25' });
-    const s = withGoal(g, [push('2026-10-07'), push('2026-10-21')]);
+    const s = withGoal(g, [day('2026-10-07'), day('2026-10-21')]);
     expect(goalStatus(g, s, '2026-10-14')).toBe('active'); // the week of the 12th is still open
     expect(goalStatus(g, s, '2026-10-21')).toBe('failed');
+    const short = withGoal(g, [day('2026-10-07'), push('2026-10-13'), day('2026-10-20')]);
+    expect(goalStatus(g, short, '2026-10-21')).toBe('failed');
   });
 
   it('a streak goal made before v8 reads under the weekly meaning', () => {
     const old = goal({ type: 'streak', target: 2, start: '2026-10-05', deadline: '2026-10-06' });
-    const s = withGoal(old, [push('2026-10-07'), push('2026-10-14')]);
+    const s = withGoal(old, [day('2026-10-07'), day('2026-10-14')]);
     expect(goalStatus(old, s, TODAY)).toBe('achieved');
   });
 
@@ -116,7 +120,7 @@ describe('goal progress from workouts', () => {
 
 describe('goals stay achieved', () => {
   const g = goal({ target: 2 });
-  const ws = [push('2026-10-06'), push('2026-10-07')];
+  const ws = [day('2026-10-06'), day('2026-10-07')];
 
   it('stamps achievedAt on a goal that is newly achieved, once', () => {
     const s = withGoal(g, ws);
@@ -128,7 +132,7 @@ describe('goals stay achieved', () => {
   });
 
   it('leaves goals that are not achieved without a stamp, and returns the same list', () => {
-    const s = withGoal(g, [push('2026-10-06')]);
+    const s = withGoal(g, [day('2026-10-06')]);
     expect(stampAchievedGoals(s, 'now', TODAY)).toBe(s.goals);
   });
 

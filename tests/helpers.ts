@@ -30,3 +30,9 @@ export function workout(date: string, items: ItemSpec[], over: Partial<WorkoutLo
 export function stateWith(workouts: WorkoutLog[], extra: Partial<AppState> = {}): AppState {
   return { ...emptyState(), workouts, ...extra };
 }
+
+// A workout that is a training day on its own: seven push-up sets are 21 minutes,
+// which pays the daily bonus. Every one repeats 10 reps, so none earns a beat or a record.
+export function trainingDay(date: string, over: Partial<WorkoutLog> = {}): WorkoutLog {
+  return workout(date, [{ id: 'pushup', sets: Array.from({ length: 7 }, () => ({ reps: 10 })) }], over);
+}

@@ -113,26 +113,43 @@ skips seen-tracking, and a badge replay leaves out the "+XP" line.
 
 Nothing about XP is stored except what a workout carries for display. Total XP,
 level, rank, streaks and badges are computed from the state every time. The
-rules are the XP Rulebook (`docs/design/xp-reference.html`), called rules v2:
+rules are the XP Rulebook (`docs/design/xp-reference.html`), called rules v3:
 
 - **Set XP** (`setXp` in `lib/routines.ts`): 5 per ticked strength set with a
   rep or a 5 second hold, cardio 1 XP a minute (30 at most a set) plus 10 with a
   distance, an interval set its work plus easy minutes (also capped at 30).
 - **Beat last time (+10) and records (+25)**, once per exercise per workout. A
   record replaces the beat. The first time an exercise shows up earns neither.
-- **Finish bonus**: paid when the workout's plan is complete. It is worth the XP
-  of the sets that fill the plan, up to 50, and at most 2 a day.
-- **Weekly goal**: +50 the workout that makes a Monday to Sunday week's count of
-  plan-complete workouts reach the weekly goal.
+- **Daily bonus**: +50, once a day, on the workout that takes the day's
+  training to 20 minutes. Every workout of that date adds up, strength and cardio
+  together: a ticked strength set that earns XP counts 3 minutes, cardio counts
+  its minutes (intervals work plus easy, not capped, only the XP is). The plan
+  does not matter. A date that reaches 20 minutes is a **training day**. The
+  amount is stored in `xpParts.finish`, the key the old finish bonus used, so
+  no stored data had to move. `WORKOUT_XP` in `lib/routines.ts` holds the numbers.
+- **Weekly goal**: +50 on the workout that makes a Monday to Sunday week's count
+  of training days reach the weekly goal.
+- **Comeback**: +25 on the first training day after a whole Monday to Sunday week
+  with none, never for a person's first training day (`xpParts.comeback`, a
+  missing value reads as 0).
 - Workouts are scored in date order by `scoreWorkouts` and `rescoreWorkouts` in
-  `lib/workoutScoring.ts`. Beat, record, the daily cap and the weekly goal
-  depend on the workouts around them, so after any save, edit or delete the
-  server scores all workouts again, and deleting or moving one re-scores the rest.
+  `lib/workoutScoring.ts`. Beat, record, the daily bonus, the weekly goal and the
+  comeback depend on the workouts around them, so after any save, edit or delete
+  the server scores all workouts again, and deleting or moving one re-scores the
+  rest. `trainingDays`, `trainingDaysOf`, `trainingMinutes`, `dayMinutes` and
+  `dailyBonusPaid` are the helpers the screens use: the training days of a state,
+  and the minutes a date has so far (saved workouts plus the one in progress).
+- **Training days drive the rest.** `weeklyStreaks` takes training-day dates, and
+  the weekly goal, the Finisher, Month Clear, Goal Month and Streak Keeper badges,
+  and the workouts and weekly streak goals all count training days. A day under
+  20 minutes still earns its XP but is not one.
 - **The plan snapshot.** A workout carries `plan`, the exercises and set counts it
   set out to do, taken at Start (the routine, or the exercises picked before
-  Start). Swapping moves a plan slot, removing removes it, adding does not
-  change it. A workout saved before v8 has no `plan`, and its own ticked sets
-  stand in as the plan. `marks`, `xpParts`, `planComplete` and `planMissing` are
+  Start). Swapping moves a plan slot. Removing and adding do not change it, so a
+  workout cannot shrink its own plan. The plan decides only the Clean Sweep badge
+  (and `planComplete` and `planMissing`), never any XP. A workout saved before v8
+  has no `plan`, and its own ticked sets stand in as the plan. `marks`,
+  `xpParts`, `planComplete` and `planMissing` are
   derived and written by `rescoreWorkouts`. The server ignores what a client
   sends for them.
 - `totalXp` in `lib/progress.ts` adds workout XP, badge tiers, monthly and special
@@ -140,12 +157,18 @@ rules are the XP Rulebook (`docs/design/xp-reference.html`), called rules v2:
   `xpForLevel(n) = 50 * n * (n - 1)`.
 - Badges (`lib/badges.ts`) come from time series over the workouts.
   `lib/badgeCards.ts` turns them into cards. The plan-only badges are retired.
-- Goals (`lib/goals.ts`) count workouts logged after the goal's `createdAt`. The
+- Goals (`lib/goals.ts`) count training days (the stored type id is still
+  `workouts`) logged after the goal's `createdAt`. The
   server stamps `achievedAt` the first time a goal is met, and a stamped goal
   stays achieved even if a workout is later edited or deleted.
-- **Rules note.** `AppState.rulesV2Note` is set once by the store for a person
+- **Rules notes.** `AppState.rulesV2Note` is set once by the store for a person
   who already had workouts or plan days, so Home can say "XP was worked out
-  again with the new rules". Seeing it sets the flag to false.
+  again with the new rules". `rulesV3Note` does the same for the daily bonus
+  rules: true when the state has workouts the first time it is read, false
+  otherwise. Seeing a note sets its flag to false (`setRulesNote`,
+  `setRulesV3Note`). The pass that sets `rulesV3Note` also works the stored `xp`
+  and `xpParts` of every workout out again, so the workout pages match the new
+  rules at once. Reading again changes nothing.
 
 ## Storage
 
@@ -187,7 +210,7 @@ first time `getState` reads a state that still has a `days` log (`upgrade` in
    18:00 start and finish, and a `plan` holding everything scheduled that day.
 3. `days` is dropped and the state is saved. Reading it again changes nothing.
 
-`rulesV2Note` is set in the same pass. `tests/planMigration.test.ts` and
+`rulesV2Note` is set in the same pass (and `rulesV3Note`, see the rules notes above). `tests/planMigration.test.ts` and
 `tests/store.test.ts` cover the migration, the backup and idempotence.
 
 ### The share card

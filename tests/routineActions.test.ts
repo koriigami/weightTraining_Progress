@@ -34,6 +34,9 @@ const routine = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+// Seven ticked sets are 21 minutes: the day reaches the daily bonus on its own.
+const training = { exerciseId: 'db-ohp', sets: Array.from({ length: 7 }, () => ({ kg: 10, reps: 10, done: true })) };
+
 // A workout as the client sends it: no xp, no marks.
 function input(date: string, over: Record<string, unknown> = {}, exerciseId = 'db-ohp') {
   return {
@@ -128,12 +131,12 @@ describe('deleteRoutine', () => {
 
 describe('saveWorkout', () => {
   it('works out xp and marks on the server, ignoring what the client sends', () => {
-    const s = expectOk(run(emptyState(), { action: 'saveWorkout', workout: input('2026-10-09', { xp: 99999, marks: [{ exerciseId: 'x', kind: 'record' }], planComplete: false, xpParts: { sets: 999 } }) }));
+    const s = expectOk(run(emptyState(), { action: 'saveWorkout', workout: input('2026-10-09', { items: [training], xp: 99999, marks: [{ exerciseId: 'x', kind: 'record' }], planComplete: false, xpParts: { sets: 999 } }) }));
     expect(s.workouts).toHaveLength(1);
-    expect(s.workouts![0].xp).toBe(5 + 5);
+    expect(s.workouts![0].xp).toBe(35 + 50);
     expect(s.workouts![0].marks).toEqual([]);
     expect(s.workouts![0].planComplete).toBe(true);
-    expect(s.workouts![0].xpParts).toEqual({ sets: 5, cardio: 0, beat: 0, record: 0, finish: 5, weekly: 0 });
+    expect(s.workouts![0].xpParts).toEqual({ sets: 35, cardio: 0, beat: 0, record: 0, finish: 50, weekly: 0, comeback: 0 });
   });
 
   it('marks a record against an earlier workout and pays for it', () => {
@@ -141,7 +144,7 @@ describe('saveWorkout', () => {
     const heavier = input('2026-10-09', { items: [{ exerciseId: 'db-ohp', sets: [{ kg: 12, reps: 10, done: true }] }] });
     s = expectOk(run(s, { action: 'saveWorkout', workout: heavier }));
     expect(s.workouts![1].marks).toEqual([{ exerciseId: 'db-ohp', kind: 'record', kg: 12, reps: 10 }]);
-    expect(s.workouts![1].xp).toBe(5 + 5 + 25);
+    expect(s.workouts![1].xp).toBe(5 + 25); // one set is 3 minutes, so no daily bonus
   });
 
   it('rejects a duplicate id', () => {
@@ -203,9 +206,9 @@ describe('saveWorkout', () => {
   it('pays the weekly goal bonus once, on the third workout of the week', () => {
     let s = emptyState();
     for (const d of ['2026-10-05', '2026-10-06', '2026-10-07', '2026-10-08']) {
-      s = expectOk(run(s, { action: 'saveWorkout', workout: input(d) }));
+      s = expectOk(run(s, { action: 'saveWorkout', workout: input(d, { items: [training] }) }));
     }
-    expect(s.workouts!.map((w) => w.xp)).toEqual([10, 10, 60, 10]);
+    expect(s.workouts!.map((w) => w.xp)).toEqual([85, 85, 135, 85]);
   });
 });
 
@@ -226,7 +229,7 @@ describe('updateWorkout', () => {
       })
     );
     const w = s.workouts![0];
-    expect(w).toMatchObject({ title: 'Renamed', notes: 'Felt strong', photo: 'p1', xp: 10 });
+    expect(w).toMatchObject({ title: 'Renamed', notes: 'Felt strong', photo: 'p1', xp: 5 });
     expect(w.items).toHaveLength(1);
     expect(w.routineId).toBeUndefined();
   });
@@ -287,10 +290,10 @@ describe('savePrefs', () => {
 
   it('re-scores workouts when the weekly goal changes', () => {
     let s = emptyState();
-    for (const d of ['2026-10-05', '2026-10-06']) s = expectOk(run(s, { action: 'saveWorkout', workout: input(d) }));
-    expect(s.workouts!.map((w) => w.xp)).toEqual([10, 10]);
+    for (const d of ['2026-10-05', '2026-10-06']) s = expectOk(run(s, { action: 'saveWorkout', workout: input(d, { items: [training] }) }));
+    expect(s.workouts!.map((w) => w.xp)).toEqual([85, 85]);
     s = expectOk(run(s, { action: 'savePrefs', prefs: prefs() }));
-    expect(s.workouts!.map((w) => w.xp)).toEqual([10, 60]);
+    expect(s.workouts!.map((w) => w.xp)).toEqual([85, 135]);
   });
 
   it('rejects bad input', () => {
@@ -320,7 +323,7 @@ describe('addCustomExercise', () => {
     expect(s.customExercises).toEqual([{ id: 'custom-made-id', name: 'Sled Push', equipment: 'machine', primary: 'quads', secondary: ['glutes'], metric: 'weight_reps', custom: true }]);
     s = expectOk(run(s, { action: 'saveRoutine', routine: routine({ items: [{ exerciseId: 'custom-made-id', sets: [{ kg: 50, reps: 10 }] }] }) }));
     s = expectOk(run(s, { action: 'saveWorkout', workout: input('2026-10-09', {}, 'custom-made-id') }));
-    expect(s.workouts![0].xp).toBe(10);
+    expect(s.workouts![0].xp).toBe(5);
   });
 
   it('accepts a client id that starts with custom-', () => {
@@ -399,6 +402,22 @@ describe('saveRoutine after', () => {
 
   it('rejects an anchor that is not an id', () => {
     expectFail(run(three(), { action: 'saveRoutine', routine: routine({ id: 'd' }), after: { $ne: 1 } }), 'invalid id');
+  });
+});
+
+describe('setRulesV3Note', () => {
+  it('puts the daily bonus note away, and leaves the earlier note alone', () => {
+    const next = expectOk(run({ ...emptyState(), rulesV2Note: true, rulesV3Note: true }, { action: 'setRulesV3Note', value: false }));
+    expect(next.rulesV3Note).toBe(false);
+    expect(next.rulesV2Note).toBe(true);
+  });
+
+  it('is harmless when the note is already gone', () => {
+    expect(expectOk(run(emptyState(), { action: 'setRulesV3Note', value: false })).rulesV3Note).toBe(false);
+  });
+
+  it('cannot raise the note, and only takes a boolean false', () => {
+    for (const value of [true, 'false', 0, null, undefined]) expectFail(run(emptyState(), { action: 'setRulesV3Note', value }), 'invalid note flag');
   });
 });
 

@@ -153,7 +153,7 @@ function EditForm({ workout }: { workout: WorkoutLog }) {
     const removal = S.removeExercise(ref.current, index);
     if (!removal) return;
     commit(removal.session);
-    showToast(`${name} removed`, 'Undo', () => commit(S.restoreExercise(ref.current, removal.removed, removal.index, removal.planSlot)));
+    showToast(`${name} removed`, 'Undo', () => commit(S.restoreExercise(ref.current, removal.removed, removal.index)));
   }
 
   const blocks = session.items.map((item, i) => {

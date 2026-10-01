@@ -10,7 +10,7 @@ import {
   weeklyStreaks,
   workoutXpTotal,
 } from '../lib/workoutScoring';
-import { stateWith, workout } from './helpers';
+import { stateWith, trainingDay, workout } from './helpers';
 import { legacyPlanState } from './fixtures/legacyPlanState';
 import type { AppState } from '../lib/progress';
 
@@ -80,12 +80,17 @@ describe('workout totals', () => {
 });
 
 describe('finishing a workout', () => {
-  it('earns set XP plus a finish bonus sized to the sets, and nothing when no set is ticked', () => {
+  it('earns set XP, the daily bonus only once the day reaches 20 minutes, and nothing when no set is ticked', () => {
     const w = workout(MON, [{ id: 'pushup', sets: [{ reps: 10 }, { reps: 10 }, { reps: 10 }], undone: [2] }]);
     const [s] = scoreWorkouts([w], opts);
     expect(s.setXp).toBe(10);
-    expect(s.finishXp).toBe(10);
-    expect(s.xp).toBe(20);
+    expect(s.dailyXp).toBe(0);
+    expect(s.xp).toBe(10);
+
+    const [full] = scoreWorkouts([trainingDay(MON)], opts);
+    expect(full.setXp).toBe(35);
+    expect(full.dailyXp).toBe(50);
+    expect(full.xp).toBe(85);
 
     const empty = workout('2026-10-06', [{ id: 'pushup', sets: [{ reps: 10 }], undone: [0] }]);
     expect(scoreWorkouts([empty], opts)).toEqual([]);
@@ -116,7 +121,7 @@ describe('records and beats', () => {
     expect(scores.map((s) => s.records)).toEqual([0, 1, 1, 0, 0]);
     expect(scores[1].marks).toEqual([{ exerciseId: 'db-ohp', kind: 'record', kg: 12.5, reps: 6 }]);
     expect(scores[1].recordXp).toBe(25);
-    expect(scores[1].xp).toBe(5 + 5 + 25);
+    expect(scores[1].xp).toBe(5 + 25);
   });
 
   it('count once per exercise per workout, using the best set', () => {
@@ -168,7 +173,7 @@ describe('records and beats', () => {
 });
 
 describe('weekly goal bonus', () => {
-  const day = (date: string) => workout(date, [{ id: 'pushup', sets: [{ reps: 10 }] }]);
+  const day = (date: string) => trainingDay(date);
 
   it('pays +50 once, on the workout that reaches the goal in a Monday to Sunday week', () => {
     const scores = scoreWorkouts([day('2026-10-05'), day('2026-10-07'), day('2026-10-11'), day('2026-10-11')], opts);
@@ -192,9 +197,10 @@ describe('weekly goal bonus', () => {
 
   it('reads the goal from prefs, defaulting to 3', () => {
     const days = [day('2026-10-05'), day('2026-10-06'), day('2026-10-07')];
-    expect(workoutXpTotal(stateWith(days))).toBe(3 * 10 + 50);
-    expect(workoutXpTotal(stateWith(days, { prefs: { ...defaultPrefs(), weeklyGoal: 2 } }))).toBe(3 * 10 + 50);
-    expect(workoutXpTotal(stateWith(days, { prefs: { ...defaultPrefs(), weeklyGoal: 4 } }))).toBe(3 * 10);
+    const perDay = 35 + 50; // seven sets and the daily bonus
+    expect(workoutXpTotal(stateWith(days))).toBe(3 * perDay + 50);
+    expect(workoutXpTotal(stateWith(days, { prefs: { ...defaultPrefs(), weeklyGoal: 2 } }))).toBe(3 * perDay + 50);
+    expect(workoutXpTotal(stateWith(days, { prefs: { ...defaultPrefs(), weeklyGoal: 4 } }))).toBe(3 * perDay);
   });
 });
 
@@ -203,9 +209,9 @@ describe('anti-farming', () => {
     const future = workout('2026-11-20', [{ id: 'pushup', sets: [{ reps: 10 }] }]);
     const tomorrow = workout('2026-10-31', [{ id: 'pushup', sets: [{ reps: 10 }] }]);
     const s = stateWith([future, tomorrow]);
-    expect(workoutXpTotal(s, '2026-10-30')).toBe(10);
+    expect(workoutXpTotal(s, '2026-10-30')).toBe(5);
     expect(computeProgress(s, '2026-10-30').workout.workouts).toBe(1);
-    expect(rescoreWorkouts(s, s.workouts!, '2026-10-30').map((w) => w.xp)).toEqual([0, 10]);
+    expect(rescoreWorkouts(s, s.workouts!, '2026-10-30').map((w) => w.xp)).toEqual([0, 5]);
   });
 
   it('gives no XP for a workout with nothing ticked', () => {
@@ -219,13 +225,13 @@ describe('rescoring', () => {
     const a = workout('2026-10-05', [{ id: 'db-ohp', sets: [{ kg: 10, reps: 10 }] }]);
     const b = workout('2026-10-06', [{ id: 'db-ohp', sets: [{ kg: 12, reps: 10 }] }]);
     const both = rescoreWorkouts(stateWith([a, b]), [a, b], TODAY);
-    expect(both.map((w) => w.xp)).toEqual([10, 35]);
+    expect(both.map((w) => w.xp)).toEqual([5, 30]);
     expect(both[1].marks).toEqual([{ exerciseId: 'db-ohp', kind: 'record', kg: 12, reps: 10 }]);
-    expect(both[1].xpParts).toEqual({ sets: 5, cardio: 0, beat: 0, record: 25, finish: 5, weekly: 0 });
+    expect(both[1].xpParts).toEqual({ sets: 5, cardio: 0, beat: 0, record: 25, finish: 0, weekly: 0, comeback: 0 });
     expect(both[1].planComplete).toBe(true);
     expect(both[1].planMissing).toEqual([]);
     const onlyB = rescoreWorkouts(stateWith([b]), [b], TODAY);
-    expect(onlyB[0].xp).toBe(10);
+    expect(onlyB[0].xp).toBe(5);
     expect(onlyB[0].marks).toEqual([]);
   });
 
@@ -278,7 +284,8 @@ describe('progress with workouts', () => {
     const newBadges = allEarnedBadges(s1, today).filter((b) => !allEarnedBadges(s0, today).some((o) => o.id === b.id));
     const badgeXp = newBadges.reduce((sum, b) => sum + (b.kind === 'lifetime' ? XP.badgeTier[b.tier] : 0), 0);
     expect(after - before).toBe(workoutXpTotal(s1, today) + badgeXp);
-    expect(workoutXpTotal(s1, today)).toBe(10 + 40 + 50 + (5 + 40 + 45 + 25));
+    // Each day is over 20 minutes (the second has a 40 minute ride), so each pays the daily bonus once.
+    expect(workoutXpTotal(s1, today)).toBe(10 + 40 + 50 + (5 + 40 + 25 + 50));
   });
 
   it('takes level and rank from the total', () => {

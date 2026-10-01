@@ -59,7 +59,7 @@ export function xpLines(workout: Pick<WorkoutLog, 'items'>, score: WorkoutScore 
     }
   }
   if (score.planComplete) {
-    lines.push({ key: 'finish', title: 'Workout finished', xp: score.finishXp, ...(score.finishXp === 0 ? { sub: `Finish bonus is paid ${WORKOUT_XP.finishPerDay} times a day` } : {}) });
+    lines.push({ key: 'finish', title: 'Workout finished', xp: score.dailyXp, ...(score.dailyXp === 0 ? { sub: 'Finish bonus is paid once a day' } : {}) });
   } else if (score.planMissing.length > 0) {
     lines.push({ key: 'missed', title: `Missed: ${score.planMissing.map(nameOf).join(', ')} not done`, xp: 0 });
   }

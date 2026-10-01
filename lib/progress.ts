@@ -40,6 +40,9 @@ export type AppState = {
   // already had workouts or plan days under v8, and false for everyone else. The
   // note sets it to false when it has been seen. Undefined only on states not read since.
   rulesV2Note?: boolean;
+  // The same, for the v3 rules (the daily bonus): the store sets it once, true when
+  // the state already has workouts, false otherwise, and the note puts it away.
+  rulesV3Note?: boolean;
 };
 
 export function emptyState(): AppState {
