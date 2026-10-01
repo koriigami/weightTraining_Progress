@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { comebackPending, trainedDates, upNextRoutines, weekDots, weekSummary } from '../lib/week';
+import { comebackPending, dayKind, dayRules, trainedDates, upNextRoutines, weekDots, weekSummary } from '../lib/week';
 import { emptyState } from '../lib/progress';
 import type { AppState } from '../lib/progress';
 import { defaultPrefs } from '../lib/routines';
@@ -8,6 +8,8 @@ import { stateWith, trainingDay, workout } from './helpers';
 
 // Tuesday 29 September 2026. Its week runs Monday 28 Sep to Sunday 4 Oct.
 const TODAY = '2026-09-29';
+// The first logged workout in the week tests below: Monday, the start of the week.
+const FIRST = '2026-09-28';
 
 describe('week dots', () => {
   it('runs Monday to Sunday with the day of the month', () => {
@@ -37,37 +39,101 @@ describe('week dots', () => {
 
 describe('rest days on the week strip', () => {
   it('a past day of this week without a training day is a rest day, a training day is not', () => {
-    const dots = weekDots(['2026-09-28'], '2026-10-01'); // Thursday
+    const dots = weekDots(['2026-09-28'], '2026-10-01', undefined, FIRST); // Thursday
     expect(dots.map((d) => d.rest)).toEqual([false, true, true, false, false, false, false]);
     expect(dots[0].done).toBe(true);
   });
 
+  it('shows no rest days until a first workout is given', () => {
+    const dots = weekDots(['2026-09-28'], '2026-10-01');
+    expect(dots.some((d) => d.rest)).toBe(false);
+  });
+
   it('before the goal is met the days ahead stay open', () => {
-    const dots = weekDots(['2026-09-28', '2026-09-29'], TODAY, 3); // 2 of 3
+    const dots = weekDots(['2026-09-28', '2026-09-29'], TODAY, 3, FIRST); // 2 of 3
     expect(dots.filter((d) => d.future).some((d) => d.rest)).toBe(false);
-    expect(weekDots(['2026-09-28', '2026-09-29', '2026-09-30'], TODAY).filter((d) => d.future).some((d) => d.rest)).toBe(false); // no goal given
+    expect(weekDots(['2026-09-28', '2026-09-29', '2026-09-30'], TODAY, undefined, FIRST).filter((d) => d.future).some((d) => d.rest)).toBe(false); // no goal given
   });
 
   it('once the weekly goal is met the days still to come are rest days too', () => {
-    const dots = weekDots(['2026-09-28', '2026-09-29', '2026-09-30'], '2026-09-30', 3);
+    const dots = weekDots(['2026-09-28', '2026-09-29', '2026-09-30'], '2026-09-30', 3, FIRST);
     expect(dots.map((d) => d.rest)).toEqual([false, false, false, true, true, true, true]);
   });
 
   it('today never shows Rest, even with the goal met on an earlier day', () => {
-    const dots = weekDots(['2026-09-28', '2026-09-29', '2026-09-30'], '2026-10-01', 3);
+    const dots = weekDots(['2026-09-28', '2026-09-29', '2026-09-30'], '2026-10-01', 3, FIRST);
     const today = dots.find((d) => d.today)!;
     expect(today).toMatchObject({ done: false, rest: false });
     expect(dots.slice(4).every((d) => d.rest)).toBe(true);
   });
 
   it('a training day today keeps the tick, not Rest', () => {
-    const dots = weekDots(['2026-09-28', '2026-09-29', '2026-09-30'], '2026-09-30', 3);
+    const dots = weekDots(['2026-09-28', '2026-09-29', '2026-09-30'], '2026-09-30', 3, FIRST);
     expect(dots[2]).toMatchObject({ done: true, rest: false, today: true });
   });
 
   it('the summary applies the weekly goal from the prefs', () => {
     const state = stateWith([trainingDay('2026-09-28'), trainingDay('2026-09-29')], { prefs: { ...defaultPrefs(), weeklyGoal: 2 } });
     expect(weekSummary(state, '2026-09-30').dots.map((d) => d.rest)).toEqual([false, false, false, true, true, true, true]);
+  });
+
+  it('the summary starts rest days at the first logged workout, so a new account sees none', () => {
+    expect(weekSummary(emptyState(), '2026-09-30').dots.some((d) => d.rest)).toBe(false);
+    const dots = weekSummary(stateWith([trainingDay('2026-09-29')]), '2026-10-01').dots; // first workout on Tuesday
+    expect(dots.map((d) => d.rest)).toEqual([false, false, true, false, false, false, false]);
+  });
+});
+
+describe('day kind', () => {
+  // Thursday 1 October, first workout on Monday 28 September, one training day.
+  const rules = dayRules(['2026-09-28'], '2026-09-28', '2026-10-01', 3);
+
+  it('a past day without a training day, on or after the first workout, is a rest day', () => {
+    expect(dayKind('2026-09-29', rules)).toBe('rest');
+    expect(dayKind('2026-09-28', rules)).toBe('training');
+    expect(dayKind('2026-09-30', dayRules([], '2026-09-10', '2026-10-01'))).toBe('rest'); // an earlier week too
+  });
+
+  it('a day before the first workout is open', () => {
+    expect(dayKind('2026-09-27', rules)).toBe('open');
+    expect(dayKind('2026-09-01', rules)).toBe('open');
+  });
+
+  it('with no workouts at all there are no rest days', () => {
+    const none = dayRules([], null, '2026-10-01', 3);
+    expect(dayKind('2026-09-29', none)).toBe('open');
+    expect(dayKind('2026-09-10', none)).toBe('open');
+  });
+
+  it('today is open until it becomes a training day', () => {
+    expect(dayKind('2026-10-01', rules)).toBe('open');
+    expect(dayKind('2026-10-01', dayRules(['2026-09-28', '2026-10-01'], '2026-09-28', '2026-10-01', 3))).toBe('training');
+    const met = dayRules(['2026-09-28', '2026-09-29', '2026-09-30'], '2026-09-28', '2026-10-01', 3);
+    expect(dayKind('2026-10-01', met)).toBe('open'); // even with the goal met
+  });
+
+  it('a day with only a short workout is a rest day', () => {
+    const short = workout('2026-09-28', [{ id: 'pushup', sets: [{ reps: 10 }, { reps: 10 }] }]);
+    const s = weekSummary(stateWith([short]), '2026-09-30');
+    expect(s.rules.training.has('2026-09-28')).toBe(false);
+    expect(dayKind('2026-09-28', s.rules)).toBe('rest');
+    expect(s.dots[0]).toMatchObject({ done: false, rest: true });
+  });
+
+  it('once the weekly goal is met the rest of this week is rest, and next week stays open', () => {
+    const met = dayRules(['2026-09-28', '2026-09-29', '2026-09-30'], '2026-09-28', '2026-09-30', 3);
+    expect(met.goalMetThisWeek).toBe(true);
+    expect(dayKind('2026-10-01', met)).toBe('rest');
+    expect(dayKind('2026-10-04', met)).toBe('rest'); // Sunday
+    expect(dayKind('2026-10-05', met)).toBe('open'); // next Monday
+    const notYet = dayRules(['2026-09-28', '2026-09-29'], '2026-09-28', '2026-09-30', 3);
+    expect(notYet.goalMetThisWeek).toBe(false);
+    expect(dayKind('2026-10-01', notYet)).toBe('open');
+  });
+
+  it('only training days in the current week count towards the goal, and no goal means it is never met', () => {
+    expect(dayRules(['2026-09-21', '2026-09-22', '2026-09-23'], '2026-09-21', '2026-09-30', 3).goalMetThisWeek).toBe(false);
+    expect(dayRules(['2026-09-28', '2026-09-29', '2026-09-30'], '2026-09-28', '2026-09-30').goalMetThisWeek).toBe(false);
   });
 });
 

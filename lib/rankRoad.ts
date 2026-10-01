@@ -35,6 +35,7 @@ export type LevelRow = {
   kind: 'level';
   level: number;
   xp: number; // XP the level starts at
+  xpToGo: number; // XP to reach this level, 0 once reached
   state: 'done' | 'now' | 'ahead';
 };
 
@@ -108,7 +109,7 @@ export function buildRoad(xp: number): Road {
         rankProgress: state === 'current' || state === 'next' ? rankProgress : 0,
       });
     } else {
-      rows.push({ kind: 'level', level: l, xp: xpForLevel(l), state: l < level ? 'done' : l === level ? 'now' : 'ahead' });
+      rows.push({ kind: 'level', level: l, xp: xpForLevel(l), xpToGo: l > level ? xpForLevel(l) - xp : 0, state: l < level ? 'done' : l === level ? 'now' : 'ahead' });
     }
   }
   return {

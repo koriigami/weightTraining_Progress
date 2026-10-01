@@ -4,23 +4,36 @@ import { emptyState } from '../lib/progress';
 import type { AppState } from '../lib/progress';
 import { migratePlanDays } from '../lib/migrations/planDays';
 import { heatPercent, isInLast7Days, last7Days, last7Stats, muscleRows, muscleSets, workoutMuscleSets } from '../lib/muscleStats';
-import { stateWith, workout } from './helpers';
+import { dayRules } from '../lib/week';
+import { stateWith, trainingDay, workout } from './helpers';
 
 // Tuesday 29 September 2026: the last 7 days are Wed 23 Sep to Tue 29 Sep.
 const TODAY = '2026-09-29';
 
 describe('last 7 days', () => {
   it('lists the 7 days ending today with their weekday letter and day number', () => {
-    const days = last7Days([], TODAY);
+    const days = last7Days(dayRules([], null, TODAY));
     expect(days.map((d) => d.date)).toEqual(['2026-09-23', '2026-09-24', '2026-09-25', '2026-09-26', '2026-09-27', '2026-09-28', '2026-09-29']);
     expect(days.map((d) => d.label).join('')).toBe('WTFSSMT');
     expect(days.map((d) => d.day)).toEqual([23, 24, 25, 26, 27, 28, 29]);
     expect(days.filter((d) => d.today).map((d) => d.date)).toEqual([TODAY]);
   });
 
-  it('marks the days something was trained', () => {
-    const days = last7Days(['2026-09-26', '2026-09-28', '2026-09-20'], TODAY);
+  it('marks the training days', () => {
+    const days = last7Days(dayRules(['2026-09-26', '2026-09-28', '2026-09-20'], '2026-09-20', TODAY));
     expect(days.map((d) => d.trained)).toEqual([false, false, false, true, false, true, false]);
+  });
+
+  it('marks rest days from the first logged workout, and leaves today and earlier days plain', () => {
+    // First workout on Thursday 24 Sep; Saturday 26 and Monday 28 are training days.
+    const days = last7Days(dayRules(['2026-09-26', '2026-09-28'], '2026-09-24', TODAY));
+    expect(days.map((d) => d.rest)).toEqual([false, true, true, false, true, false, false]);
+    expect(days.some((d) => d.trained && d.rest)).toBe(false);
+    expect(days[6]).toMatchObject({ today: true, trained: false, rest: false });
+  });
+
+  it('has no rest days when nothing was ever logged', () => {
+    expect(last7Days(dayRules([], null, TODAY)).some((d) => d.rest)).toBe(false);
   });
 
   it('knows the window: 6 days back through today', () => {
@@ -119,8 +132,14 @@ describe('muscle rows and heat', () => {
   it('last7Stats puts the chips, rows and intensity together', () => {
     const state = stateWith([workout('2026-09-28', [{ id: 'db-bench', sets: [{ kg: 20, reps: 10 }, { kg: 20, reps: 10 }] }])]);
     const s = last7Stats(state, TODAY);
-    expect(s.days.find((d) => d.date === '2026-09-28')?.trained).toBe(true);
+    expect(s.days.find((d) => d.date === '2026-09-28')).toMatchObject({ trained: false, rest: true }); // a short day is a rest day
     expect(s.rows[0]).toMatchObject({ muscle: 'chest', sets: 2, intensity: 1 });
     expect(s.intensity).toEqual({ chest: 1, triceps: 0.5, shoulders: 0.5 });
+  });
+
+  it('last7Stats builds the chips from training days and the first logged workout', () => {
+    const state = stateWith([trainingDay('2026-09-26'), workout('2026-09-27', [{ id: 'pushup', sets: [{ reps: 10 }] }])]);
+    const kinds = last7Stats(state, TODAY).days.map((d) => (d.trained ? 'training' : d.rest ? 'rest' : 'open'));
+    expect(kinds).toEqual(['open', 'open', 'open', 'training', 'rest', 'rest', 'open']);
   });
 });

@@ -8,7 +8,9 @@ import { addDaysStr } from './date';
 import type { AppState } from './progress';
 import { stateLookup } from './routines';
 import type { ExerciseLookup, WorkoutItem } from './routines';
-import { trainedDates } from './week';
+import { dayKind, dayRules, trainedDates } from './week';
+import type { DayRules } from './week';
+import { trainingDaysOf } from './workoutScoring';
 
 export const SECONDARY_WEIGHT = 0.5;
 
@@ -16,22 +18,25 @@ export type DayChip = {
   date: string;
   label: string; // M T W T F S S
   day: number; // day of the month
-  trained: boolean;
+  trained: boolean; // a training day
+  rest: boolean; // a rest day (dayKind); the green dot is for training days only
   today: boolean;
 };
 
 const LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']; // Date#getUTCDay order, Sunday first
 
-/** The 7 days ending today (oldest first), with a flag for the days something was trained. */
-export function last7Days(trained: readonly string[], today: string): DayChip[] {
-  const set = new Set(trained);
+/** The 7 days ending today (oldest first), each marked as a training day, a rest day or neither. */
+export function last7Days(rules: DayRules): DayChip[] {
+  const { today } = rules;
   return Array.from({ length: 7 }, (_, i) => {
     const date = addDaysStr(today, i - 6);
+    const kind = dayKind(date, rules);
     return {
       date,
       label: LABELS[new Date(`${date}T00:00:00Z`).getUTCDay()],
       day: Number(date.slice(8, 10)),
-      trained: set.has(date),
+      trained: kind === 'training',
+      rest: kind === 'rest',
       today: date === today,
     };
   });
@@ -100,5 +105,7 @@ export function last7Stats(state: AppState, today: string): Last7 {
   const rows = muscleRows(muscleSets(state, today));
   const intensity: Partial<Record<Muscle, number>> = {};
   for (const r of rows) intensity[r.muscle] = r.intensity;
-  return { days: last7Days(trainedDates(state), today), rows, intensity };
+  // No goal: the chips end today, so the days still to come this week never show.
+  const rules = dayRules(trainingDaysOf(state, today), trainedDates(state)[0] ?? null, today);
+  return { days: last7Days(rules), rows, intensity };
 }

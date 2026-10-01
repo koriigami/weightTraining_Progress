@@ -90,6 +90,16 @@ describe('the rows around your level', () => {
     expect(road.levelPct).toBe(Math.round((100 / road.needed) * 100));
   });
 
+  it('counts the XP to go on levels above yours, and 0 once a level is reached', () => {
+    const xp = xpForLevel(12) + 100;
+    const road = buildRoad(xp);
+    const level = (n: number) => road.rows.find((r) => r.level === n)!;
+    expect(level(13)).toMatchObject({ kind: 'level', xpToGo: xpForLevel(13) - xp });
+    expect(level(14)).toMatchObject({ kind: 'level', xpToGo: xpForLevel(14) - xp });
+    expect(level(12)).toMatchObject({ kind: 'level', xpToGo: 0 });
+    expect(level(11)).toMatchObject({ kind: 'level', xpToGo: 0 });
+  });
+
   it('shows progress through the rank on your rank and the next one', () => {
     // Level 12 of a rank that spans levels 10 to 15: 2 levels of XP in, out of 5.
     const road = atLevel(12);

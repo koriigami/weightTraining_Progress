@@ -1,7 +1,8 @@
 // The Calendar screen's month grid and day lookup. Pure.
 //
-// Weeks start on Monday, like the weekly streak and goal. A day is marked when
-// a finished workout was logged on it (they come from the workout feed).
+// Weeks start on Monday, like the weekly streak and goal. The workouts of a day come
+// from the workout feed. Whether a day is a training day, a rest day or open is the
+// shared rule in week.ts (dayKind), not decided here.
 import { addDaysStr, lastDayOfMonth, monthLabel } from './date';
 import { buildFeed } from './feed';
 import type { FeedItem } from './feed';
@@ -54,9 +55,9 @@ export function sessionsOn(byDate: Map<string, FeedItem[]>, date: string): FeedI
   return byDate.get(date) ?? [];
 }
 
-/** How many sessions fall in a month. */
-export function monthSessionCount(byDate: Map<string, FeedItem[]>, month: string): number {
-  let n = 0;
-  for (const [date, items] of byDate) if (monthOf(date) === month) n += items.length;
-  return n;
+/** How many of the training days fall in a month (YYYY-MM). Each date counts once. */
+export function trainingDaysInMonth(trainingDays: Iterable<string>, month: string): number {
+  const inMonth = new Set<string>();
+  for (const d of trainingDays) if (monthOf(d) === month) inMonth.add(d);
+  return inMonth.size;
 }

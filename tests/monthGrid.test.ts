@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { emptyState } from '../lib/progress';
 import type { AppState } from '../lib/progress';
-import { monthGrid, monthOf, monthSessionCount, sessionsByDate, sessionsOn, shiftMonth } from '../lib/monthGrid';
+import { monthGrid, monthOf, sessionsByDate, sessionsOn, shiftMonth, trainingDaysInMonth } from '../lib/monthGrid';
 import { stateWith, workout } from './helpers';
 
 describe('month grid', () => {
@@ -54,15 +54,23 @@ describe('day lookup', () => {
     expect(sessionsOn(by, '2026-10-03')).toEqual([]);
   });
 
-  it('counts sessions per month', () => {
-    expect(monthSessionCount(by, '2026-09')).toBe(2);
-    expect(monthSessionCount(by, '2026-10')).toBe(1);
-    expect(monthSessionCount(by, '2026-11')).toBe(0);
+  it('is empty for a new person', () => {
+    expect(sessionsByDate(emptyState()).size).toBe(0);
+  });
+});
+
+describe('training days in a month', () => {
+  const days = ['2026-08-31', '2026-09-01', '2026-09-29', '2026-09-30', '2026-10-02'];
+
+  it('counts the training days that fall in the month', () => {
+    expect(trainingDaysInMonth(days, '2026-09')).toBe(3);
+    expect(trainingDaysInMonth(days, '2026-10')).toBe(1);
+    expect(trainingDaysInMonth(days, '2026-11')).toBe(0);
+    expect(trainingDaysInMonth([], '2026-09')).toBe(0);
   });
 
-  it('is empty for a new person', () => {
-    const empty = sessionsByDate(emptyState());
-    expect(empty.size).toBe(0);
-    expect(monthSessionCount(empty, '2026-09')).toBe(0);
+  it('takes the set from the day rules, and counts a date once', () => {
+    expect(trainingDaysInMonth(new Set(days), '2026-09')).toBe(3);
+    expect(trainingDaysInMonth(['2026-09-29', '2026-09-29'], '2026-09')).toBe(1);
   });
 });

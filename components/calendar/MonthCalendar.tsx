@@ -7,7 +7,7 @@ import { useProgress } from '@/components/ProgressProvider';
 import { Card, SectionLabel } from '@/components/ui/Card';
 import { cn } from '@/components/ui/cn';
 import { formatDateLong } from '@/lib/date';
-import { monthGrid, monthOf, monthSessionCount, sessionsByDate, sessionsOn, shiftMonth } from '@/lib/monthGrid';
+import { monthGrid, monthOf, sessionsByDate, sessionsOn, shiftMonth, trainingDaysInMonth } from '@/lib/monthGrid';
 import { useToday } from '@/lib/useToday';
 import { weekSummary } from '@/lib/week';
 
@@ -25,8 +25,9 @@ export function MonthCalendar() {
 
   const grid = useMemo(() => monthGrid(month), [month]);
   const byDate = useMemo(() => sessionsByDate(state, lookup), [state, lookup]);
-  const streak = useMemo(() => weekSummary(state, today).streak, [state, today]);
-  const count = monthSessionCount(byDate, month);
+  const week = useMemo(() => weekSummary(state, today), [state, today]);
+  const streak = week.streak;
+  const count = trainingDaysInMonth(week.rules.training, month);
   const list = sessionsOn(byDate, selected);
   const thisMonth = monthOf(today);
 
@@ -42,7 +43,7 @@ export function MonthCalendar() {
           </div>
           <div>
             <Dumbbell size={20} aria-hidden="true" />
-            <b>{count}</b> {month === thisMonth ? 'this month' : 'that month'}
+            <b>{count}</b> training {count === 1 ? 'day' : 'days'} {month === thisMonth ? 'this month' : 'that month'}
           </div>
         </div>
         <div className="wt-monthnav">

@@ -6,7 +6,7 @@ import { ChevronRight } from 'lucide-react';
 import { useProgress } from '@/components/ProgressProvider';
 import { Card, SectionLabel } from '@/components/ui/Card';
 import { cn } from '@/components/ui/cn';
-import { monthGrid, monthOf, monthSessionCount, sessionsByDate } from '@/lib/monthGrid';
+import { monthGrid, monthOf, sessionsByDate, trainingDaysInMonth } from '@/lib/monthGrid';
 import { useToday } from '@/lib/useToday';
 import { weekSummary } from '@/lib/week';
 
@@ -17,8 +17,9 @@ export function MonthStrip() {
   const month = monthOf(today);
   const grid = useMemo(() => monthGrid(month), [month]);
   const byDate = useMemo(() => sessionsByDate(state, lookup), [state, lookup]);
-  const count = monthSessionCount(byDate, month);
-  const streak = useMemo(() => weekSummary(state, today).streak, [state, today]);
+  const week = useMemo(() => weekSummary(state, today), [state, today]);
+  const count = trainingDaysInMonth(week.rules.training, month);
+  const streak = week.streak;
   const name = grid.label.split(' ')[0];
 
   return (
@@ -30,13 +31,13 @@ export function MonthStrip() {
         </Link>
       </div>
       <Card>
-        <div className="wt-monthstrip" role="img" aria-label={`${grid.label}: ${count} ${count === 1 ? 'workout' : 'workouts'}`}>
+        <div className="wt-monthstrip" role="img" aria-label={`${grid.label}: ${count} training ${count === 1 ? 'day' : 'days'}`}>
           {grid.days.map((d) => (
             <i key={d.date} className={cn(byDate.has(d.date) && 'w', d.date === today && 't', d.date > today && 'f')} title={`${name} ${d.day}`} />
           ))}
         </div>
         <small className="wt-chart-note" style={{ marginTop: 10 }}>
-          {count} {count === 1 ? 'workout' : 'workouts'} in {name} · {streak} week streak
+          {count} training {count === 1 ? 'day' : 'days'} in {name} · {streak} week streak
         </small>
       </Card>
     </section>

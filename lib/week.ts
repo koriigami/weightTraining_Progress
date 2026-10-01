@@ -3,6 +3,10 @@
 // A day counts as trained when it is a training day: its workouts add up to 20
 // minutes (see scoreWorkouts). Weeks run Monday to Sunday, like the weekly streak
 // and the weekly goal.
+//
+// dayRules and dayKind are the one rule every day view shares (Home's week strip,
+// the Calendar, the Profile month strip, the Statistics chips). A day is a
+// training day, a rest day or open.
 import type { AppState } from './progress';
 import { addDaysStr, mondayOf } from './date';
 import { trainingDaysOf, weeklyStreaks } from './workoutScoring';
@@ -20,36 +24,70 @@ export function trainedDates(state: Pick<AppState, 'workouts'>): string[] {
   return dates.sort();
 }
 
+// ---------------- Day rules ----------------
+
+// training  reached 20 minutes
+// rest      a past day without a training day, on or after the first logged workout,
+//           or a day still to come this week once the weekly goal is met
+// open      today until it becomes a training day, days still to come, and days
+//           before the first logged workout
+export type DayKind = 'training' | 'rest' | 'open';
+
+export type DayRules = {
+  training: ReadonlySet<string>; // the training days
+  since: string | null; // the first logged workout; no rest days before it, and none at all when null
+  today: string;
+  goalMetThisWeek: boolean; // the training days in today's week reach the weekly goal
+};
+
+// `trainingDays` are the dates that reached 20 minutes (trainingDaysOf), `firstWorkout`
+// is the date of the earliest workout with a ticked set (the first of trainedDates),
+// and `goal` is the weekly goal. Without a goal the days ahead are never rest days.
+export function dayRules(trainingDays: readonly string[], firstWorkout: string | null, today: string, goal?: number): DayRules {
+  const training = new Set(trainingDays);
+  const monday = mondayOf(today);
+  const sunday = addDaysStr(monday, 6);
+  let inWeek = 0;
+  for (const d of training) if (d >= monday && d <= sunday) inWeek++;
+  return { training, since: firstWorkout, today, goalMetThisWeek: goal !== undefined && inWeek >= goal };
+}
+
+// Today is never a rest day: it stays open until it becomes a training day.
+export function dayKind(date: string, r: DayRules): DayKind {
+  if (r.training.has(date)) return 'training';
+  if (r.since === null || date < r.since) return 'open';
+  if (date < r.today) return 'rest';
+  const sunday = addDaysStr(mondayOf(r.today), 6);
+  if (date > r.today && date <= sunday && r.goalMetThisWeek) return 'rest';
+  return 'open';
+}
+
 export type WeekDot = {
   date: string;
   label: string; // M T W T F S S
   day: number; // day of the month
   done: boolean; // a training day
-  rest: boolean; // shown as "Rest": a past day without a training day, or any day still to come once the weekly goal is met
+  rest: boolean; // shown as "Rest" (dayKind)
   today: boolean;
   future: boolean;
 };
 
 const LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
-// Monday to Sunday of the week that holds `today`. `dates` are training days.
-// Past days of the week without one are rest days. Once `goal` training days are
-// in, the days still to come are rest days too, so the week reads as done. Before
-// that the days ahead stay open. Today is never a rest day: it keeps its marker
-// until it becomes a training day.
-export function weekDots(dates: readonly string[], today: string, goal?: number): WeekDot[] {
-  const monday = mondayOf(today);
-  const sunday = addDaysStr(monday, 6);
-  const set = new Set(dates);
-  const inWeek = dates.filter((d) => d >= monday && d <= sunday).length;
-  const goalMet = goal !== undefined && inWeek >= goal;
+function dotsFor(r: DayRules): WeekDot[] {
+  const monday = mondayOf(r.today);
   return LABELS.map((label, i) => {
     const date = addDaysStr(monday, i);
-    const done = set.has(date);
-    const future = date > today;
-    const rest = !done && (date < today || (future && goalMet));
-    return { date, label, day: Number(date.slice(8, 10)), done, rest, today: date === today, future };
+    const kind = dayKind(date, r);
+    return { date, label, day: Number(date.slice(8, 10)), done: kind === 'training', rest: kind === 'rest', today: date === r.today, future: date > r.today };
   });
+}
+
+// Monday to Sunday of the week that holds `today`. `dates` are training days and
+// `since` is the first logged workout (null means no rest days at all). The rest
+// days follow dayKind.
+export function weekDots(dates: readonly string[], today: string, goal?: number, since: string | null = null): WeekDot[] {
+  return dotsFor(dayRules(dates, since, today, goal));
 }
 
 // True when the next training day pays the comeback bonus: this week has none yet,
@@ -67,6 +105,7 @@ export type WeekSummary = {
   goal: number;
   streak: number; // weeks in a row with at least one training day
   comeback: boolean; // the next training day pays the comeback bonus
+  rules: DayRules; // the day rule, for the Calendar and the Profile month strip
 };
 
 export function weekSummary(state: AppState, today: string): WeekSummary {
@@ -74,12 +113,14 @@ export function weekSummary(state: AppState, today: string): WeekSummary {
   const monday = mondayOf(today);
   const sunday = addDaysStr(monday, 6);
   const goal = weeklyGoalOf(state);
+  const rules = dayRules(dates, trainedDates(state)[0] ?? null, today, goal);
   return {
-    dots: weekDots(dates, today, goal),
+    dots: dotsFor(rules),
     count: dates.filter((d) => d >= monday && d <= sunday).length,
     goal,
     streak: weeklyStreaks(dates, today).current,
     comeback: comebackPending(dates, today),
+    rules,
   };
 }
 
