@@ -365,7 +365,8 @@ Agreed in the conversation after a UI check of v10 (no board; the plan is in `do
   count from the first logged workout, so the months before someone joined are not a wall of
   rest, and a brand new account no longer starts the week with two rest days. A short-workout day
   is a rest day; the Calendar adds a small dot so it can still be opened, and its day list says
-  "6 of 20 min, so this counts as a rest day".
+  "6 of 20 training minutes (each set counts 3), so this counts as a rest day". It says "training
+  minutes" because the workout card above shows clock time, which can differ (8 min for 2 sets).
 - **Calendar keeps its numbers.** A month grid needs dates, so rest is the sand tile plus a legend
   rather than the word "Rest" in every cell. The Statistics chips have room for the word, like Home.
 - **XP bar inside the level.** The phone bar showed total XP over the next threshold ("582 / 600").

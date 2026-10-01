@@ -116,7 +116,9 @@ export function MonthCalendar() {
 
       <SectionLabel>{selectedKind === 'open' ? formatDateLong(selected) : `${formatDateLong(selected)} · ${KIND_LABEL[selectedKind]}`}</SectionLabel>
       {list.length === 0 ? (
-        <div className="wt-hint">{selectedKind === 'rest' ? 'Rest day. Nothing logged.' : 'No workout on this day.'}</div>
+        <div className="wt-hint">
+          {selectedKind !== 'rest' ? 'No workout on this day.' : selected > today ? "Rest day. This week's goal is met." : 'Rest day. Nothing logged.'}
+        </div>
       ) : (
         <>
           <div className="wt-feed">
@@ -126,9 +128,10 @@ export function MonthCalendar() {
           </div>
           {selectedKind !== 'training' && (
             <div className="wt-hint">
+              {/* Training minutes, not clock time: each ticked set counts a fixed number of minutes, cardio its own. */}
               {selected === today
-                ? `${minutes} of ${WORKOUT_XP.dailyMinutes} min today. ${Math.max(0, WORKOUT_XP.dailyMinutes - minutes)} more makes it a training day.`
-                : `${minutes} of ${WORKOUT_XP.dailyMinutes} min, so this counts as a rest day.`}
+                ? `${minutes} of ${WORKOUT_XP.dailyMinutes} training minutes today (each set counts ${WORKOUT_XP.minutesPerSet}). ${Math.max(0, WORKOUT_XP.dailyMinutes - minutes)} more makes it a training day.`
+                : `${minutes} of ${WORKOUT_XP.dailyMinutes} training minutes (each set counts ${WORKOUT_XP.minutesPerSet}), so this counts as a rest day.`}
             </div>
           )}
         </>

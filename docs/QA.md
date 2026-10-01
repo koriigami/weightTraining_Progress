@@ -265,7 +265,7 @@ For each of Level up, Rank up and Badge unlock:
       and next month, a day list. Training days green, rest days sand, a dot on a
       day with a workout under 20 minutes, a legend under the grid, and "N
       training days" in the header. Tap the short day: its workout, then "6 of
-      20 min, so this counts as a rest day". There is no plan link.
+      20 training minutes (each set counts 3), so this counts as a rest day". There is no plan link.
 
 ## Settings `/settings`
 

@@ -127,8 +127,9 @@ into this level and what the next level needs.
    streak | {n} training days" for the month shown. The selected day's label reads
    "Thursday, 2 October · Rest day" or "· Training day". Below it:
    - a rest day with nothing logged: "Rest day. Nothing logged."
-   - a short day: its workouts, then "6 of 20 min, so this counts as a rest day."
-   - today with a short workout: "6 of 20 min today. 14 more makes it a training day."
+   - a rest day still to come (the weekly goal is met): "Rest day. This week's goal is met."
+   - a short day: its workouts, then "6 of 20 training minutes (each set counts 3), so this counts as a rest day." (Training minutes, not clock time: the card above may say 8 min.)
+   - today with a short workout: "6 of 20 training minutes today (each set counts 3). 14 more makes it a training day."
    - an open day: "No workout on this day."
 4. **Profile month strip.** Sand squares for rest days, a legend (Training day, Rest
    day), caption "{n} training days in October · {streak} week streak".
@@ -181,4 +182,4 @@ QA, ROADMAP.
 the seeded `qa-short` day (2 days ago) is sand with a dot on the Calendar and sand on
 the strip and chips; `qa-strength` (today) is green; days before the first seeded
 workout are plain; the phone bar reads within-level XP. A `withApp` flow taps the short
-day on the Calendar and checks the "6 of 20 min" line.
+day on the Calendar and checks the "6 of 20 training minutes" line.
