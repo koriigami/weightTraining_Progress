@@ -12,6 +12,8 @@ import { Shield } from 'lucide-react';
 export function HeroLevel() {
   const { progress } = useProgress();
   const { current, needed } = progress.xpIntoLevel;
+  const into = current.toLocaleString('en-US');
+  const takes = needed.toLocaleString('en-US');
   return (
     <Hero>
       <div className="wt-hero-row">
@@ -24,13 +26,13 @@ export function HeroLevel() {
           Road
         </ButtonLink>
       </div>
-      <XpBar current={current} max={needed} label={`${current} of ${needed} XP to level ${progress.level + 1}`} />
+      <XpBar current={current} max={needed} label={`${into} of ${takes} XP to level ${progress.level + 1}`} />
       <div className="wt-hero-xp">
         <span>
-          {current} / {needed} XP
+          {into} / {takes} XP
         </span>
         <span>
-          {needed - current} XP to level {progress.level + 1}
+          {(needed - current).toLocaleString('en-US')} XP to level {progress.level + 1}
         </span>
       </div>
     </Hero>

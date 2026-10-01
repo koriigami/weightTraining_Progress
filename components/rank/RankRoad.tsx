@@ -16,6 +16,8 @@ const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia('
 
 function GateCard({ row, road }: { row: GateRow; road: Road }) {
   const letter = row.rank;
+  const into = road.into.toLocaleString('en-US');
+  const takes = road.needed.toLocaleString('en-US');
   let body: React.ReactNode;
   if (row.state === 'past') {
     body = (
@@ -68,9 +70,9 @@ function GateCard({ row, road }: { row: GateRow; road: Road }) {
       {body}
       {row.now && (
         <>
-          <XpBar thin value={road.levelPct} label={`${road.into} of ${road.needed} XP to level ${road.level + 1}`} />
+          <XpBar thin value={road.levelPct} label={`${into} of ${takes} XP to level ${road.level + 1}`} />
           <small>
-            <span className="wt-now">Now</span> · {road.into} / {road.needed} XP to level {road.level + 1}
+            <span className="wt-now">Now</span> · {into} / {takes} XP to level {road.level + 1}
           </small>
         </>
       )}
@@ -157,6 +159,8 @@ export function RankRoad({ xp, onPreview }: { xp: number; onPreview: (gate: Gate
 
 function LevelItem({ row, road, liRef }: { row: LevelRow; road: Road; liRef?: React.RefObject<HTMLLIElement | null> }) {
   const now = row.state === 'now';
+  const into = road.into.toLocaleString('en-US');
+  const takes = road.needed.toLocaleString('en-US');
   return (
     <li ref={liRef} className={cn('wt-road-row', row.state === 'done' && 'done', now && 'cur')} aria-current={now ? 'step' : undefined}>
       <span className="wt-node">
@@ -170,12 +174,12 @@ function LevelItem({ row, road, liRef }: { row: LevelRow; road: Road; liRef?: Re
       </span>
       <div className="wt-road-t">
         <b>Level {row.level}</b>
-        <small>{row.xp.toLocaleString('en-US')} XP</small>
+        <small>{now ? `${row.xp.toLocaleString('en-US')} XP` : row.state === 'done' ? 'Cleared' : `${row.xpToGo.toLocaleString('en-US')} XP to go`}</small>
         {now && (
           <>
-            <XpBar thin value={road.levelPct} label={`${road.into} of ${road.needed} XP to level ${row.level + 1}`} />
+            <XpBar thin value={road.levelPct} label={`${into} of ${takes} XP to level ${row.level + 1}`} />
             <small>
-              <span className="wt-now">Now</span> · {road.into} / {road.needed} XP to level {row.level + 1}
+              <span className="wt-now">Now</span> · {into} / {takes} XP to level {row.level + 1}
             </small>
           </>
         )}

@@ -77,7 +77,7 @@ function LevelBody({ event, reduced }: { event: Extract<CelebrationEvent, { kind
       </div>
       <div className="gt wt-m-num">{rolled}</div>
       <div className="wt-m-sub">
-        {Math.max(0, needed - current)} XP to level {event.to + 1}
+        {Math.max(0, needed - current).toLocaleString('en-US')} XP to level {event.to + 1}
       </div>
     </>
   );

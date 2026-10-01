@@ -6,20 +6,27 @@ import { ChevronRight } from 'lucide-react';
 import { useProgress } from '@/components/ProgressProvider';
 import { Card, SectionLabel } from '@/components/ui/Card';
 import { cn } from '@/components/ui/cn';
-import { monthGrid, monthOf, sessionsByDate, trainingDaysInMonth } from '@/lib/monthGrid';
+import { monthGrid, monthOf, trainingDaysInMonth } from '@/lib/monthGrid';
 import { useToday } from '@/lib/useToday';
-import { weekSummary } from '@/lib/week';
+import { dayKind, weekSummary } from '@/lib/week';
 
-/** This month: a compact heat strip, one square per day, and a link to the full Calendar. */
+const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
+
+/**
+ * This month: a compact strip, one square per day (green for a training day, sand for a rest day,
+ * by the same rule as Home), and a link to the full Calendar.
+ */
 export function MonthStrip() {
-  const { state, lookup } = useProgress();
+  const { state } = useProgress();
   const today = useToday();
   const month = monthOf(today);
   const grid = useMemo(() => monthGrid(month), [month]);
-  const byDate = useMemo(() => sessionsByDate(state, lookup), [state, lookup]);
   const week = useMemo(() => weekSummary(state, today), [state, today]);
-  const count = trainingDaysInMonth(week.rules.training, month);
-  const streak = week.streak;
+  const { streak, rules } = week;
+  const count = trainingDaysInMonth(rules.training, month);
+  const kinds = useMemo(() => grid.days.map((d) => dayKind(d.date, rules)), [grid, rules]);
+  // Rest days so far: the ones up to today (a rest day still to come is not counted).
+  const restSoFar = grid.days.reduce((n, d, i) => (d.date < today && kinds[i] === 'rest' ? n + 1 : n), 0);
   const name = grid.label.split(' ')[0];
 
   return (
@@ -31,13 +38,27 @@ export function MonthStrip() {
         </Link>
       </div>
       <Card>
-        <div className="wt-monthstrip" role="img" aria-label={`${grid.label}: ${count} training ${count === 1 ? 'day' : 'days'}`}>
-          {grid.days.map((d) => (
-            <i key={d.date} className={cn(byDate.has(d.date) && 'w', d.date === today && 't', d.date > today && 'f')} title={`${name} ${d.day}`} />
+        <div
+          className="wt-monthstrip"
+          role="img"
+          aria-label={`${grid.label}: ${count} training ${plural(count, 'day', 'days')} and ${restSoFar} rest ${plural(restSoFar, 'day', 'days')} so far`}
+        >
+          {grid.days.map((d, i) => (
+            <i key={d.date} className={cn(kinds[i] === 'training' && 'w', kinds[i] === 'rest' && 'r', d.date === today && 't', d.date > today && 'f')} title={`${name} ${d.day}`} />
           ))}
         </div>
+        <div className="wt-legend" style={{ justifyContent: 'flex-start', marginTop: 10 }}>
+          <span>
+            <i className="w" aria-hidden="true" />
+            Training day
+          </span>
+          <span>
+            <i className="r" aria-hidden="true" />
+            Rest day
+          </span>
+        </div>
         <small className="wt-chart-note" style={{ marginTop: 10 }}>
-          {count} training {count === 1 ? 'day' : 'days'} in {name} · {streak} week streak
+          {count} training {plural(count, 'day', 'days')} in {name} · {streak} week streak
         </small>
       </Card>
     </section>

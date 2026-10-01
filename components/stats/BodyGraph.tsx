@@ -20,7 +20,7 @@ function heatFill(intensity: Last7['intensity']) {
   };
 }
 
-/** Last 7 days body graph: a chip for each day with a dot on the trained ones, and front and back heat maps. */
+/** Last 7 days body graph: a chip for each day (a dot on training days, "Rest" on rest days), and front and back heat maps. */
 export function BodyGraphCard({ stats }: { stats: Last7 }) {
   const fill = heatFill(stats.intensity);
   const any = stats.rows.length > 0;
@@ -29,10 +29,14 @@ export function BodyGraphCard({ stats }: { stats: Last7 }) {
       <CardHead title="Last 7 days body graph" />
       <ol className="wt-daychips">
         {stats.days.map((d) => (
-          <li key={d.date} className={cn('wt-dchip', d.trained && 'w')} aria-label={`${d.label} ${d.day}${d.trained ? ', trained' : ''}${d.today ? ', today' : ''}`}>
+          <li
+            key={d.date}
+            className={cn('wt-dchip', d.trained && 'w', d.rest && 'rest')}
+            aria-label={`${d.label} ${d.day}${d.trained ? ', training day' : ''}${d.rest ? ', rest day' : ''}${d.today ? ', today' : ''}`}
+          >
             <span aria-hidden="true">{d.label}</span>
             <b aria-hidden="true">{d.day}</b>
-            <i aria-hidden="true" />
+            <i aria-hidden="true">{d.rest ? 'Rest' : null}</i>
           </li>
         ))}
       </ol>
