@@ -183,3 +183,51 @@ the seeded `qa-short` day (2 days ago) is sand with a dot on the Calendar and sa
 the strip and chips; `qa-strength` (today) is green; days before the first seeded
 workout are plain; the phone bar reads within-level XP. A `withApp` flow taps the short
 day on the Calendar and checks the "6 of 20 training minutes" line.
+
+---
+
+# v10.2: mini hunter card header, cleaner day tiles, no penalty for time away
+
+Signed off on 1 October 2026 from board 08 (`docs/design/08-home-header-board.html`). Same branch.
+
+## Decisions
+1. **Header (phone Home): option C, amended.** One cream card with the Today card's cream,
+   white inner edge and gold bevel, holding:
+   - `RankShield` with the **rank letter only** (E, D, C, B, A, S), since "Level 4" is written
+     next to it;
+   - **"Level 4"** in the display font;
+   - the XP bar below it reading **"113 / 400"**; no "XP to level 5" line, the bar says it;
+   - a divider, then the streak and "2/5" training days stacked on the right.
+
+   The whole card opens Rank. Aria-label: "Level 4, E-Rank Hunter, 113 of 400 XP to level 5,
+   2 week streak, 2 of 5 training days this week. Open Rank". Desktop keeps its hunter card.
+2. **Day tiles, one treatment everywhere** (Home week strip, Calendar, Profile strip,
+   Statistics chips, date picker):
+   - **Training day:** the green bevel goes inside the tile (`inset 0 -3px 0 var(--p-bevel)`),
+     so every tile in a row is the same height.
+   - **Today:** a gold ring outside the tile with a 2 px gap in the card colour
+     (`0 0 0 2px <card>, 0 0 0 4px var(--xp)`), complete on green, sand and plain tiles. On the
+     Profile strip (5 px apart): a 1.5 px gap and a 2 px ring.
+   - **Rest day:** the sand fill gets a 1.5 px solid `--line` border as an inset ring, so the size
+     does not change. Dashed stays for days still to come on the Profile strip.
+   - **Date picker:** the selected gold day gets the same inside bevel.
+   - Buttons, chips and segmented controls keep their bevel below: there it is the press cue.
+3. **No penalty for time away.** XP, level and rank never drop because time passes (XP comes
+   from stored workouts, the streak badge uses the best streak, goals stay achieved). A week with
+   no training day ends the streak and misses the weekly goal; coming back pays +25. No "missed
+   day" marking, no decay, no rank floor.
+
+## Build (`levl-builder`)
+- `components/home/ResourceBar.tsx`: the card. Reuse `RankShield` (no `level` prop draws the
+  letter only) and `progress.xpIntoLevel`. Delete `components/home/LevelBadge.tsx` and the CSS
+  only it and the old bar used (`.wt-rbar-xp`, `.wt-rbar-pill`, `.wt-rbar-badge`). The sticky
+  wrap stays.
+- `app/globals.css`: the tile rules above for `.wt-wd`, `.wt-dcell`, `.wt-monthstrip i`,
+  `.wt-dchip.rest`, `.wt-dp-day.wt-dp-sel`. Selected and today together on the Calendar must
+  still read (the `.sel` outline and the today ring).
+- `docs/QA.md`: the header and day tile checks.
+
+## Verification
+`levl-ui-check` at 390 and 1440 on `/`, `/calendar`, `/profile`, `/stats`, `/rank` and the goal
+sheet's date picker: equal tile heights, a complete today ring, bordered rest days, the header as
+one card with no overflow at 360.
