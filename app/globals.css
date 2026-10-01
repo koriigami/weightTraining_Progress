@@ -3471,10 +3471,13 @@ textarea.wt-input {
   font-family: var(--font-num);
   font-size: 15px;
 }
+/* Day tiles, one treatment everywhere (Home, Calendar, Profile strip, Statistics chips): a training
+   day has its green bevel inside the tile, a rest day a thin inset ring, today a gold ring outside
+   the tile with a gap in the card colour. Nothing changes a tile's size, so a row stays level. */
 .wt-wd.done i {
   background: var(--chip-on);
   color: #fff;
-  box-shadow: 0 3px 0 var(--p-bevel);
+  box-shadow: inset 0 -3px 0 var(--p-bevel);
 }
 .wt-wd.rest i {
   background: var(--rest);
@@ -3482,12 +3485,16 @@ textarea.wt-input {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0;
+  box-shadow: inset 0 0 0 1.5px var(--line);
 }
 .wt-wd.today i {
-  box-shadow: inset 0 0 0 2px var(--xp);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--xp);
 }
 .wt-wd.done.today i {
-  box-shadow: 0 3px 0 var(--p-bevel), 0 0 0 2px var(--xp);
+  box-shadow: inset 0 -3px 0 var(--p-bevel), 0 0 0 2px var(--surface), 0 0 0 4px var(--xp);
+}
+.wt-wd.rest.today i {
+  box-shadow: inset 0 0 0 1.5px var(--line), 0 0 0 2px var(--surface), 0 0 0 4px var(--xp);
 }
 .wt-streakrow {
   display: flex;
@@ -4168,15 +4175,16 @@ textarea.wt-input {
   background: var(--surface-2);
   display: block;
 }
+/* the squares sit 5px apart, so today's gap is 1.5px and its ring 2px */
 .wt-monthstrip i.w {
-  background: linear-gradient(180deg, #86ea64, #2ba438);
-  box-shadow: 0 2px 0 #186a20;
+  background: var(--chip-on);
+  box-shadow: inset 0 -2px 0 var(--p-bevel);
 }
 .wt-monthstrip i.t {
-  box-shadow: inset 0 0 0 2px #f5c542;
+  box-shadow: 0 0 0 1.5px var(--surface), 0 0 0 3.5px var(--xp);
 }
 .wt-monthstrip i.w.t {
-  box-shadow: 0 2px 0 #186a20, 0 0 0 2px #f5c542;
+  box-shadow: inset 0 -2px 0 var(--p-bevel), 0 0 0 1.5px var(--surface), 0 0 0 3.5px var(--xp);
 }
 .wt-monthstrip i.f {
   background: transparent;
@@ -4184,9 +4192,13 @@ textarea.wt-input {
 }
 .wt-monthstrip i.r {
   background: var(--rest);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+.wt-monthstrip i.r.t {
+  box-shadow: inset 0 0 0 1.5px var(--line), 0 0 0 1.5px var(--surface), 0 0 0 3.5px var(--xp);
 }
 .wt-monthstrip i.r.f {
-  border-color: transparent;
+  border: 0;
 }
 
 /* ---- Goal sheet ---- */
@@ -4366,8 +4378,12 @@ textarea.wt-input {
   border-radius: 50%;
   background: var(--hi);
 }
+/* a rest day: sand with the same 1.5px --line edge as the other rest tiles, taken from the padding so the chip keeps its size */
 .wt-dchip.rest {
   background: var(--rest);
+  border-width: 1.5px;
+  border-color: var(--line);
+  padding: 7.5px 0;
 }
 .wt-mbars {
   list-style: none;
@@ -4466,6 +4482,7 @@ textarea.wt-input {
 .wt-dcell.rest span {
   background: var(--rest);
   color: var(--muted);
+  box-shadow: inset 0 0 0 1.5px var(--line);
 }
 /* a short workout is logged on a day that is not a training day: a dot under the number */
 .wt-dcell.logged span::after {
@@ -4482,17 +4499,25 @@ textarea.wt-input {
 .wt-dcell.w span {
   background: var(--chip-on);
   color: #fff;
-  box-shadow: 0 3px 0 var(--p-bevel);
+  box-shadow: inset 0 -3px 0 var(--p-bevel);
 }
 .wt-dcell.today span {
-  box-shadow: inset 0 0 0 2px var(--xp);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--xp);
 }
 .wt-dcell.w.today span {
-  box-shadow: 0 3px 0 var(--p-bevel), 0 0 0 2px var(--xp);
+  box-shadow: inset 0 -3px 0 var(--p-bevel), 0 0 0 2px var(--surface), 0 0 0 4px var(--xp);
 }
+.wt-dcell.rest.today span {
+  box-shadow: inset 0 0 0 1.5px var(--line), 0 0 0 2px var(--surface), 0 0 0 4px var(--xp);
+}
+/* the selected day: a dark ring, so it never looks like today's gold one. Today keeps only its gold
+   ring when selected; the heading under the grid names the day. */
 .wt-dcell.sel span {
-  outline: 2px solid var(--xp);
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
+}
+.wt-dcell.today.sel span {
+  outline: none;
 }
 .wt-dcell.fut {
   color: var(--muted);
@@ -5178,14 +5203,14 @@ button.wt-dp-day:focus-visible {
 .wt-dp-day.wt-dp-sel {
   background: var(--s-grad);
   border-color: var(--s-line);
-  box-shadow: 0 3px 0 var(--s-bevel);
+  box-shadow: inset 0 -3px 0 var(--s-bevel);
   font-family: var(--font-num);
   font-weight: 400;
   font-size: 16px;
   color: var(--s-ink);
 }
 .wt-dp-day.wt-dp-sel.wt-dp-today {
-  box-shadow: inset 0 0 0 2px var(--ok), 0 3px 0 var(--s-bevel);
+  box-shadow: inset 0 0 0 2px var(--ok), inset 0 -3px 0 var(--s-bevel);
 }
 .wt-dp-day:disabled {
   color: #c9b48a;
@@ -5516,7 +5541,7 @@ button.wt-frow:focus-visible {
    generic name can never meet a day cell's own "today" state.
    ------------------------------------------------------------------ */
 
-/* ---- Resource bar: the phone's Home top bar ---- */
+/* ---- Resource bar: the phone's Home top bar, a mini hunter card ---- */
 .wt-rbar-wrap {
   position: sticky;
   top: 0;
@@ -5529,79 +5554,96 @@ button.wt-frow:focus-visible {
 .wt-rbar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #fff;
+  gap: 10px;
+  padding: 9px 12px 10px 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--card-shadow);
+  color: var(--ink);
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }
 .wt-rbar:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
-  border-radius: 16px;
 }
-.wt-rbar-badge {
+.wt-rbar-shield {
   flex: none;
-  position: relative;
-  z-index: 1;
   display: grid;
-  margin-right: -22px;
-  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.25));
+  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.22));
 }
-.wt-rbar-xp {
-  position: relative;
-  display: block;
+.wt-rbar-mid {
   flex: 1;
   min-width: 0;
-  height: 26px;
-  border-radius: 13px;
-  background: rgba(42, 24, 6, 0.82);
-  border: 2px solid #2a1806;
-  box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.35), 0 2px 0 rgba(255, 255, 255, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.wt-rbar-mid b {
+  font-family: var(--font-num);
+  font-weight: 400;
+  font-size: 19px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.wt-rbar-track {
+  position: relative;
+  display: block;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--surface-2);
+  box-shadow: inset 0 2px 0 rgba(120, 80, 20, 0.16);
   overflow: hidden;
 }
-.wt-rbar-xp i {
+/* the fill is never narrower than its rounded end, so a little progress still shows; zero renders no fill */
+.wt-rbar-track i {
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
   display: block;
-  border-radius: 0 10px 10px 0;
-  background: linear-gradient(180deg, var(--xp-hi), var(--xp) 55%, var(--xp-deep));
+  min-width: 24px;
+  border-radius: 11px;
+  background: linear-gradient(180deg, var(--xp-hi), var(--xp) 55%, #e6a514);
+  box-shadow: inset 0 -2px 0 rgba(199, 135, 10, 0.45);
 }
-.wt-rbar-xp em {
+.wt-rbar-track em {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
-  padding-left: 18px;
   font-style: normal;
   font-family: var(--font-num);
-  font-size: 14px;
-  letter-spacing: 0.02em;
-  text-shadow: 0 1px 0 #2a1806, 1px 0 0 #2a1806, -1px 0 0 #2a1806, 0 -1px 0 #2a1806;
+  font-size: 13.5px;
+  white-space: nowrap;
+  color: var(--ink);
 }
-.wt-rbar-pill {
+.wt-rbar-stats {
   flex: none;
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-left: 10px;
+  border-left: 1.5px solid var(--line);
+}
+.wt-rbar-stat {
+  display: flex;
   align-items: center;
-  gap: 4px;
-  height: 32px;
-  padding: 0 10px 0 6px;
-  border-radius: 16px;
-  background: rgba(42, 24, 6, 0.82);
-  border: 2px solid #2a1806;
-  box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.35), 0 2px 0 rgba(255, 255, 255, 0.35);
+  gap: 5px;
   font-family: var(--font-num);
   font-size: 17px;
-  text-shadow: 0 1px 0 #000;
+  line-height: 1.15;
+  white-space: nowrap;
 }
-.wt-rbar-pill .fl {
+.wt-rbar-stat span {
   display: grid;
-  color: #ff9a3c;
 }
-.wt-rbar-pill .db {
-  display: grid;
-  color: #9ee67e;
+.wt-rbar-stat .fl {
+  color: #ef7a12;
+}
+.wt-rbar-stat .db {
+  color: var(--ok);
 }
 
 /* ---- Today card ---- */

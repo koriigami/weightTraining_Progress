@@ -60,10 +60,11 @@ Tick these on each screen below, at 390 px and at 1440 px.
 
 ## Home `/`
 
-- [ ] Phone: the Resource bar on top (level shield and XP bar, week streak,
-      weekly goal count). The XP bar reads XP into the level over what the level
-      takes ("282 / 300"), the same numbers as the desktop hunter card and Rank.
-      Desktop: the hunter card and the week card.
+- [ ] Phone: the header is one cream card: the rank shield with the rank letter,
+      "Level N", the XP bar reading XP into the level over what the level takes
+      ("282 / 300", the same numbers as the desktop hunter card and Rank), and the
+      streak and "N/goal" stacked on the right. It fits a 360 px phone at level 31,
+      and tapping it opens Rank. Desktop: the hunter card and the week card.
 - [ ] Ready: the Today card names one routine ("Today's workout") with a normal
       size Start and its first 3 exercises. Desktop shows three cards: two
       routines and a dashed "Something else".
@@ -77,6 +78,11 @@ Tick these on each screen below, at 390 px and at 1440 px.
       without one show "Rest", and once the weekly goal is met the rest of the
       week shows "Rest". Today keeps its ring until it is a training day. Days
       before the first logged workout show their number, not "Rest".
+- [ ] Day tiles (here, the Calendar, the Profile strip, the Statistics chips and
+      the date picker): every tile in a row is the same height, the green bevel
+      sits inside the tile, today's gold ring is complete with a small gap, and
+      rest days have a thin border. On the Calendar the selected day has a dark
+      ring; today keeps only its gold ring when selected.
 - [ ] After a week with no training day (and none yet this week) the Today card
       says "Comeback bonus: +25 XP on your first training day". It is gone once
       this week has a training day.
