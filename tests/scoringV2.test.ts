@@ -216,6 +216,14 @@ describe('the daily bonus', () => {
     // Items in progress never count as already paid: they finish after what is saved.
     expect(dailyBonusPaid([], '2026-10-05')).toBe(false);
   });
+
+  it('only counts saved workouts stamped before the moment given, since scoring goes in time order', () => {
+    const evening = workout('2026-10-05', [{ id: 'run', sets: [{ min: 30 }] }], { when: '2026-10-05T18:00' });
+    const live = [{ exerciseId: 'pushup', sets: [{ reps: 10, done: true }] }];
+    expect(dailyBonusPaid([evening], '2026-10-05', undefined, '2026-10-05T03:22')).toBe(false);
+    expect(dayMinutes([evening], '2026-10-05', live, undefined, '2026-10-05T03:22')).toBe(3);
+    expect(dailyBonusPaid([evening], '2026-10-05', undefined, '2026-10-05T19:00')).toBe(true);
+  });
 });
 
 describe('training days and the weekly goal', () => {

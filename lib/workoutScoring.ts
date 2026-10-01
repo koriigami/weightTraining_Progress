@@ -269,17 +269,25 @@ export function trainingMinutes(items: readonly WorkoutItem[], lookup: ExerciseL
 
 // Minutes trained on a date: the saved workouts dated that day, plus the items of
 // a workout still in progress. This is the number the live popover counts up to 20.
-export function dayMinutes(workouts: readonly WorkoutLog[], date: string, live?: readonly WorkoutItem[], lookup: ExerciseLookup = exerciseById): number {
+// `before` (a local `when`, YYYY-MM-DDTHH:mm) keeps only saved workouts at or before
+// that moment. Scoring goes in `when` order, so a workout in progress, saved with
+// `when` = the time it finishes, only builds on the ones that come before it.
+export function dayMinutes(
+  workouts: readonly WorkoutLog[],
+  date: string,
+  live?: readonly WorkoutItem[],
+  lookup: ExerciseLookup = exerciseById,
+  before?: string,
+): number {
   let minutes = live ? trainingMinutes(live, lookup) : 0;
-  for (const w of workouts) if (w.date === date) minutes += trainingMinutes(w.items, lookup);
+  for (const w of workouts) if (w.date === date && (before === undefined || w.when <= before)) minutes += trainingMinutes(w.items, lookup);
   return minutes;
 }
 
-// True when the saved workouts of a date have already paid its daily bonus, so a
-// workout finished now will not pay it again. A workout still in progress is
-// never counted: it finishes after the ones already saved.
-export function dailyBonusPaid(workouts: readonly WorkoutLog[], date: string, lookup: ExerciseLookup = exerciseById): boolean {
-  return dayMinutes(workouts, date, undefined, lookup) >= WORKOUT_XP.dailyMinutes;
+// True when the saved workouts of a date, up to `before` when given, have already
+// paid its daily bonus, so a workout finished then will not pay it again.
+export function dailyBonusPaid(workouts: readonly WorkoutLog[], date: string, lookup: ExerciseLookup = exerciseById, before?: string): boolean {
+  return dayMinutes(workouts, date, undefined, lookup, before) >= WORKOUT_XP.dailyMinutes;
 }
 
 // ---------------- Scoring ----------------

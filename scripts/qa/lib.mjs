@@ -119,13 +119,13 @@ export function dayStr(daysAgo = 0) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-function workout(id, daysAgo, title, minutes, items, plan) {
+function workout(id, daysAgo, title, minutes, items, plan, at = '18:00') {
   const date = dayStr(daysAgo);
-  const start = new Date(`${date}T18:00:00`);
+  const start = new Date(`${date}T${at}:00`);
   return {
     id,
     date,
-    when: `${date}T18:00`,
+    when: `${date}T${at}`,
     title,
     startedAt: start.toISOString(),
     finishedAt: new Date(start.getTime() + minutes * 60_000).toISOString(),
@@ -162,7 +162,7 @@ export async function seed(context) {
     workout(IDS.strength, 0, 'Push and Legs', 45, [['db-bench', [...three(20, 10), { kg: 20, reps: 10 }]], ['bb-squat', three(60, 8)]], [
       { exerciseId: 'db-bench', sets: 4 },
       { exerciseId: 'bb-squat', sets: 3 },
-    ]),
+    ], '00:05'), // early today, so a workout logged now comes after it
     workout(IDS.run, 1, 'Morning Run', 31, [['run', [{ min: 31, km: 5.2 }]]]),
     workout(IDS.short, 2, 'Quick Push-ups', 8, [['pushup', [{ reps: 12 }, { reps: 10 }]]]),
     workout(IDS.ride, 3, 'Evening Ride', 46, [['cycle', [{ min: 46, km: 18.4 }]]]),

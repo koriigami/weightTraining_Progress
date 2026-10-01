@@ -4782,6 +4782,7 @@ button.wt-setrow:hover {
   gap: 2px;
 }
 .wt-infobtn {
+  position: relative;
   display: inline-grid;
   place-items: center;
   width: 24px;
@@ -4792,6 +4793,13 @@ button.wt-setrow:hover {
   border-radius: 50%;
   background: none;
   color: var(--link);
+}
+.wt-infobtn::before {
+  /* A 44 px tap area around the 24 px icon. */
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
 }
 .wt-xppop-scrim {
   position: fixed;

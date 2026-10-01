@@ -8,6 +8,7 @@ import { untickedSets } from '@/lib/finishSummary';
 import { dailyBonusLive, liveXp, statTiles } from '@/lib/liveStats';
 import { fillOnTick } from '@/lib/setColumns';
 import type { SetPatch } from '@/lib/session';
+import { localWhen } from '@/lib/session';
 import { dailyBonusPaid, dayMinutes, liveMarks } from '@/lib/workoutScoring';
 import { useDesktopLayout, useWideLayout } from '@/lib/useMediaQuery';
 import { useToday } from '@/lib/useToday';
@@ -79,7 +80,11 @@ export function LogScreen() {
   const marks = useMemo(() => liveMarks(items ?? [], workouts, lookup), [items, workouts, lookup]);
   const parts = useMemo(() => liveXp(items ?? [], marks, lookup), [items, marks, lookup]);
   // The daily bonus so far: today's saved workouts and this one add up towards 20 minutes.
-  const bonus = useMemo(() => dailyBonusLive(dayMinutes(workouts, today, items ?? [], lookup), dailyBonusPaid(workouts, today, lookup)), [workouts, today, items, lookup]);
+  // Only workouts stamped before now count, since this one is saved with the time it finishes.
+  const bonus = useMemo(() => {
+    const now = localWhen(new Date());
+    return dailyBonusLive(dayMinutes(workouts, today, items ?? [], lookup, now), dailyBonusPaid(workouts, today, lookup, now));
+  }, [workouts, today, items, lookup]);
 
   if (!ws.ready) return <Screen header={<PageHeader title="Log workout" back="/" />}>{null}</Screen>;
 

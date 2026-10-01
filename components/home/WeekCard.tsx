@@ -43,7 +43,7 @@ export function WeekCard({ week }: { week: WeekSummary }) {
           {week.streak} week streak
         </span>
         <span style={{ color: 'var(--muted)' }}>
-          {week.count} of {week.goal} this week
+          {week.count} of {week.goal} training days
         </span>
       </div>
     </Link>
