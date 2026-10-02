@@ -1,0 +1,28 @@
+{
+  "duration": 10.5,
+  "bpm": 120,
+  "beatFrom": 0,
+  "beatTo": 10,
+  "cues": [
+    { "t": 0.0, "kind": "thud" },
+    { "t": 0.5, "kind": "whoosh" },
+    { "t": 1.0, "kind": "hit" }, { "t": 1.05, "kind": "pop" },
+    { "t": 1.5, "kind": "hit" }, { "t": 1.55, "kind": "pop" },
+    { "t": 2.0, "kind": "hit" }, { "t": 2.05, "kind": "pop" },
+    { "t": 2.5, "kind": "hit" }, { "t": 2.55, "kind": "pop" },
+    { "t": 3.0, "kind": "hit" }, { "t": 3.05, "kind": "pop" },
+    { "t": 3.5, "kind": "hit" }, { "t": 3.55, "kind": "pop" },
+    { "t": 4.0, "kind": "hit" }, { "t": 4.05, "kind": "pop" },
+    { "t": 4.5, "kind": "riser", "d": 0.5 },
+    { "t": 5.0, "kind": "hit" }, { "t": 5.0, "kind": "crack" },
+    { "t": 5.15, "kind": "dayCleared" },
+    { "t": 5.95, "kind": "whoosh" },
+    { "t": 6.5, "kind": "pop" },
+    { "t": 6.8, "kind": "pop" },
+    { "t": 7.15, "kind": "count", "d": 0.4, "n": 6 },
+    { "t": 7.55, "kind": "sparkle" },
+    { "t": 8.3, "kind": "whoosh" },
+    { "t": 8.6, "kind": "thud" },
+    { "t": 9.4, "kind": "sparkle" }
+  ]
+}

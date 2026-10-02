@@ -1,12 +1,14 @@
 {
   "name": "levl-reel",
   "private": true,
-  "description": "Levl marketing reels made with Remotion. Separate from the app.",
+  "description": "Levl reels and posts made in code with Remotion. Separate from the app.",
   "scripts": {
-    "assets": "mkdir -p public && cp ../../docs/marketing/*.png ../../public/fonts/*.woff2 public/",
-    "voice": "python3 vo.py",
+    "assets": "mkdir -p public && cp ../../docs/marketing/*.png ../../public/fonts/*.woff2 ../../public/logo.svg public/",
+    "sound": "node sfx.mjs comeback && node sfx.mjs boss",
     "studio": "remotion studio src/index.ts",
-    "render": "remotion render src/index.ts Reel out/levl-reel-1.mp4 --browser-executable=/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell"
+    "render": "remotion render src/index.ts Comeback out/levl-comeback.mp4 --crf=20 --browser-executable=/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell && remotion render src/index.ts BossFight out/levl-boss.mp4 --crf=20 --browser-executable=/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell",
+    "render:overlay": "remotion render src/index.ts BossFightOverlay out/levl-boss-overlay.mov --codec=prores --prores-profile=4444 --pixel-format=yuva444p10le --image-format=png --browser-executable=/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell",
+    "posts": "for id in SplitCover SplitDays SplitXp ComebackPost; do remotion still src/index.ts $id out/post-$id.png --browser-executable=/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell; done"
   },
   "dependencies": {
     "@remotion/cli": "4.0.532",
@@ -14,5 +16,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "remotion": "4.0.532"
+  },
+  "devDependencies": {
+    "node-web-audio-api": "^2.2.0"
   }
 }

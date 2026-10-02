@@ -1,19 +1,31 @@
-# Levl reels
+# Levl reels and posts
 
-Short vertical videos (1080 x 1920) for Instagram Reels, Stories and YouTube Shorts, made in
-code with Remotion so a new reel is a new script, not a new edit. Kept apart from the app: it has
-its own `package.json` and the app's `tsconfig.json` leaves this folder out.
+Vertical reels (1080 x 1920) and feed posts (1080 x 1350) made in code with Remotion, so a new
+piece is a new script, not a new edit. The look and motion are set by board 11
+(`docs/design/11-motion-language.html`). Kept apart from the app: it has its own `package.json`
+and the app's `tsconfig.json` leaves this folder out.
 
-## Make a reel
-1. `npm install`
-2. `npm run assets` copies the story and carousel images and the two Levl fonts into `public/`.
-3. Voice: `pip install kokoro-onnx soundfile`, download `kokoro-v1.0.int8.onnx` and
-   `voices-v1.0.bin` from the kokoro-onnx GitHub releases into `models/`, then `npm run voice`.
-   It writes one WAV per line into `public/` and the line lengths into `src_vo.json`, which set
-   the length of each scene. Write "Level" in the spoken text so the voice says the name right.
-4. `npm run studio` to preview, `npm run render` to write `out/levl-reel-1.mp4`. On a Mac, drop
-   the `--browser-executable` flag and Remotion downloads its own browser.
+## What is here
+- `src/brand.tsx`: the app's colours, the two fonts, stroked display type, tags, the sky.
+- `src/motion.tsx`: the motion vocabulary (slam, drop in, rise, roll, sparks, gloss, sky wipe,
+  impact shake). Build new reels from these, not new moves.
+- `src/ui.tsx`: app pieces rebuilt as vectors (rank shield, XP bar, Home header card, week strip,
+  XP chip, XP earned sheet, logo). Keep them matching the app as it is today.
+- `src/reels/`: one file per reel plus its cue sheet (`*.cues.json`), which times both the
+  sound and the animation.
+- `src/posts/`: feed posts as stills.
+- `sfx.mjs`: renders a reel's sound from its cue sheet with the app's own synthesized sounds
+  (the same code as `lib/feedback.ts`), plus a 120 BPM pulse. No recorded audio, no voice.
 
-## Safe zones
-Instagram covers about the top 250 px and the bottom 350 px of a reel with its own buttons.
-Captions sit 330 px above the bottom; keep anything important between those lines.
+## Make them
+1. `npm install`, then `npm run assets` (copies images, fonts and the logo into `public/`).
+2. `npm run sound` writes the WAVs, `npm run studio` previews, `npm run render` writes the reels
+   to `out/`, `npm run render:overlay` the transparent reel 2 (large ProRes file), and
+   `npm run posts` the post images.
+3. On a Mac, drop the `--browser-executable` flag from the scripts; Remotion fetches its own browser.
+
+## Rules
+- Numbers follow the XP rules (`docs/design/xp-reference.html`): 5 XP a set, +50 daily bonus at
+  20 minutes, +25 comeback, the growing weekly bonus, level n starts at 50 x n x (n - 1) XP.
+- Text stays inside Instagram's safe zone: clear of the top 250 px and the bottom 350 px.
+- Every piece ends on "Join the waitlist · link in bio" while `SIGNUPS=invite` is on.

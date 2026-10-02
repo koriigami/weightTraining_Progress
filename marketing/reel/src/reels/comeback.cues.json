@@ -1,0 +1,28 @@
+{
+  "duration": 13,
+  "bpm": 120,
+  "beatFrom": 0,
+  "beatTo": 12.5,
+  "cues": [
+    { "t": 0.0, "kind": "thud" },
+    { "t": 0.5, "kind": "thud" },
+    { "t": 1.5, "kind": "pop" },
+    { "t": 2.5, "kind": "crack" },
+    { "t": 2.75, "kind": "thud" },
+    { "t": 3.3, "kind": "whoosh" },
+    { "t": 3.75, "kind": "thud" },
+    { "t": 4.6, "kind": "sparkle" },
+    { "t": 5.5, "kind": "thud" },
+    { "t": 5.75, "kind": "pop" },
+    { "t": 6.05, "kind": "count", "d": 0.25, "n": 3 },
+    { "t": 6.25, "kind": "pop" },
+    { "t": 6.55, "kind": "count", "d": 0.25, "n": 4 },
+    { "t": 6.75, "kind": "pop" },
+    { "t": 7.05, "kind": "count", "d": 0.3, "n": 4 },
+    { "t": 7.4, "kind": "riser", "d": 0.6 },
+    { "t": 8.15, "kind": "levelUp" },
+    { "t": 9.7, "kind": "whoosh" },
+    { "t": 10.0, "kind": "thud" },
+    { "t": 11.0, "kind": "sparkle" }
+  ]
+}
