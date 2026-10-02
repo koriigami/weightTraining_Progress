@@ -86,6 +86,9 @@ export type WorkoutLog = {
   xp: number; // snapshot of what this workout earned, kept in step by rescoreWorkouts
   notes?: string;
   photo?: string; // small string only. Photo storage is planned for a later version
+  // How it was made: 'live' is started and finished in the app, 'log' is Log workout
+  // afterwards. A workout saved before this existed has none and counts as live.
+  source?: 'live' | 'log';
   // What the workout set out to do, taken at Start. Workouts saved before v8 have
   // none: their own items and ticked sets stand in as the plan.
   plan?: PlanItem[];

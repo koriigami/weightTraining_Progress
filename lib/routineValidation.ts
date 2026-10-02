@@ -229,6 +229,7 @@ export function parseWorkoutInput(raw: unknown, lookup: ExerciseLookup): Parsed<
   if (!isInstant(raw.startedAt) || !isInstant(raw.finishedAt)) return fail('invalid start or finish time');
   const span = Date.parse(raw.finishedAt) - Date.parse(raw.startedAt);
   if (span < 0 || span > 24 * 3600 * 1000) return fail('finish must be after the start, within a day');
+  if (raw.source !== undefined && raw.source !== 'live' && raw.source !== 'log') return fail('invalid source');
   const notes = optText(raw.notes, 1000);
   if (!notes.ok) return fail('notes are too long');
   const photo = optText(raw.photo, 2000);
@@ -248,6 +249,7 @@ export function parseWorkoutInput(raw: unknown, lookup: ExerciseLookup): Parsed<
     finishedAt: raw.finishedAt,
     items,
     xp: 0,
+    ...(raw.source ? { source: raw.source } : {}),
     ...(notes.value ? { notes: notes.value } : {}),
     ...(photo.value ? { photo: photo.value } : {}),
     ...(plan.value ? { plan: plan.value } : {}),

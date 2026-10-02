@@ -29,4 +29,15 @@ describe('sign-ups', () => {
     expect(canSignIn(undefined, 'open', [])).toBe(false);
     expect(canSignIn('  ', 'open', [])).toBe(false);
   });
+
+  it('lets in an email on either list while invite-only, ignoring case and spaces', () => {
+    expect(canSignIn(' New@Example.com ', 'invite', ['me@example.com'], ['new@example.com'])).toBe(true);
+    expect(canSignIn('me@example.com', 'invite', ['me@example.com'], ['new@example.com'])).toBe(true);
+    expect(canSignIn('stranger@example.com', 'invite', ['me@example.com'], ['new@example.com'])).toBe(false);
+  });
+
+  it('ignores the invite list while open and never lets in an empty email', () => {
+    expect(canSignIn('anyone@example.com', 'open', [], [])).toBe(true);
+    expect(canSignIn('', 'invite', [], [''])).toBe(false);
+  });
 });

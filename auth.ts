@@ -4,10 +4,25 @@ import Credentials from 'next-auth/providers/credentials';
 import type { Provider } from 'next-auth/providers';
 import { isOwnerEmail } from '@/lib/owner';
 import { canSignIn, signupMode } from '@/lib/signups';
-import { saveProfile } from '@/lib/store';
+import { getInvites, saveProfile } from '@/lib/store';
 
 // Sign-ups are open unless SIGNUPS=invite, which limits sign-in to ALLOWED_EMAILS (lib/signups.ts).
 export const inviteOnly = signupMode() === 'invite';
+
+// The invite list is read only while invite-only, and only here on the server. If it
+// cannot be read, nobody extra gets in.
+async function mayJoin(email: string | null | undefined): Promise<boolean> {
+  const mode = signupMode();
+  let invited: string[] = [];
+  if (mode === 'invite') {
+    try {
+      invited = await getInvites();
+    } catch {
+      invited = [];
+    }
+  }
+  return canSignIn(email, mode, undefined, invited);
+}
 
 export const hasGoogle = Boolean(process.env.AUTH_GOOGLE_ID);
 // Dev sign-in exists only outside production and only when Google is not configured.
@@ -23,7 +38,7 @@ if (hasDevProvider) {
       credentials: { email: { label: 'Email', type: 'email' } },
       async authorize(credentials) {
         const email = String(credentials?.email ?? '').trim().toLowerCase();
-        if (!canSignIn(email)) return null;
+        if (!(await mayJoin(email))) return null;
         return { id: `dev:${email}`, email, name: email.split('@')[0] };
       },
     })
@@ -37,7 +52,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: { signIn: '/', error: '/auth/denied' },
   callbacks: {
     async signIn({ user }) {
-      return canSignIn(user.email);
+      return mayJoin(user.email);
     },
     async jwt({ token, user, account }) {
       // On sign-in, `user.id` is the Google sub (or the dev id).

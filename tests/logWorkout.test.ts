@@ -90,6 +90,12 @@ describe('logSession', () => {
 describe('buildLoggedWorkout', () => {
   const ticked = () => must(logSession({ routine }, NOW));
 
+  it('marks a logged workout as log', () => {
+    const r = buildLoggedWorkout(ticked(), { when: '2026-10-09T19:30', minutes: 45, notes: '', now: NOW });
+    if (!r.ok) throw new Error(r.error);
+    expect(r.workout.source).toBe('log');
+  });
+
   it('takes the day from when and the start from when minus the minutes', () => {
     const r = buildLoggedWorkout(ticked(), { when: '2026-10-09T19:30', minutes: 45, notes: '', now: NOW, id: 'w-log' });
     if (!r.ok) throw new Error(r.error);

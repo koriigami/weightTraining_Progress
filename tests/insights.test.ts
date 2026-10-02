@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aggregate, parseRange, personFacts } from '../lib/insights';
+import { aggregate, minGroupFor, parseRange, personFacts } from '../lib/insights';
 import type { PersonFacts } from '../lib/insights';
 import { insightsStatus, isOwnerEmail } from '../lib/owner';
 import { defaultPrefs } from '../lib/routines';
@@ -13,7 +13,7 @@ const person = (over: Partial<PersonFacts> & { dates?: string[] } = {}): PersonF
   return {
     joined: '2026-08-01',
     onboarded: true,
-    workouts: dates.map((date) => ({ date, cardioMin: 0, strengthSets: 9 })),
+    workouts: dates.map((date) => ({ date, cardioMin: 0, strengthSets: 9, trainingDay: true, source: 'live' as const, laps: false })),
     rankDates: { d: null, c: null, b: null },
     ...rest,
   };
@@ -90,7 +90,7 @@ describe('aggregate', () => {
     const week = ['2026-09-28', '2026-09-29', '2026-09-30'];
     const three = many(5, { dates: week }); // 3 a week
     const one = many(5, { dates: ['2026-09-29'] }); // 1 a week
-    const cardio = many(5, { workouts: [{ date: '2026-09-29', cardioMin: 40, strengthSets: 0 }] });
+    const cardio = many(5, { workouts: [{ date: '2026-09-29', cardioMin: 40, strengthSets: 0, trainingDay: true, source: 'live' as const, laps: false }] });
     const r = aggregate([...three, ...one, ...cardio], TODAY, '4w');
     expect(r.pace.map((b) => b.people)).toEqual([10, 5, null]);
     expect(r.mostly.map((b) => b.people)).toEqual([10, null, 5]);
@@ -105,8 +105,8 @@ describe('aggregate', () => {
       { label: 'Signed in', people: 7 },
       { label: 'Set up the app', people: 5 },
       { label: 'First workout', people: 5 },
+      { label: 'Second training day', people: 5 },
       { label: 'Active in week 2', people: 5 },
-      { label: 'Active in week 4', people: 5 },
     ]);
   });
 
@@ -121,7 +121,7 @@ describe('aggregate', () => {
 
   it('never carries names, emails, ids or set data', () => {
     const json = JSON.stringify(aggregate(many(6, { dates: ['2026-09-29'] }), TODAY, '12w'));
-    expect(Object.keys(JSON.parse(json)).sort()).toEqual(['active', 'activePct', 'daysToD', 'enough', 'funnel', 'mostly', 'pace', 'people', 'perWeek', 'range', 'ranks', 'weekly']);
+    expect(Object.keys(JSON.parse(json)).sort()).toEqual(['active', 'activePct', 'daysToD', 'enough', 'funnel', 'invites', 'lastWorkout', 'made', 'min', 'mostly', 'pace', 'people', 'perWeek', 'range', 'ranks', 'weekly']);
   });
 
   it('falls back to 12 weeks for an unknown range', () => {
@@ -132,7 +132,85 @@ describe('aggregate', () => {
   });
 });
 
+describe('small groups while invite-only', () => {
+  it('uses 1 while invite-only and 5 while open', () => {
+    expect(minGroupFor('invite')).toBe(1);
+    expect(minGroupFor('open')).toBe(5);
+  });
+
+  it('shows the numbers for one person when the minimum is 1, and a lock when it is 5', () => {
+    const one = [person({ dates: ['2026-09-29'] })];
+    const small = aggregate(one, TODAY, '12w', { min: 1 });
+    expect(small.enough).toBe(true);
+    expect(small.people).toBe(1);
+    expect(small.active).toBe(1);
+    expect(aggregate(one, TODAY, '12w').enough).toBe(false);
+  });
+
+  it('shows no numbers for an empty group even when the minimum is 1', () => {
+    expect(aggregate([], TODAY, '12w', { min: 1 }).enough).toBe(false);
+  });
+});
+
+describe('activation, last workout, how workouts were made and invites', () => {
+  const MIN1 = { min: 1 };
+
+  it('counts a second training day, not a second workout on the same day', () => {
+    const twice = person({ workouts: [
+      { date: '2026-09-08', cardioMin: 0, strengthSets: 9, trainingDay: true, source: 'live', laps: false },
+      { date: '2026-09-08', cardioMin: 0, strengthSets: 9, trainingDay: false, source: 'live', laps: false },
+    ] });
+    const two = person({ dates: ['2026-09-08', '2026-09-10'] });
+    const r = aggregate([twice, two], TODAY, '12w', MIN1);
+    expect(r.funnel.find((f) => f.label === 'Second training day')?.people).toBe(1);
+  });
+
+  it('puts everyone in one last-workout bucket, including people with none', () => {
+    const r = aggregate([
+      person({ dates: ['2026-09-30'] }),
+      person({ dates: ['2026-09-29'] }),
+      person({ dates: ['2026-09-23'] }), // 7 days ago
+      person({ dates: ['2026-09-22'] }), // 8 days ago
+      person({ dates: ['2026-09-01'] }),
+      person(),
+    ], TODAY, 'all', MIN1);
+    expect(r.lastWorkout.map((b) => b.people)).toEqual([1, 2, 1, 1, 1]);
+  });
+
+  it('counts live, logged and lap workouts in the range, and old workouts without a source as live', () => {
+    const w = (date: string, source: 'live' | 'log', laps = false) => ({ date, cardioMin: 0, strengthSets: 9, trainingDay: true, source, laps });
+    const r = aggregate([person({ workouts: [w('2026-09-29', 'live'), w('2026-09-28', 'log'), w('2026-09-27', 'live', true), w('2026-06-01', 'log')] })], TODAY, '4w', MIN1);
+    expect(r.made).toEqual([
+      { label: 'Started live', count: 2 },
+      { label: 'Logged afterwards', count: 1 },
+      { label: 'Runs with laps', count: 1 },
+    ]);
+  });
+
+  it('hides how workouts were made below the minimum', () => {
+    const shown = aggregate(many(5, { dates: ['2026-09-29'] }), TODAY, '4w');
+    expect(shown.made.map((b) => b.count)).toEqual([5, 0, 0]);
+    const hidden = aggregate([...many(4, { dates: ['2026-09-29'] }), person()], TODAY, '4w');
+    expect(hidden.enough).toBe(true);
+    expect(hidden.made.every((b) => b.count === null)).toBe(true);
+  });
+
+  it('carries the invite counts through and nothing else about invites', () => {
+    const r = aggregate(many(2), TODAY, '12w', { min: 1, invites: { invited: 4, signedIn: 2 } });
+    expect(r.invites).toEqual({ invited: 4, signedIn: 2 });
+  });
+});
+
 describe('personFacts', () => {
+  it('reads a workout source, defaulting to live, and laps', () => {
+    const run = workout('2026-09-10', [{ id: 'run', sets: [{ min: 20, km: 3 }] }], { source: 'log' });
+    const f = personFacts(stateWith([run, workout('2026-09-11', [{ id: 'db-ohp', sets: [{ kg: 10, reps: 10 }] }])]), undefined, TODAY);
+    expect(f.workouts.map((w) => w.source)).toEqual(['log', 'live']);
+    expect(f.workouts.map((w) => w.laps)).toEqual([false, false]);
+    const lapped = workout('2026-09-12', [{ id: 'run', sets: [{ min: 20, km: 3, laps: [{ sec: 600, km: 1.5 }, { sec: 600, km: 1.5 }] }] }]);
+    expect(personFacts(stateWith([lapped]), undefined, TODAY).workouts[0].laps).toBe(true);
+  });
+
   it('reads the join date, setup, workouts and the day a rank was reached', () => {
     // 200 sets of 5 XP is 1000 XP or more, level 5 (D rank), reached on the second day.
     const day = (date: string, sets: number) => workout(date, [{ id: 'db-ohp', sets: Array.from({ length: sets }, () => ({ kg: 10, reps: 10 })) }]);

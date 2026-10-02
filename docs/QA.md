@@ -322,12 +322,29 @@ For each of Level up, Rank up and Badge unlock:
       Insights, for the owner).
 - [ ] Onboarding: the Skip button is in the top bar.
 
+## Invite list `/api/invites`
+
+Start the server with `INVITE_KEY=testkey SIGNUPS=invite` and use curl.
+
+- [ ] No header, and a wrong key: 401 with an empty body. With `INVITE_KEY` unset: always 401.
+- [ ] `GET` with `Authorization: Bearer testkey`: `{ "emails": [...], "count": n }`.
+- [ ] `POST -d '{"add":["a@example.com"]}'` returns `added: 1`. Sending it again returns `added: 0`.
+- [ ] `POST -d '{"remove":["a@example.com"]}'` returns `removed: 1`, then `removed: 0`.
+- [ ] An invalid email, or more than 200 emails, gives 400 and changes nothing.
+- [ ] More than 30 calls in a minute from one IP gives 429.
+- [ ] While invite-only, an emailed person on the list can sign in and one not on it lands on
+      `/auth/denied`. Removing them stops the next sign-in.
+
 ## Insights `/insights` (owner only)
 
 Sign in as `me@example.com`, and add five or six more people with workouts (sign
 in as each, then log a workout or send `saveWorkout` to `/api/state`).
 
-- [ ] Fewer than 5 people: "Insights appear once 5 people have joined."
+- [ ] Open sign-ups, fewer than 5 people: "Insights appear once 5 people have joined."
+- [ ] With `SIGNUPS=invite`, even one person shows numbers, and the note reads "Small groups are
+      shown while Levl is invite-only. No names, sets or weights."
+- [ ] The cards Activation, Last workout, How workouts were made and Invites are there, with equal
+      card widths and the same bar style. After Log workout, "Logged afterwards" goes up by 1.
 - [ ] The owner sees the four tiles (People, Active this week, Workouts a week,
       Days to D rank), the weekly bar chart with this week in gold, the funnel,
       the days to each rank and "How people train". Bars have value labels and a

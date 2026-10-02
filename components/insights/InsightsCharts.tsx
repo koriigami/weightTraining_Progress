@@ -2,7 +2,8 @@
 
 import { useId } from 'react';
 import { Lock } from 'lucide-react';
-import type { Bucket, RankBucket, WeekBar } from '@/lib/insights';
+import type { Bucket, CountBucket, RankBucket, WeekBar } from '@/lib/insights';
+import { MIN_GROUP } from '@/lib/insights';
 import { niceMax } from '@/lib/weekly';
 
 const W = 460;
@@ -18,7 +19,7 @@ const monthDay = (monday: string) => new Date(`${monday}T00:00:00Z`).toLocaleDat
  * gold, value labels on the bars. A week with fewer than 5 people is a dashed
  * stub with a lock instead of a number.
  */
-export function WeekBars({ weeks }: { weeks: WeekBar[] }) {
+export function WeekBars({ weeks, min = MIN_GROUP }: { weeks: WeekBar[]; min?: number }) {
   const uid = useId().replace(/:/g, '');
   const max = niceMax(weeks.map((w) => w.people ?? 0));
   const y = (v: number) => PT + (H - PT - PB) * (1 - v / max);
@@ -26,7 +27,7 @@ export function WeekBars({ weeks }: { weeks: WeekBar[] }) {
   const bw = Math.min(BAR_W, slot - 4);
   // Label roughly every other week when there are many.
   const every = weeks.length > 16 ? 4 : weeks.length > 8 ? 2 : 1;
-  const label = `Active people each week. ${weeks.map((w) => `Week of ${monthDay(w.monday)}: ${w.people === null ? 'hidden, fewer than 5 people' : w.people}`).join('. ')}.`;
+  const label = `Active people each week. ${weeks.map((w) => `Week of ${monthDay(w.monday)}: ${w.people === null ? `hidden, fewer than ${min} people` : w.people}`).join('. ')}.`;
 
   return (
     <div className="wt-chart-panel">
@@ -56,7 +57,7 @@ export function WeekBars({ weeks }: { weeks: WeekBar[] }) {
           if (w.people === null) {
             return (
               <g key={w.monday}>
-                <title>{`${monthDay(w.monday)}: fewer than 5 people`}</title>
+                <title>{`${monthDay(w.monday)}: fewer than ${min} people`}</title>
                 <rect x={x} y={H - PB - 5} width={bw} height="5" rx="2.5" fill="none" stroke="#C9A566" strokeWidth="1.2" strokeDasharray="3 2" />
                 <g transform={`translate(${cx - 6} ${H - PB - 22})`} style={{ color: '#7D6545' }} aria-hidden="true">
                   <rect x="1.5" y="6" width="9" height="7" rx="1.6" fill="currentColor" />
@@ -90,13 +91,13 @@ export function WeekBars({ weeks }: { weeks: WeekBar[] }) {
 }
 
 /** A horizontal bar row. A null value is a dashed empty track with a lock. */
-export function HBar({ label, value, max, unit = '' }: { label: string; value: number | null; max: number; unit?: string }) {
+export function HBar({ label, value, max, unit = '', min = MIN_GROUP }: { label: string; value: number | null; max: number; unit?: string; min?: number }) {
   if (value === null) {
     return (
-      <div className="wt-hbar hid" title={`${label}: fewer than 5 people`}>
+      <div className="wt-hbar hid" title={`${label}: fewer than ${min} people`}>
         <span>{label}</span>
         <span className="t" />
-        <span aria-label="Hidden, fewer than 5 people">
+        <span aria-label={`Hidden, fewer than ${min} people`}>
           <Lock size={14} aria-hidden="true" />
         </span>
       </div>
@@ -116,22 +117,34 @@ export function HBar({ label, value, max, unit = '' }: { label: string; value: n
   );
 }
 
-export function BucketBars({ items, max }: { items: Bucket[]; max: number }) {
+export function BucketBars({ items, max, min = MIN_GROUP }: { items: Bucket[]; max: number; min?: number }) {
   return (
     <>
       {items.map((b) => (
-        <HBar key={b.label} label={b.label} value={b.people} max={max} />
+        <HBar key={b.label} label={b.label} value={b.people} max={max} min={min} />
       ))}
     </>
   );
 }
 
-export function RankBars({ items }: { items: RankBucket[] }) {
+/** Bars for counts of workouts rather than people. */
+export function CountBars({ items, min = MIN_GROUP }: { items: CountBucket[]; min?: number }) {
+  const max = Math.max(1, ...items.map((i) => i.count ?? 0));
+  return (
+    <>
+      {items.map((b) => (
+        <HBar key={b.label} label={b.label} value={b.count} max={max} min={min} />
+      ))}
+    </>
+  );
+}
+
+export function RankBars({ items, min = MIN_GROUP }: { items: RankBucket[]; min?: number }) {
   const max = Math.max(1, ...items.map((r) => r.days ?? 0));
   return (
     <>
       {items.map((r) => (
-        <HBar key={r.label} label={r.label} value={r.days} max={max} unit=" d" />
+        <HBar key={r.label} label={r.label} value={r.days} max={max} unit=" d" min={min} />
       ))}
     </>
   );

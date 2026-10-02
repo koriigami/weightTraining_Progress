@@ -5,6 +5,7 @@ import { defaultPrefs } from './routines';
 import { completionToDayLog, hasLegacyDays, migratePlanDays } from './migrations/planDays';
 import type { LegacyDayLog, LegacyState } from './migrations/planDays';
 import { todayStr } from './date';
+import { cleanList } from './invites';
 import { isOwnerEmail } from './owner';
 import { rescoreWorkouts } from './workoutScoring';
 
@@ -128,6 +129,8 @@ export type KV = {
 const stateKey = (userId: string) => `wt:user:${userId}:state`;
 const profileKey = (userId: string) => `wt:user:${userId}:profile`;
 // The state exactly as it was before the plan days became workouts, kept once.
+// The emails allowed to sign in while invite-only, a list of lowercased emails.
+const INVITES_KEY = 'wt:invites';
 const backupKey = (userId: string) => `wt:user:${userId}:backup:v7`;
 
 export function createStore(kv: KV) {
@@ -184,6 +187,13 @@ export function createStore(kv: KV) {
       const keys = await kv.scan('wt:user:*:state');
       return keys.map((k) => k.slice('wt:user:'.length, -':state'.length));
     },
+    // The invite list. Server only: it is never sent to a browser.
+    async getInvites(): Promise<string[]> {
+      return cleanList(await kv.get<string[]>(INVITES_KEY));
+    },
+    async saveInvites(emails: string[]): Promise<void> {
+      await kv.set(INVITES_KEY, cleanList(emails));
+    },
     async saveProfile(userId: string, p: Omit<Profile, 'createdAt'>): Promise<void> {
       const prev = await kv.get<Profile>(profileKey(userId));
       await kv.set(profileKey(userId), { ...p, createdAt: prev?.createdAt ?? new Date().toISOString() });
@@ -239,3 +249,5 @@ export const saveState = (userId: string, state: AppState) => active().saveState
 export const getProfile = (userId: string) => active().getProfile(userId);
 export const listUserIds = () => active().listUserIds();
 export const saveProfile = (userId: string, p: Omit<Profile, 'createdAt'>) => active().saveProfile(userId, p);
+export const getInvites = () => active().getInvites();
+export const saveInvites = (emails: string[]) => active().saveInvites(emails);

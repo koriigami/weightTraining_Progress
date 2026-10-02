@@ -262,6 +262,12 @@ describe('finishing', () => {
     expect(buildWorkoutInput(newSession(NOW), { now: NOW }).ok).toBe(false);
   });
 
+  it('marks a finished workout as live', () => {
+    const r = buildWorkoutInput(toggleSet(sessionFromRoutine(routine, NOW), 0, 0), { now: NOW });
+    if (!r.ok) throw new Error(r.error);
+    expect(r.workout.source).toBe('live');
+  });
+
   it('keeps only ticked sets and drops exercises with none', () => {
     let s = sessionFromRoutine(routine, NOW);
     s = toggleSet(toggleSet(s, 1, 0), 1, 2);

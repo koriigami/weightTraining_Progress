@@ -17,9 +17,18 @@ export function allowedEmails(value: string | undefined = process.env.ALLOWED_EM
     .filter(Boolean);
 }
 
-/** True when this email may sign in. An account without an email never may. */
-export function canSignIn(email: string | null | undefined, mode: SignupMode = signupMode(), allowed: readonly string[] = allowedEmails()): boolean {
+/**
+ * True when this email may sign in. An account without an email never may. While
+ * invite-only, an email is let in when it is in ALLOWED_EMAILS or in the app's invite
+ * list (`invited`, read from the store on the server, already lowercased).
+ */
+export function canSignIn(
+  email: string | null | undefined,
+  mode: SignupMode = signupMode(),
+  allowed: readonly string[] = allowedEmails(),
+  invited: readonly string[] = []
+): boolean {
   const e = email?.trim().toLowerCase();
   if (!e) return false;
-  return mode === 'open' || allowed.includes(e);
+  return mode === 'open' || allowed.includes(e) || invited.includes(e);
 }

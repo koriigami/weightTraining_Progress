@@ -509,6 +509,7 @@ export function buildWorkoutInput(session: Session, opts: { now: Date; lookup?: 
       startedAt: new Date(started).toISOString(),
       finishedAt: finishedAt.toISOString(),
       items,
+      source: 'live',
       ...(session.plan && session.plan.length > 0 ? { plan: session.plan } : {}),
     },
   };
@@ -685,6 +686,7 @@ export function buildLoggedWorkout(session: Session, draft: LogDraft): BuildResu
       startedAt: new Date(finished - span).toISOString(),
       finishedAt: new Date(finished).toISOString(),
       items,
+      source: 'log',
       ...(notes ? { notes } : {}),
       ...(session.plan && session.plan.length > 0 ? { plan: session.plan } : {}),
     },

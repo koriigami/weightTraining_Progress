@@ -15,7 +15,7 @@ Fonts are Figtree (reading) and Lilita One (game titles).
 
 | Folder | What lives there |
 |---|---|
-| `app/` | Routes. Each page is a thin client component that reads a provider and composes components. `app/api/state/route.ts` is the data API for a person's own state, `app/api/insights/route.ts` is the owner-only Insights API, and `app/api/auth/` is Auth.js. `app/globals.css` holds every style. |
+| `app/` | Routes. Each page is a thin client component that reads a provider and composes components. `app/api/state/route.ts` is the data API for a person's own state, `app/api/insights/route.ts` is the owner-only Insights API, `app/api/invites/route.ts` manages the invite list with a secret key, and `app/api/auth/` is Auth.js. `app/globals.css` holds every style. |
 | `components/` | React components. `ProgressProvider.tsx`, `WorkoutSessionProvider.tsx` and `AppShell.tsx` sit at the top. Sub-folders per area: `ui/` (buttons, cards, sheets, dialogs), `nav/`, `home/`, `routines/`, `exercises/`, `workout/`, `victory/`, `celebrate/`, `rank/`, `profile/`, `goals/`, `stats/`, `calendar/`, `prefs/`, `onboarding/`, `insights/`. |
 | `lib/` | Pure logic with no React and no browser access, so it is testable. Scoring, badges, the rank road, goals, units, the workout session, routine actions and validation, feed and stat builders. `feedback.ts`, `useToday.ts`, `useMediaQuery.ts` and `useBackToClose.ts` are the few browser-facing helpers. `migrations/planDays.ts` turns the old plan log into workouts. |
 | `data/` | `exercises.ts`: the library, muscle groups, equipment and metrics. |
@@ -49,7 +49,8 @@ them (`signupMode` and `canSignIn` in `lib/signups.ts`, used by the `signIn` cal
 provider). A refused sign-in lands on `/auth/denied`: in invite mode it says "Invite only" and
 shows the Tally waitlist; while open it says "Couldn't sign you in" with Try again. The sign-in
 card shows the waitlist only in invite mode. Changing `SIGNUPS` on Vercel needs a redeploy, and
-sessions already signed in are not affected. Google's own consent screen is "In production", so
+sessions already signed in are not affected. While invite-only, a person may also sign in when their
+email is on the app's invite list (see "The invite list" below). Google's own consent screen is "In production", so
 Google allows any account; showing the Levl logo there needs Google's brand verification.
 
 ## Data flow
@@ -288,6 +289,7 @@ Redis keys, all per person (`{id}` is the Google account id):
 | `wt:user:{id}:state` | The whole `AppState` document, `version: 2` |
 | `wt:user:{id}:profile` | Email, name, photo, created time (`createdAt` is the join date Insights uses) |
 | `wt:user:{id}:backup:v7` | The state exactly as it was before the plan days became workouts, written once and never changed |
+| `wt:invites` | The invite list: a de-duplicated array of trimmed, lowercased emails. Server only |
 | `wt:state:v2`, `wt:state` | The owner's older single-user progress. Read only, never written or deleted |
 
 Browser storage, all per person and device: `wt:session:{id}` (workout in
@@ -362,10 +364,50 @@ session says `isOwner`, then fetches `GET /api/insights?range=4w|12w|all`.
   level 5, 10 and 15 (by replaying workout XP in date order). `aggregate` turns
   everyone's facts into group numbers. Only the group numbers leave the server:
   no names, emails, ids, sets or weights.
-- **The 5 person rule.** Any group of 1 to 4 people is `null`, which the page
-  draws as a lock. Below 5 people in total nothing else is returned either.
+- **The group minimum.** Any group smaller than the minimum is `null`, which the
+  page draws as a lock, and below the minimum in total nothing else is returned.
+  The minimum is 5 while sign-ups are open and 1 while `SIGNUPS=invite`
+  (`minGroupFor`), chosen by the server route and returned as `min` so the page
+  words its locks and note to match. The invite-only note reads "Small groups
+  are shown while Levl is invite-only. No names, sets or weights."
+- **Activation, last workout, how workouts were made, invites.** Activation is
+  signed in, set up, first workout, a second training day, active in week 2.
+  Last workout buckets everyone by days since their last workout (today, 1 to 7,
+  8 to 14, over 14, never). How workouts were made counts workouts in the range
+  as started live, logged afterwards (the `source` field below) and runs with
+  laps. Invites shows how many emails are on the list and how many of them have
+  signed in: the route matches the list against each person's profile email on
+  the server and only the two counts are returned.
 - **Range.** 4 weeks, 12 weeks or all time limits the weekly bars, workouts a
   week, how people train and which rank crossings count.
+
+## The invite list
+
+While `SIGNUPS=invite`, `auth.ts` lets an email in when it is in `ALLOWED_EMAILS` or in the
+invite list at `wt:invites` (`canSignIn`'s fourth argument). The list is read only on the
+server, only in invite mode, and only at sign-in. If it cannot be read, nobody extra gets in.
+It is never sent to a browser and no page shows it.
+
+`/api/invites` is how the owner edits it from chat. It is a dynamic API route, so pages stay static.
+- Every call needs `Authorization: Bearer <INVITE_KEY>`. The key is compared in constant time
+  (both sides hashed, then `timingSafeEqual` on equal-length buffers). With `INVITE_KEY` unset,
+  or a missing or wrong key, the answer is a bare 401.
+- `GET` returns `{ emails, count }`. `POST { add?, remove? }` returns `{ added, removed, count }`,
+  where `added` and `removed` count real changes, so repeating a call returns zeros. Emails are
+  validated and lowercased, at most 200 per call, and an invalid one rejects the whole call (400).
+- A small in-memory limiter allows 30 calls a minute per IP (429 after that). It is per server
+  instance, which is enough for one owner. Emails are never logged.
+- Why it is safe: the route is server-only and behind a secret that lives in an env var, the list
+  is never in any response except to the key holder, and Insights only ever gets counts.
+- Pure helpers (`lib/invites.ts`) hold the validation, the add and remove rules, the key check and
+  the limiter. `lib/store.ts` reads and writes the list.
+
+## Workout source
+
+A saved workout has an optional `source: 'live' | 'log'`. Finish sets `live` (`buildWorkoutInput`),
+Log workout sets `log` (`buildLoggedWorkout`). The server (`parseWorkoutInput`) refuses any other
+value, and edits never touch it. A workout saved before this existed has none and counts as live,
+so there is no migration.
 
 ## Rendering and layout
 

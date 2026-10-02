@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Lock } from 'lucide-react';
-import { BucketBars, RankBars, WeekBars } from '@/components/insights/InsightsCharts';
+import { BucketBars, CountBars, HBar, RankBars, WeekBars } from '@/components/insights/InsightsCharts';
 import { Card, CardHead } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Screen } from '@/components/ui/Screen';
@@ -20,11 +20,11 @@ type Load = { state: 'loading' } | { state: 'missing' } | { state: 'error' } | {
 
 const num = (n: number | null, suffix = '') => (n === null ? null : `${n}${suffix}`);
 
-function Tile({ label, value, sub }: { label: string; value: string | null; sub: string }) {
+function Tile({ label, value, sub, min }: { label: string; value: string | null; sub: string; min: number }) {
   return (
     <div className="wt-ins-tile">
       <small>{label}</small>
-      <b>{value ?? <Lock size={22} aria-label="Hidden, fewer than 5 people" />}</b>
+      <b>{value ?? <Lock size={22} aria-label={`Hidden, fewer than ${min} people`} />}</b>
       <span>{sub}</span>
     </div>
   );
@@ -94,45 +94,63 @@ export default function InsightsPage() {
     return (
       <Screen header={header}>
         <Card tone="dashed" className="text-center">
-          <p style={{ margin: 0, color: 'var(--muted)' }}>Insights appear once 5 people have joined.</p>
+          <p style={{ margin: 0, color: 'var(--muted)' }}>{d.min === 1 ? 'Insights appear once the first person has signed in.' : `Insights appear once ${d.min} people have joined.`}</p>
         </Card>
       </Screen>
     );
   }
 
+  const min = d.min;
   const top = (items: { people: number | null }[]) => Math.max(1, ...items.map((i) => i.people ?? 0));
   return (
     <Screen header={header}>
       <div className="wt-ins-tiles">
-        <Tile label="People" value={num(d.people)} sub="joined" />
-        <Tile label="Active this week" value={num(d.active)} sub={d.activePct === null ? 'fewer than 5 people' : `${d.activePct}% of people`} />
-        <Tile label="Workouts a week" value={num(d.perWeek)} sub="per active person" />
-        <Tile label="Days to D rank" value={num(d.daysToD)} sub="median" />
+        <Tile min={min} label="People" value={num(d.people)} sub="joined" />
+        <Tile min={min} label="Active this week" value={num(d.active)} sub={d.activePct === null ? `fewer than ${min} people` : `${d.activePct}% of people`} />
+        <Tile min={min} label="Workouts a week" value={num(d.perWeek)} sub="per active person" />
+        <Tile min={min} label="Days to D rank" value={num(d.daysToD)} sub="median" />
       </div>
       <div className="wt-ins-grid">
         <Card>
           <CardHead title="Active people each week" right={<small>logged at least 1 workout</small>} />
-          <WeekBars weeks={d.weekly} />
+          <WeekBars weeks={d.weekly} min={min} />
         </Card>
         <Card>
-          <CardHead title="From sign-in to habit" right={<small>people</small>} />
-          <BucketBars items={d.funnel} max={top(d.funnel)} />
+          <CardHead title="Activation" right={<small>people</small>} />
+          <BucketBars items={d.funnel} max={top(d.funnel)} min={min} />
         </Card>
         <Card>
           <CardHead title="Days to reach each rank" right={<small>median</small>} />
-          <RankBars items={d.ranks} />
+          <RankBars items={d.ranks} min={min} />
         </Card>
         <Card>
           <CardHead title="How people train" right={<small>active people</small>} />
           <span className="wt-ins-eyebrow">Workouts a week</span>
-          <BucketBars items={d.pace} max={top(d.pace)} />
+          <BucketBars items={d.pace} max={top(d.pace)} min={min} />
           <span className="wt-ins-eyebrow">Mostly</span>
-          <BucketBars items={d.mostly} max={top(d.mostly)} />
+          <BucketBars items={d.mostly} max={top(d.mostly)} min={min} />
+        </Card>
+        <Card>
+          <CardHead title="Last workout" right={<small>everyone</small>} />
+          <BucketBars items={d.lastWorkout} max={top(d.lastWorkout)} min={min} />
+        </Card>
+        <Card>
+          <CardHead title="How workouts were made" right={<small>workouts in range</small>} />
+          <CountBars items={d.made} min={min} />
+        </Card>
+        <Card className="wt-ins-wide">
+          <CardHead title="Invites" right={<small>people</small>} />
+          <HBar label="Invited" value={d.invites.invited} max={Math.max(1, d.invites.invited)} min={min} />
+          <HBar label="Have signed in" value={d.invites.signedIn} max={Math.max(1, d.invites.invited)} min={min} />
         </Card>
       </div>
       <div className="wt-ins-privacy">
         <Lock size={18} aria-hidden="true" />
-        <span>Groups under 5 people show a lock instead of a number, so nobody can be picked out. Nothing on this page names a person or shows their sets.</span>
+        <span>
+          {min === 1
+            ? 'Small groups are shown while Levl is invite-only. No names, sets or weights.'
+            : `Groups under ${min} people show a lock instead of a number, so nobody can be picked out. Nothing on this page names a person or shows their sets.`}
+        </span>
       </div>
     </Screen>
   );

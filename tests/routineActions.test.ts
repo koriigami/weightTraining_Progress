@@ -212,6 +212,26 @@ describe('saveWorkout', () => {
   });
 });
 
+describe('workout source', () => {
+  const save = (source: unknown) => run(emptyState(), { action: 'saveWorkout', workout: { ...input('2026-10-09'), ...(source === undefined ? {} : { source }) } });
+
+  it('accepts live and log, and an absent source stays absent', () => {
+    expect(expectOk(save('live')).workouts![0].source).toBe('live');
+    expect(expectOk(save('log')).workouts![0].source).toBe('log');
+    expect(expectOk(save(undefined)).workouts![0].source).toBeUndefined();
+  });
+
+  it('refuses any other source', () => {
+    for (const bad of ['import', '', 1, null, true]) expect(save(bad).ok).toBe(false);
+  });
+
+  it('keeps the source when the workout is edited', () => {
+    const s = expectOk(save('log'));
+    const edited = expectOk(run(s, { action: 'updateWorkout', id: s.workouts![0].id, title: 'Renamed', source: 'live' }));
+    expect(edited.workouts![0].source).toBe('log');
+  });
+});
+
 describe('updateWorkout', () => {
   const base = () => expectOk(run(emptyState(), { action: 'saveWorkout', workout: input('2026-10-09') }));
   const id = 'in-2026-10-09-db-ohp';
