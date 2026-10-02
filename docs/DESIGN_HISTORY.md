@@ -499,7 +499,21 @@ screens nobody sees any more.
     people get the guide and never old updates; per person on the server, guide done and the last
     update seen; an update is one entry in a list, added with the release; two new Settings rows
     (How Levl works, What's new) and Welcome tour renamed Setup questions.
-- **Waiting for answers.** Badges and chests (board 09) stay as they are.
+- **Round 1 answers (2 October 2026):** my pick on all seven. The spotlight tour ("a very good
+  industry standard ... it looks so good with respect to game-like design"), its steps and words as
+  shown, What's new only for people already on Levl, the paged game card, rule changes through
+  What's new, the two Settings rows and Setup questions, and the October update as the first one.
+  Badges and chests (board 09) stay as they are.
+- **Round 2**, two fixes the user asked for:
+  - **The ring wraps the shadow.** Cards and buttons have a bevel under them (4 px on cards, 5 px
+    on the Workout button). The gold ring now treats it as part of the element: the same 4 px gap
+    on all four sides, measured from the bottom of the shadow, so the bottom corners sit as cleanly
+    as the top ones. The build measures the bevel from the element's own `box-shadow`.
+  - **One gold border on the step card.** The 7 cards with Skip and Next had a darker bevel under
+    their gold border, which read as a second gold line. They keep one border and a soft shadow.
+    The welcome and How XP works cards keep the app's game modal look.
+
+  Built as v12 (`docs/V12_PLAN.md`).
 
 ## Where the chat lives
 

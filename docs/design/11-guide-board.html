@@ -98,7 +98,7 @@ tr:last-child td{border-bottom:0}
 .spot{position:absolute;pointer-events:none;box-shadow:0 0 0 4px #ffd34d,0 0 26px 8px rgba(255,211,77,.7),0 0 0 4000px var(--scrim);transition:left .35s,top .35s,width .35s,height .35s,border-radius .35s}
 @media (prefers-reduced-motion:reduce){.spot,.gb,.gmodal{transition:none!important;animation:none!important}}
 /* the guide's speech bubble, in the game modal's frame */
-.gb{position:absolute;width:300px;background:linear-gradient(180deg,#fffdf5,#fff1cf);border:3px solid #e3b03a;border-radius:20px;box-shadow:0 5px 0 #c8932a,0 24px 40px -18px rgba(60,30,0,.65);padding:10px 16px 14px;z-index:3;animation:gbin .28s cubic-bezier(.2,1.3,.4,1)}
+.gb{position:absolute;width:300px;background:linear-gradient(180deg,#fffdf5,#fff1cf);border:3px solid #e3b03a;border-radius:20px;box-shadow:0 18px 36px -16px rgba(60,30,0,.6);padding:10px 16px 14px;z-index:3;animation:gbin .28s cubic-bezier(.2,1.3,.4,1)}
 @keyframes gbin{from{opacity:0;transform:translateY(8px) scale(.96)}}
 .gb::before{content:'';position:absolute;width:18px;height:18px;background:#fffdf5;border:3px solid #e3b03a;transform:rotate(45deg)}
 .gb.below::before{top:-12px;left:var(--ax);border-right:0;border-bottom:0}
@@ -186,10 +186,28 @@ ol.decide b{color:var(--ink)}
 <body>
 <main class="wrap">
   <header>
-    <span class="kick">Board 11 · round 1</span>
+    <span class="kick">Board 11 · round 2</span>
     <h1>How Levl explains itself</h1>
     <p class="lede">Two new things, built once and used for every release after: a short guide for someone who has just joined, and a What's new card for everyone else when something changes. Part 1 is the base for both: every screen of the app as it is today, taken from the live build with demo data and marked Stable or Changed in v11. Nothing in the app changes until you pick.</p>
   </header>
+
+  <section class="sec signed" aria-labelledby="signed-h">
+    <h2 id="signed-h">Signed off <span class="pick">Round 1</span></h2>
+    <ol class="decide">
+      <li><b>The guide:</b> the spotlight tour on Home.</li>
+      <li><b>Its steps and words</b> as in the table.</li>
+      <li><b>People already on Levl</b> get What's new only. The guide waits for them in Settings.</li>
+      <li><b>What's new:</b> the paged game card.</li>
+      <li><b>Rule changes</b> are announced in What's new from now on.</li>
+      <li><b>Settings:</b> How Levl works and What's new, and Welcome tour becomes Setup questions.</li>
+      <li><b>The first update:</b> the four October changes, for everyone who joined before it.</li>
+    </ol>
+    <h3>Changed in round 2</h3>
+    <ul class="plain">
+      <li><b>The gold ring wraps the shadow too.</b> Cards and buttons have a bevel under them (4 px on cards, 5 px on the Workout button). The ring now keeps the same 4 px gap on all four sides, measured from the bottom of that shadow, so the bottom corners sit as cleanly as the top ones.</li>
+      <li><b>One gold border on the step card.</b> The 7 cards with Skip and Next lost the darker bevel under their border, which read as a second gold line.</li>
+    </ul>
+  </section>
 
   <nav class="jump" aria-label="Parts of this board">
     <a href="#today">1. The app today</a>
@@ -197,7 +215,7 @@ ol.decide b{color:var(--ink)}
     <a href="#guide">2. First-run guide</a>
     <a href="#news">3. What's new</a>
     <a href="#system">4. How it works</a>
-    <a href="#decide">5. What I need from you</a>
+    <a href="#decide">5. Signed off</a>
   </nav>
 
   <section class="sec" aria-labelledby="why-h">
@@ -518,21 +536,21 @@ ol.decide b{color:var(--ink)}
   </section>
 
   <section class="sec" id="decide" aria-labelledby="dec-h">
-    <h2 id="dec-h">5. What I need from you</h2>
+    <h2 id="dec-h">5. Signed off</h2>
     <ol class="decide">
-      <li><b>The guide:</b> A spotlight tour on Home, B story cards, or C first-visit tips. <b>My pick: A.</b></li>
-      <li><b>The guide's steps and words</b>, as in the table. <b>My pick: as shown.</b> Change any line you like.</li>
-      <li><b>People already on Levl:</b> What's new only, with the guide in Settings, or the guide once as well. <b>My pick: What's new only.</b></li>
-      <li><b>What's new:</b> A paged game card, B an update screen, or C a card on Home. <b>My pick: A.</b></li>
-      <li><b>Rule changes</b> are announced in What's new from now on, with the XP rules changed tag, instead of the Home rules note. <b>My pick: yes.</b></li>
-      <li><b>Settings:</b> add How Levl works and What's new, and rename Welcome tour to Setup questions. <b>My pick: yes.</b></li>
-      <li><b>The first update:</b> the four October changes as shown, for everyone who joined before it. <b>My pick: yes.</b></li>
+      <li><b>The guide:</b> A, the spotlight tour on Home.</li>
+      <li><b>The guide's steps and words</b>, as in the table.</li>
+      <li><b>People already on Levl:</b> What's new only, with the guide in Settings.</li>
+      <li><b>What's new:</b> A, the paged game card.</li>
+      <li><b>Rule changes</b> are announced in What's new from now on, with the XP rules changed tag, instead of the Home rules note.</li>
+      <li><b>Settings:</b> add How Levl works and What's new, and rename Welcome tour to Setup questions.</li>
+      <li><b>The first update:</b> the four October changes as shown, for everyone who joined before it. Built as v12 (<b>docs/V12_PLAN.md</b>).</li>
     </ol>
   </section>
 </main>
 
 <script>
-const DATA = {"gp": [{"type": "modal", "rib": "Welcome to Levl", "art": "shield", "title": "", "text": "Levl turns your training into a game. Every set earns XP, and XP takes you from rank E to rank S.", "btns": ["Skip", "Show me around"]}, {"type": "spot", "rect": [8, 4, 374, 77], "rad": 26, "title": "Your level", "text": "Every bit of XP fills this bar. Level up to climb from rank E to S."}, {"type": "spot", "rect": [12, 93, 366, 357], "rad": 26, "title": "Today", "text": "Your next routine waits here. Trained without the app? Log workout adds it afterwards."}, {"type": "spot", "rect": [138, 762, 114, 74], "rad": 24, "title": "Start a workout", "text": "Tap Workout to start a routine, a run or a custom workout. Tick each set as you go."}, {"type": "spot", "rect": [12, 458, 366, 216], "rad": 26, "title": "Your week", "text": "A day counts once you train for 20 minutes. Reach your weekly goal for a bonus that grows each week in a row."}, {"type": "spot", "rect": [72, 777, 74, 55], "rad": 18, "title": "Routines", "text": "Save the workouts you repeat, or pick a ready-made one. Every exercise is here too."}, {"type": "spot", "rect": [244, 777, 74, 55], "rad": 18, "title": "Rank", "text": "The Rank Road shows every level and rank ahead, and the badges you can earn."}, {"type": "spot", "rect": [314, 777, 74, 55], "rad": 18, "title": "Profile", "text": "Your stats, goals, weight and calendar. Settings is in here too."}, {"type": "modal", "rib": "How XP works", "art": "", "title": "", "text": "XP comes from showing up, never from how heavy you lift.", "extra": "<ul class=\"gml\"><li><span>Each set you tick</span><b>+5</b></li><li><span>Each minute of cardio</span><b>+1</b></li><li><span>Beat last time, or a record</span><b>+10 or +25</b></li><li><span>A day with 20 minutes of training</span><b>+50</b></li><li><span>Your weekly goal, growing each week in a row</span><b>+50 to +100</b></li></ul>", "foot": "You can play this guide again from Settings.", "btns": ["Start training"]}], "gd": [{"type": "modal", "rib": "Welcome to Levl", "art": "shield", "title": "", "text": "Levl turns your training into a game. Every set earns XP, and XP takes you from rank E to rank S.", "btns": ["Skip", "Show me around"]}, {"type": "spot", "rect": [312, 94, 597, 224], "rad": 24, "title": "Your level", "text": "Every bit of XP fills this bar. Level up to climb from rank E to S."}, {"type": "spot", "rect": [306, 336, 720, 296], "rad": 24, "title": "Today", "text": "Your next routine waits here. Trained without the app? Log workout adds it afterwards."}, {"type": "spot", "rect": [14, 76, 223, 64], "rad": 18, "title": "Start a workout", "text": "Start a routine, a run or a custom workout. Tick each set as you go."}, {"type": "spot", "rect": [919, 94, 461, 224], "rad": 24, "title": "Your week", "text": "A day counts once you train for 20 minutes. Reach your weekly goal for a bonus that grows each week in a row."}, {"type": "spot", "rect": [12, 202, 227, 50], "rad": 16, "title": "Routines and Exercises", "text": "Save the workouts you repeat, pick a ready-made one, or browse every exercise.", "rect2": [12, 252, 227, 50]}, {"type": "spot", "rect": [12, 302, 227, 50], "rad": 16, "title": "Rank", "text": "The Rank Road shows every level and rank ahead, and the badges you can earn."}, {"type": "spot", "rect": [12, 352, 227, 50], "rad": 16, "title": "Profile", "text": "Your stats, goals, weight and calendar. Settings is in your account menu, bottom left."}, {"type": "modal", "rib": "How XP works", "art": "", "title": "", "text": "XP comes from showing up, never from how heavy you lift.", "extra": "<ul class=\"gml\"><li><span>Each set you tick</span><b>+5</b></li><li><span>Each minute of cardio</span><b>+1</b></li><li><span>Beat last time, or a record</span><b>+10 or +25</b></li><li><span>A day with 20 minutes of training</span><b>+50</b></li><li><span>Your weekly goal, growing each week in a row</span><b>+50 to +100</b></li></ul>", "foot": "You can play this guide again from Settings.", "btns": ["Start training"]}], "news": [{"type": "news", "i": 0, "img": "new-laps", "title": "Laps for runners", "text": "Tap Lap as you run. Levl marks your fastest lap and shows every lap on the workout page."}, {"type": "news", "i": 1, "img": "new-log", "title": "Log a workout you already did", "text": "Trained without the app? Tap Log workout on Home, pick the day and time, and the XP lands on that day."}, {"type": "news", "i": 2, "img": "new-felt", "title": "How did it feel?", "text": "After a workout, tap a face and add your effort if you like. Profile shows how the last 30 days felt. It earns no XP."}, {"type": "news", "i": 3, "img": "new-goal", "title": "Your goal bonus grows", "text": "Reach your weekly goal week after week: +50, then +10 more each week in a row, up to +100. Your XP was worked out again with this rule.", "rules": true}], "img": "11-guide/"};
+const DATA = {"gp": [{"type": "modal", "rib": "Welcome to Levl", "art": "shield", "title": "", "text": "Levl turns your training into a game. Every set earns XP, and XP takes you from rank E to rank S.", "btns": ["Skip", "Show me around"]}, {"type": "spot", "rect": [8, 4, 374, 81], "rad": 24, "title": "Your level", "text": "Every bit of XP fills this bar. Level up to climb from rank E to S."}, {"type": "spot", "rect": [12, 93, 366, 361], "rad": 22, "title": "Today", "text": "Your next routine waits here. Trained without the app? Log workout adds it afterwards."}, {"type": "spot", "rect": [140, 764, 110, 75], "rad": 24, "title": "Start a workout", "text": "Tap Workout to start a routine, a run or a custom workout. Tick each set as you go."}, {"type": "spot", "rect": [12, 458, 366, 220], "rad": 22, "title": "Your week", "text": "A day counts once you train for 20 minutes. Reach your weekly goal for a bonus that grows each week in a row."}, {"type": "spot", "rect": [72, 777, 74, 55], "rad": 16, "title": "Routines", "text": "Save the workouts you repeat, or pick a ready-made one. Every exercise is here too."}, {"type": "spot", "rect": [244, 777, 74, 55], "rad": 16, "title": "Rank", "text": "The Rank Road shows every level and rank ahead, and the badges you can earn."}, {"type": "spot", "rect": [314, 777, 74, 55], "rad": 16, "title": "Profile", "text": "Your stats, goals, weight and calendar. Settings is in here too."}, {"type": "modal", "rib": "How XP works", "art": "", "title": "", "text": "XP comes from showing up, never from how heavy you lift.", "extra": "<ul class=\"gml\"><li><span>Each set you tick</span><b>+5</b></li><li><span>Each minute of cardio</span><b>+1</b></li><li><span>Beat last time, or a record</span><b>+10 or +25</b></li><li><span>A day with 20 minutes of training</span><b>+50</b></li><li><span>Your weekly goal, growing each week in a row</span><b>+50 to +100</b></li></ul>", "foot": "You can play this guide again from Settings.", "btns": ["Start training"]}], "gd": [{"type": "modal", "rib": "Welcome to Levl", "art": "shield", "title": "", "text": "Levl turns your training into a game. Every set earns XP, and XP takes you from rank E to rank S.", "btns": ["Skip", "Show me around"]}, {"type": "spot", "rect": [312, 94, 597, 228], "rad": 24, "title": "Your level", "text": "Every bit of XP fills this bar. Level up to climb from rank E to S."}, {"type": "spot", "rect": [312, 375, 708, 253], "rad": 22, "title": "Today", "text": "Your next routine waits here. Trained without the app? Log workout adds it afterwards."}, {"type": "spot", "rect": [14, 76, 223, 68], "rad": 20, "title": "Start a workout", "text": "Start a routine, a run or a custom workout. Tick each set as you go."}, {"type": "spot", "rect": [919, 94, 461, 228], "rad": 22, "title": "Your week", "text": "A day counts once you train for 20 minutes. Reach your weekly goal for a bonus that grows each week in a row."}, {"type": "spot", "rect": [12, 202, 227, 50], "rad": 14, "title": "Routines and Exercises", "text": "Save the workouts you repeat, pick a ready-made one, or browse every exercise.", "rect2": [12, 252, 227, 50]}, {"type": "spot", "rect": [12, 302, 227, 50], "rad": 14, "title": "Rank", "text": "The Rank Road shows every level and rank ahead, and the badges you can earn."}, {"type": "spot", "rect": [12, 352, 227, 50], "rad": 14, "title": "Profile", "text": "Your stats, goals, weight and calendar. Settings is in your account menu, bottom left."}, {"type": "modal", "rib": "How XP works", "art": "", "title": "", "text": "XP comes from showing up, never from how heavy you lift.", "extra": "<ul class=\"gml\"><li><span>Each set you tick</span><b>+5</b></li><li><span>Each minute of cardio</span><b>+1</b></li><li><span>Beat last time, or a record</span><b>+10 or +25</b></li><li><span>A day with 20 minutes of training</span><b>+50</b></li><li><span>Your weekly goal, growing each week in a row</span><b>+50 to +100</b></li></ul>", "foot": "You can play this guide again from Settings.", "btns": ["Start training"]}], "news": [{"type": "news", "i": 0, "img": "new-laps", "title": "Laps for runners", "text": "Tap Lap as you run. Levl marks your fastest lap and shows every lap on the workout page."}, {"type": "news", "i": 1, "img": "new-log", "title": "Log a workout you already did", "text": "Trained without the app? Tap Log workout on Home, pick the day and time, and the XP lands on that day."}, {"type": "news", "i": 2, "img": "new-felt", "title": "How did it feel?", "text": "After a workout, tap a face and add your effort if you like. Profile shows how the last 30 days felt. It earns no XP."}, {"type": "news", "i": 3, "img": "new-goal", "title": "Your goal bonus grows", "text": "Reach your weekly goal week after week: +50, then +10 more each week in a row, up to +100. Your XP was worked out again with this rule.", "rules": true}], "img": "11-guide/"};
 DATA.tip = [{ type: 'tip', rect: [20, 92, 350, 50], title: 'The Rank Road', text: 'Every level and rank ahead of you. Tap a gate to see what it unlocks.' }];
 const LOGO = '11-guide/logo.svg';
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
