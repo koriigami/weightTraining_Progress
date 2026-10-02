@@ -1489,6 +1489,10 @@ textarea.wt-input {
 }
 
 /* ---- What's new: the game modal with a picture and pages, and the same picture on /news ---- */
+.wt-news:focus,
+.wt-news h2:focus {
+  outline: none;
+}
 .wt-news {
   display: flex;
   flex-direction: column;

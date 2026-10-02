@@ -55,9 +55,11 @@ export function NewsModal({ pages, onClose }: { pages: NewsCardPage[]; onClose: 
   return createPortal(
     <div className="wt-gm-wrap">
       <button type="button" tabIndex={-1} className="wt-scrim" aria-label="Close" onClick={close} />
+      {/* The card opens by itself, so focus starts on its title, not on Next: no focus ring before
+          anyone has used the keyboard, and a screen reader reads the title and words first. */}
       <div ref={ref} className="wt-gmodal wt-news" role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={bodyId} tabIndex={-1}>
         <div className="wt-gm-rib">
-          <h2 id={titleId} className="gt">
+          <h2 id={titleId} className="gt" tabIndex={-1} data-autofocus>
             {TITLE}
           </h2>
         </div>
@@ -79,7 +81,7 @@ export function NewsModal({ pages, onClose }: { pages: NewsCardPage[]; onClose: 
             ))}
           </div>
           <div className="wt-gm-btns one">
-            <Button onClick={() => (last ? close() : setAt(at + 1))} data-autofocus>
+            <Button onClick={() => (last ? close() : setAt(at + 1))}>
               {last ? 'Got it' : 'Next'}
             </Button>
           </div>
