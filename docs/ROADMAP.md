@@ -32,6 +32,7 @@ Sign-ups are open to any Google account since 1 October 2026 (`SIGNUPS=invite` c
 | v9 | Share card as a picture: random sky, body figure, Share image and Save image | Done, live |
 | v10 | Rules v3: one +50 daily bonus at 20 minutes a day (strength and cardio together), training days for the weekly goal, streak and badges, Rest on the week strip, +25 comeback after a week off | Done, live |
 | v11 2b | Invite-only launch kit: invite list managed from chat (`/api/invites`), Insights for small groups, activation, last workout, how workouts were made, invite counts, workout `source` | Done, on branch, not merged |
+| v11 2c | Owner People card on Insights: who has signed in (name, email, level, last workout, training days, joined) and who is invited but has not. No sets or weights. Privacy Policy section 3 updated | Done, on branch, not merged |
 | v10.1 | One rest-day rule on Home, Calendar, Profile and Statistics; the XP bar shows XP into the level; Rank Road shows XP to go | Done, live |
 | v10.2 | Home header as a mini hunter card (board 08), day tiles of one height with a full today ring and bordered rest days, no penalty for time away | Done, live |
 | v11 stage 1 | Laps: a live Lap button on a run, walk or ride, optional lap distance, editable lap rows, the lap table and bars on the workout page. Records and XP still judge the whole run (board 10, `docs/V11_PLAN.md`). Released with equal-width button pairs across the app | Done, live |

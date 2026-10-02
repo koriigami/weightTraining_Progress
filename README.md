@@ -50,9 +50,11 @@ and everything now happens in routines and logged workouts.
   sidebar with an account menu on desktop. Installable to a phone home screen.
 - **Insights (owner only).** For the person named in `OWNER_EMAIL`: how many
   people joined, how many are active each week, how long people take to reach
-  each rank and how they train. It shows group numbers only, never a name or a
-  set, and a group of fewer than 5 people is hidden behind a lock. Everyone else
-  gets a 404 and never sees a link.
+  each rank and how they train. The group numbers show no names, and a group of
+  fewer than 5 people is hidden behind a lock. A People card lists who has signed
+  in (name, email, level, how often they train) and who is invited but has not;
+  it never shows sets, weights or notes. Everyone else gets a 404 and never sees
+  a link.
 
 ## Screens and routes
 

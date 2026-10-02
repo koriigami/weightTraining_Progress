@@ -356,20 +356,24 @@ session says `isOwner`, then fetches `GET /api/insights?range=4w|12w|all`.
   only when `isOwner` is true, and a non-owner who opens `/insights` sees a
   plain "not found" state.
 - **Reading everyone.** `listUserIds()` in `lib/store.ts` finds every
-  `wt:user:*:state` key: an Upstash `scan` with a match pattern and a cursor
-  loop, or the memory store's map. The route loads each state and profile.
+  `wt:user:*:state` and `wt:user:*:profile` key: an Upstash `scan` with a match
+  pattern and a cursor loop, or the memory store's map. The profile key counts
+  because someone who signed in and left before saving anything has a profile and
+  no state; they read as a new person (no workouts, not set up). The route loads
+  each state and profile.
 - **Adding up.** `personFacts` (`lib/insights.ts`) reduces one person to a few
   facts: join date, whether they finished setup, their workout dates with
   cardio minutes and strength sets, and the workout date on which they crossed
   level 5, 10 and 15 (by replaying workout XP in date order). `aggregate` turns
-  everyone's facts into group numbers. Only the group numbers leave the server:
-  no names, emails, ids, sets or weights.
+  everyone's facts into group numbers. The group numbers carry no names, emails,
+  ids, sets or weights.
 - **The group minimum.** Any group smaller than the minimum is `null`, which the
   page draws as a lock, and below the minimum in total nothing else is returned.
   The minimum is 5 while sign-ups are open and 1 while `SIGNUPS=invite`
   (`minGroupFor`), chosen by the server route and returned as `min` so the page
-  words its locks and note to match. The invite-only note reads "Small groups
-  are shown while Levl is invite-only. No names, sets or weights."
+  words its locks and note to match. The note under the cards says the group
+  numbers show no names and that the People card is the one place that names
+  people, and it never shows sets or weights.
 - **Activation, last workout, how workouts were made, invites.** Activation is
   signed in, set up, first workout, a second training day, active in week 2.
   Last workout buckets everyone by days since their last workout (today, 1 to 7,
@@ -378,6 +382,24 @@ session says `isOwner`, then fetches `GET /api/insights?range=4w|12w|all`.
   laps. Invites shows how many emails are on the list and how many of them have
   signed in: the route matches the list against each person's profile email on
   the server and only the two counts are returned.
+- **People.** The one part of the response that names people, for the owner who
+  runs Levl and wants to ask friends for feedback. The route builds a row per
+  person with `personRow(state, profile, today)` and returns them sorted by
+  `sortRoster` as `roster` (`people` is already the count in the group numbers).
+  A row holds name, email, join date, whether they finished setup, level and rank
+  (from `computeProgress`, so they match what the person sees), the date of their
+  last workout and whole days since, training days in the last 7 days, workouts in
+  the last 30 days and workouts in total. Both windows end today and include it.
+  A row never holds a set, rep, weight, body weight, note, goal, joint limit,
+  photo, id or anything else from inside a workout; a test pins the exact keys.
+  `invitedNotJoined(invites, allowed, joinedEmails)` returns `invitedNotJoined`:
+  the emails on the invite list or in `ALLOWED_EMAILS` that no profile uses yet,
+  normalised and sorted. The card (`components/insights/PeopleCard.tsx`) is a table
+  from 1100 px up and a stacked list below, with a "Not set up" tag, "No workout
+  yet" for people who never trained (they sort last), and the invited emails as
+  selectable text. It shows even when the group minimum is not met, because it
+  needs no hiding: it names people on purpose. The Privacy Policy (section 3)
+  says the owner can see these details and nothing more.
 - **Range.** 4 weeks, 12 weeks or all time limits the weekly bars, workouts a
   week, how people train and which rank crossings count.
 
@@ -386,7 +408,8 @@ session says `isOwner`, then fetches `GET /api/insights?range=4w|12w|all`.
 While `SIGNUPS=invite`, `auth.ts` lets an email in when it is in `ALLOWED_EMAILS` or in the
 invite list at `wt:invites` (`canSignIn`'s fourth argument). The list is read only on the
 server, only in invite mode, and only at sign-in. If it cannot be read, nobody extra gets in.
-It is never sent to a browser and no page shows it.
+It is never sent to a browser, except that the owner's Insights People card lists the emails on it
+that have not signed in yet (`invitedNotJoined`).
 
 `/api/invites` is how the owner edits it from chat. It is a dynamic API route, so pages stay static.
 - Every call needs `Authorization: Bearer <INVITE_KEY>`. The key is compared in constant time
@@ -397,8 +420,9 @@ It is never sent to a browser and no page shows it.
   validated and lowercased, at most 200 per call, and an invalid one rejects the whole call (400).
 - A small in-memory limiter allows 30 calls a minute per IP (429 after that). It is per server
   instance, which is enough for one owner. Emails are never logged.
-- Why it is safe: the route is server-only and behind a secret that lives in an env var, the list
-  is never in any response except to the key holder, and Insights only ever gets counts.
+- Why it is safe: the route is server-only and behind a secret that lives in an env var. The list
+  is never in any response except to the key holder, and to the owner for the emails that have not
+  signed in yet (the People card). The group numbers only ever get counts.
 - Pure helpers (`lib/invites.ts`) hold the validation, the add and remove rules, the key check and
   the limiter. `lib/store.ts` reads and writes the list.
 

@@ -1,13 +1,16 @@
 // Insights for the owner: group numbers about how people use the app. Pure
-// functions. Nothing that leaves here names a person or shows a set or a weight,
-// and any group smaller than the minimum is null (the page shows a lock). The
-// minimum is 5 while sign-ups are open and 1 while Levl is invite-only, so a small
-// invited group can see its own numbers.
+// functions. The group numbers name no one and show no set or weight, and any group
+// smaller than the minimum is null (the page shows a lock). The minimum is 5 while
+// sign-ups are open and 1 while Levl is invite-only, so a small invited group can
+// see its own numbers. The one place that names people is the People rows below
+// (personRow), for the owner only, and they hold no set, weight or note either.
+// No node imports here: the Insights page uses the label helpers in the browser.
 import { addDaysStr, daysBetween, mondayOf } from './date';
-import { levelForXp } from './progress';
+import { computeProgress, levelForXp } from './progress';
 import type { SignupMode } from './signups';
-import type { AppState } from './progress';
-import { scoreState } from './workoutScoring';
+import type { AppState, Rank } from './progress';
+import { resolvePrefs } from './routines';
+import { scoreState, trainingDays } from './workoutScoring';
 
 export const MIN_GROUP = 5; // open sign-ups
 export const MIN_GROUP_INVITE = 1; // invite-only
@@ -229,4 +232,96 @@ export function aggregate(people: PersonFacts[], today: string, range: InsightsR
 
 export function parseRange(v: string | null | undefined): InsightsRange {
   return v === '4w' || v === '12w' || v === 'all' ? v : '12w';
+}
+
+// ---------------- People (owner only) ----------------
+
+// What /api/insights returns: the group numbers, then the People card. `people` is
+// already the count in the group numbers, so the rows are `roster`, sorted (sortRoster).
+// `invitedNotJoined` is the invite list and ALLOWED_EMAILS less everyone who has signed in.
+export type InsightsResponse = InsightsResult & { roster: PersonRow[]; invitedNotJoined: string[] };
+
+// One row per person for the People card: who they are and how often they train. It
+// never holds a set, weight, body weight, note, goal, joint limit or photo, and the
+// route sends it to the owner only.
+export type PersonRow = {
+  name: string;
+  email: string;
+  joined: string; // YYYY-MM-DD
+  setUp: boolean; // finished the first-run setup
+  level: number; // the level the person sees in their own app
+  rank: Rank;
+  lastWorkout: string | null; // YYYY-MM-DD
+  daysSince: number | null; // whole days since the last workout, 0 for today
+  workouts30: number; // workouts in the last 30 days, today included
+  trainingDays7: number; // training days (20 minutes or more) in the last 7 days, today included
+  workoutsTotal: number;
+};
+
+/** The parts of a profile the People card reads. The photo is not one of them. */
+export type RosterProfile = { name?: string; email?: string; createdAt?: string } | null | undefined;
+
+/**
+ * One person's row. The 7 and 30 day windows end today and include it. Level and rank
+ * come from computeProgress, so they match the app. A workout dated tomorrow (a phone
+ * ahead of the server's clock) counts as today for "days since". Someone with no
+ * stored prefs predates setup and reads as set up, as in the app (resolvePrefs).
+ */
+export function personRow(state: AppState, profile: RosterProfile, today: string): PersonRow {
+  const scores = scoreState(state, today);
+  const { level, rank } = computeProgress(state, today);
+  const dates = scores.map((s) => s.date);
+  const lastWorkout = dates.reduce<string | null>((m, d) => (m === null || d > m ? d : m), null);
+  const from7 = addDaysStr(today, -6);
+  const from30 = addDaysStr(today, -29);
+  return {
+    name: profile?.name ?? '',
+    email: profile?.email ?? '',
+    joined: profile?.createdAt ? profile.createdAt.slice(0, 10) : (dates[0] ?? today),
+    setUp: resolvePrefs(state).onboarded,
+    level,
+    rank,
+    lastWorkout,
+    daysSince: lastWorkout === null ? null : Math.max(0, daysBetween(lastWorkout, today)),
+    workouts30: dates.filter((d) => d >= from30).length,
+    trainingDays7: trainingDays(scores).filter((d) => d >= from7).length,
+    workoutsTotal: scores.length,
+  };
+}
+
+/** Most recent workout first. People with no workout come last, then by name. */
+export function sortRoster(rows: readonly PersonRow[]): PersonRow[] {
+  return [...rows].sort((a, b) => {
+    if (a.lastWorkout !== b.lastWorkout) {
+      if (a.lastWorkout === null) return 1;
+      if (b.lastWorkout === null) return -1;
+      return a.lastWorkout < b.lastWorkout ? 1 : -1;
+    }
+    return a.name.localeCompare(b.name) || a.email.localeCompare(b.email);
+  });
+}
+
+// Same form as lib/invites.ts normaliseEmail, which is server only and so not imported here.
+const norm = (e: string) => e.trim().toLowerCase();
+
+/** Emails on the invite list or in ALLOWED_EMAILS that nobody has signed in with yet. Normalised, no repeats, sorted. */
+export function invitedNotJoined(invites: readonly string[], allowed: readonly string[], joinedEmails: readonly string[]): string[] {
+  const joined = new Set(joinedEmails.map(norm));
+  return [...new Set([...invites, ...allowed].map(norm).filter((e) => e !== '' && !joined.has(e)))].sort();
+}
+
+/** "Today", "Yesterday", "3 days ago", or "No workout yet". */
+export function agoLabel(daysSince: number | null): string {
+  if (daysSince === null) return 'No workout yet';
+  return daysSince <= 0 ? 'Today' : daysSince === 1 ? 'Yesterday' : `${daysSince} days ago`;
+}
+
+const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+/** The compact phone line: "Level 6 · D rank · last workout 3 days ago · 2 training days in the last 7 days". */
+export function personSummary(row: PersonRow): string {
+  const parts = [`Level ${row.level}`, `${row.rank} rank`];
+  if (row.daysSince === null) parts.push('no workout yet');
+  else parts.push(`last workout ${agoLabel(row.daysSince).toLowerCase()}`, `${count(row.trainingDays7, 'training day', 'training days')} in the last 7 days`);
+  return parts.join(' · ');
 }

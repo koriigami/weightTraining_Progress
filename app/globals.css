@@ -6180,6 +6180,142 @@ button.wt-frow:focus-visible {
     grid-template-columns: 110px minmax(0, 1fr) 40px;
   }
 }
+/* ---- insights: People (owner only) ---- */
+.wt-ppl-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.wt-ppl-table th {
+  text-align: left;
+  padding: 0 10px 8px 0;
+  border-bottom: 1.5px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.wt-ppl-table td {
+  padding: 10px 10px 10px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+.wt-ppl-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.wt-ppl-table th:nth-child(1) {
+  width: 17%;
+}
+.wt-ppl-table th:nth-child(2) {
+  width: 27%;
+}
+.wt-ppl-table th:nth-child(3) {
+  width: 9%;
+}
+.wt-ppl-table th:nth-child(4) {
+  width: 15%;
+}
+.wt-ppl-table th:nth-child(5),
+.wt-ppl-table th:nth-child(6) {
+  width: 12%;
+}
+.wt-ppl-table th:nth-child(7) {
+  width: 10%;
+}
+.wt-ppl-table small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.wt-ppl-who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-width: 0;
+}
+.wt-ppl-who b {
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+.wt-ppl-email {
+  -webkit-user-select: text;
+  user-select: text;
+  overflow-wrap: anywhere;
+}
+.wt-ppl-none {
+  color: var(--muted);
+  font-weight: 600;
+}
+.wt-ppl-list {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.wt-ppl-list li {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.wt-ppl-list li:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.wt-ppl-list .wt-ppl-email {
+  max-width: 100%;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.wt-ppl-line {
+  font-size: 13px;
+  font-weight: 700;
+}
+.wt-ppl-empty {
+  margin: 0;
+  color: var(--muted);
+}
+.wt-ppl-invited {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line);
+}
+.wt-ppl-invited b {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+.wt-ppl-invited ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 4px 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.wt-ppl-invited li {
+  font-size: 14px;
+  font-weight: 600;
+}
+/* The table needs the room of the wide layout (the same 1100px the screens use for a side column). */
+@media (max-width: 1099px) {
+  .wt-ppl-table {
+    display: none;
+  }
+  .wt-ppl-list {
+    display: block;
+  }
+}
 .wt-cardhead small {
   color: var(--muted);
 }

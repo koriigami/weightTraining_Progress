@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Lock } from 'lucide-react';
 import { BucketBars, CountBars, HBar, RankBars, WeekBars } from '@/components/insights/InsightsCharts';
+import { PeopleCard } from '@/components/insights/PeopleCard';
 import { Card, CardHead } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Screen } from '@/components/ui/Screen';
 import { Segmented } from '@/components/ui/Segmented';
-import type { InsightsRange, InsightsResult } from '@/lib/insights';
+import type { InsightsRange, InsightsResponse } from '@/lib/insights';
 
 const RANGE_OPTIONS: { value: InsightsRange; label: string }[] = [
   { value: '4w', label: '4 weeks' },
@@ -16,7 +17,7 @@ const RANGE_OPTIONS: { value: InsightsRange; label: string }[] = [
   { value: 'all', label: 'All time' },
 ];
 
-type Load = { state: 'loading' } | { state: 'missing' } | { state: 'error' } | { state: 'ready'; data: InsightsResult };
+type Load = { state: 'loading' } | { state: 'missing' } | { state: 'error' } | { state: 'ready'; data: InsightsResponse };
 
 const num = (n: number | null, suffix = '') => (n === null ? null : `${n}${suffix}`);
 
@@ -56,7 +57,7 @@ export default function InsightsPage() {
         if (!live) return;
         if (res.status === 404) setLoad({ state: 'missing' });
         else if (!res.ok) setLoad({ state: 'error' });
-        else setLoad({ state: 'ready', data: (await res.json()) as InsightsResult });
+        else setLoad({ state: 'ready', data: (await res.json()) as InsightsResponse });
       })
       .catch(() => live && setLoad({ state: 'error' }));
     return () => {
@@ -96,6 +97,7 @@ export default function InsightsPage() {
         <Card tone="dashed" className="text-center">
           <p style={{ margin: 0, color: 'var(--muted)' }}>{d.min === 1 ? 'Insights appear once the first person has signed in.' : `Insights appear once ${d.min} people have joined.`}</p>
         </Card>
+        <PeopleCard rows={d.roster} invited={d.invitedNotJoined} />
       </Screen>
     );
   }
@@ -143,13 +145,14 @@ export default function InsightsPage() {
           <HBar label="Invited" value={d.invites.invited} max={Math.max(1, d.invites.invited)} min={min} />
           <HBar label="Have signed in" value={d.invites.signedIn} max={Math.max(1, d.invites.invited)} min={min} />
         </Card>
+        <PeopleCard rows={d.roster} invited={d.invitedNotJoined} />
       </div>
       <div className="wt-ins-privacy">
         <Lock size={18} aria-hidden="true" />
         <span>
           {min === 1
-            ? 'Small groups are shown while Levl is invite-only. No names, sets or weights.'
-            : `Groups under ${min} people show a lock instead of a number, so nobody can be picked out. Nothing on this page names a person or shows their sets.`}
+            ? 'Small groups are shown while Levl is invite-only. The group numbers show no names. The People card is the one place that names people, and it never shows sets or weights.'
+            : `Groups under ${min} people show a lock instead of a number, so nobody can be picked out. The group numbers name no one. The People card is the one place that names people, and it never shows sets or weights.`}
         </span>
       </div>
     </Screen>

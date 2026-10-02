@@ -74,4 +74,13 @@ describe('listing users', () => {
     });
     expect((await createStore(kv).listUserIds()).sort()).toEqual(['123', 'dev:a@b.co']);
   });
+
+  it('also lists someone who signed in but never saved a state, once', async () => {
+    const kv = memoryKv({
+      'wt:user:123:state': emptyState(),
+      'wt:user:123:profile': {},
+      'wt:user:dev:left@b.co:profile': {},
+    });
+    expect((await createStore(kv).listUserIds()).sort()).toEqual(['123', 'dev:left@b.co']);
+  });
 });

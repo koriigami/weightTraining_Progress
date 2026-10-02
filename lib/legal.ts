@@ -5,7 +5,7 @@ export const STUDIO_URL = 'https://www.kagadmodyaa.com';
 export const CONTACT_EMAIL = 'hello@kagadmodyaa.com';
 export const STUDIO_PLACE = 'Nagpur, India';
 /** Shown as "Last updated" on both pages. Change it whenever either page changes. */
-export const LEGAL_UPDATED = '30 September 2026';
+export const LEGAL_UPDATED = '2 October 2026';
 export const MIN_AGE = 18;
 
 export const PUBLIC_PATHS = ['/privacy', '/terms'] as const;

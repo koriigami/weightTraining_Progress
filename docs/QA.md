@@ -342,7 +342,8 @@ in as each, then log a workout or send `saveWorkout` to `/api/state`).
 
 - [ ] Open sign-ups, fewer than 5 people: "Insights appear once 5 people have joined."
 - [ ] With `SIGNUPS=invite`, even one person shows numbers, and the note reads "Small groups are
-      shown while Levl is invite-only. No names, sets or weights."
+      shown while Levl is invite-only. The group numbers show no names. The People card is the
+      one place that names people, and it never shows sets or weights."
 - [ ] The cards Activation, Last workout, How workouts were made and Invites are there, with equal
       card widths and the same bar style. After Log workout, "Logged afterwards" goes up by 1.
 - [ ] The owner sees the four tiles (People, Active this week, Workouts a week,
@@ -352,11 +353,28 @@ in as each, then log a workout or send `saveWorkout` to `/api/state`).
 - [ ] Any group under 5 people shows a lock instead of a number, in a tile, a
       bar row or a week.
 - [ ] 4 weeks, 12 weeks and All time change the chart and the numbers.
-- [ ] Nothing on the page or in the `/api/insights` response has a name, email,
-      id, set or weight.
+- [ ] Outside the People card, nothing on the page has a name or email, and the group numbers in
+      the `/api/insights` response (everything except `roster` and `invitedNotJoined`) have no
+      name, email, id, set or weight.
+- [ ] People card: one row per person who has signed in, with name, email, level and rank, last
+      workout (and how many days ago), training days in the last 7 days, workouts in the last
+      30 days and the join date. The most recent workout is first, and a person with no workout
+      is last and reads "No workout yet". Someone who skipped setup has a "Not set up" tag.
+- [ ] People card, privacy: the `roster` in the `/api/insights` response has only name, email,
+      joined, setUp, level, rank, lastWorkout, daysSince, workouts30, trainingDays7 and
+      workoutsTotal. No sets, reps, weights, body weight, notes, goals, joint limits, photos or ids
+      anywhere in the response.
+- [ ] People card, phone (390) and tablet (under 1100): each person is a stacked row with the name in bold, the email small
+      under it and one line like "Level 6 · D rank · last workout 3 days ago · 2 training days in
+      the last 7 days". A long email wraps and nothing scrolls sideways. Desktop (1440) shows a
+      table with Name, Email, Level, Last workout, Last 7 days, Last 30 days and Joined. An email
+      can be selected and copied.
+- [ ] "Invited, not signed in yet (N)" lists the emails on the invite list or in `ALLOWED_EMAILS`
+      with no profile, and is gone when there are none. Sign in as one of them and the email moves
+      into the table.
 - [ ] Phone: the tiles are two across, the cards stack, no horizontal scroll.
-- [ ] A person who is not the owner: `/api/insights` answers 404, `/insights`
-      shows the not-found state, and Settings and the account menu have no
+- [ ] A person who is not the owner: `/api/insights` answers 404 (so no People data either),
+      `/insights` shows the not-found state, and Settings and the account menu have no
       Insights entry. Signed out, the API also answers 404.
 - [ ] The owner sees an Insights row in Settings (App) and an Insights entry in
       the desktop account menu.

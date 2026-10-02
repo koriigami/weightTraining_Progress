@@ -182,10 +182,15 @@ export function createStore(kv: KV) {
     async getProfile(userId: string): Promise<Profile | null> {
       return kv.get<Profile>(profileKey(userId));
     },
-    // The id of everyone who has a saved state, for the owner's Insights.
+    // The id of everyone who has signed in or saved a state, for the owner's Insights. Someone
+    // who signed in and left before saving anything has a profile and no state, and still counts.
     async listUserIds(): Promise<string[]> {
-      const keys = await kv.scan('wt:user:*:state');
-      return keys.map((k) => k.slice('wt:user:'.length, -':state'.length));
+      const [states, profiles] = await Promise.all([kv.scan('wt:user:*:state'), kv.scan('wt:user:*:profile')]);
+      const ids = new Set([
+        ...states.map((k) => k.slice('wt:user:'.length, -':state'.length)),
+        ...profiles.map((k) => k.slice('wt:user:'.length, -':profile'.length)),
+      ]);
+      return [...ids];
     },
     // The invite list. Server only: it is never sent to a browser.
     async getInvites(): Promise<string[]> {

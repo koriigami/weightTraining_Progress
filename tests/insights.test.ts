@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { aggregate, minGroupFor, parseRange, personFacts } from '../lib/insights';
-import type { PersonFacts } from '../lib/insights';
+import { agoLabel, aggregate, invitedNotJoined, minGroupFor, parseRange, personFacts, personRow, personSummary, sortRoster } from '../lib/insights';
+import type { PersonFacts, PersonRow } from '../lib/insights';
 import { insightsStatus, isOwnerEmail } from '../lib/owner';
+import { computeProgress } from '../lib/progress';
 import { defaultPrefs } from '../lib/routines';
-import { stateWith, workout } from './helpers';
+import { stateWith, trainingDay, workout } from './helpers';
 
 // Wednesday 30 September 2026. Its week starts Monday 28 Sep.
 const TODAY = '2026-09-30';
@@ -227,5 +228,103 @@ describe('personFacts', () => {
     const f = personFacts(stateWith([workout('2026-09-10', [{ id: 'db-ohp', sets: [{ kg: 10, reps: 10 }] }])]), undefined, TODAY);
     expect(f.joined).toBe('2026-09-10');
     expect(f.onboarded).toBe(false);
+  });
+});
+
+describe('personRow', () => {
+  const profile = { name: 'Asha Rao', email: 'asha@example.com', createdAt: '2026-09-08T10:00:00.000Z' };
+  // A workout of two push-up sets: 6 minutes, so it counts as a workout but not a training day.
+  const short = (date: string) => workout(date, [{ id: 'pushup', sets: [{ reps: 10 }, { reps: 10 }] }]);
+  const rows = (...r: Partial<PersonRow>[]): PersonRow[] =>
+    r.map((o, i) => ({ name: `P${i}`, email: `p${i}@example.com`, joined: '2026-09-01', setUp: true, level: 1, rank: 'E', lastWorkout: null, daysSince: null, workouts30: 0, trainingDays7: 0, workoutsTotal: 0, ...o }));
+
+  it('shows the same level and rank the person sees in the app', () => {
+    const big = workout('2026-09-12', [{ id: 'db-ohp', sets: Array.from({ length: 200 }, () => ({ kg: 10, reps: 10 })) }]);
+    const state = stateWith([trainingDay('2026-09-10'), big, trainingDay('2026-09-14')], { weights: { '2026-09-11': 80 } });
+    const p = computeProgress(state, TODAY);
+    const row = personRow(state, profile, TODAY);
+    expect(p.level).toBeGreaterThanOrEqual(5);
+    expect(row.level).toBe(p.level);
+    expect(row.rank).toBe(p.rank);
+  });
+
+  it('gives the last workout and whole days since it', () => {
+    const row = personRow(stateWith([trainingDay('2026-09-20'), trainingDay('2026-09-27')]), profile, TODAY);
+    expect(row.lastWorkout).toBe('2026-09-27');
+    expect(row.daysSince).toBe(3);
+    expect(personRow(stateWith([trainingDay(TODAY)]), profile, TODAY).daysSince).toBe(0);
+  });
+
+  it('counts a workout dated tomorrow as today, not as minus one day', () => {
+    const row = personRow(stateWith([trainingDay('2026-10-01')]), profile, TODAY);
+    expect(row.lastWorkout).toBe('2026-10-01');
+    expect(row.daysSince).toBe(0);
+  });
+
+  it('counts training days in the last 7 days, today included', () => {
+    const state = stateWith([trainingDay('2026-09-23'), trainingDay('2026-09-24'), short('2026-09-28'), trainingDay('2026-09-30')]);
+    // 24 to 30 September is 7 days. The 23rd is out, the short workout is not a training day.
+    expect(personRow(state, profile, TODAY).trainingDays7).toBe(2);
+  });
+
+  it('counts workouts in the last 30 days, today included, and all of them in total', () => {
+    const state = stateWith([trainingDay('2026-08-31'), trainingDay('2026-09-01'), short('2026-09-15'), trainingDay('2026-09-30')]);
+    // 1 to 30 September is 30 days: 31 August is out, 1 September is in, the short workout counts.
+    const row = personRow(state, profile, TODAY);
+    expect(row.workouts30).toBe(3);
+    expect(row.workoutsTotal).toBe(4);
+  });
+
+  it('describes a person who has never trained', () => {
+    const state = stateWith([], { prefs: defaultPrefs() });
+    const row = personRow(state, profile, TODAY);
+    expect(row).toMatchObject({ level: 1, rank: 'E', lastWorkout: null, daysSince: null, workouts30: 0, trainingDays7: 0, workoutsTotal: 0, setUp: false, joined: '2026-09-08' });
+  });
+
+  it('reads setup the way the app does, so an account with no stored prefs counts as set up', () => {
+    expect(personRow(stateWith([], { prefs: { ...defaultPrefs(), onboarded: true } }), profile, TODAY).setUp).toBe(true);
+    expect(personRow(stateWith([], { prefs: defaultPrefs() }), profile, TODAY).setUp).toBe(false);
+    expect(personRow(stateWith([]), profile, TODAY).setUp).toBe(true);
+  });
+
+  it('falls back to the first workout, then today, for the join date, and to empty text without a profile', () => {
+    expect(personRow(stateWith([trainingDay('2026-09-10')]), null, TODAY)).toMatchObject({ joined: '2026-09-10', name: '', email: '' });
+    expect(personRow(stateWith([]), null, TODAY).joined).toBe(TODAY);
+  });
+
+  it('has only the allowed keys: nothing from inside a workout, no id, no photo', () => {
+    const state = stateWith([trainingDay('2026-09-27')], { weights: { '2026-09-27': 81.5 } });
+    const row = personRow(state, { ...profile, image: 'https://example.com/me.jpg' } as typeof profile, TODAY);
+    expect(Object.keys(row).sort()).toEqual(['daysSince', 'email', 'joined', 'lastWorkout', 'level', 'name', 'rank', 'setUp', 'trainingDays7', 'workouts30', 'workoutsTotal']);
+    expect(JSON.stringify(row)).not.toMatch(/81\.5|example\.com\/me/);
+  });
+
+  it('sorts the most recent workout first, people with none last, then by name', () => {
+    const sorted = sortRoster(rows({ name: 'Zed', lastWorkout: '2026-09-20' }, { name: 'Bo' }, { name: 'Amy', lastWorkout: '2026-09-29' }, { name: 'Cy', lastWorkout: '2026-09-20' }, { name: 'Al' }));
+    expect(sorted.map((r) => r.name)).toEqual(['Amy', 'Cy', 'Zed', 'Al', 'Bo']);
+  });
+
+  it('words the days since and the phone line', () => {
+    expect([agoLabel(null), agoLabel(0), agoLabel(1), agoLabel(3)]).toEqual(['No workout yet', 'Today', 'Yesterday', '3 days ago']);
+    const [a, b, c] = rows({ level: 6, rank: 'D', daysSince: 3, trainingDays7: 2 }, { daysSince: 0, trainingDays7: 1 }, {});
+    expect(personSummary(a)).toBe('Level 6 · D rank · last workout 3 days ago · 2 training days in the last 7 days');
+    expect(personSummary(b)).toBe('Level 1 · E rank · last workout today · 1 training day in the last 7 days');
+    expect(personSummary(c)).toBe('Level 1 · E rank · no workout yet');
+  });
+});
+
+describe('invitedNotJoined', () => {
+  it('leaves out anyone who has signed in, whatever the case or spacing', () => {
+    const list = invitedNotJoined(['a@example.com', 'b@example.com', 'c@example.com'], [], ['A@Example.com', ' c@example.com ']);
+    expect(list).toEqual(['b@example.com']);
+  });
+
+  it('joins the invite list and ALLOWED_EMAILS, normalised, without repeats, sorted', () => {
+    const list = invitedNotJoined(['zed@example.com', 'Amy@Example.com'], ['amy@example.com', ' bo@example.com ', ''], []);
+    expect(list).toEqual(['amy@example.com', 'bo@example.com', 'zed@example.com']);
+  });
+
+  it('is empty when everyone invited has signed in', () => {
+    expect(invitedNotJoined(['a@example.com'], ['a@example.com'], ['a@example.com'])).toEqual([]);
   });
 });
