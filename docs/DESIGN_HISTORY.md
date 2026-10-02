@@ -414,9 +414,48 @@ Agreed in the conversation after a UI check of v10 (no board; the plan is in `do
   buttons over the list, two doors, today's routine first) and three rules for the other start
   points, plus answers for the edge cases: a workout in progress, a half-done log, past weeks scored
   again, the same routine twice in a day.
-- **Built (v11 stage 1):** the laps pick, as the board showed it: the live Lap button (one full
-  width button, not the board's two), the distance chips, editable rows with the fastest lap
-  tinted, "+ Add lap" in Edit workout, and the summary line, bars and table on the workout page.
+- **Round 2 turned down:**
+  - The Workout sheet's mode buttons. They switched the list below like tabs, and a button should
+    do what it says.
+  - The words "Log one I did", which are not plain English.
+  - A redrawn sheet, when today's Start sheet already works. Change the current screen as little as
+    possible.
+  - The tall "+ Add exercise" button. Buttons keep the app's sizes.
+  - Start plus Log on all ten start points, which is too much.
+
+  The user also had to point out, again, that buttons side by side must be equal widths. These
+  rules are now in the `levl-board` skill and in CLAUDE.md.
+- **Kept from round 2:**
+  - Log in a routine's menu with a slightly bigger New pill;
+  - Log on a routine's page, at equal widths;
+  - the Log screen for each kind of workout;
+  - the Cardio sheet;
+  - desktop Home.
+- **Built (v11 stage 1):** the laps pick, as the board showed it:
+  - the live Lap button (one full-width button, not the board's two);
+  - the distance chips;
+  - editable rows, with the fastest lap tinted;
+  - "+ Add lap" in Edit workout;
+  - the summary line, bars and table on the workout page.
+- **Equal widths fixed across the app:** five places had two buttons of different widths:
+  - routine cards;
+  - a routine's page;
+  - Explore cards;
+  - the page headers: Share and Edit, Create routine and Explore, Discard and Finish.
+
+  `.wt-rc-actions` and `.wt-ph-actions` are now equal grid columns.
+- **Round 3**, built from screenshots of the real app with the change made (a scratch prototype),
+  so sizes are exact:
+  - Today's Start sheet is unchanged. Log goes in three places only:
+    - a "Log a past workout" button on Home;
+    - a routine's menu, with a 24 px New pill;
+    - Edit, Log and Start on a routine's page.
+  - The Log sheet is the Start sheet with Log in place of Start.
+  - The Log screen is Edit workout titled "Log workout".
+  - Options shown:
+    - three for the Home button (a button under the tiles, a text link, a fourth tile);
+    - two for the Workout sheet (unchanged, or one button on top);
+    - four wordings.
 
 ## Where the chat lives
 

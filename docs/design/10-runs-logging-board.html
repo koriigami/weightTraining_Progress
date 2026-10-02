@@ -231,14 +231,170 @@ table.x td.where b{display:block}
   table.x.stack td:nth-child(2)::before{content:'Start: ';font-weight:800;color:var(--green-deep)}
   table.x.stack td:nth-child(3)::before{content:'Log: ';font-weight:800;color:var(--gold-ink)}
 }
+
+/* ---- Round 3: screenshots of the real app with the change made ---- */
+.shot{width:402px;flex:none;border-radius:34px;background:#1b1409;padding:6px;box-shadow:0 18px 36px -22px rgba(0,0,0,.7)}
+.shot img{display:block;width:390px;height:auto;border-radius:28px}
+.opt.wide{grid-column:1/-1}
+.shots{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+.dshot{display:block;width:100%;max-width:1040px;height:auto;border-radius:14px;border:1px solid var(--line);box-shadow:0 10px 24px -16px rgba(60,40,10,.6)}
+.status{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:10px}
+.status div{border-radius:14px;padding:10px 12px;font-size:14px;border:1px solid var(--line);background:var(--calm)}
+.status div b{display:block}
+.status .ok{background:#e9f8e1;border-color:#b6e3a1}
+.status .ok b{color:var(--green-deep)}
+.status .no{background:#fdebe7;border-color:#efb7aa}
+.status .no b{color:#9b2a1c}
+.places{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px;max-width:84ch}
+.places b{color:var(--ink)}
+.copy{width:100%;border-collapse:collapse;font-size:14px}
+.copy th,.copy td{padding:9px 10px;border-bottom:1px solid #eedfbd;text-align:left;vertical-align:top}
+.copy th{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:#fbf1da}
+.copy td:first-child{font-weight:800;white-space:nowrap}
+.copy tr.pick td{background:#e9f8e1}
+.r1 small{display:block;font-family:var(--body);font-size:14px;color:var(--muted);margin-top:4px}
+@media (max-width:640px){.copy td:first-child{white-space:normal}}
 </style>
 </head>
 <body>
 <main class="wrap">
   <header>
     <h1>Runs, logging and consistency</h1>
-    <p class="lede"><b>Round 2.</b> Your round 1 picks are in. This round works out <b>Log vs Start</b> everywhere a workout can begin, the Workout button's sheet, and the <b>Log screen for each kind of workout</b>, including how you add more exercises. Round 1 is kept below.</p>
+    <p class="lede"><b>Round 3.</b> Logging a workout you already did, kept small. Today's screens stay as they are and <b>Log</b> is added in three places. Every picture in this round is a <b>screenshot of the real app with the change made</b>, so sizes, colours and spacing are exactly what you would get. Rounds 1 and 2 are kept below.</p>
   </header>
+
+  <section class="sec" id="r3-since">
+    <h2>Since round 2</h2>
+    <div class="status">
+      <div class="ok"><b>Laps: built and released</b>The live Lap button, lap rows you can edit, and the lap chart on the workout page. XP and records still judge the whole run.</div>
+      <div class="ok"><b>Equal widths, everywhere</b>Five places had two buttons of different widths side by side: routine cards, a routine's page, Explore cards, and the page headers (Share and Edit, Create routine and Explore, Discard and Finish). All five are fixed and released, and the rule is now written into how every board is made.</div>
+      <div class="no"><b>Turned down from round 2</b>The Workout sheet's mode buttons (they switched the list like tabs), the words "Log one I did", the tall Add exercise button, and Start plus Log on every start point.</div>
+      <div><b>Kept from round 2</b>Log in a routine's menu with a New pill, Log on a routine's page, the Log screen for each kind of workout, the Cardio sheet and desktop Home.</div>
+    </div>
+  </section>
+
+  <section class="sec" id="r3-where">
+    <h2>1. Where Log lives: three places</h2>
+    <p>Everything that starts a workout today stays Start only. Log goes where someone looking for it would look first:</p>
+    <ol class="places">
+      <li><b>Home:</b> one button, <b>Log a past workout</b>, under the three tiles. It opens the Log sheet (section 4).</li>
+      <li><b>A routine's menu</b> on the Routines tab: <b>Log a past workout</b>, with a New pill for the first few weeks.</li>
+      <li><b>A routine's page:</b> Edit, Log and Start in one row, the same width each.</li>
+    </ol>
+    <p>Nothing else changes: the Workout button, the Cardio sheet, the Custom picker, desktop's routine cards and Explore stay as they are.</p>
+  </section>
+
+  <section class="sec" id="r3-home">
+    <h2>2. Home: the Log button</h2>
+    <p>The Today card already holds every way to start. The Log button joins them, in three possible ways. The phone shows the card before and after today's workout.</p>
+    <div class="opts">
+      <div class="opt wide">
+        <h3>H1. A button under the tiles <span class="tag">My pick</span></h3>
+        <p class="cap">A secondary button, full width, the standard 48 px. The three tiles above it don't change.</p>
+        <div class="shots"><div class="shot fit"><img src="10-runs-logging/r3-home-h1.jpg" width="390" alt="Home with Today's workout, three tiles and a Log a past workout button under them" loading="lazy"></div><div class="shot fit"><img src="10-runs-logging/r3-home-h1-done.jpg" width="390" alt="Home after today's workout, with the Log a past workout button under the tiles" loading="lazy"></div></div>
+      </div>
+      <div class="opt">
+        <h3>H2. A text link</h3>
+        <p class="cap">The same place, as a green link. Quieter, but easy to miss.</p>
+        <div class="shot fit"><img src="10-runs-logging/r3-home-h2.jpg" width="390" alt="Home with a Log a past workout text link under the tiles" loading="lazy"></div>
+      </div>
+      <div class="opt">
+        <h3>H3. A fourth tile</h3>
+        <p class="cap">The tiles become a 2 by 2 grid, all the same size. Tidy, but it changes the row you already use.</p>
+        <div class="shot fit"><img src="10-runs-logging/r3-home-h3.jpg" width="390" alt="Home with four tiles in a 2 by 2 grid, the fourth is Log a past workout" loading="lazy"></div>
+      </div>
+    </div>
+    <h3>Desktop</h3>
+    <p class="cap">The Something else card gets the same button under Choose, both the same width.</p>
+    <img class="dshot" src="10-runs-logging/r3-desk-home-d1.jpg" alt="Desktop Home: the Something else card has Choose and Log a past workout, the same width" loading="lazy">
+  </section>
+
+  <section class="sec" id="r3-sheet">
+    <h2>3. The Workout button's sheet stays as it is</h2>
+    <div class="opts">
+      <div class="opt">
+        <h3>S1. Unchanged <span class="tag">My pick</span></h3>
+        <p class="cap">This is today's app. The Workout button means start; Log lives on Home.</p>
+        <div class="shot fit"><img src="10-runs-logging/r3-sheet-s1.jpg" width="390" alt="The Start a workout sheet as it is today" loading="lazy"></div>
+      </div>
+      <div class="opt">
+        <h3>S2. One button on top</h3>
+        <p class="cap">A secondary button above the list; the list below is untouched. Log is one tap from any screen, but a sheet called Start a workout now holds Log too.</p>
+        <div class="shot fit"><img src="10-runs-logging/r3-sheet-s2.jpg" width="390" alt="The Start a workout sheet with a Log a past workout button on top" loading="lazy"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="r3-logsheet">
+    <h2>4. The Log sheet</h2>
+    <p>What <b>Log a past workout</b> opens: the Start sheet you know, element for element, with <b>Log</b> in place of Start. Run, Walk and Ride open the Cardio sheet as today, and its button says <b>Log workout</b>. Custom workout reads "Pick exercises, then log", and the picker's button says Log workout.</p>
+    <div class="shots"><div class="shot fit"><img src="10-runs-logging/r3-sheet-log.jpg" width="390" alt="The Log a past workout sheet: routines with Log buttons, Cardio tiles, Custom workout" loading="lazy"></div><div class="shot fit"><img src="10-runs-logging/r3-cardio-log.jpg" width="390" alt="The Cardio sheet in log mode, Run picked, the button says Log workout" loading="lazy"></div></div>
+  </section>
+
+  <section class="sec" id="r3-routines">
+    <h2>5. Routines</h2>
+    <div class="opts">
+      <div class="opt">
+        <h3>A routine's menu</h3>
+        <p class="cap"><b>Log a past workout</b> comes first, with a bigger New pill (24 px tall). Behind the menu, Edit and Start are now the same width.</p>
+        <div class="shot fit"><img src="10-runs-logging/r3-routines-menu.jpg" width="390" alt="The routine menu: Log a past workout with a New pill, Duplicate, Delete routine" loading="lazy"></div>
+      </div>
+      <div class="opt">
+        <h3>A routine's page</h3>
+        <p class="cap">Edit, Log and Start, three equal buttons at 48 px. "Start routine" becomes "Start" so all three fit.</p>
+        <div class="shot fit"><img src="10-runs-logging/r3-routine.jpg" width="390" alt="A routine page with Edit, Log and Start buttons of equal width" loading="lazy"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="r3-logscreen">
+    <h2>6. The Log screen</h2>
+    <p>It is the <b>Edit workout</b> screen you already have, titled <b>Log workout</b>: Date and time, Duration, the exercise cards, <b>+ Add exercise</b> at its usual size, Notes and Save. Nothing new to learn. Date and time starts at an hour ago; any past time works, a future one does not. Sets come in ticked with last time's numbers; untick one to leave it out.</p>
+    <div class="opts">
+      <div class="opt">
+        <h3>A routine</h3>
+        <p class="cap">Push A, filled in from last time.</p>
+        <div class="shot fit"><img src="10-runs-logging/r3-log-strength.jpg" width="390" alt="Log workout for Push A: date and time, duration, the first exercise with three ticked sets" loading="lazy"></div>
+      </div>
+      <div class="opt">
+        <h3>A run, with laps</h3>
+        <p class="cap">Time and distance, and the lap rows built this round, with + Add lap.</p>
+        <div class="shot fit"><img src="10-runs-logging/r3-log-run-full.jpg" width="390" alt="Log workout for a run: time, distance, five laps with the fastest marked, Add lap, Add exercise, Notes" loading="lazy"></div>
+      </div>
+      <div class="opt">
+        <h3>Custom, nothing added yet</h3>
+        <p class="cap">One button to add what you did. Strength and cardio can be mixed, as in Edit.</p>
+        <div class="shot fit"><img src="10-runs-logging/r3-log-empty.jpg" width="390" alt="Log workout with no exercises yet and an Add exercise button" loading="lazy"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="r3-copy">
+    <h2>7. The button's words</h2>
+    <div class="tbl"><table class="copy">
+      <thead><tr><th>Words</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr class="pick"><td>Log a past workout <span class="tag">My pick</span></td><td>Says what it does, and "past" tells it apart from Start.</td></tr>
+        <tr><td>Add a past workout</td><td>Also clear, but "Add" already means adding an exercise or a set.</td></tr>
+        <tr><td>Log a workout you did</td><td>The same meaning, a little longer.</td></tr>
+        <tr><td>Already trained? Log it</td><td>Friendly, but a question on a button.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="sec" id="r3-decide">
+    <h2>8. What I need from you</h2>
+    <ol class="decide">
+      <li><b>Home:</b> H1, H2 or H3. My pick: <b>H1, a button under the tiles</b>, and the same on desktop.</li>
+      <li><b>The Workout button's sheet:</b> S1 or S2. My pick: <b>S1, unchanged</b>.</li>
+      <li><b>The words:</b> My pick: <b>Log a past workout</b>.</li>
+      <li><b>Only three places</b> for Log: Home, a routine's menu, a routine's page. My pick: <b>yes</b>.</li>
+      <li><b>A routine's page:</b> Edit, Log and Start, with "Start routine" shortened to "Start". My pick: <b>yes</b>.</li>
+    </ol>
+    <p>Then Log is built as the next stage, with How it felt and the growing weekly goal bonus after it. Answer in the chat: comments on this page don't reach me.</p>
+  </section>
+
+  <h2 class="r1">Round 2<small>Section 3 (the Workout sheet) and Start plus Log on every start point were turned down; see "Since round 2" above.</small></h2>
 
   <section class="sec" id="signed">
     <h2>1. Signed off in round 1</h2>
