@@ -27,6 +27,9 @@ figcaption span { display: block; color: var(--muted); font-weight: 600; font-si
 .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 18px; }
 ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; }
 .cap { display: flex; flex-direction: column; gap: 8px; }
+.msgs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 18px; }
+.cap p.note { background: none; border: 0; padding: 0; white-space: normal; font-weight: 600; }
+.cap h3 { font-family: var(--display); font-weight: 400; font-size: 20px; margin: 0; }
 .cap p { margin: 0; background: #fffdf6; border: 1.5px solid var(--bevel); border-radius: 14px; padding: 12px 14px; white-space: pre-line; font-weight: 600; }
 button { font-family: var(--display); font-size: 16px; height: 40px; padding: 0 18px; border: 0; border-radius: 12px; color: #fff; background: linear-gradient(180deg, #86ea64, var(--green)); box-shadow: 0 3px 0 var(--green-deep); cursor: pointer; align-self: flex-start; }
 button:focus-visible { outline: 3px solid #1d5fbf; outline-offset: 3px; }
@@ -67,6 +70,77 @@ code { font-weight: 800; color: var(--ink); }
     </div>
   </section>
 
+  <section class="card">
+    <h2>Messages to send</h2>
+    <p class="note">Replace [name] before sending. People who aren't on the invite list yet can't sign in, so send these only after they're added.</p>
+    <div class="msgs">
+      <div class="cap">
+        <h3>You're in, on WhatsApp</h3>
+        <p class="note">For the people already added, and for every batch you invite later.</p>
+        <p id="msg-in-wa">Hey [name]! You're in 🎉
+
+I've added you to Levl, the workout app I've been building. It turns your workouts into a game: XP for every set, levels, and ranks from E to S.
+
+Open this and sign in with the Google account you gave me:
+https://weight-training-progress.vercel.app
+
+Tip: add it to your home screen and it works like an app. iPhone: open it in Safari, tap Share, then Add to Home Screen. Android: open it in Chrome, tap the three dots, then Add to Home screen.
+
+It's still early, so if anything feels off or confusing, just tell me. That's exactly what I need.</p>
+        <button type="button" data-copy="msg-in-wa">Copy</button>
+      </div>
+      <div class="cap">
+        <h3>You're in, by email</h3>
+        <p class="note">Same message for email. The Gmail drafts use this text.</p>
+        <p id="msg-in-mail">Subject: You're in: your Levl invite
+
+Hi [name],
+
+You're in! I've added you to Levl, the workout app I've been building. It turns your workouts into a game: XP for every set, levels, and ranks from E to S.
+
+Open this and sign in with this Google account:
+https://weight-training-progress.vercel.app
+
+Tip: add it to your home screen and it works like an app. iPhone: open it in Safari, tap Share, then Add to Home Screen. Android: open it in Chrome, tap the three dots, then Add to Home screen.
+
+It's still early, so if anything feels off or confusing, just reply to this email. That's exactly what I need.
+
+Ketan</p>
+        <button type="button" data-copy="msg-in-mail">Copy</button>
+      </div>
+      <div class="cap">
+        <h3>Waitlist reply</h3>
+        <p class="note">For people who join the waitlist from the stories or the carousel.</p>
+        <p id="msg-waitlist">Hey [name], thanks for joining the Levl waitlist! You're in 🎉
+
+Open this and sign in with the Google account you put in the form:
+https://weight-training-progress.vercel.app
+
+Tip: add it to your home screen and it works like an app. iPhone: open it in Safari, tap Share, then Add to Home Screen. Android: open it in Chrome, tap the three dots, then Add to Home screen.
+
+Try it for a week and tell me what you think, good or bad.</p>
+        <button type="button" data-copy="msg-waitlist">Copy</button>
+      </div>
+      <div class="cap">
+        <h3>Nudge</h3>
+        <p class="note">For people on Insights under "Invited, not signed in yet", a few days after the invite.</p>
+        <p id="msg-nudge">Hey [name], did you get a chance to open Levl? Your invite is ready:
+https://weight-training-progress.vercel.app
+
+Sign in with the same Google account you gave me. Takes a minute to set up, and your first workout already counts.</p>
+        <button type="button" data-copy="msg-nudge">Copy</button>
+      </div>
+      <div class="cap">
+        <h3>Check-in</h3>
+        <p class="note">For people on Insights with "No workout yet".</p>
+        <p id="msg-checkin">Hey [name], saw you signed in to Levl, thanks! You haven't logged a workout yet. What got in the way? Even "busy" or "didn't get it" helps me.
+
+If you trained already and forgot to start it, tap Log workout on Home and add it after. The XP still counts.</p>
+        <button type="button" data-copy="msg-checkin">Copy</button>
+      </div>
+    </div>
+  </section>
+
   <div class="two">
     <section class="card">
       <h2>Save and post</h2>
@@ -75,6 +149,7 @@ code { font-weight: 800; color: var(--ink); }
         <li><b>Instagram story 5:</b> add a Link sticker with <code>https://tally.so/r/kdMyYM</code> in the empty space under the three steps. The Levl logo sits at the top, clear of Instagram's reply bar.</li>
         <li><b>WhatsApp Status:</b> post story 5 (WhatsApp) and paste the WhatsApp caption with it.</li>
         <li><b>Carousel:</b> put <code>tally.so/r/kdMyYM</code> in your Instagram bio before posting, then use the carousel caption.</li>
+        <li><b>After posting:</b> when new names come in on Tally, open a new Claude session and say "invite the new people". You'll see the names first, then each one gets added with a Gmail draft. Send them the "Waitlist reply" on WhatsApp if you have their number.</li>
       </ol>
       <p class="note">When new names land in the waitlist, tell me "invite the new people" in our chat.</p>
     </section>
