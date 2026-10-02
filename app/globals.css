@@ -1809,8 +1809,11 @@ textarea.wt-input {
   align-items: center;
   justify-self: start;
 }
+/* Buttons side by side are always the same width. */
 .wt-ph-actions {
-  display: flex;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   align-items: center;
   gap: 8px;
   justify-self: end;
@@ -2544,12 +2547,12 @@ textarea.wt-input {
   color: var(--link);
   font-weight: 700;
 }
+/* Equal widths, however long each label is. */
 .wt-rc-actions {
-  display: flex;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: 10px;
-}
-.wt-rc-actions .grow {
-  flex: 1;
 }
 .wt-wk {
   display: inline-flex;

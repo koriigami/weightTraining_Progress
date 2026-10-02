@@ -73,7 +73,7 @@ export function RoutineCard({ routine, doneThisWeek }: { routine: Routine; doneT
         <ButtonLink href={`/routine/${routine.id}`} variant="secondary" size="sm" icon={<Pencil size={16} aria-hidden="true" />} aria-label={`Edit ${routine.title}`}>
           Edit
         </ButtonLink>
-        <Button className="grow" size="sm" icon={<Play size={14} fill="currentColor" aria-hidden="true" />} aria-label={`Start ${routine.title}`} onClick={() => start(routine.id)}>
+        <Button size="sm" icon={<Play size={14} fill="currentColor" aria-hidden="true" />} aria-label={`Start ${routine.title}`} onClick={() => start(routine.id)}>
           Start
         </Button>
       </div>
@@ -116,7 +116,6 @@ export function TemplateCard({ routine, fits, added, onAdd, adding }: { routine:
           Preview
         </ButtonLink>
         <Button
-          className="grow"
           size="sm"
           disabled={added}
           loading={adding}

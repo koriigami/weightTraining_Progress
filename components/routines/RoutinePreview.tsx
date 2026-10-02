@@ -67,7 +67,7 @@ export function RoutinePreview({ routine, kind }: { routine: Routine; kind: 'min
       <ButtonLink href={`/routine/${routine.id}`} variant="secondary" icon={<Pencil size={18} aria-hidden="true" />}>
         Edit
       </ButtonLink>
-      <Button className="grow" icon={<Play size={16} fill="currentColor" aria-hidden="true" />} onClick={() => startSaved(routine.id)}>
+      <Button icon={<Play size={16} fill="currentColor" aria-hidden="true" />} onClick={() => startSaved(routine.id)}>
         Start routine
       </Button>
     </div>
@@ -76,7 +76,7 @@ export function RoutinePreview({ routine, kind }: { routine: Routine; kind: 'min
       <Button variant="secondary" icon={<Play size={16} fill="currentColor" aria-hidden="true" />} onClick={tryNow}>
         Start
       </Button>
-      <Button className="grow" disabled={added} loading={addingId === routine.id} icon={added ? <Check size={16} aria-hidden="true" /> : undefined} onClick={() => void add(routine)}>
+      <Button disabled={added} loading={addingId === routine.id} icon={added ? <Check size={16} aria-hidden="true" /> : undefined} onClick={() => void add(routine)}>
         {added ? 'Added' : 'Save routine'}
       </Button>
     </div>
