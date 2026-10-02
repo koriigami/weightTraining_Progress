@@ -2,7 +2,7 @@
 // what closing one does.
 import { existsSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { MAX_NEWS_PAGES, NEWS, advanceNewsSeen, closesRulesUpdate, latestNewsId, unseenEntries, unseenPages } from '../lib/news';
+import { MAX_NEWS_PAGES, NEWS, advanceNewsSeen, closesRulesUpdate, latestNewsId, latestPages, newestUnseenId, newsDate, newsKicker, unseenEntries, unseenPages } from '../lib/news';
 import type { NewsEntry } from '../lib/news';
 
 // A made-up list, newest first: 2026-12 (2 pages), 2026-11 (3 pages, one about the rules), 2026-10 (2 pages).
@@ -108,5 +108,38 @@ describe('closesRulesUpdate', () => {
   it('is false for an update that was seen before, or one that is not in the list', () => {
     expect(closesRulesUpdate('2026-12', '2026-11', LIST)).toBe(false);
     expect(closesRulesUpdate(undefined, '2030-01', LIST)).toBe(false);
+  });
+});
+
+describe('newestUnseenId', () => {
+  it('is the newest update, which closing the card marks seen along with the older ones', () => {
+    expect(newestUnseenId(undefined, LIST)).toBe('2026-12');
+    expect(newestUnseenId('2026-10', LIST)).toBe('2026-12');
+  });
+
+  it('is null when the newest update is already seen', () => {
+    expect(newestUnseenId('2026-12', LIST)).toBeNull();
+  });
+});
+
+describe('latestPages', () => {
+  it('gives every page of the newest update, seen or not, with its update', () => {
+    const pages = latestPages(LIST);
+    expect(titles(pages)).toEqual(['d1', 'd2']);
+    expect(pages.every((p) => p.entryId === '2026-12' && p.label === 'December 2026')).toBe(true);
+  });
+});
+
+describe('newsKicker', () => {
+  it('reads the label, then the page out of all the pages in the card', () => {
+    expect(newsKicker('October 2026', 0, 4)).toBe('October 2026 · 1 of 4');
+    expect(newsKicker('November 2026', 4, 5)).toBe('November 2026 · 5 of 5');
+  });
+});
+
+describe('newsDate', () => {
+  it('writes the release day as day, short month and year, with no leading zero', () => {
+    expect(newsDate('2026-10-02')).toBe('2 Oct 2026');
+    expect(newsDate('2027-01-15')).toBe('15 Jan 2027');
   });
 });

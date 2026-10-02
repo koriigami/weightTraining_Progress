@@ -5,6 +5,13 @@
 //   import { withApp } from '<repo>/scripts/qa/lib.mjs';
 //   await withApp(async ({ page, base, ids }) => { ... }, { width: 390 });
 //
+// The seeded person finishes the setup questions (savePrefs with onboarded: true), which
+// makes the first-run guide wait for them. seed() puts the guide away (setGuideDone) so
+// ordinary runs never show it. For guide QA pass `{ guide: true }` to withApp: the guide
+// is left waiting, as it is for a brand new person. What's new never shows for the seeded
+// person: a new person starts with the newest update already seen. Preview it with the
+// route `/?news=1`.
+//
 // Nothing here runs in CI. It needs Chromium and the playwright module, which
 // this environment has at the default paths below (override with env vars).
 import { spawn, execSync } from 'node:child_process';
@@ -144,8 +151,9 @@ const three = (kg, reps) => [{ kg, reps }, { kg, reps }, { kg, reps }];
  * The short workout is 2 sets (6 minutes) 2 days ago, so that day is a rest day on Home and its workout page shows "6 of 20 min today".
  * How it felt: the run is Good with an effort of 6, the ride is Great and the mixed workout is Tough with an effort of 8. The strength and short workouts are unrated, so their rows have no face and the Victory flow starts with nothing picked.
  * "Rest" on the week strip needs a past day in the current week, so it shows from Wednesday on.
+ * The first-run guide is put away unless `guide` is true, because saving the prefs sets it waiting.
  */
-export async function seed(context) {
+export async function seed(context, { guide = false } = {}) {
   const state = await getState(context);
   const have = new Set((state.workouts ?? []).map((w) => w.id));
   await api(context, 'savePrefs', {
@@ -160,6 +168,7 @@ export async function seed(context) {
       onboarded: true,
     },
   });
+  if (!guide) await api(context, 'setGuideDone', { value: true });
   const workouts = [
     workout(IDS.strength, 0, 'Push and Legs', 45, [['db-bench', [...three(20, 10), { kg: 20, reps: 10 }]], ['bb-squat', three(60, 8)]], [
       { exerciseId: 'db-bench', sets: 4 },
@@ -220,14 +229,15 @@ export const slug = (route) => route.replace(/^\//, '').replace(/[^a-z0-9]+/gi, 
 /**
  * Starts (or reuses) the server, signs in, seeds, and hands a ready page to `fn`.
  * Always closes the browser; stops the server unless `keepServer`.
+ * `guide: true` leaves the first-run guide waiting, for guide QA.
  */
-export async function withApp(fn, { width = 390, email = EMAIL, seedData = true, reuse = false, keepServer = false } = {}) {
+export async function withApp(fn, { width = 390, email = EMAIL, seedData = true, reuse = false, keepServer = false, guide = false } = {}) {
   await startServer({ reuse });
   const browser = await launch();
   try {
     const { context, page, errors } = await newPage(browser, width);
     await signIn(context, email);
-    const ids = seedData ? await seed(context) : IDS;
+    const ids = seedData ? await seed(context, { guide }) : IDS;
     return await fn({ browser, context, page, errors, base: BASE, ids, api: (a, b) => api(context, a, b) });
   } finally {
     await browser.close();

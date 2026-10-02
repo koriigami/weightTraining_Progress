@@ -1487,6 +1487,173 @@ textarea.wt-input {
     transform: translateX(4px);
   }
 }
+
+/* ---- What's new: the game modal with a picture and pages, and the same picture on /news ---- */
+.wt-news {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+.wt-news .wt-gm-rib {
+  flex: none;
+}
+/* The picture, words and kicker scroll on a short screen; the dots and the button stay put. */
+.wt-news-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.wt-news-kick {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--xp-ink);
+}
+.wt-news-pic {
+  position: relative;
+  margin: 10px 18px 4px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px #e3b03a, 0 6px 14px -8px rgba(60, 30, 0, 0.5);
+  background: #fff6e2;
+}
+.wt-news-pic img {
+  display: block;
+  width: 100%;
+  max-height: 190px;
+  object-fit: cover;
+  object-position: top;
+}
+.wt-news-tag {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  z-index: 1;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #7a4f00;
+  background: #fff0c2;
+  border: 1px solid #e8c766;
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+.wt-news-h {
+  margin: 10px 0 4px;
+  font-family: var(--font-num);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.005em;
+  text-wrap: balance;
+}
+.wt-news .wt-gm-body p {
+  margin-bottom: 14px;
+}
+.wt-news-foot {
+  flex: none;
+  padding: 0 20px 18px;
+}
+.wt-news-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 0 14px;
+}
+.wt-news-dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line);
+}
+.wt-news-dots i.on {
+  width: 22px;
+  border-radius: 999px;
+  background: var(--ok);
+}
+/* A short screen gives the picture less room, so the words and the button fit with less scrolling. */
+@media (max-height: 640px) {
+  .wt-news-pic img {
+    max-height: 130px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wt-news {
+    animation: none;
+  }
+}
+
+/* /news: every update as a card, each page with its picture beside or above its words */
+.wt-newslist {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.wt-newshead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 4px;
+}
+.wt-newshead h2 {
+  margin: 0;
+  font-family: var(--font-num);
+  font-size: 22px;
+  font-weight: 400;
+}
+.wt-newshead time {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.wt-newspage {
+  display: grid;
+  gap: 8px;
+  padding: 14px 0;
+  border-top: 1.5px dashed var(--line);
+}
+.wt-newspage:first-of-type {
+  border-top: 0;
+}
+/* On this page the picture is shown whole, not cropped to fit a card. */
+.wt-newspage .wt-news-pic {
+  margin: 4px 3px 0;
+}
+.wt-newspage .wt-news-pic img {
+  max-height: none;
+}
+.wt-newspage h3 {
+  margin: 0 0 4px;
+  font-family: var(--font-num);
+  font-size: 19px;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.wt-newspage p {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+@media (min-width: 640px) {
+  .wt-newspage {
+    grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
+    column-gap: 20px;
+    align-items: start;
+  }
+  .wt-newspage .wt-news-pic {
+    margin-bottom: 4px;
+  }
+  .wt-newstext {
+    padding-top: 4px;
+  }
+}
 @keyframes wt-fade {
   from {
     opacity: 0;

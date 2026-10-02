@@ -24,8 +24,13 @@ type Ctx = {
 
 const CelebrationContext = createContext<Ctx | null>(null);
 
+// Whether a moment is on screen, waiting in the queue, or held back for the Victory
+// screen. It is its own context so only what needs it re-renders as moments come and go.
+const CelebratingContext = createContext(false);
+
 export function CelebrationProvider({ children }: { children: React.ReactNode }) {
   const [queue, setQueue] = useState<CelebrationEvent[]>([]);
+  const [holding, setHolding] = useState(false);
   const current = queue[0] ?? null;
 
   const commit = useCallback((events: CelebrationEvent[]) => {
@@ -44,6 +49,7 @@ export function CelebrationProvider({ children }: { children: React.ReactNode })
     stopListening.current = null;
     const events = held.current;
     held.current = [];
+    setHolding(false);
     if (events.length) commit(events);
   }, [commit]);
 
@@ -56,6 +62,7 @@ export function CelebrationProvider({ children }: { children: React.ReactNode })
         return;
       }
       held.current = [...held.current, ...events];
+      setHolding(true);
       if (timer.current !== null) return;
       timer.current = window.setTimeout(release, delay);
       const onFirst = () => release();
@@ -88,8 +95,10 @@ export function CelebrationProvider({ children }: { children: React.ReactNode })
 
   return (
     <CelebrationContext.Provider value={value}>
-      {children}
-      {current && <Moment key={eventKey(current)} event={current} onDone={advance} />}
+      <CelebratingContext.Provider value={current !== null || holding}>
+        {children}
+        {current && <Moment key={eventKey(current)} event={current} onDone={advance} />}
+      </CelebratingContext.Provider>
     </CelebrationContext.Provider>
   );
 }
@@ -98,4 +107,9 @@ export function useCelebration(): Ctx {
   const ctx = useContext(CelebrationContext);
   if (!ctx) throw new Error('useCelebration must be used within CelebrationProvider');
   return ctx;
+}
+
+/** True while a reward moment is showing, queued or held back. Things that would cover the screen wait for false. */
+export function useCelebrating(): boolean {
+  return useContext(CelebratingContext);
 }

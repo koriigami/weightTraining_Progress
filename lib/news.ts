@@ -78,6 +78,32 @@ export function unseenPages(newsSeen: string | undefined, news: NewsEntry[] = NE
     .slice(0, MAX_NEWS_PAGES);
 }
 
+// The id to mark seen when the card of unseen updates is closed: the newest one, which
+// marks every older one seen with it. Null when nothing is unseen.
+export function newestUnseenId(newsSeen: string | undefined, news: NewsEntry[] = NEWS): string | null {
+  return unseenEntries(newsSeen, news)[0]?.id ?? null;
+}
+
+// Every page of the newest update, for the `/?news=1` preview. It does not look at
+// what the person has seen.
+export function latestPages(news: NewsEntry[] = NEWS): NewsCardPage[] {
+  return news[0].pages.map((p) => ({ ...p, entryId: news[0].id, label: news[0].label }));
+}
+
+// The line over a card's picture: "October 2026 · 1 of 4". `index` counts from 0 and
+// `total` is the number of pages in the card, across every update it mixes.
+export function newsKicker(label: string, index: number, total: number): string {
+  return `${label} · ${index + 1} of ${total}`;
+}
+
+// "2 Oct 2026", for an update's release day on the What's new page. Worked out in UTC
+// so the build and the browser agree.
+export function newsDate(date: string): string {
+  const [y, m, d] = date.split('-').map(Number);
+  const month = new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' });
+  return `${d} ${month} ${y}`;
+}
+
 // What `newsSeen` becomes when update `id` is closed: the newer of the two, so an
 // old id never brings back an update that was already seen.
 export function advanceNewsSeen(newsSeen: string | undefined, id: string, news: NewsEntry[] = NEWS): string {

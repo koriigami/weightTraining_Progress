@@ -529,6 +529,10 @@ rules notes. `ProgressProvider` has a method for each, resolving to an error mes
 - `latestNewsId()`, `unseenEntries(newsSeen)` and `unseenPages(newsSeen)`: the pages of the updates
   newer than `newsSeen`, newest update first, at most 5, each with its update's id and label. A missing or
   unknown `newsSeen` means every update is unseen.
+- `newestUnseenId(newsSeen)` is the id the card marks seen when it closes (the newest unseen update, which
+  marks every older one with it). `latestPages()` is every page of the newest update, for the preview.
+  `newsKicker(label, index, total)` is the line "October 2026 · 1 of 4" and `newsDate(date)` writes "2 Oct 2026"
+  for the What's new page.
 - To add an update, put a new entry at the top of `NEWS` with an id such as `2026-11` and its pictures in
   `public/news/` (named like `2026-10-laps.jpg`, about 640 px wide, cut from the real screen). Mark a page
   `rules: true` when it announces an XP rules change: it gets the "XP rules changed" tag and closing it
@@ -552,6 +556,24 @@ rules notes. `ProgressProvider` has a method for each, resolving to an error mes
 - `introToShow({ guideDone, onboarded, unseenCount, sessionActive, shownThisLoad })`: `'guide'`, `'news'` or
   `null`. Nothing before onboarding, while a workout is in progress, or when something was already shown this
   load. The guide comes first (`guideDone === false`), What's new next.
+
+### What Home shows, the card and the page
+
+- `components/home/HomeIntro.tsx` is on both Home layouts (`app/page.tsx`, in `Suspense` because it reads
+  `?news=`). It asks `introToShow` with `guideDone` and `onboarded` from the state and prefs, `unseenCount` from
+  `unseenPages(newsSeen)`, `sessionActive` from the workout session, and `shownThisLoad`, a module-level
+  variable (memory only, so one thing per app open). It decides once per visit to Home, and only when the state
+  and the stored workout have been read and no level-up or badge moment is showing, queued or held back
+  (`useCelebrating()` in `CelebrationProvider`). For `'news'` it waits for the first picture, up to 1.5 s, then
+  opens `NewsModal`. For `'guide'` it renders nothing yet: the guide tour plugs in at that branch.
+- `components/news/NewsModal.tsx` is the game modal with a picture, the kicker, the title and words, dots and one
+  full-width button. It uses `useDialog` and `useBackToClose`: Got it, Escape, the scrim and Back all close the
+  whole card and call `onClose` once, and `HomeIntro` then calls `markNewsSeen(newestUnseenId)`. The picture and
+  words scroll inside it on a short screen while the dots and button stay in view.
+- `/?news=1` is a preview: every page of the newest update, nothing remembered, and it does not count as this
+  load's one thing. It is how an update is seen before a release.
+- `/news` (`app/news/page.tsx`) is a static page listing every update newest first, each page with its picture,
+  title and words. A Settings row for it comes in the last v12 stage.
 
 ## Rendering and layout
 

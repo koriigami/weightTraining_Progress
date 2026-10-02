@@ -29,6 +29,12 @@ npm run qa -- --routes "/,/profile,/workout/view?id=@strength,/workout/view?id=@
 Shots are at 2x pixel density and show the first screen. Add `--full` for pages that
 scroll; it also writes one readable slice per screen height.
 
+The seeded person has the first-run guide put away, so ordinary runs never show it,
+and has already seen the newest update, so What's new does not show either. Open
+`/?news=1` to preview the What's new card with every page of the newest update (it
+remembers nothing). In a flow script, `withApp(fn, { guide: true })` leaves the guide
+waiting, as it is for a brand new person.
+
 ## Every screen, every width
 
 Tick these on each screen below, at 390 px and at 1440 px.

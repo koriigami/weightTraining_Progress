@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { HeroLevel } from '@/components/HeroLevel';
+import { HomeIntro } from '@/components/home/HomeIntro';
 import { WeekCard } from '@/components/home/WeekCard';
 import { DesktopToday } from '@/components/home/DesktopToday';
 import { ResourceBar } from '@/components/home/ResourceBar';
@@ -54,26 +55,39 @@ export default function HomePage() {
     </>
   );
 
+  // After the screen on both layouts, in the same place, so a window resize does not restart it.
+  const intro = (
+    <Suspense fallback={null}>
+      <HomeIntro />
+    </Suspense>
+  );
+
   if (desktop) {
     return (
-      <Screen header={<PageHeader title="Home" large />}>
-        <RulesNote />
-        <div className="wt-homegrid">
-          <HeroLevel />
-          <WeekCard week={week} />
-        </div>
-        <DesktopToday model={model} routines={due} hasRoutines={routines.length > 0} comeback={week.comeback} />
-        {feedBlock}
-      </Screen>
+      <>
+        <Screen header={<PageHeader title="Home" large />}>
+          <RulesNote />
+          <div className="wt-homegrid">
+            <HeroLevel />
+            <WeekCard week={week} />
+          </div>
+          <DesktopToday model={model} routines={due} hasRoutines={routines.length > 0} comeback={week.comeback} />
+          {feedBlock}
+        </Screen>
+        {intro}
+      </>
     );
   }
 
   return (
-    <Screen header={<ResourceBar week={week} />}>
-      <RulesNote />
-      <TodayCard model={model} comeback={week.comeback} />
-      <WeekCard week={week} />
-      {feedBlock}
-    </Screen>
+    <>
+      <Screen header={<ResourceBar week={week} />}>
+        <RulesNote />
+        <TodayCard model={model} comeback={week.comeback} />
+        <WeekCard week={week} />
+        {feedBlock}
+      </Screen>
+      {intro}
+    </>
   );
 }
