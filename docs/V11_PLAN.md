@@ -167,3 +167,44 @@ A runner who uses Levl asked for laps back. Laps were removed in v8 to keep the 
   - a routine's menu;
   - a routine's page;
   - Log while a workout is in progress.
+
+## Stage 2b: invite-only launch kit (invites from chat, Insights for a small group)
+
+### Signed-off decisions
+- **Invite-only again**, with the list managed from the owner's chat instead of Vercel edits.
+  - In invite mode a person may sign in when their email is in `ALLOWED_EMAILS` (kept) or in the app's invite list, Redis key `wt:invites`. That key is a set of trimmed, lowercased emails.
+  - The list is read only on the server at sign-in. It is never sent to a browser and no page shows it.
+- **`/api/invites`**, owner only by secret:
+  - Every call needs `Authorization: Bearer <INVITE_KEY>`, compared in constant time.
+  - With no `INVITE_KEY` set, or a missing or wrong one, the answer is 401 with no body detail.
+  - `GET` returns `{ emails: [...], count }`.
+  - `POST { add?: string[], remove?: string[] }`:
+    - validates each email;
+    - takes at most 200 per call;
+    - is idempotent;
+    - returns `{ added, removed, count }`.
+  - Calls are rate limited (a small in-memory limiter is enough).
+- **Insights for a small group:**
+  - The lock threshold is 1 while `SIGNUPS=invite`, and 5 when sign-ups are open.
+  - Still no names, sets or weights.
+  - The note reads "Small groups are shown while Levl is invite-only. No names, sets or weights."
+  - New numbers:
+    - **Activation:** signed in, set up, first workout, a second training day, active in week 2 after joining.
+    - **Last workout:** today, 1 to 7 days ago, 8 to 14 days ago, more than 14 days, never.
+    - **How workouts were made** (in range):
+      - started live;
+      - logged afterwards;
+      - runs with laps.
+
+      A new optional `source?: 'live' | 'log'` on saved workouts is set by Finish and by Log workout. It is validated on the server, and an old workout without it counts as live, so there is no migration.
+    - **Invites:** how many are invited, and how many of those have signed in. Counts only.
+
+### Tests (one per rule)
+- `canSignIn` with the union of both lists, ignoring case and spaces.
+- The invite route:
+  - refuses no key, a wrong key, and an unset `INVITE_KEY`;
+  - validates emails;
+  - add and remove are idempotent;
+  - refuses more than 200.
+- `source` is accepted and refused correctly, and is defaulted.
+- Each new Insights number, and the threshold switching with the mode.
