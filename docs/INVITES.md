@@ -15,7 +15,7 @@ Say "invite the new people". Claude then:
 2. **Compares** them with the invite list (`GET /api/invites`) and with the people already allowed.
 3. **Shows** the new names and the count. Nothing is added before the owner confirms.
 4. **Adds** the confirmed emails (`POST /api/invites` with `add`).
-5. **Writes one Gmail draft per person** in the owner's Gmail: the app link, "sign in with this Google account", and a line asking for feedback. The owner reads them and presses Send.
+5. **Writes one Gmail draft per person** in the owner's Gmail: the app link, "sign in with this Google account", and a line asking for feedback. Sign them "Ketan Damle", then "Kagadmodyaa Studio". The owner reads them and presses Send.
 6. **Records** the batch below: date and count only.
 
 ## Removing someone
