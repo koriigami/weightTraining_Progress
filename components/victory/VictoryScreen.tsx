@@ -376,7 +376,7 @@ function Victory({ finished }: { finished: Finished }) {
         <Card className="wt-switchrow">
           <span id="update-label">
             <b>Save weights to {before.current.title}</b>
-            <small>Use today&apos;s weights and reps as next time&apos;s plan.</small>
+            <small>{logged ? "Use these weights and reps as next time's plan." : <>Use today&apos;s weights and reps as next time&apos;s plan.</>}</small>
           </span>
           <button type="button" role="switch" aria-checked={updateOn} aria-labelledby="update-label" className="wt-switch" onClick={toggleUpdate}>
             <i />
