@@ -30,6 +30,17 @@ Both read Insights (People list and "Invited, not signed in yet") or the status 
 - **Nudge**: people under "Invited, not signed in yet", a few days after their invite, not on the day.
 - **Check-in**: people in the People list with "No workout yet".
 
+## Daily routine
+A scheduled Claude routine, "Levl invites: daily drafts" (`trig_01TeremNzEAGL1VLxHttv9Jh`), runs every day at 08:47 IST in a fresh session. It only creates Gmail drafts. It never sends, deletes or edits anything, and the owner presses Send.
+1. **Welcome**: anyone on the Tally form who is not on any list yet gets the welcome draft, then is added to the invite list. More than 10 new people in one run is treated as spam and skipped.
+2. **Nudge**: invited and not signed in, invited 2 or more days ago (or no recorded day).
+3. **Check-in**: signed in with no workout, joined 2 or more days ago.
+4. **WhatsApp list**: one extra draft to the owner with a pre-filled `wa.me` link per person who gave a phone number, so each message is one tap to send from the owner's own WhatsApp.
+
+Gmail is its memory: before drafting it searches for a draft or sent mail with the same subject to the same address and skips if one exists, so nobody is drafted twice. Subjects: "You're in: Levl early access", "Your Levl invite is ready", "How's Levl going?".
+
+The routine's prompt lives in the routine, not in this repo, because it names the owner's accounts. It needs the Gmail and Tally connectors and `INVITE_KEY` in the environment. This environment's API cannot attach connectors to a routine, so they are attached in the claude.ai routines page, and the routine stays paused until that is done.
+
 ## Removing someone
 Say "remove <email> from the invites". It goes through `POST /api/invites` with `remove`. Their saved data stays until they ask for it to be deleted (Privacy Policy).
 
