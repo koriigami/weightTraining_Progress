@@ -35,6 +35,25 @@ button { font-family: var(--display); font-size: 16px; height: 40px; padding: 0 
 button:focus-visible { outline: 3px solid #1d5fbf; outline-offset: 3px; }
 .note { font-size: 14px; color: var(--muted); margin: 0; }
 code { font-weight: 800; color: var(--ink); }
+[hidden] { display: none !important; }
+button:disabled { opacity: .65; cursor: progress; }
+button.ghost { color: var(--ink); background: #fffdf6; box-shadow: inset 0 0 0 2px var(--bevel), 0 3px 0 var(--bevel); }
+.opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+legend { font-weight: 800; padding: 0; margin-bottom: 8px; }
+.chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.chips label { position: relative; display: flex; }
+.chips input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.chips span { flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 56px; padding: 6px 8px; border-radius: 14px; background: #fffdf6; box-shadow: inset 0 0 0 2px var(--bevel); text-align: center; font-weight: 800; line-height: 1.2; }
+.chips small { font-size: 12px; font-weight: 600; color: var(--muted); }
+.chips input:checked + span { background: #eafbe2; box-shadow: inset 0 0 0 3px var(--green); }
+.chips input:focus-visible + span { outline: 3px solid #1d5fbf; outline-offset: 2px; }
+.chips input:disabled + span { opacity: .5; }
+figure button { align-self: stretch; margin-top: auto; }
+.dl-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.dl-row button { align-self: stretch; padding: 0 8px; }
+@media (min-width: 760px) { .dl-row { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); width: max-content; max-width: calc(100vw - 32px); background: var(--ink); color: #fff; font-weight: 700; font-size: 15px; padding: 12px 18px; border-radius: 14px; box-shadow: 0 10px 28px rgba(46, 31, 12, .35); z-index: 10; }
 </style>
 
 <main class="wrap">
@@ -44,16 +63,44 @@ code { font-weight: 800; color: var(--ink); }
     <p class="lede">Stories and an Instagram carousel made from the real app, filled with demo data. Every set ends with the waitlist.</p>
   </header>
 
+  <section class="card" aria-labelledby="dl-title">
+    <h2 id="dl-title">Download</h2>
+    <div class="dl-only" hidden>
+      <div class="opts">
+        <fieldset>
+          <legend>Format</legend>
+          <div class="chips">
+            <label><input type="radio" name="fmt" value="png" checked><span>PNG<small>Sharpest</small></span></label>
+            <label><input type="radio" name="fmt" value="jpg"><span>JPG<small>Smaller file</small></span></label>
+            <label><input type="radio" name="fmt" value="webp"><span>WebP<small id="webp-hint">Smallest file</small></span></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Size</legend>
+          <div class="chips">
+            <label><input type="radio" name="size" value="720"><span>720 px<small>For chats</small></span></label>
+            <label><input type="radio" name="size" value="1080" checked><span>1080 px<small>Instagram size</small></span></label>
+            <label><input type="radio" name="size" value="2160"><span>2160 px<small>Extra sharp</small></span></label>
+          </div>
+        </fieldset>
+      </div>
+    </div>
+    <p class="note dl-only" id="dl-dims" hidden>Stories come out at 1080 × 1920 and carousel slides at 1080 × 1350.</p>
+    <p class="note" id="dl-wait">Getting downloads ready...</p>
+    <p class="note" id="dl-off" hidden>Downloads only work with this page open on claude.ai or in the Claude app. Anywhere else, ask Claude in the chat to send you the images.</p>
+  </section>
+
   <section class="card">
     <h2>Stories, 9:16</h2>
     <p class="note">For WhatsApp Status and Instagram Stories. Post 1 to 5 in order. Story 5 comes in two versions: Instagram leaves room for your link sticker, WhatsApp prints the link.</p>
+    <button type="button" class="ghost dl-only" data-dl-all="story" hidden>Download all 6 stories (ZIP)</button>
     <div class="strip" aria-label="The stories">
-      <figure><img src="levl-story-1-game.png" alt="Your workouts, now a game. Home before today's workout, with Start." loading="eager"><figcaption>1. The hook<span>Home, today still to do</span></figcaption></figure>
-      <figure><img src="levl-story-2-rank.png" alt="Climb from E to S rank. The S-Rank Hunter card on the Rank Road." loading="eager"><figcaption>2. The goal<span>S-Rank Hunter</span></figcaption></figure>
-      <figure><img src="levl-story-3-laps.png" alt="Every lap counts. A run with five laps, the fastest marked." loading="eager"><figcaption>3. For runners<span>Laps</span></figcaption></figure>
-      <figure><img src="levl-story-4-log.png" alt="Log it after. The Log workout screen dated yesterday." loading="eager"><figcaption>4. No excuses<span>Log workout</span></figcaption></figure>
-      <figure><img src="levl-story-5-join-instagram.png" alt="Want an invite? Three steps and empty space for the link sticker." loading="eager"><figcaption>5. Instagram<span>Put the link sticker in the space under the steps</span></figcaption></figure>
-      <figure><img src="levl-story-5-join-whatsapp.png" alt="Want an invite? Three steps and the waitlist link." loading="eager"><figcaption>5. WhatsApp<span>Link printed, and in the caption</span></figcaption></figure>
+      <figure><img src="levl-story-1-game.png" alt="Your workouts, now a game. Home before today's workout, with Start." loading="eager"><figcaption>1. The hook<span>Home, today still to do</span></figcaption><button type="button" class="dl-only" data-dl="levl-story-1-game" hidden>Download</button></figure>
+      <figure><img src="levl-story-2-rank.png" alt="Climb from E to S rank. The S-Rank Hunter card on the Rank Road." loading="eager"><figcaption>2. The goal<span>S-Rank Hunter</span></figcaption><button type="button" class="dl-only" data-dl="levl-story-2-rank" hidden>Download</button></figure>
+      <figure><img src="levl-story-3-laps.png" alt="Every lap counts. A run with five laps, the fastest marked." loading="eager"><figcaption>3. For runners<span>Laps</span></figcaption><button type="button" class="dl-only" data-dl="levl-story-3-laps" hidden>Download</button></figure>
+      <figure><img src="levl-story-4-log.png" alt="Log it after. The Log workout screen dated yesterday." loading="eager"><figcaption>4. No excuses<span>Log workout</span></figcaption><button type="button" class="dl-only" data-dl="levl-story-4-log" hidden>Download</button></figure>
+      <figure><img src="levl-story-5-join-instagram.png" alt="Want an invite? Three steps and empty space for the link sticker." loading="eager"><figcaption>5. Instagram<span>Put the link sticker in the space under the steps</span></figcaption><button type="button" class="dl-only" data-dl="levl-story-5-join-instagram" hidden>Download</button></figure>
+      <figure><img src="levl-story-5-join-whatsapp.png" alt="Want an invite? Three steps and the waitlist link." loading="eager"><figcaption>5. WhatsApp<span>Link printed, and in the caption</span></figcaption><button type="button" class="dl-only" data-dl="levl-story-5-join-whatsapp" hidden>Download</button></figure>
     </div>
   </section>
 
@@ -68,6 +115,16 @@ code { font-weight: 800; color: var(--ink); }
       <img src="levl-carousel-5.png" alt="Slide 5: Log it after." loading="eager">
       <img src="levl-carousel-6.png" alt="Slide 6: Want an invite? Link in bio." loading="eager">
     </div>
+    <p class="note dl-only" hidden>Download one slide:</p>
+    <div class="dl-row dl-only" hidden>
+      <button type="button" data-dl="levl-carousel-1">Slide 1</button>
+      <button type="button" data-dl="levl-carousel-2">Slide 2</button>
+      <button type="button" data-dl="levl-carousel-3">Slide 3</button>
+      <button type="button" data-dl="levl-carousel-4">Slide 4</button>
+      <button type="button" data-dl="levl-carousel-5">Slide 5</button>
+      <button type="button" data-dl="levl-carousel-6">Slide 6</button>
+    </div>
+    <button type="button" class="ghost dl-only" data-dl-all="carousel" hidden>Download all 6 slides (ZIP)</button>
   </section>
 
   <section class="card">
@@ -145,7 +202,7 @@ If you trained already and forgot to start it, tap Log workout on Home and add i
     <section class="card">
       <h2>Save and post</h2>
       <ol>
-        <li>On a phone, press and hold an image, then Save image (on a computer, right-click and Save image as).</li>
+        <li><b>Download:</b> pick a format and size at the top, then press Download under a story or a slide number under the carousel. Confirm, and the image saves to your phone or computer. On an iPhone, pick Save Image in the share sheet to put it in Photos. PNG at 1080 px is what Instagram and WhatsApp use.</li>
         <li><b>Instagram story 5:</b> add a Link sticker with <code>https://tally.so/r/kdMyYM</code> in the empty space under the three steps. The Levl logo sits at the top, clear of Instagram's reply bar.</li>
         <li><b>WhatsApp Status:</b> post story 5 (WhatsApp) and paste the WhatsApp caption with it.</li>
         <li><b>Carousel:</b> put <code>tally.so/r/kdMyYM</code> in your Instagram bio before posting, then use the carousel caption.</li>
@@ -185,4 +242,156 @@ document.querySelectorAll('[data-copy]').forEach((b) => {
     try { navigator.clipboard.writeText(el.textContent).then(() => done('Copied'), select); } catch (e) { select(); }
   });
 });
+
+// Downloads. 720 and 1080 px come from the 1080 px renders shown on this page; 2160 px from
+// the 2x renders in 2x/, which are published with the artifact only (not kept in the repo).
+const BASE_H = { story: 1920, carousel: 1350 };
+const TYPES = { png: ['image/png'], jpg: ['image/jpeg', 0.92], webp: ['image/webp', 0.9] };
+const opts = { fmt: 'png', size: 1080 };
+let downloads = null;
+let busy = false;
+
+try {
+  const kept = JSON.parse(localStorage.getItem('levl-dl') || '{}');
+  if (TYPES[kept.fmt]) opts.fmt = kept.fmt;
+  if ([720, 1080, 2160].includes(kept.size)) opts.size = kept.size;
+} catch (e) {}
+
+let canWebp = false;
+try { canWebp = document.createElement('canvas').toDataURL('image/webp').startsWith('data:image/webp'); } catch (e) {}
+if (!canWebp) {
+  document.querySelector('input[value="webp"]').disabled = true;
+  document.getElementById('webp-hint').textContent = 'Not in this browser';
+  if (opts.fmt === 'webp') opts.fmt = 'png';
+}
+
+const showChoices = () => {
+  document.querySelector(`input[name="fmt"][value="${opts.fmt}"]`).checked = true;
+  document.querySelector(`input[name="size"][value="${opts.size}"]`).checked = true;
+  const h = (kind) => Math.round((BASE_H[kind] * opts.size) / 1080);
+  document.getElementById('dl-dims').textContent = `Stories come out at ${opts.size} × ${h('story')} and carousel slides at ${opts.size} × ${h('carousel')}.`;
+};
+document.querySelectorAll('input[name="fmt"], input[name="size"]').forEach((i) => {
+  i.addEventListener('change', () => {
+    if (i.name === 'fmt') opts.fmt = i.value; else opts.size = Number(i.value);
+    try { localStorage.setItem('levl-dl', JSON.stringify(opts)); } catch (e) {}
+    showChoices();
+  });
+});
+showChoices();
+
+let toastTimer = 0;
+const toast = (text) => {
+  let t = document.getElementById('toast');
+  if (!t) { t = document.createElement('p'); t.id = 'toast'; t.className = 'toast'; t.setAttribute('role', 'status'); document.body.append(t); }
+  t.textContent = text; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 5000);
+};
+
+const loadImage = (blob) => new Promise((ok, no) => {
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.onload = () => { URL.revokeObjectURL(url); ok(img); };
+  img.onerror = () => { URL.revokeObjectURL(url); no(new Error('decode')); };
+  img.src = url;
+});
+
+const canvasOf = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+
+// Halves the size until one last step finishes it, so small sizes stay crisp.
+function scale(img, w, h) {
+  let src = img, sw = img.naturalWidth, sh = img.naturalHeight;
+  while (sw / 2 >= w) {
+    const c = canvasOf(Math.round(sw / 2), Math.round(sh / 2));
+    const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(src, 0, 0, c.width, c.height);
+    src = c; sw = c.width; sh = c.height;
+  }
+  const c = canvasOf(w, h);
+  const x = c.getContext('2d');
+  x.fillStyle = '#ffffff'; x.fillRect(0, 0, w, h);
+  x.imageSmoothingQuality = 'high'; x.drawImage(src, 0, 0, w, h);
+  return c;
+}
+
+// One image as a file in the chosen format and size.
+async function makeFile(name) {
+  const kind = name.startsWith('levl-story') ? 'story' : 'carousel';
+  const w = opts.size, h = Math.round((BASE_H[kind] * w) / 1080);
+  const res = await fetch(w > 1080 ? `2x/${name}.png` : `${name}.png`);
+  if (!res.ok) throw new Error('fetch');
+  const png = await res.blob();
+  const filename = `${name}-${w}x${h}.${opts.fmt}`;
+  if (opts.fmt === 'png' && w !== 720) return { filename, data: png };
+  const [type, quality] = TYPES[opts.fmt];
+  const c = scale(await loadImage(png), w, h);
+  const data = await new Promise((ok) => c.toBlob(ok, type, quality));
+  if (!data || data.type !== type) throw new Error('encode');
+  return { filename, data };
+}
+
+let JSZipReady = null;
+const loadZip = () => JSZipReady || (JSZipReady = new Promise((ok, no) => {
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+  s.integrity = 'sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==';
+  s.crossOrigin = 'anonymous';
+  s.onload = () => ok(window.JSZip);
+  s.onerror = () => { JSZipReady = null; no(new Error('zip')); };
+  document.head.append(s);
+}));
+
+const turnOff = () => {
+  document.querySelectorAll('.dl-only').forEach((el) => { el.hidden = true; });
+  document.getElementById('dl-wait').hidden = true;
+  document.getElementById('dl-off').hidden = false;
+};
+
+// Runs one save at a time and reports the outcome on the button.
+async function run(button, prepare, zip) {
+  if (busy) { toast('Finish the download that is open first.'); return; }
+  busy = true;
+  const label = button.textContent;
+  const done = (t) => { button.textContent = t; setTimeout(() => { button.textContent = label; }, 1800); };
+  button.disabled = true; button.textContent = 'Preparing...';
+  try {
+    const file = await prepare();
+    button.textContent = 'Confirm to save';
+    await downloads.save(file);
+    done('Saved');
+  } catch (e) {
+    const code = e && e.code;
+    if (code === 'declined') done('Not saved');
+    else if (code === 'rate_limited') { done(label); toast('Finish the download that is open first, then try again.'); }
+    else if (code === 'too_large') { done(label); toast('That file is too big to save here. Pick a smaller size.'); }
+    else if (code === 'extension_not_enabled' || code === 'rejected_extension') { done(label); toast(zip ? 'ZIP files cannot be saved here. Download the images one at a time.' : 'This format cannot be saved here. Pick PNG or JPG.'); }
+    else if (['unavailable', 'not_granted', 'capability_disabled', 'capability_removed'].includes(code)) turnOff();
+    else if (e && e.message === 'encode') { done(label); toast('This browser cannot make that format. Pick PNG or JPG.'); }
+    else if (e && e.message === 'zip') { done(label); toast('Could not load the ZIP maker. Download the images one at a time.'); }
+    else { done(label); toast('Could not save that one. Try again.'); }
+  } finally {
+    button.disabled = false; busy = false;
+  }
+}
+
+document.querySelectorAll('[data-dl]').forEach((b) => {
+  b.addEventListener('click', () => run(b, () => makeFile(b.dataset.dl), false));
+});
+document.querySelectorAll('[data-dl-all]').forEach((b) => {
+  const kind = b.dataset.dlAll;
+  const names = [...document.querySelectorAll('[data-dl]')].map((x) => x.dataset.dl).filter((n) => n.startsWith(kind === 'story' ? 'levl-story' : 'levl-carousel'));
+  b.addEventListener('click', () => run(b, async () => {
+    const JSZip = await loadZip();
+    const zip = new JSZip();
+    for (const n of names) { const f = await makeFile(n); zip.file(f.filename, f.data); }
+    const data = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
+    return { filename: `levl-${kind === 'story' ? 'stories' : 'carousel'}-${opts.size}-${opts.fmt}.zip`, data };
+  }, true));
+});
+
+(async () => {
+  try { downloads = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch (e) { downloads = null; }
+  if (!downloads) { turnOff(); return; }
+  document.getElementById('dl-wait').hidden = true;
+  document.querySelectorAll('.dl-only').forEach((el) => { el.hidden = false; });
+})();
 </script>
