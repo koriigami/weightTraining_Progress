@@ -4,13 +4,15 @@
 //
 // A Session is a workout that has not been finished: a title, when it started,
 // and exercises whose sets carry a done flag. finish turns it into the payload
-// of the saveWorkout API action, keeping only the ticked sets.
+// of the saveWorkout API action, keeping only the ticked sets. The Edit and Log
+// screens work on a Session too, with no clock (see "Editing a saved workout"
+// and "Logging a workout done earlier").
 import { exerciseById, isCardioExercise } from '../data/exercises';
 import type { ExerciseDef } from '../data/exercises';
 import { SET_FIELDS } from './routineValidation';
 import { lastWorkoutSets } from './exerciseHistory';
 import { LAP_KM, LAP_SEC, closeLap, finishLaps, lapTotals, readLaps } from './laps';
-import { LIMITS, blankSet, findDuplicateExercise, workoutItemsFromRoutine, workoutTotals } from './routines';
+import { LIMITS, blankSet, findDuplicateExercise, setXp, workoutItemsFromRoutine, workoutTotals } from './routines';
 import type { ExerciseLookup, Lap, LoggedSet, PlanItem, Routine, SetPlan, WorkoutItem, WorkoutLog, WorkoutTotals } from './routines';
 
 export type Session = {
@@ -470,6 +472,14 @@ function cleanItems(source: WorkoutItem[], lookup: ExerciseLookup): { items: Wor
   return { items, ticked };
 }
 
+// True when every exercise is cardio (distance or intervals). An empty list is not.
+function isCardioOnly(items: WorkoutItem[], lookup: ExerciseLookup): boolean {
+  return items.length > 0 && items.every((i) => {
+    const e = lookup(i.exerciseId);
+    return e ? isCardioExercise(e) : false;
+  });
+}
+
 export function buildWorkoutInput(session: Session, opts: { now: Date; lookup?: ExerciseLookup; id?: string }): BuildResult {
   const lookup = opts.lookup ?? exerciseById;
   const { items, ticked } = cleanItems(session.items, lookup);
@@ -480,10 +490,7 @@ export function buildWorkoutInput(session: Session, opts: { now: Date; lookup?: 
   let started = Date.parse(session.startedAt);
   if (!Number.isFinite(started) || started > finishedAt.getTime()) started = finishedAt.getTime();
   // A cardio-only workout lasts at least as long as the minutes logged on it.
-  if (items.every((i) => {
-    const e = lookup(i.exerciseId);
-    return e ? isCardioExercise(e) : false;
-  })) {
+  if (isCardioOnly(items, lookup)) {
     const logged = workoutTotals(items, lookup).cardioMinutes * 60_000;
     if (logged > finishedAt.getTime() - started) started = finishedAt.getTime() - logged;
   }
@@ -580,6 +587,107 @@ export function buildWorkoutPatch(original: WorkoutLog, draft: EditDraft, lookup
   const after = draft.session.plan ?? [];
   if (JSON.stringify(before) !== JSON.stringify(after)) patch.plan = after;
   return { ok: true, patch };
+}
+
+// ---------------- Logging a workout done earlier ----------------
+// The Log screen is the Edit screen for a workout that is not saved yet. It works on
+// a Session that is never stored as the running workout, so logging never touches a
+// workout in progress. `when` is the time the workout finished, as in Edit.
+
+export type LogSource = { routine: Routine } | { cardio: string } | { exerciseIds: string[] };
+
+// An hour ago, rounded down to 5 minutes, as a local YYYY-MM-DDTHH:mm.
+export function defaultLogWhen(now: Date): string {
+  const t = new Date(now.getTime() - 3600_000);
+  t.setMinutes(t.getMinutes() - (t.getMinutes() % 5), 0, 0);
+  return localWhen(t);
+}
+
+// A set that has numbers is one that would earn XP: a rep, a hold, a minute of cardio.
+function setHasNumbers(e: ExerciseDef | undefined, s: LoggedSet): boolean {
+  return e ? setXp(e, s) > 0 : false;
+}
+
+// The sets with numbers ticked. `only` limits it to those exercises.
+function tickNumbered(session: Session, lookup: ExerciseLookup, only?: ReadonlySet<string>): Session {
+  const items = session.items.map((item) => {
+    if (only && !only.has(item.exerciseId)) return item;
+    const e = lookup(item.exerciseId);
+    return { ...item, sets: item.sets.map((s) => (setHasNumbers(e, s) ? { ...s, done: true } : s)) };
+  });
+  return { ...session, items };
+}
+
+// The draft of the Log screen, from a routine, a cardio activity or picked exercises.
+// Its title and start come from the default time, nothing follows a clock, and the
+// sets that have numbers come in ticked. A routine's planned sets are numbers. Picked
+// exercises get last time's numbers when a prefill is given, and an exercise with no
+// history keeps its blank set, unticked, so a placeholder never earns XP. A run or
+// ride starts blank: it counts once its Time is typed.
+export function logSession(source: LogSource, now: Date, lookup: ExerciseLookup = exerciseById, prefill?: Prefill): SessionResult {
+  const at = new Date(defaultLogWhen(now));
+  if ('routine' in source) return ok(tickNumbered(sessionFromRoutine(source.routine, at), lookup));
+  if ('cardio' in source) {
+    if (!CARDIO_CHOICES.some((c) => c.id === source.cardio)) return fail('That activity is not available.');
+    const r = cardioSession(source.cardio, at, lookup);
+    return r.ok ? ok(tidy({ ...r.session, follow: undefined })) : r;
+  }
+  const withHistory = new Set<string>();
+  const tracked: Prefill | undefined = prefill
+    ? (id, e) => {
+        const sets = prefill(id, e);
+        if (sets && sets.length > 0) withHistory.add(id);
+        return sets;
+      }
+    : undefined;
+  const r = customSession(at, source.exerciseIds, lookup, { prefill: tracked });
+  if (!r.ok) return r;
+  return ok(tickNumbered(tidy({ ...r.session, follow: undefined }), lookup, withHistory));
+}
+
+// The minutes of cardio on a cardio-only workout, or null when there is other work or none yet.
+// The Log screen's Duration follows it until the person uses the stepper.
+export function cardioMinutesLogged(session: Session, lookup: ExerciseLookup = exerciseById): number | null {
+  if (!isCardioOnly(session.items, lookup)) return null;
+  const minutes = workoutTotals(session.items, lookup).cardioMinutes;
+  return minutes > 0 ? minutes : null;
+}
+
+export type LogDraft = { when: string; minutes: number; notes: string; now: Date; lookup?: ExerciseLookup; id?: string };
+
+// The saveWorkout payload for a logged workout. `when` is the finish, the start is `when`
+// minus the minutes (at least the cardio minutes on a cardio-only workout), and the day
+// is the day of `when`. A time that has not happened yet is refused.
+export function buildLoggedWorkout(session: Session, draft: LogDraft): BuildResult {
+  const lookup = draft.lookup ?? exerciseById;
+  const finished = Date.parse(instantOf(draft.when));
+  if (!Number.isFinite(finished) || finished > draft.now.getTime()) return { ok: false, error: 'Pick a time that has already happened.' };
+  const { items, ticked } = cleanItems(session.items, lookup);
+  if (ticked === 0) return { ok: false, error: 'Tick at least one set first.' };
+  if (ticked > LIMITS.setsPerWorkout) return { ok: false, error: `A workout can have up to ${LIMITS.setsPerWorkout} sets.` };
+
+  let span = (Number.isFinite(draft.minutes) ? Math.max(1, Math.round(draft.minutes)) : 1) * 60_000;
+  if (isCardioOnly(items, lookup)) span = Math.max(span, workoutTotals(items, lookup).cardioMinutes * 60_000);
+  // The API takes a workout up to a day long.
+  if (span >= DAY_MS) span = DAY_MS - 60_000;
+
+  const title = session.title.trim().slice(0, 80) || defaultTitle(new Date(finished - span));
+  const notes = draft.notes.trim().slice(0, 1000);
+  return {
+    ok: true,
+    workout: {
+      id: draft.id ?? newWorkoutId(draft.now),
+      date: draft.when.slice(0, 10),
+      when: draft.when,
+      title,
+      ...(session.routineId && ID_RE.test(session.routineId) ? { routineId: session.routineId } : {}),
+      startedAt: new Date(finished - span).toISOString(),
+      finishedAt: new Date(finished).toISOString(),
+      items,
+      ...(notes ? { notes } : {}),
+      ...(session.plan && session.plan.length > 0 ? { plan: session.plan } : {}),
+    },
+  };
 }
 
 // ---------------- Saving to localStorage ----------------

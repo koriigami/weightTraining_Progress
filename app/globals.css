@@ -1679,6 +1679,21 @@ textarea.wt-input {
   font-weight: 800;
   vertical-align: 1px;
 }
+/* The gold "New" pill next to a menu item that was added recently. */
+.wt-newpill {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  margin-left: 10px;
+  border-radius: 12px;
+  background: var(--s-grad);
+  border: 1.5px solid var(--s-line);
+  color: var(--s-ink);
+  font-size: 12.5px;
+  font-weight: 800;
+  vertical-align: 2px;
+}
 /* Cardio tiles: the Start sheet's three and the Cardio picker's six. */
 .wt-acts {
   display: grid;
@@ -3578,6 +3593,14 @@ textarea.wt-input {
   text-align: center;
   border-style: dashed;
   background: rgba(255, 248, 232, 0.7);
+}
+/* Choose and Log workout in the Something else card: stacked, one width. */
+.wt-upcard-btns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  width: min(100%, 240px);
+  margin-top: auto;
 }
 .wt-feed {
   display: grid;

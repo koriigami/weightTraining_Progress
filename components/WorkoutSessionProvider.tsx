@@ -6,12 +6,15 @@ import * as feedback from '@/lib/feedback';
 import { instantiateRoutine, setXp, workoutItemsFromRoutine } from '@/lib/routines';
 import type { LoggedSet, Routine, WorkoutTotals } from '@/lib/routines';
 import * as S from '@/lib/session';
-import type { LapPatch, Removal, Session, SessionResult, SetPatch } from '@/lib/session';
+import type { LapPatch, Removal, Session, SessionResult, SetPatch, WorkoutInput } from '@/lib/session';
 import { useWakeLock } from '@/lib/useWakeLock';
 import { useProgress } from '@/components/ProgressProvider';
 import type { SaveWorkoutResult } from '@/components/ProgressProvider';
 
 export type FinishResult = SaveWorkoutResult;
+
+/** What the Victory screen shows: the saved workout, flagged when it was logged after the fact instead of finished live. */
+export type FinishedWorkout = Extract<FinishResult, { ok: true }> & { logged?: boolean };
 
 type WorkoutSessionValue = {
   /** The workout in progress, or null. Kept in localStorage per user, so a reload does not lose it. */
@@ -21,8 +24,8 @@ type WorkoutSessionValue = {
   /** Ticked sets, volume and XP so far (set XP only, without the daily bonus). */
   totals: WorkoutTotals;
   counts: { done: number; total: number; unticked: number };
-  /** The last workout finish() saved, for the Victory screen. Lives in memory only. */
-  lastFinished: Extract<FinishResult, { ok: true }> | null;
+  /** The last workout finish() or logWorkout() saved, for the Victory screen. Lives in memory only. */
+  lastFinished: FinishedWorkout | null;
   clearLastFinished: () => void;
 
   /** Start a workout from a routine. Returns an error message, or null. */
@@ -61,6 +64,12 @@ type WorkoutSessionValue = {
    * after, and the celebration events to play on the Victory screen.
    */
   finish: () => Promise<FinishResult>;
+  /**
+   * Saves a workout done earlier (the Log screen's payload from buildLoggedWorkout). Like
+   * finish() it holds the celebration back for the Victory screen, but it never reads or
+   * changes the workout in progress, so a live workout is untouched.
+   */
+  logWorkout: (workout: WorkoutInput) => Promise<FinishResult>;
 };
 
 const WorkoutSessionContext = createContext<WorkoutSessionValue | null>(null);
@@ -91,7 +100,7 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
 
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
-  const [lastFinished, setLastFinished] = useState<Extract<FinishResult, { ok: true }> | null>(null);
+  const [lastFinished, setLastFinished] = useState<FinishedWorkout | null>(null);
 
   const sessionRef = useRef<Session | null>(null);
   const userRef = useRef<string | null>(userId);
@@ -357,6 +366,16 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
     return run;
   }, [commit, saveWorkout]);
 
+  const logWorkout = useCallback(
+    async (workout: WorkoutInput): Promise<FinishResult> => {
+      const saved = await saveWorkout(workout, { celebrate: false });
+      if (!saved.ok) return saved;
+      setLastFinished({ ...saved, logged: true });
+      return saved;
+    },
+    [saveWorkout]
+  );
+
   // Time on a cardio card follows the clock until it is typed in.
   const following = Boolean(session?.follow?.length);
   useEffect(() => {
@@ -406,6 +425,7 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
     setItemNotes,
     discard,
     finish,
+    logWorkout,
   };
 
   return <WorkoutSessionContext.Provider value={value}>{children}</WorkoutSessionContext.Provider>;

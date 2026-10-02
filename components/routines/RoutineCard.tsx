@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Check, ChevronRight, Ellipsis, Eye, Pencil, Play, Plus, Trash2 } from 'lucide-react';
 import type { Routine } from '@/lib/routines';
 import { duplicateRoutine, newRoutineId } from '@/lib/routineDraft';
@@ -19,10 +20,11 @@ import { useStartRoutine } from './useStartRoutine';
 /**
  * A saved routine: the title opens the full preview, every exercise is listed
  * with its sets and weight (six rows, then "+N more"), and Edit and Start sit
- * at the bottom. The three dots open Duplicate and Delete routine. `doneThisWeek`
- * feeds the "1 of 2" chip when it has a weekly count.
+ * at the bottom. The three dots open Log workout, Duplicate and Delete routine.
+ * `doneThisWeek` feeds the "1 of 2" chip when it has a weekly count.
  */
 export function RoutineCard({ routine, doneThisWeek }: { routine: Routine; doneThisWeek: number }) {
+  const router = useRouter();
   const { lookup, saveRoutine, deleteRoutine, showToast } = useProgress();
   const start = useStartRoutine();
   const target = routine.timesPerWeek;
@@ -77,7 +79,7 @@ export function RoutineCard({ routine, doneThisWeek }: { routine: Routine; doneT
           Start
         </Button>
       </div>
-      <RoutineMenu open={menu} onClose={() => setMenu(false)} title={routine.title} onDuplicate={duplicate} onDelete={() => setConfirm(true)} />
+      <RoutineMenu open={menu} onClose={() => setMenu(false)} title={routine.title} onLog={() => router.push(`/workout/log?routine=${encodeURIComponent(routine.id)}`)} onDuplicate={duplicate} onDelete={() => setConfirm(true)} />
       <GameModal
         open={confirm}
         strict

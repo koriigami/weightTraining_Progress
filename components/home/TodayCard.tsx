@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Bike, Check, ChevronRight, ClipboardList, Play, Plus, Sparkles } from 'lucide-react';
+import { Bike, Check, ChevronRight, ClipboardList, History, Play, Plus, Sparkles } from 'lucide-react';
 import { fmtMinutes } from '@/lib/liveStats';
 import { WORKOUT_XP } from '@/lib/routines';
 import { routineLine, weekChip } from '@/lib/todayCard';
@@ -63,24 +63,32 @@ export function ComebackHint() {
   );
 }
 
-/** Other routine, Cardio and Custom workout: starting something else is one tap away. */
+/**
+ * Other routine, Cardio and Custom workout: starting something else is one tap away.
+ * Under them, Log workout adds one you already did.
+ */
 function Tiles() {
-  const { openStart, openCardio, openCustom } = useShell();
+  const { openStart, openLog, openCardio, openCustom } = useShell();
   return (
-    <div className="wt-tc-alt">
-      <button type="button" onClick={openStart}>
-        <ClipboardList size={20} aria-hidden="true" />
-        Other routine
-      </button>
-      <button type="button" onClick={() => openCardio()}>
-        <Bike size={20} aria-hidden="true" />
-        Cardio
-      </button>
-      <button type="button" onClick={openCustom}>
-        <Plus size={20} aria-hidden="true" />
-        Custom workout
-      </button>
-    </div>
+    <>
+      <div className="wt-tc-alt">
+        <button type="button" onClick={openStart}>
+          <ClipboardList size={20} aria-hidden="true" />
+          Other routine
+        </button>
+        <button type="button" onClick={() => openCardio()}>
+          <Bike size={20} aria-hidden="true" />
+          Cardio
+        </button>
+        <button type="button" onClick={() => openCustom()}>
+          <Plus size={20} aria-hidden="true" />
+          Custom workout
+        </button>
+      </div>
+      <Button variant="secondary" block icon={<History size={18} aria-hidden="true" />} onClick={openLog}>
+        Log workout
+      </Button>
+    </>
   );
 }
 
@@ -104,8 +112,8 @@ function DoneEntry({ w }: { w: DoneWorkout }) {
 /**
  * Phone: the Today card. Ready leads with the routine that is due and a normal-size
  * Start. Done today is the same card with each finished workout, its XP and a View link.
- * The three tiles stay in both. After a week with no training day a calm comeback
- * hint sits above them.
+ * The three tiles and the Log workout button stay in both. After a week with no
+ * training day a calm comeback hint sits above them.
  */
 export function TodayCard({ model, comeback = false }: { model: TodayModel; comeback?: boolean }) {
   const start = useStartRoutine();

@@ -15,6 +15,7 @@ import { CardioSheet } from '@/components/nav/CardioSheet';
 import { CustomWorkoutPicker } from '@/components/nav/CustomWorkoutPicker';
 import { SignOutDialog } from '@/components/nav/SignOutDialog';
 import { ShellContext } from '@/components/nav/ShellContext';
+import type { StartMode } from '@/components/nav/ShellContext';
 import { isTabRoot } from '@/components/nav/items';
 import { cn } from '@/components/ui/cn';
 
@@ -37,10 +38,10 @@ function Frame({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { loading, authorized, prefs, showToast } = useProgress();
   const { session } = useWorkoutSession();
-  const [startOpen, setStartOpen] = useState(false);
-  const [customOpen, setCustomOpen] = useState(false);
+  const [start, setStart] = useState<{ open: boolean; mode: StartMode }>({ open: false, mode: 'start' });
+  const [custom, setCustom] = useState<{ open: boolean; mode: StartMode }>({ open: false, mode: 'start' });
   // `key` makes the Cardio sheet start fresh (with its highlight) each time it opens.
-  const [cardio, setCardio] = useState<{ open: boolean; key: number; act: string | null }>({ open: false, key: 0, act: null });
+  const [cardio, setCardio] = useState<{ open: boolean; key: number; act: string | null; mode: StartMode }>({ open: false, key: 0, act: null, mode: 'start' });
   const [signOutOpen, setSignOutOpen] = useState(false);
 
   // Hold the page back until the first load finishes, so nobody sees an empty
@@ -65,18 +66,24 @@ function Frame({ children }: { children: React.ReactNode }) {
   running.current = Boolean(session);
   const value = useMemo(() => {
     // A workout in progress has to be finished or discarded before another starts.
-    const busy = () => {
-      if (!running.current) return false;
+    // Logging one you already did never touches it, so only start mode is blocked.
+    const busy = (mode: StartMode) => {
+      if (mode === 'log' || !running.current) return false;
       showToast('Finish or discard your current workout first.');
       return true;
     };
+    // Handlers are sometimes passed straight to onClick, so anything but 'log' means start.
+    const modeOf = (mode?: unknown): StartMode => (mode === 'log' ? 'log' : 'start');
     return {
-      openStart: () => setStartOpen(true),
-      openCustom: () => {
-        if (!busy()) setCustomOpen(true);
+      openStart: () => setStart({ open: true, mode: 'start' }),
+      openLog: () => setStart({ open: true, mode: 'log' }),
+      openCustom: (mode?: StartMode) => {
+        const m = modeOf(mode);
+        if (!busy(m)) setCustom({ open: true, mode: m });
       },
-      openCardio: (act?: string) => {
-        if (!busy()) setCardio((c) => ({ open: true, key: c.key + 1, act: act ?? null }));
+      openCardio: (act?: string, mode?: StartMode) => {
+        const m = modeOf(mode);
+        if (!busy(m)) setCardio((c) => ({ open: true, key: c.key + 1, act: typeof act === 'string' ? act : null, mode: m }));
       },
       askSignOut: () => setSignOutOpen(true),
     };
@@ -94,9 +101,9 @@ function Frame({ children }: { children: React.ReactNode }) {
         </main>
         {!bare && tabs && <TabBar onStart={value.openStart} showMini={showMini} />}
       </div>
-      <StartSheet open={startOpen} onClose={() => setStartOpen(false)} />
-      <CustomWorkoutPicker open={customOpen} onClose={() => setCustomOpen(false)} />
-      <CardioSheet key={cardio.key} open={cardio.open} initial={cardio.act} onClose={() => setCardio((c) => ({ ...c, open: false }))} />
+      <StartSheet open={start.open} mode={start.mode} onClose={() => setStart((s) => ({ ...s, open: false }))} />
+      <CustomWorkoutPicker open={custom.open} mode={custom.mode} onClose={() => setCustom((c) => ({ ...c, open: false }))} />
+      <CardioSheet key={cardio.key} open={cardio.open} mode={cardio.mode} initial={cardio.act} onClose={() => setCardio((c) => ({ ...c, open: false }))} />
       <SignOutDialog open={signOutOpen} onClose={() => setSignOutOpen(false)} />
     </ShellContext.Provider>
   );

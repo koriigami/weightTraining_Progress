@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Bike, ChevronRight, ClipboardList, Footprints, PersonStanding, Play, Plus } from 'lucide-react';
+import { Bike, ChevronRight, ClipboardList, Footprints, History, PersonStanding, Play, Plus } from 'lucide-react';
 import { estimateMinutes } from '@/lib/routines';
 import { upNextRoutines } from '@/lib/week';
 import { useToday } from '@/lib/useToday';
@@ -10,10 +10,12 @@ import { useElapsed, useWorkoutSession } from '@/components/WorkoutSessionProvid
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { Sheet, useSheet } from '@/components/ui/Sheet';
 import { useShell } from './ShellContext';
+import type { StartMode } from './ShellContext';
 
 const MAX_ROUTINES = 3;
 
-function StartBody() {
+function StartBody({ mode }: { mode: StartMode }) {
+  const log = mode === 'log';
   const router = useRouter();
   const { closeThen } = useSheet();
   const { routines, workouts, lookup, showToast } = useProgress();
@@ -34,7 +36,12 @@ function StartBody() {
     closeThen(() => router.push('/workout'));
   }
 
-  if (ws.session) {
+  // Log: open the Log screen for a routine once the sheet has closed. It never touches a workout in progress.
+  function logRoutine(id: string) {
+    closeThen(() => router.push(`/workout/log?routine=${encodeURIComponent(id)}`));
+  }
+
+  if (ws.session && !log) {
     return (
       <div className="wt-stack" style={{ gap: 12 }}>
         <p className="wt-sheet-desc" style={{ margin: 0 }}>
@@ -91,9 +98,15 @@ function StartBody() {
                     {r.items.length} {r.items.length === 1 ? 'exercise' : 'exercises'} · about {estimateMinutes(r.items, lookup)} min
                   </small>
                 </div>
-                <Button size="sm" icon={<Play size={14} fill="currentColor" aria-hidden="true" />} aria-label={`Start ${r.title}`} onClick={() => begin(() => ws.start(r.id))}>
-                  Start
-                </Button>
+                {log ? (
+                  <Button size="sm" variant="secondary" icon={<History size={14} aria-hidden="true" />} aria-label={`Log ${r.title}`} onClick={() => logRoutine(r.id)}>
+                    Log
+                  </Button>
+                ) : (
+                  <Button size="sm" icon={<Play size={14} fill="currentColor" aria-hidden="true" />} aria-label={`Start ${r.title}`} onClick={() => begin(() => ws.start(r.id))}>
+                    Start
+                  </Button>
+                )}
               </div>
             ))}
           </div>
@@ -109,20 +122,20 @@ function StartBody() {
       </h3>
       <div className="wt-acts" style={{ marginTop: 8 }}>
         {cardio.map((c) => (
-          <button key={c.id} type="button" className="wt-act" onClick={() => closeThen(() => openCardio(c.id))}>
+          <button key={c.id} type="button" className="wt-act" onClick={() => closeThen(() => openCardio(c.id, mode))}>
             <span className="ib">{c.icon}</span>
             {c.label}
           </button>
         ))}
       </div>
 
-      <button type="button" className="wt-startrow wt-customrow" onClick={() => closeThen(openCustom)}>
+      <button type="button" className="wt-startrow wt-customrow" onClick={() => closeThen(() => openCustom(mode))}>
         <span className="ib">
           <Plus size={22} aria-hidden="true" />
         </span>
         <span className="grow">
           <b>Custom workout</b>
-          <small>Pick exercises, then start</small>
+          <small>{log ? 'Pick exercises, then log' : 'Pick exercises, then start'}</small>
         </span>
         <ChevronRight size={18} aria-hidden="true" />
       </button>
@@ -130,11 +143,15 @@ function StartBody() {
   );
 }
 
-/** Your routines with Start, the Cardio tiles, and Custom workout. */
-export function StartSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+/**
+ * Your routines with Start, the Cardio tiles, and Custom workout. In log mode it is the
+ * same sheet, "Log a workout", with Log on each routine, and it shows the list even while
+ * a workout is in progress.
+ */
+export function StartSheet({ open, mode = 'start', onClose }: { open: boolean; mode?: StartMode; onClose: () => void }) {
   return (
-    <Sheet open={open} onClose={onClose} title="Start a workout">
-      <StartBody />
+    <Sheet open={open} onClose={onClose} title={mode === 'log' ? 'Log a workout' : 'Start a workout'}>
+      <StartBody mode={mode} />
     </Sheet>
   );
 }

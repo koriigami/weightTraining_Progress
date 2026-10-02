@@ -164,6 +164,29 @@ Tick these on each screen below, at 390 px and at 1440 px.
       tap adds one lap. Typing a Time removes the Lap button and the running row
       and keeps the laps.
 
+## Log workout `/workout/log`
+
+- [ ] Home has a gold full-width "Log workout" button under the three tiles, before and after
+      today's workout. On desktop the Something else card has Choose and Log workout stacked at
+      one width.
+- [ ] It opens "Log a workout": your routines with a small gold Log button, Run, Walk and Ride,
+      and "Custom workout, Pick exercises, then log". The same sheet lists routines while a
+      workout is running.
+- [ ] Run, Walk or Ride opens the Cardio sheet ("Pick an activity, then log.") with a green Log
+      workout button. Custom workout opens the picker with "Log workout · N".
+- [ ] A routine's three-dot menu starts with "Log workout" and a gold New pill (it goes away on
+      15 November 2026). A routine's page has Edit, Log and Start, three buttons of one width.
+- [ ] The Log screen is the Edit screen, titled "Log workout", with Cancel and Save and no "XP is
+      worked out again" line and no Delete. The date and time start an hour ago, Duration starts at
+      the routine's estimate, and sets that have numbers are ticked.
+- [ ] A Run: type a Time and a distance and the Duration follows the Time until you use the
+      stepper. "+ Add lap" adds rows. Nothing counts until the Time is typed.
+- [ ] Change the date to yesterday and Save: the Victory screen plays (XP, level, badge moments),
+      "Save weights to <routine>" is off, and the workout page shows yesterday. A time that has not
+      happened yet is refused with "Pick a time that has already happened."
+- [ ] Log while a workout is running: it saves, and the running workout and its mini bar are
+      exactly as they were.
+
 ## Workout page, edit and delete `/workout/view?id=`
 
 - [ ] Open a workout from Home or the Profile feed. The page shows
@@ -348,3 +371,13 @@ Automated checks fake the clock, so check these by hand after a deploy:
 - Tap Lap with a thumb while moving: one tap adds one lap, and two quick taps add one.
 - Finish, open the workout, and check the laps, the summary line and the chart. Open Edit,
   correct a time with the keyboard (`m:ss` works on the phone keyboard) and save.
+
+## Log workout on a real phone
+
+- Pick the date in the calendar modal on a real phone (iPhone Safari and Android Chrome): the
+  day grid, the hour and minute boxes and am or pm work with a thumb and the keyboard, and Done
+  puts the chosen day on the Log screen.
+- Log a routine for yesterday, Save, and check the Victory screen, the Home week strip and the
+  workout page. Open the workout and check it shows yesterday and the chosen time.
+- Start a workout, switch to Home, and log another one from the Log workout button. Resume the
+  first one: nothing in it has changed.

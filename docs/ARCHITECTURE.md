@@ -95,6 +95,47 @@ ticked sets. The workout stays in progress until the save succeeds. It resolves
 to the saved workout, an XP snapshot before and after, and the celebration
 events the workout caused. Those events are not played yet.
 
+### Logging a workout done earlier
+
+Log workout adds a workout the person already did. It starts in three places only: a button
+on Home (`TodayCard`'s tiles on the phone, the Something else card on desktop), "Log workout"
+in a routine's three-dot menu (with a New pill until 15 November 2026, `.wt-newpill`), and
+"Log" on a routine's page. The shell has `openLog()` (the Start sheet in log mode, titled
+"Log a workout") and a `mode` for `openCardio` and `openCustom`; the StartSheet,
+CardioSheet and CustomWorkoutPicker take `mode: 'start' | 'log'`. The "finish or discard your
+workout first" block in `AppShell` applies to start mode only, and the log-mode Start sheet
+lists routines even while a workout is running.
+
+Every path ends at `/workout/log` (a static page, like `/workout/edit`), which reads
+`?routine=<id>`, `?cardio=<exercise id>` or `?ex=a,b,c`. `components/workout/LogWorkout.tsx`
+builds the draft once from the data as it is on opening, with `logSession` in `lib/session.ts`:
+
+- from a routine (`sessionFromRoutine`), a cardio activity (`cardioSession`, no clock follows)
+  or picked exercises (`customSession` with last time's numbers when the prefill pref is on);
+- sets that have numbers (they would earn XP: `setXp > 0`) come in ticked, and a blank set stays
+  unticked. A picked exercise with no history keeps its blank set unticked, so a placeholder never
+  earns XP. A run counts once its Time is typed;
+- an unknown routine shows a not-found card, and a bad activity or an empty pick says why.
+
+The form body is shared with Edit workout, not copied: `components/workout/WorkoutForm.tsx`
+(title, Date and time with its modal, Duration, exercise blocks with laps, Add exercise, Notes,
+the exercise menu, the picker and the info sheet) plus `useWorkoutDraft` (the session and a ref
+to the latest copy). Edit passes its info line, its Delete block and its own empty text; Log passes
+none of the first two. `when` is the time the workout finished, as in Edit, and starts an hour ago
+rounded down to 5 minutes (`defaultLogWhen`). Duration starts at `estimateMinutes` of the draft and,
+for a cardio-only log, follows the cardio Time (`cardioMinutesLogged`) until the stepper is used.
+
+Save runs `buildLoggedWorkout` (the day is the day of `when`, the start is `when` minus the
+minutes and at least the cardio minutes on a cardio-only workout, a time that has not happened
+yet is refused, the plan is kept as Finish keeps it) and then `logWorkout(input)` in the
+`WorkoutSessionProvider`. It mirrors `finish()`: `saveWorkout` with `celebrate: false`, then
+`lastFinished` is set with `logged: true`, then the route is replaced with `/workout/done`.
+It never reads or writes the workout in progress, so a live workout is untouched. XP is derived
+as ever, so the workout counts on the chosen day and rescoring is the same as for any edit. On
+Victory, a logged workout starts with "Save weights to <routine>" off and applies nothing by itself.
+There is no stored-state change, so no migration and no backup key. A Log screen left half done is
+not kept.
+
 ### Laps on a run
 
 A distance cardio set (`distance_time`) can carry `laps?: Lap[]`, with
@@ -331,7 +372,8 @@ session says `isOwner`, then fetches `GET /api/insights?range=4w|12w|all`.
 - Every route is a static shell. Pages that depend on a person's routine ids
   (`/routine/[id]`) return an empty `generateStaticParams` so Next prerenders the
   shell once. A saved workout is opened by query, `/workout/view?id=` and
-  `/workout/edit?id=`, so those pages stay static too. `/workout/settings` holds the
+  `/workout/edit?id=`, and a workout to log by `/workout/log?routine=`, `?cardio=` or `?ex=`,
+  so those pages stay static too. `/workout/settings` holds the
   workout settings, and `/insights` the owner's numbers. The ready-made routine previews (`/explore/[id]`) are prerendered
   for real.
 - `Screen` and `PageHeader` (`components/ui/`) give every page the same

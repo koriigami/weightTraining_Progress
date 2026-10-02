@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Check, Pencil, Play } from 'lucide-react';
+import { Check, History, Pencil, Play } from 'lucide-react';
 import { MUSCLES } from '@/data/exercises';
 import { musclesOfExercises } from '@/lib/muscles';
 import { fitsEquipment, isStarterAdded } from '@/lib/explore';
@@ -25,7 +25,7 @@ import { useStartRoutine } from './useStartRoutine';
 
 /**
  * The full preview of a routine: every exercise with every set, a muscle map,
- * and the main action. `kind` is "mine" for a saved routine (Edit, Start routine)
+ * and the main action. `kind` is "mine" for a saved routine (Edit, Log, Start)
  * or "starter" for a ready-made one (Start, Save routine).
  */
 export function RoutinePreview({ routine, kind }: { routine: Routine; kind: 'mine' | 'starter' }) {
@@ -67,8 +67,11 @@ export function RoutinePreview({ routine, kind }: { routine: Routine; kind: 'min
       <ButtonLink href={`/routine/${routine.id}`} variant="secondary" icon={<Pencil size={18} aria-hidden="true" />}>
         Edit
       </ButtonLink>
+      <ButtonLink href={`/workout/log?routine=${encodeURIComponent(routine.id)}`} variant="secondary" icon={<History size={18} aria-hidden="true" />}>
+        Log
+      </ButtonLink>
       <Button icon={<Play size={16} fill="currentColor" aria-hidden="true" />} onClick={() => startSaved(routine.id)}>
-        Start routine
+        Start
       </Button>
     </div>
   ) : (

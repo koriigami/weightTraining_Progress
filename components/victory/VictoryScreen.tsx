@@ -142,14 +142,17 @@ function Victory({ finished }: { finished: Finished }) {
   const routine = saved.routineId ? routines.find((r) => r.id === saved.routineId) : undefined;
   const before = useRef<Routine | null>(routine ?? null);
   const showUpdate = useMemo(() => Boolean(before.current && routineWouldChange(before.current, saved)), [saved]);
-  const [updateOn, setUpdateOn] = useState(true);
+  // A workout logged after the fact starts with the switch off and applies nothing: an old
+  // workout's weights should not overwrite the routine.
+  const logged = Boolean(finished.logged);
+  const [updateOn, setUpdateOn] = useState(!logged);
   const appliedFirst = useRef(false);
   useEffect(() => {
     // On by default, like the design: the routine takes today's weights and reps. The switch undoes it.
-    if (appliedFirst.current || !showUpdate || !before.current) return;
+    if (logged || appliedFirst.current || !showUpdate || !before.current) return;
     appliedFirst.current = true;
     void saveRoutine(updateRoutineFromWorkout(before.current, saved)).then((error) => error && showToast(error));
-  }, [showUpdate, saved, saveRoutine, showToast]);
+  }, [logged, showUpdate, saved, saveRoutine, showToast]);
 
   function toggleUpdate() {
     if (!before.current) return;

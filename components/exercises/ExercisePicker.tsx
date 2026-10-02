@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Play, Plus } from 'lucide-react';
+import { History, Play, Plus } from 'lucide-react';
 import { EXERCISES, exerciseById } from '@/data/exercises';
 import type { Muscle } from '@/data/exercises';
 import { emptyFilters } from '@/lib/exerciseFilter';
@@ -35,11 +35,13 @@ type PickerProps = {
   onReplace: (id: string) => void;
   /** start mode: called with the picked ids once the picker has closed. */
   onStart?: (ids: string[]) => void;
+  /** start mode: the pinned button says "Log workout · N" instead of "Start workout · N". */
+  log?: boolean;
 };
 
 const TITLES = { add: 'Add exercise', replace: 'Replace exercise', start: 'Custom workout' } as const;
 
-function PickerBody({ mode, inLabel, listName, inList, initialMuscles, onAdd, onReplace, onStart, close, closeThen }: Omit<PickerProps, 'open' | 'onClose'> & { close: () => void; closeThen: (fn: () => void) => void }) {
+function PickerBody({ mode, inLabel, listName, inList, initialMuscles, onAdd, onReplace, onStart, log, close, closeThen }: Omit<PickerProps, 'open' | 'onClose'> & { close: () => void; closeThen: (fn: () => void) => void }) {
   const { customExercises, lookup, showToast } = useProgress();
   const [filters, setFilters] = useState<Filters>(() => ({ ...emptyFilters(), muscles: initialMuscles ?? [] }));
   const [selected, setSelected] = useState<string[]>([]);
@@ -106,8 +108,8 @@ function PickerBody({ mode, inLabel, listName, inList, initialMuscles, onAdd, on
       )}
       {n > 0 && mode === 'start' && (
         <div className="wt-foot">
-          <Button size="lg" icon={<Play size={20} fill="currentColor" aria-hidden="true" />} onClick={() => closeThen(() => onStart?.(selected))}>
-            Start workout · {n}
+          <Button size="lg" icon={log ? <History size={20} aria-hidden="true" /> : <Play size={20} fill="currentColor" aria-hidden="true" />} onClick={() => closeThen(() => onStart?.(selected))}>
+            {log ? 'Log workout' : 'Start workout'} · {n}
           </Button>
         </div>
       )}
@@ -119,9 +121,10 @@ function PickerBody({ mode, inLabel, listName, inList, initialMuscles, onAdd, on
 
 /**
  * The full-screen exercise picker: search, filters, the list, and "Add N
- * exercises" (or, starting a custom workout, "Start workout · N") pinned at the
- * bottom once something is picked. Exercises already in the routine or workout
- * are marked and cannot be picked twice. Esc, Cancel and the Back button close it.
+ * exercises" (or, starting a custom workout, "Start workout · N", or "Log workout · N"
+ * for one already done) pinned at the bottom once something is picked. Exercises
+ * already in the routine or workout are marked and cannot be picked twice. Esc,
+ * Cancel and the Back button close it.
  */
 export function ExercisePicker(props: PickerProps) {
   const { open, onClose, ...body } = props;

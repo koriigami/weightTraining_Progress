@@ -65,11 +65,12 @@ Every route is prerendered as a static shell. Data is read on the client.
 | `/explore`, `/explore/[id]` | Ready-made routines and their previews |
 | `/exercises` | The exercise library (desktop sidebar item) |
 | `/routine/new`, `/routine/[id]` | Routine editor (create, edit, delete) |
-| `/routine/[id]/preview` | Every set of a routine, with Start |
+| `/routine/[id]/preview` | Every set of a routine, with Edit, Log and Start |
 | `/workout` | Log a workout |
 | `/workout/settings` | Workout settings: sounds, vibration, keep screen on, fill in last time |
 | `/workout/done` | Victory, then the reward moments |
 | `/workout/view?id=`, `/workout/edit?id=` | A finished workout, and its editor |
+| `/workout/log?routine=`, `?cardio=`, `?ex=` | Log workout: add a workout you already did, then Victory |
 | `/rank` | Rank Road and Badges |
 | `/profile` | Stats, goals, weight, this month, workouts |
 | `/stats` | Body heat map and sets per muscle |

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Play, Plus } from 'lucide-react';
+import { History, Play, Plus } from 'lucide-react';
 import { routineWeekLine } from '@/lib/todayCard';
 import type { TodayModel } from '@/lib/todayCard';
 import type { UpNextItem } from '@/lib/week';
@@ -22,7 +22,7 @@ const SLOTS = 3;
  */
 export function DesktopToday({ model, routines, hasRoutines, comeback = false }: { model: TodayModel; routines: UpNextItem[]; hasRoutines: boolean; comeback?: boolean }) {
   const start = useStartRoutine();
-  const { openStart } = useShell();
+  const { openStart, openLog } = useShell();
 
   const routineCard = (it: UpNextItem) => (
     <Card key={it.routine.id} as="article" className="wt-upcard" aria-label={it.routine.title}>
@@ -38,10 +38,15 @@ export function DesktopToday({ model, routines, hasRoutines, comeback = false }:
   const other = (
     <Card key="other" as="article" className="wt-upcard empty" aria-label="Something else">
       <h3>Something else</h3>
-      <small className="wt-upcard-meta">Another routine, cardio or a custom workout.</small>
-      <Button variant="secondary" icon={<Plus size={16} aria-hidden="true" />} onClick={openStart}>
-        Choose
-      </Button>
+      <small className="wt-upcard-meta">Another routine, cardio or a custom workout, or one you already did.</small>
+      <div className="wt-upcard-btns">
+        <Button variant="secondary" icon={<Plus size={16} aria-hidden="true" />} onClick={openStart}>
+          Choose
+        </Button>
+        <Button variant="secondary" icon={<History size={16} aria-hidden="true" />} onClick={openLog}>
+          Log workout
+        </Button>
+      </div>
     </Card>
   );
 
