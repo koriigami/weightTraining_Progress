@@ -41,6 +41,7 @@ There is no linter yet (`npm run lint` is not set up). `tsc` is the static check
 ## Conventions
 - **No em dashes anywhere**: code, comments, copy, docs, commit messages. `npm run check:dashes` enforces it.
 - Copy is plain and specific, written from the person's side. Buttons say what happens.
+- Design changes start from the current screen and change the least. Buttons keep the app's sizes (48 px, 38 px small, 56 px large) and buttons side by side are always equal width. The full list is in the `levl-board` skill.
 - Every page is static (`○` in the build output). Details use query params (`/workout/view?id=`), not dynamic segments that need the server.
 - `lib/` is pure logic with relative imports. Components use `@/` imports. Match the comment density and naming of the file you are in.
 - CSS classes use the `wt-` prefix and the tokens at the top of `app/globals.css`. One light look, no dark mode.
