@@ -15,7 +15,7 @@ Say "invite the new people". Claude then:
 2. **Compares** them with the invite list (`GET /api/invites`) and with the people already allowed.
 3. **Shows** the new names and the count. Nothing is added before the owner confirms.
 4. **Adds** the confirmed emails (`POST /api/invites` with `add`).
-5. **Writes one Gmail draft per person** in the owner's Gmail: the app link, "sign in with this Google account", and a line asking for feedback. Sign them "Ketan Damle", then "Kagadmodyaa Studio". Send them as HTML with the app link as the text "Open Levl", so no long URL shows (Gmail wraps raw links in a long google.com/url redirect). The owner reads them and presses Send.
+5. **Writes one Gmail draft per person** in the owner's Gmail: the app link, "sign in with this Google account", and a line asking for feedback. Sign them "Ketan Damle", then "Kagadmodyaa Studio". Send them as HTML with the app link as the text "Open Levl", so no long URL shows (Gmail wraps raw links in a long google.com/url redirect). The welcome mail reads like a short personal note: subject "Your Levl invite, from Ketan", a line from what they said they would track, and a request to tap "Not spam" and reply "got it". Mail from a sender a person has never heard from often lands in spam, so for people with a phone number also send the WhatsApp welcome ("I've also emailed you, check spam"). Send one at a time, spaced out, not in a batch. The owner reads them and presses Send.
 6. **Records** the batch below: date and count only.
 
 ## Invite status (for the routine)
@@ -37,7 +37,7 @@ A scheduled Claude routine, "Levl invites: daily drafts" (`trig_01TeremNzEAGL1VL
 3. **Check-in**: signed in with no workout, joined 2 or more days ago.
 4. **WhatsApp list**: one extra draft to the owner with a pre-filled `wa.me` link per person who gave a phone number, so each message is one tap to send from the owner's own WhatsApp.
 
-Gmail is its memory: before drafting it searches for a draft or sent mail with the same subject to the same address and skips if one exists, so nobody is drafted twice. Subjects: "You're in: Levl early access", "Your Levl invite is ready", "How's Levl going?".
+Gmail is its memory: before drafting it searches for a draft or sent mail with the same subject to the same address and skips if one exists, so nobody is drafted twice. Subjects: "Your Levl invite, from Ketan" (the first batch used "You're in: Levl early access", and the routine counts that as done too), "Your Levl invite is ready", "How's Levl going?".
 
 The routine's prompt lives in the routine, not in this repo, because it names the owner's accounts. It needs the Gmail and Tally connectors and `INVITE_KEY` in the environment. This environment's API cannot attach connectors to a routine, so they are attached in the claude.ai routines page, and the routine stays paused until that is done.
 
