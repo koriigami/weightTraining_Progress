@@ -160,14 +160,298 @@ table.x td.up{font-family:var(--display);color:var(--green-deep);white-space:now
 .ladderx{display:flex;gap:4px;margin-top:5px}
 .ladderx i{flex:1;height:8px;border-radius:4px;background:var(--surface-2)}
 .ladderx i.on{background:linear-gradient(180deg,var(--gold-hi),var(--gold))}
+
+/* ---- Round 2 ---- */
+.signed{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:10px}
+.signed div{background:#e9f8e1;border:1px solid #b6e3a1;border-radius:14px;padding:10px 12px;font-size:14px}
+.signed b{display:block;color:var(--green-deep)}
+table.x td small{color:var(--muted)}
+table.x td.where b{display:block}
+.modebtn{border:0;cursor:pointer;text-align:left;font-family:var(--body);opacity:.55;transition:opacity .15s,transform .15s}
+.modebtn[aria-pressed="true"]{opacity:1;outline:3px solid #2e1f0c;outline-offset:2px}
+.modebtn:focus-visible{outline:3px solid #1d5fbf;outline-offset:3px}
+.tiles4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tiles4 span{background:var(--calm);border:1px solid var(--line);border-radius:14px;padding:9px 0;text-align:center;font-weight:800;font-size:12.5px}
+.tiles4.log span{background:#fff1cf;border-color:#e3b03a;color:#6a4e10}
+.today-tag{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--green);border-radius:5px;padding:0 5px;margin-left:5px;vertical-align:2px}
+.door{border-radius:20px;padding:20px 16px;display:flex;flex-direction:column;gap:4px;min-height:120px;justify-content:center}
+.door b{font-family:var(--display);font-weight:400;font-size:24px}
+.door small{font-size:13px;opacity:.9}
+.iconlog{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(180deg,#ffe9a0,#f2b940);box-shadow:0 2px 0 #b8862e;color:#4a3212;font-size:14px;flex:none}
+.todaybig{background:var(--paper);border-radius:18px;box-shadow:inset 0 0 0 3px rgba(255,255,255,.6),0 4px 0 var(--bevel);padding:12px;display:flex;flex-direction:column;gap:8px}
+.todaybig .eyebrow{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.todaybig b{font-family:var(--display);font-weight:400;font-size:22px}
+.minis{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px}
+.mini{background:var(--calm);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.mini h4{margin:0;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.mini .card{gap:8px}
+.menu{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 24px -12px rgba(60,40,10,.5);overflow:hidden}
+.menu div{padding:9px 12px;border-bottom:1px solid #f0e3c4;font-weight:700;font-size:14px}
+.menu div:last-child{border-bottom:0}
+.menu div.new{background:#fff6dc;color:#6a4e10}
+.menu div.new::after{content:'New';font-size:10.5px;font-weight:800;color:#fff;background:#c7870a;border-radius:5px;padding:0 5px;margin-left:8px;vertical-align:2px}
+.btnrow{display:grid;grid-template-columns:1.4fr 1fr;gap:8px}
+.ex{background:var(--paper);border-radius:18px;box-shadow:inset 0 0 0 3px rgba(255,255,255,.6),0 4px 0 var(--bevel);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.ex .t{display:flex;align-items:center;gap:8px}
+.ex .t b{flex:1;font-size:15px}
+.ex .t .dots{font-weight:900;color:var(--muted);letter-spacing:1px}
+.sethead,.set{display:grid;grid-template-columns:28px 1fr 1fr 1fr 30px;gap:5px;align-items:center;font-size:13px;font-variant-numeric:tabular-nums}
+.sethead{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.set .n{font-weight:800;color:var(--muted)}
+.set .prev{color:var(--muted);font-size:12px}
+.set .c{background:var(--calm);border:1px solid var(--line);border-radius:9px;padding:4px 7px}
+.set .c.empty{color:#c9b48a}
+.tk{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:#fff;background:linear-gradient(180deg,var(--green-hi),var(--green));font-size:13px}
+.tk.off{background:var(--surface-2);color:#c9b48a}
+.addset{font-weight:800;font-size:13px;color:#1e7a28}
+.addex{font-family:var(--display);font-size:16px;border-radius:14px;min-height:42px;display:flex;align-items:center;justify-content:center;color:#4a3212;background:linear-gradient(180deg,#ffe9a0,#ffd970 50%,#f2b940);box-shadow:0 4px 0 #b8862e}
+.addex.big{min-height:90px;font-size:19px;flex-direction:column;gap:2px}
+.addex.big small{font-family:var(--body);font-size:12.5px;font-weight:700}
+.logbar{display:grid;grid-template-columns:1.25fr 1fr;gap:8px}
+.logbar .bf .v{font-size:17px}
+.screen.tall{min-height:640px}
+.diff{width:100%;border-collapse:collapse;font-size:14px}
+.diff th,.diff td{padding:8px 10px;border-bottom:1px solid #eedfbd;text-align:left;vertical-align:top}
+.diff th{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:#fbf1da}
+.diff td:first-child{font-weight:800}
+.scen{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:12px}
+.scen div{background:var(--calm);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.scen b{display:block;margin-bottom:4px}
+.scen p{margin:0;font-size:14px;color:var(--muted)}
+.scen p em{font-style:normal;font-weight:800;color:var(--ink)}
+.r1{border-top:2px dashed var(--line);padding-top:18px}
+/* On a phone the start points stack: where, then Start and Log on their own lines. */
+@media (max-width:640px){
+  table.x.stack{min-width:0}
+  table.x.stack thead{display:none}
+  table.x.stack,table.x.stack tbody,table.x.stack tr,table.x.stack td{display:block}
+  table.x.stack tr{padding:10px 12px;border-bottom:1px solid #eedfbd}
+  table.x.stack tr:last-child{border-bottom:0}
+  table.x.stack td{padding:2px 0;border:0}
+  table.x.stack td:nth-child(2)::before{content:'Start: ';font-weight:800;color:var(--green-deep)}
+  table.x.stack td:nth-child(3)::before{content:'Log: ';font-weight:800;color:var(--gold-ink)}
+}
 </style>
 </head>
 <body>
 <main class="wrap">
   <header>
     <h1>Runs, logging and consistency</h1>
-    <p class="lede"><b>Round 1.</b> Four asks from a runner who uses Levl: <b>laps</b> on a run, a clear difference between <b>logging</b> a workout you already did and <b>starting</b> one now, a quick way to say <b>how it felt</b>, and whether <b>consistency</b> earns anything. Each section has options and my pick. The badges board (09) waits until you are ready for it.</p>
+    <p class="lede"><b>Round 2.</b> Your round 1 picks are in. This round works out <b>Log vs Start</b> everywhere a workout can begin, the Workout button's sheet, and the <b>Log screen for each kind of workout</b>, including how you add more exercises. Round 1 is kept below.</p>
   </header>
+
+  <section class="sec" id="signed">
+    <h2>1. Signed off in round 1</h2>
+    <div class="signed">
+      <div><b>Laps: the live Lap button</b>Rows stay editable; records and beats judge the whole run.</div>
+      <div><b>Log vs Start: two big buttons</b>This round works out where they live and what every start point does.</div>
+      <div><b>How it felt: faces, plus effort if you like</b>Five faces, an optional 1 to 10 effort, no XP.</div>
+      <div><b>Consistency: the growing weekly goal bonus</b>+50 for the goal, +10 for each week in a row, up to +100.</div>
+    </div>
+  </section>
+
+  <section class="sec" id="points">
+    <h2>2. Every place a workout starts</h2>
+    <p>Levl has ten ways in. Each keeps <b>Start</b> as it is today. This is where <b>Log</b> appears in my pick (sections 3 and 4).</p>
+    <div class="tbl"><table class="x stack">
+      <thead><tr><th>Where</th><th>Start, as today</th><th>Log, new</th></tr></thead>
+      <tbody>
+        <tr><td class="where"><b>Workout button</b><small>Centre of the tab bar; "+ Workout" in the desktop sidebar</small></td><td>Opens the Workout sheet: routines, Run, Walk, Ride, Custom</td><td>The sheet's "Log one I did" button turns every choice into Log</td></tr>
+        <tr><td class="where"><b>Home: Today card</b><small>Today's routine</small></td><td>Start begins it</td><td>"Log it instead" under Start</td></tr>
+        <tr><td class="where"><b>Home: Other routine, Cardio, Custom</b></td><td>Open the Workout sheet, the Cardio sheet, the Custom picker</td><td>Each of those has its own Log (below)</td></tr>
+        <tr><td class="where"><b>Desktop Home</b><small>Two routine cards and Something else</small></td><td>Start on each card; Choose opens the Workout sheet</td><td>A small Log next to each Start; the sheet as above</td></tr>
+        <tr><td class="where"><b>Routines tab</b><small>Each routine card</small></td><td>Start</td><td>"Log a past workout" in the card's menu</td></tr>
+        <tr><td class="where"><b>A routine's page</b></td><td>Start routine</td><td>Log beside Start routine</td></tr>
+        <tr><td class="where"><b>Explore: Try now</b><small>Ready-made routines</small></td><td>Starts it once without saving</td><td>None: trying one is always live</td></tr>
+        <tr><td class="where"><b>Cardio sheet</b><small>Run, Walk, Ride</small></td><td>Starts the clock</td><td>"Log one I did" under the three tiles</td></tr>
+        <tr><td class="where"><b>Custom picker</b><small>After choosing exercises</small></td><td>Start workout</td><td>Log beside Start workout</td></tr>
+        <tr><td class="where"><b>Resume bar</b><small>A workout in progress</small></td><td>Back to it</td><td>Also for a Log left half done: "Logging Push A · Continue"</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="sec" id="sheet">
+    <h2>3. The Workout sheet: three ways</h2>
+    <p>What opens from the big Workout button. The two buttons you liked can be a <b>mode</b>, two <b>doors</b>, or sit on <b>today's routine</b>. Tap the buttons in a to try it.</p>
+    <div class="opts">
+      <div class="opt">
+        <h3>a. Mode buttons over the list <span class="tag">My pick</span></h3>
+        <p class="cap"><b>Start now</b> is selected when the sheet opens, so everything below says Start, as today. Tap <b>Log one I did</b> and the list turns gold and says Log. Start costs no extra tap.</p>
+        <div class="phone fit"><div class="screen dim" style="min-height:600px"><div class="sheet" id="modesheet"><div class="grab"></div>
+          <h4>Workout</h4>
+          <div class="two"><button type="button" class="bigbtn go modebtn" data-mode="start" aria-pressed="true"><b>&#9654; Start now</b><small>The clock runs while you train</small></button><button type="button" class="bigbtn log modebtn" data-mode="log" aria-pressed="false"><b>&#9998; Log one I did</b><small>Already done? Add it with the day and time</small></button></div>
+          <h4 style="font-size:16px;margin-top:4px" data-mode-title>Start a routine</h4>
+          <div class="row"><div class="grow"><b>Push A <span class="today-tag">Today</span></b><small>5 exercises · 50 min</small></div><span class="act" data-act>Start</span></div>
+          <div class="row"><div class="grow"><b>Legs</b><small>6 exercises · 55 min</small></div><span class="act" data-act>Start</span></div>
+          <div class="row"><div class="grow"><b>Pull B</b><small>5 exercises · 45 min</small></div><span class="act" data-act>Start</span></div>
+          <div class="tiles4" data-tiles><span>Run</span><span>Walk</span><span>Ride</span><span>Custom</span></div>
+        </div></div></div>
+      </div>
+      <div class="opt">
+        <h3>b. Two doors</h3>
+        <p class="cap">The sheet opens on just the two buttons. Each leads to the same list, in its mode. The clearest, but every Start takes one more tap.</p>
+        <div class="phone fit"><div class="screen dim" style="min-height:600px"><div class="sheet"><div class="grab"></div>
+          <h4>Workout</h4>
+          <div class="door bigbtn go"><b>&#9654; Start now</b><small>Pick a routine, a run or your own exercises. The clock runs while you train.</small></div>
+          <div class="door bigbtn log"><b>&#9998; Log one I did</b><small>Add a workout you already did, with the day, the time and how long.</small></div>
+          <p class="cap" style="text-align:center">Then the list, as in a, with a back arrow.</p>
+        </div></div></div>
+      </div>
+      <div class="opt">
+        <h3>c. Today's routine first</h3>
+        <p class="cap">Today's routine leads, with Start and Log side by side. Other routines get Start plus a small pencil for Log. No mode to switch, but more buttons on screen.</p>
+        <div class="phone fit"><div class="screen dim" style="min-height:600px"><div class="sheet"><div class="grab"></div>
+          <h4>Workout</h4>
+          <div class="todaybig"><span class="eyebrow">Today's workout</span><b>Push A</b><small style="color:var(--muted)">5 exercises · 50 min</small><div class="btnrow"><span class="btn sm" style="width:100%">&#9654; Start</span><span class="btn s sm" style="width:100%">&#9998; Log</span></div></div>
+          <div class="row"><div class="grow"><b>Legs</b><small>6 exercises · 55 min</small></div><span class="iconlog" aria-label="Log">&#9998;</span><span class="act">Start</span></div>
+          <div class="row"><div class="grow"><b>Pull B</b><small>5 exercises · 45 min</small></div><span class="iconlog" aria-label="Log">&#9998;</span><span class="act">Start</span></div>
+          <div class="tiles4"><span>Run</span><span>Walk</span><span>Ride</span><span>Custom</span></div>
+          <small style="color:var(--muted);text-align:center">Run, Walk, Ride and Custom ask Start or Log next.</small>
+        </div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="elsewhere">
+    <h2>4. The other start points</h2>
+    <p><b>i. My pick:</b> Start stays the main button everywhere, and a quieter <b>Log</b> sits next to it where there is room. Nothing you do today takes an extra tap.</p>
+    <div class="minis">
+      <div class="mini"><h4>Home: Today card</h4>
+        <div class="card"><span style="font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--muted)">TODAY'S WORKOUT</span><div style="display:flex;align-items:center;gap:10px"><div style="flex:1"><b style="font-family:var(--display);font-weight:400;font-size:24px">Pull A</b><br><small style="color:var(--muted)">5 exercises · 50 min</small></div><span class="btn sm">&#9654; Start</span></div><span class="textbtn" style="text-align:right;padding:0">&#9998; Log it instead</span></div></div>
+      <div class="mini"><h4>Routines tab: a routine's menu</h4>
+        <div class="menu"><div>Duplicate</div><div class="new">Log a past workout</div><div>Delete routine</div></div></div>
+      <div class="mini"><h4>A routine's page</h4>
+        <div class="card"><b style="font-family:var(--display);font-weight:400;font-size:20px">Push A</b><small style="color:var(--muted)">Bench Press, Shoulder Press, Push Up, Tricep Dip, Plank</small><div class="btnrow"><span class="btn">&#9654; Start routine</span><span class="btn s">&#9998; Log</span></div></div></div>
+      <div class="mini"><h4>Custom picker, 3 exercises chosen</h4>
+        <div class="card"><small style="color:var(--muted)">Bench Press, Squat, Plank</small><div class="btnrow"><span class="btn">&#9654; Start workout</span><span class="btn s">&#9998; Log</span></div></div></div>
+      <div class="mini"><h4>Cardio sheet</h4>
+        <div class="card"><div class="cardio3"><span>Run</span><span>Walk</span><span>Ride</span></div><small style="color:var(--muted);text-align:center">Tap one to start the clock</small><div class="row" style="border-style:dashed"><div class="grow"><b>Log one I did</b><small>Type the time, distance and laps</small></div><span class="act log">Log</span></div></div></div>
+      <div class="mini"><h4>Desktop Home</h4>
+        <div class="card"><b style="font-family:var(--display);font-weight:400;font-size:20px">Legs</b><small style="color:var(--muted)">6 exercises · 55 min</small><div class="btnrow"><span class="btn">&#9654; Start</span><span class="btn s">&#9998; Log</span></div></div></div>
+    </div>
+    <div class="opts">
+      <div class="opt"><h3>ii. Everything through the Workout sheet</h3><p class="cap">Every Start opens the Workout sheet with that routine picked, and you choose Start or Log there. One place to learn, but one more step for everyone, every time.</p></div>
+      <div class="opt"><h3>iii. Log only in the Workout sheet</h3><p class="cap">Every other button stays Start only. The least to build, but people who start from Home or Routines may never find Log.</p></div>
+    </div>
+  </section>
+
+  <section class="sec" id="logscreen">
+    <h2>5. The Log screen, for each kind of workout</h2>
+    <p>Log opens the same screen as <b>Edit workout</b>, which already has everything a workout needs: exercise cards with sets, <b>+ Add exercise</b>, Swap and Remove in each exercise's menu, and notes. On top it gets <b>When</b> and <b>How long</b>; at the bottom, <b>Save workout</b>. No clock, no rest timer. Sets count once they have numbers, so there is nothing to tick; tick one off to leave it out.</p>
+    <div class="opts">
+      <div class="opt">
+        <h3>Strength: a routine</h3>
+        <p class="cap">Push A, filled in with last time's numbers. Change what you did differently, add an exercise you added on the day, Save.</p>
+        <div class="phone fit"><div class="screen tall">
+          <div class="ahead"><span class="back">&lsaquo;</span><b>Log Push A</b></div>
+          <div class="logbar"><div class="bf"><label>When you started</label><div class="v">Today, 7:30 am</div></div><div class="bf"><label>How long</label><div class="v">50 min</div></div></div>
+          <div class="ex"><div class="t"><span class="ico">&#127947;</span><b>Bench Press (Dumbbell)</b><span class="dots">&middot;&middot;&middot;</span></div>
+            <div class="sethead"><span>Set</span><span>Last</span><span>Kg</span><span>Reps</span><span></span></div>
+            <div class="set"><span class="n">1</span><span class="prev">20 × 10</span><span class="c">20</span><span class="c">10</span><span class="tk">&#10003;</span></div>
+            <div class="set"><span class="n">2</span><span class="prev">20 × 10</span><span class="c">22</span><span class="c">8</span><span class="tk">&#10003;</span></div>
+            <div class="set"><span class="n">3</span><span class="prev">20 × 9</span><span class="c">22</span><span class="c">8</span><span class="tk">&#10003;</span></div>
+            <span class="addset">+ Add set</span></div>
+          <div class="ex"><div class="t"><span class="ico">&#129336;</span><b>Shoulder Press</b><span class="dots">&middot;&middot;&middot;</span></div>
+            <div class="set"><span class="n">1</span><span class="prev">12 × 10</span><span class="c">12</span><span class="c">10</span><span class="tk">&#10003;</span></div>
+            <div class="set"><span class="n">2</span><span class="prev">12 × 10</span><span class="c empty">kg</span><span class="c empty">reps</span><span class="tk off">&#10003;</span></div></div>
+          <span class="addex">+ Add exercise</span>
+          <span class="btn" style="margin-top:auto">Save workout</span>
+        </div></div>
+      </div>
+      <div class="opt">
+        <h3>Custom: your own exercises</h3>
+        <p class="cap">Starts with the exercises you picked, or empty with one big button. Add as many as you did, in any order.</p>
+        <div class="phone fit"><div class="screen tall">
+          <div class="ahead"><span class="back">&lsaquo;</span><b>Log a workout</b></div>
+          <div class="logbar"><div class="bf"><label>When you started</label><div class="v">Yesterday, 6:15 pm</div></div><div class="bf"><label>How long</label><div class="v">40 min</div></div></div>
+          <div class="bf"><label>Title</label><div class="v" style="font-size:17px">Evening workout</div></div>
+          <span class="addex big">+ Add exercise<small>Strength, a hold, or cardio</small></span>
+          <p class="cap" style="text-align:center">Each exercise you add appears above this button, with its sets.</p>
+          <span class="btn" style="margin-top:auto;opacity:.5">Save workout</span>
+          <small style="color:var(--muted);text-align:center">Save works once one set or a time is filled in.</small>
+        </div></div>
+      </div>
+      <div class="opt">
+        <h3>Cardio: a run, walk or ride</h3>
+        <p class="cap">The run card you know: Time, Distance and pace, with laps as typed rows. How long follows the run's time. The live Lap button belongs to Start.</p>
+        <div class="phone fit"><div class="screen tall">
+          <div class="ahead"><span class="back">&lsaquo;</span><b>Log a run</b></div>
+          <div class="bf"><label>When you started</label><div class="v" style="font-size:17px">Today, 6:05 am</div></div>
+          <div class="card">
+            <div class="ctitle"><span class="ico">&#127939;</span><b>Running</b><span class="dots" style="font-weight:900;color:var(--muted)">&middot;&middot;&middot;</span></div>
+            <div class="big2"><div class="bf"><label>Time</label><div class="v">31:12<small>min</small></div></div><div class="bf"><label>Distance</label><div class="v">5.2<small>km</small></div></div></div>
+            <div class="rate">Pace 6:00 /km</div>
+            <table class="laps"><thead><tr><th>Lap</th><th>Time</th><th>Km</th><th>Pace</th></tr></thead><tbody>
+              <tr><td>1</td><td><input value="6:04" aria-label="Lap 1 time"></td><td><input value="1.0" aria-label="Lap 1 km"></td><td>6:04</td></tr>
+              <tr class="best"><td>2</td><td><input value="5:46" aria-label="Lap 2 time"></td><td><input value="1.0" aria-label="Lap 2 km"></td><td>5:46</td></tr>
+              <tr><td>3</td><td><input value="6:02" aria-label="Lap 3 time"></td><td><input value="1.0" aria-label="Lap 3 km"></td><td>6:02</td></tr>
+            </tbody></table>
+            <span class="textbtn" style="padding:0">+ Add lap</span>
+          </div>
+          <span class="addex">+ Add exercise</span>
+          <span class="btn" style="margin-top:auto">Save workout</span>
+        </div></div>
+      </div>
+      <div class="opt">
+        <h3>Mixed: lifting and a run</h3>
+        <p class="cap">Strength cards and a run card in one workout. Add exercise offers both kinds, so a cool-down run or a few planks fit in.</p>
+        <div class="phone fit"><div class="screen tall">
+          <div class="ahead"><span class="back">&lsaquo;</span><b>Log Legs</b></div>
+          <div class="logbar"><div class="bf"><label>When you started</label><div class="v">Mon 28 Sep, 7 pm</div></div><div class="bf"><label>How long</label><div class="v">70 min</div></div></div>
+          <div class="ex"><div class="t"><span class="ico">&#127947;</span><b>Squat (Barbell)</b><span class="dots">&middot;&middot;&middot;</span></div>
+            <div class="set"><span class="n">1</span><span class="prev">60 × 8</span><span class="c">60</span><span class="c">8</span><span class="tk">&#10003;</span></div>
+            <div class="set"><span class="n">2</span><span class="prev">60 × 8</span><span class="c">62.5</span><span class="c">8</span><span class="tk">&#10003;</span></div></div>
+          <div class="ex"><div class="t"><span class="ico">&#127947;</span><b>Leg Press</b><span class="dots">&middot;&middot;&middot;</span></div>
+            <div class="set"><span class="n">1</span><span class="prev">100 × 12</span><span class="c">110</span><span class="c">12</span><span class="tk">&#10003;</span></div></div>
+          <div class="ex"><div class="t"><span class="ico">&#127939;</span><b>Treadmill</b><span class="dots">&middot;&middot;&middot;</span></div>
+            <div class="big2"><div class="bf"><label>Time</label><div class="v" style="font-size:20px">15<small>min</small></div></div><div class="bf"><label>Distance</label><div class="v" style="font-size:20px">2.1<small>km</small></div></div></div></div>
+          <span class="addex">+ Add exercise</span>
+          <span class="btn" style="margin-top:auto">Save workout</span>
+        </div></div>
+      </div>
+    </div>
+    <h3>Start vs Log, side by side</h3>
+    <div class="tbl"><table class="diff">
+      <thead><tr><th></th><th>Start (live)</th><th>Log (already done)</th></tr></thead>
+      <tbody>
+        <tr><td>Top of the screen</td><td>The clock, Discard and Finish</td><td>When you started and How long</td></tr>
+        <tr><td>Sets</td><td>Tick each as you finish it; the rest timer runs</td><td>Count once they have numbers; no rest timer</td></tr>
+        <tr><td>Adding exercises</td><td>+ Add exercise, Swap, Remove</td><td>The same</td></tr>
+        <tr><td>Run laps</td><td>The live Lap button</td><td>Typed lap rows</td></tr>
+        <tr><td>Last button</td><td>Finish workout</td><td>Save workout</td></tr>
+        <tr><td>After</td><td>Victory: XP, moments, How did it feel</td><td>The same</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="sec" id="scenarios">
+    <h2>6. Every case, answered</h2>
+    <div class="scen">
+      <div><b>A workout is in progress and you tap Log</b><p>"Finish or discard your workout first." One at a time, as today; the sheet shows <em>Resume</em> at the top.</p></div>
+      <div><b>You leave Log half done</b><p>The draft is kept, like a workout in progress. The bar reads <em>Logging Push A · Continue</em>.</p></div>
+      <div><b>You pick a time in the future</b><p>Not allowed, as Edit works now. Any past day is fine.</p></div>
+      <div><b>You log a day in a past week</b><p>That week is scored again: it can <em>complete an old weekly goal</em> or <em>keep a streak going</em>, and level up or badge moments still play.</p></div>
+      <div><b>The same routine is already logged that day</b><p>A gentle check: <em>"You already logged Push A on Tue 29 Sep. Log another?"</em> In case it was saved twice.</p></div>
+      <div><b>How long vs XP</b><p>XP and the daily bonus come from sets and cardio minutes, as always. How long sets the time shown on the workout, so you remember it right.</p></div>
+      <div><b>After Save</b><p>The Victory screen, exactly as after Finish: XP, records, moments and <em>How did it feel</em>.</p></div>
+      <div><b>Changing it later</b><p>The workout page's Edit opens this same screen.</p></div>
+    </div>
+  </section>
+
+  <section class="sec" id="decide2">
+    <h2>7. What I need from you</h2>
+    <ol class="decide">
+      <li><b>The Workout sheet:</b> a, b or c. My pick: <b>a, mode buttons over the list</b>.</li>
+      <li><b>Other start points:</b> i, ii or iii. My pick: <b>i, a quiet Log next to Start</b>.</li>
+      <li><b>When</b> means when you started, defaulting to an hour ago. My pick: <b>yes</b>.</li>
+      <li><b>Sets count once filled in</b>, with no ticking on the Log screen. My pick: <b>yes</b>.</li>
+      <li><b>The same-day check</b> before saving a routine twice. My pick: <b>yes</b>.</li>
+    </ol>
+    <p>Then I write the build plan: laps, Log, How it felt, consistency, each its own release. Answer in the chat: comments on this page don't reach me.</p>
+  </section>
+
+  <h2 class="r1">Round 1</h2>
+
 
   <section class="sec" id="laps">
     <h2>1. Laps on a run</h2>
@@ -229,7 +513,7 @@ table.x td.up{font-family:var(--display);color:var(--green-deep);white-space:now
     <p>Today every workout starts a live session with a clock. To add one you did earlier, you start it, fill it in, finish, then change the date. Two paths make that clear: <b>Start</b>, the clock runs while you train; <b>Log</b>, it is already done, so you say when and for how long. Both score exactly the same.</p>
     <div class="opts">
       <div class="opt">
-        <h3>a. Two big buttons <span class="tag">My pick</span></h3>
+        <h3>a. Two big buttons <span class="tag">Chosen</span></h3>
         <p class="cap">The Workout sheet opens with the choice, then the routines and cardio under it work for whichever you picked.</p>
         <div class="phone fit"><div class="screen dim"><div class="sheet"><div class="grab"></div>
           <h4>Workout</h4>
@@ -342,15 +626,13 @@ table.x td.up{font-family:var(--display);color:var(--green-deep);white-space:now
   </section>
 
   <section class="sec" id="decide">
-    <h2>5. What I need from you</h2>
+    <h2>Round 1 answers</h2>
     <ol class="decide">
-      <li><b>Laps:</b> a, the live Lap button (rows stay editable), or b, typed rows only. And the default lap distance: none, 400 m or 1 km. My pick: <b>a</b>, with <b>no distance</b> by default and the 400 m and 1 km chips one tap away.</li>
-      <li><b>Log vs Start:</b> a, b or c. My pick: <b>a, two big buttons</b>.</li>
-      <li><b>How it felt:</b> a, b or c. My pick: <b>c, faces plus optional effort</b>, no XP.</li>
-      <li><b>Consistency:</b> a, b or c. My pick: <b>a, the growing weekly goal bonus</b>, +50 up to +100.</li>
-      <li><b>Order to build:</b> my pick is <b>laps, then Log, then How it felt, then consistency</b>, each its own release. The badges board can follow, or go in between.</li>
+      <li><b>Laps:</b> a, the live Lap button.</li>
+      <li><b>Log vs Start:</b> a, two big buttons.</li>
+      <li><b>How it felt:</b> c, faces plus optional effort.</li>
+      <li><b>Consistency:</b> a, the growing weekly goal bonus.</li>
     </ol>
-    <p>Answer in the chat: comments on this page don't reach me.</p>
   </section>
 </main>
 
@@ -446,6 +728,18 @@ const rows = PEOPLE.map((p) => {
   return `<tr><td><b>${p.name}</b></td><td class="n">+${t}</td>${c(optA(p))}${c(optB(p))}${c(optC(p))}</tr>`;
 }).join('');
 document.getElementById('optable').innerHTML = `<thead><tr><th>Consistency XP over 10 weeks</th><th>Today</th><th>a. Growing bonus</th><th>b. Milestones</th><th>c. Score</th></tr></thead><tbody>${rows}</tbody>`;
+
+// Round 2: the Workout sheet's mode buttons switch the list between Start and Log.
+(function modes() {
+  const sheet = document.getElementById('modesheet');
+  sheet.querySelectorAll('.modebtn').forEach((b) => b.addEventListener('click', () => {
+    const log = b.dataset.mode === 'log';
+    sheet.querySelectorAll('.modebtn').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    sheet.querySelectorAll('[data-act]').forEach((a) => { a.textContent = log ? 'Log' : 'Start'; a.classList.toggle('log', log); });
+    sheet.querySelector('[data-tiles]').classList.toggle('log', log);
+    sheet.querySelector('[data-mode-title]').textContent = log ? 'Log a routine you did' : 'Start a routine';
+  }));
+})();
 
 // Scale each phone mock down when the screen is narrower than the phone.
 function fit() {

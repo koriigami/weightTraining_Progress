@@ -396,6 +396,25 @@ Agreed in the conversation after a UI check of v10 (no board; the plan is in `do
     while away would punish people at the moment they might return. A week off ends the streak and
     misses the weekly goal; the comeback bonus pays for coming back. The rulebook says so in one line.
 
+## 10 Runs, logging and consistency
+
+`docs/design/10-runs-logging-board.html`, published as an artifact. From a runner's feedback. (Board
+09, badges, is parked: shown, not answered yet.)
+
+- **Round 1** showed laps (a live Lap button, or typed rows), Log vs Start (two big buttons, a
+  switch, or a row), how it felt (faces, a 1 to 10 effort, or both) and three ways to reward
+  consistency, compared on three people over 10 weeks.
+- **Picked:** the live Lap button; two big buttons; faces plus optional effort (no XP); a weekly goal
+  bonus that grows by +10 for each week in a row, up to +100. Records and beats judge a whole run,
+  never a single lap.
+- **Round 2**, after the user asked how a logged workout adds exercises and what each start point
+  does: Log reuses the Edit workout screen (Add exercise, Swap, Remove, sets) with When and How long
+  on top and Save at the bottom, shown for a routine, a custom workout, a run with typed laps and a
+  mixed workout. A table maps all ten start points. Three layouts for the Workout sheet (mode
+  buttons over the list, two doors, today's routine first) and three rules for the other start
+  points, plus answers for the edge cases: a workout in progress, a half-done log, past weeks scored
+  again, the same routine twice in a day.
+
 ## Where the chat lives
 
 The conversation is not stored in the repo. Long chats are summarized when the
