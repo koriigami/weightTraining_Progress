@@ -175,7 +175,19 @@ function EditForm({ workout }: { workout: WorkoutLog }) {
         onRemoveSet={(j) => apply(S.removeSet(ref.current, i, j))}
         onToggleSet={(j) => tick(i, j)}
         mark={marks.find((m) => m.exerciseId === item.exerciseId)}
-        cardio={e.metric === 'distance_time' ? { follow: false, onChange: (patch: SetPatch) => commit(S.updateCardio(ref.current, i, patch)) } : undefined}
+        cardio={
+          e.metric === 'distance_time'
+            ? {
+                follow: false,
+                onChange: (patch: SetPatch) => commit(S.updateCardio(ref.current, i, patch)),
+                laps: {
+                  onAdd: () => commit(S.addBlankLap(ref.current, i)),
+                  onUpdate: (lapIndex, patch) => commit(S.updateLap(ref.current, i, lapIndex, patch)),
+                  onRemove: (lapIndex) => commit(S.removeLap(ref.current, i, lapIndex)),
+                },
+              }
+            : undefined
+        }
       />
     );
   });

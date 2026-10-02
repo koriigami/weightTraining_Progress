@@ -1,9 +1,12 @@
 import { EXERCISES, exerciseById } from '../data/exercises';
 import { describe, expect, it } from 'vitest';
 import {
+  addBlankLap,
   addExercise,
+  addLap,
   addSet,
   buildWorkoutInput,
+  buildWorkoutPatch,
   cardioSession,
   defaultTitle,
   formatElapsed,
@@ -13,16 +16,21 @@ import {
   newSession,
   parseStoredSession,
   removeExercise,
+  removeLap,
   removeSet,
   replaceExercise,
   restoreExercise,
   serializeSession,
   sessionFromRoutine,
+  sessionFromWorkout,
   sessionTotals,
   setCounts,
   setItemNotes,
   setTitle,
+  syncFollow,
   toggleSet,
+  updateCardio,
+  updateLap,
   updateSet,
 } from '../lib/session';
 import type { Session, SessionResult } from '../lib/session';
@@ -444,5 +452,130 @@ describe('first run', () => {
     expect(resolvePrefs(newUserState()).onboarded).toBe(false);
     expect(resolvePrefs(emptyState()).onboarded).toBe(true);
     expect(resolvePrefs({ prefs: { ...defaultPrefs(), onboarded: true } }).onboarded).toBe(true);
+  });
+});
+
+describe('laps', () => {
+  const at = (sec: number) => new Date(NOW.getTime() + sec * 1000);
+  const run = () => must(cardioSession('run', NOW));
+  const lapsOf = (s: Session) => s.items[0].sets[0].laps;
+
+  it('addLap stamps the time since Start, then the time since the last lap', () => {
+    let s = addLap(run(), 0, at(362));
+    s = addLap(s, 0, at(710));
+    expect(lapsOf(s)).toEqual([{ sec: 362 }, { sec: 348 }]);
+  });
+
+  it('addLap keeps the Time following the clock', () => {
+    let s = addLap(run(), 0, at(400));
+    expect(s.follow).toEqual(['run']);
+    s = syncFollow(s, at(400));
+    expect(s.items[0].sets[0]).toMatchObject({ min: 6, done: true });
+    expect(lapsOf(s)).toEqual([{ sec: 400 }]);
+    expect(s.follow).toEqual(['run']);
+  });
+
+  it('addLap does nothing under a second after the last lap', () => {
+    const base = run();
+    expect(addLap(base, 0, at(0))).toBe(base);
+    const s = addLap(base, 0, at(100));
+    expect(addLap(s, 0, at(100.5))).toBe(s);
+  });
+
+  it('a lap stamped with a distance fills an empty run distance, and keeps adding up', () => {
+    let s = addLap(run(), 0, at(360), 1);
+    expect(s.items[0].sets[0].km).toBe(1);
+    s = addLap(s, 0, at(710), 1);
+    expect(s.items[0].sets[0].km).toBe(2);
+    expect(lapsOf(s)).toEqual([{ sec: 360, km: 1 }, { sec: 350, km: 1 }]);
+  });
+
+  it('a distance the person typed is never overwritten', () => {
+    let s = updateCardio(run(), 0, { km: 5.2 });
+    s = addLap(s, 0, at(360), 1);
+    s = addLap(s, 0, at(710), 1);
+    expect(s.items[0].sets[0].km).toBe(5.2);
+  });
+
+  it('a lap with no distance leaves the run distance alone', () => {
+    const s = addLap(run(), 0, at(360));
+    expect(s.items[0].sets[0].km).toBeUndefined();
+  });
+
+  it('typing a Time ends the clock but keeps the laps', () => {
+    const s = updateCardio(addLap(run(), 0, at(360)), 0, { min: 31 });
+    expect(s.follow).toBeUndefined();
+    expect(lapsOf(s)).toEqual([{ sec: 360 }]);
+  });
+
+  it('updateLap corrects a lap, an empty time leaves the row with none, and an empty distance clears it', () => {
+    let s = addLap(run(), 0, at(360), 1);
+    s = updateLap(s, 0, 0, { sec: 345.4, km: 0.4 });
+    expect(lapsOf(s)).toEqual([{ sec: 345, km: 0.4 }]);
+    s = updateLap(s, 0, 0, { km: undefined });
+    expect(lapsOf(s)).toEqual([{ sec: 345 }]);
+    s = updateLap(s, 0, 0, { sec: undefined });
+    expect(lapsOf(s)).toEqual([{ sec: 0 }]);
+    expect(updateLap(s, 0, 5, { sec: 10 })).toBe(s);
+  });
+
+  it('removeLap drops one lap, and the last one removes the laps key', () => {
+    let s = addLap(addLap(run(), 0, at(100)), 0, at(250));
+    s = removeLap(s, 0, 0);
+    expect(lapsOf(s)).toEqual([{ sec: 150 }]);
+    s = removeLap(s, 0, 0);
+    expect('laps' in s.items[0].sets[0]).toBe(false);
+  });
+
+  it('addBlankLap adds a row with no time, up to 200 laps', () => {
+    let s = addBlankLap(run(), 0);
+    expect(lapsOf(s)).toEqual([{ sec: 0 }]);
+    for (let i = 0; i < 250; i++) s = addBlankLap(s, 0);
+    expect(lapsOf(s)).toHaveLength(LIMITS.lapsPerSet);
+  });
+
+  it('a new set copies the numbers, not the laps', () => {
+    const s = must(addSet(addLap(run(), 0, at(100)), 0));
+    expect(s.items[0].sets[1]).toEqual({ done: false });
+  });
+
+  it('a stored session keeps its laps, and drops junk laps', () => {
+    let s = updateCardio(addLap(addLap(run(), 0, at(360), 1), 0, at(700), 0.4), 0, { min: 12 });
+    s = addBlankLap(s, 0);
+    expect(parseStoredSession(serializeSession(s))).toEqual(s);
+    const raw = JSON.parse(serializeSession(s));
+    raw.items[0].sets[0].laps.push({ sec: 'x' }, 7, { sec: 99999999, km: -1 });
+    expect(parseStoredSession(JSON.stringify(raw))?.items[0].sets[0].laps).toEqual([{ sec: 360, km: 1 }, { sec: 340, km: 0.4 }, { sec: 0 }, { sec: 86400 }]);
+  });
+
+  it('finishing keeps the laps as stamped, drops rows with no time, and leaves the run totals alone', () => {
+    let s = addLap(addLap(run(), 0, at(360), 1), 0, at(700), 1);
+    s = addBlankLap(updateCardio(s, 0, { min: 12 }), 0);
+    const r = buildWorkoutInput(s, { now: at(780) });
+    if (!r.ok) throw new Error(r.error);
+    expect(r.workout.items[0].sets).toEqual([{ done: true, min: 12, km: 2, laps: [{ sec: 360, km: 1 }, { sec: 340, km: 1 }] }]);
+  });
+
+  it('finishing keeps laps on distance cardio only', () => {
+    let s = newSession(NOW);
+    s = must(addExercise(s, 'pushup'));
+    s = toggleSet(updateSet(s, 0, 0, { reps: 10 }), 0, 0);
+    s.items[0].sets[0].laps = [{ sec: 60 }];
+    const r = buildWorkoutInput(s, { now: at(120) });
+    if (!r.ok) throw new Error(r.error);
+    expect(r.workout.items[0].sets).toEqual([{ done: true, reps: 10 }]);
+  });
+
+  it('a saved run opens in Edit with its laps, and saving the edit keeps them', () => {
+    let s = updateCardio(addLap(addLap(run(), 0, at(360), 1), 0, at(700), 1), 0, { min: 12 });
+    const built = buildWorkoutInput(s, { now: at(780) });
+    if (!built.ok) throw new Error(built.error);
+    const saved = { ...built.workout, xp: 0 };
+    const draft = sessionFromWorkout(saved);
+    expect(draft.items[0].sets[0].laps).toEqual([{ sec: 360, km: 1 }, { sec: 340, km: 1 }]);
+    s = updateLap(draft, 0, 1, { sec: 330 });
+    const patch = buildWorkoutPatch(saved, { session: s, when: saved.when, minutes: 13, notes: '' });
+    if (!patch.ok) throw new Error(patch.error);
+    expect(patch.patch.items[0].sets[0].laps).toEqual([{ sec: 360, km: 1 }, { sec: 330, km: 1 }]);
   });
 });

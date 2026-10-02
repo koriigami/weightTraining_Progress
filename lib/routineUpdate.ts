@@ -10,7 +10,8 @@ export function updateRoutineFromWorkout(routine: Routine, workout: Pick<Workout
     const done = workout.items.find((w) => w.exerciseId === item.exerciseId);
     const sets = done?.sets.filter((s) => s.done) ?? [];
     if (!done || sets.length === 0) return item;
-    const planned: SetPlan[] = sets.map(({ done: _done, ...rest }) => ({ ...rest }));
+    // A routine plans numbers, never laps.
+    const planned: SetPlan[] = sets.map(({ done: _done, laps: _laps, ...rest }) => ({ ...rest }));
     const { notes: _old, ...rest } = item;
     const notes = done.notes?.trim();
     return { ...rest, ...(notes ? { notes } : item.notes ? { notes: item.notes } : {}), sets: planned };

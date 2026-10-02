@@ -44,6 +44,8 @@
   --ok: #2ba438;
   --ok-deep: #186a20;
   --ok-soft: #ddf5d2;
+  /* the fastest lap's row, from board 10 */
+  --lap-best: #e9f8e1;
   --bad: #dd3f33;
   --bad-ink: #c8322a;
 
@@ -5051,6 +5053,120 @@ button.wt-cc-pill {
 }
 .wt-cc-note svg {
   flex: none;
+}
+
+/* ---- laps on a run (board 10): the distance chips, the table, the bars on the workout page ---- */
+.wt-lapchips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+/* The label takes its own line so the three chips fit in one row on a phone. */
+.wt-lapchips > span {
+  flex-basis: 100%;
+  margin-bottom: -2px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+}
+.wt-laps {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.wt-laps col.n {
+  width: 38px;
+}
+.wt-laps col.x {
+  width: 34px;
+}
+.wt-laps th {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wt-laps td {
+  padding: 7px 6px;
+  border-bottom: 1px solid #efe2c2;
+  overflow-wrap: anywhere;
+}
+.wt-laps.ed th,
+.wt-laps.ed td {
+  text-align: center;
+  padding: 4px;
+}
+.wt-laps td.n {
+  font-weight: 800;
+  color: var(--muted);
+}
+.wt-laps.ed td.x {
+  padding: 0;
+}
+.wt-laps tr.best td {
+  background: var(--lap-best);
+}
+.wt-laps .fast {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--ok-deep);
+}
+.wt-laps tr.live td {
+  color: var(--ok-deep);
+  font-weight: 800;
+  height: 44px;
+}
+.wt-addlap {
+  align-self: flex-start;
+  padding-left: 0;
+}
+.wt-runlaps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+}
+.wt-lapsum {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.wt-lapbars {
+  display: flex;
+  align-items: flex-end;
+  height: 70px;
+  padding-top: 6px;
+}
+.wt-lapbars i {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, #ffd970, #f2b940);
+}
+.wt-lapbars i.best {
+  background: linear-gradient(180deg, var(--p1), var(--p2));
+}
+.wt-lapbars-lbl {
+  display: flex;
+  margin-top: 3px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--muted);
+}
+.wt-lapbars-lbl span {
+  flex: 1 1 0;
+  text-align: center;
 }
 .wt-end-row {
   display: grid;

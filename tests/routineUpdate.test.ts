@@ -14,6 +14,12 @@ const routine: Routine = {
 };
 
 describe('update routine with today\'s weights', () => {
+  it('plans the numbers only: laps never go into a routine', () => {
+    const run: Routine = { id: 'run-a', title: 'Run', items: [{ exerciseId: 'run', sets: [{ min: 30, km: 5 }] }] };
+    const w = workout('2026-10-10', [{ id: 'run', sets: [{ min: 32, km: 5.2, laps: [{ sec: 360, km: 1 }, { sec: 350, km: 1 }] }] }]);
+    expect(updateRoutineFromWorkout(run, w).items[0].sets).toEqual([{ min: 32, km: 5.2 }]);
+  });
+
   it('replaces the sets with the ticked ones, without the done flag', () => {
     const w = workout('2026-10-10', [
       { id: 'db-ohp', sets: [{ kg: 7.5, reps: 10 }, { kg: 7.5, reps: 9 }, { kg: 7.5, reps: 8 }] },

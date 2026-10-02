@@ -33,11 +33,14 @@ Sign-ups are open to any Google account since 1 October 2026 (`SIGNUPS=invite` c
 | v10 | Rules v3: one +50 daily bonus at 20 minutes a day (strength and cardio together), training days for the weekly goal, streak and badges, Rest on the week strip, +25 comeback after a week off | Done, live |
 | v10.1 | One rest-day rule on Home, Calendar, Profile and Statistics; the XP bar shows XP into the level; Rank Road shows XP to go | Done, live |
 | v10.2 | Home header as a mini hunter card (board 08), day tiles of one height with a full today ring and bordered rest days, no penalty for time away | Done, live |
+| v11 stage 1 | Laps: a live Lap button on a run, walk or ride, optional lap distance, editable lap rows, the lap table and bars on the workout page. Records and XP still judge the whole run (board 10, `docs/V11_PLAN.md`) | Done, on branch, not merged |
+| v11 stages 2 to 4 | Log a past workout, how it felt (faces plus effort, no XP), consistency (the weekly goal bonus grows with each week in a row) | Planned, see `docs/V11_PLAN.md` |
 
 
 ### Next
 
-These two come first, in this order (agreed when sign-ups opened):
+v11 continues with stage 2 (log a past workout, waiting for board 10 round 3), then how it felt
+and consistency (`docs/V11_PLAN.md`). Besides that, these two come first, in this order (agreed when sign-ups opened):
 
 1. **An in-app feedback box.** "Send feedback" in Settings, stored per person. The cheapest
    source of roadmap signal, and what feedback triage needs later (`docs/AGENTS.md`).

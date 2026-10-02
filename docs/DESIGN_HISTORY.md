@@ -414,6 +414,9 @@ Agreed in the conversation after a UI check of v10 (no board; the plan is in `do
   buttons over the list, two doors, today's routine first) and three rules for the other start
   points, plus answers for the edge cases: a workout in progress, a half-done log, past weeks scored
   again, the same routine twice in a day.
+- **Built (v11 stage 1):** the laps pick, as the board showed it: the live Lap button (one full
+  width button, not the board's two), the distance chips, editable rows with the fastest lap
+  tinted, "+ Add lap" in Edit workout, and the summary line, bars and table on the workout page.
 
 ## Where the chat lives
 

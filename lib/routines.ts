@@ -25,7 +25,12 @@ export type SetPlan = {
   off?: number;
 };
 
-export type LoggedSet = SetPlan & { done: boolean };
+// One lap of a run, walk or ride: its time in whole seconds, and its distance in
+// km when the person gave one. A distance_time set may carry laps (see lib/laps.ts).
+// The set keeps the run's own total time and distance, so scoring never reads laps.
+export type Lap = { sec: number; km?: number };
+
+export type LoggedSet = SetPlan & { done: boolean; laps?: Lap[] };
 
 export type RoutineItem = {
   exerciseId: string;
@@ -117,6 +122,7 @@ export const LIMITS = {
   itemsPerList: 40,
   setsPerItem: 30,
   setsPerWorkout: 300,
+  lapsPerSet: 200,
 };
 
 export const DEFAULT_WEEKLY_GOAL = 3;

@@ -155,6 +155,14 @@ Tick these on each screen below, at 390 px and at 1440 px.
 - [ ] Phone: nothing is pinned while logging. Desktop: Discard and Finish stay in
       the sticky header.
 - [ ] Reload mid-workout: the workout is still there.
+- [ ] Laps: on a run, walk or ride that is following the clock, the Lap button
+      (green, full width) sits under Time and Distance. Under it the table shows
+      the stamped laps, the fastest one in green with "Fastest", and the lap that
+      is running last, ticking. The distance chips (No distance, 400 m, 1 km; in
+      miles 0.25 mi, 1 mi) set the distance of the laps stamped after it. A
+      lap time and distance can be corrected, and the X removes a lap. A double
+      tap adds one lap. Typing a Time removes the Lap button and the running row
+      and keeps the laps.
 
 ## Workout page, edit and delete `/workout/view?id=`
 
@@ -168,6 +176,10 @@ Tick these on each screen below, at 390 px and at 1440 px.
       the change. Changing a date re-scores the other workouts.
 - [ ] Delete: a solid red confirm that says what level you would drop to, if it
       would drop. Afterwards an "XP updated" toast and no level-down animation.
+- [ ] A run with laps shows "N laps · fastest lap 2, 4:05 /km", a small bar chart
+      (taller is faster, the fastest in green) and the read-only lap table under
+      its totals. Edit shows the same table with a "+ Add lap" button under it;
+      an added lap that has no time is not saved.
 - [ ] A missing or wrong id shows a friendly not-found state.
 
 ## Victory `/workout/done`
@@ -325,3 +337,14 @@ Automated checks run in desktop Chromium only, so check these by hand after a de
 - Tap the dice, then Share image: the new sky is the one that gets sent.
 - Save image on a laptop downloads `levl-<title>-<date>.png`, 1080 by 1350.
 - A run shows the distance, time and pace, and no body figure.
+
+## Laps on a real phone
+
+Automated checks fake the clock, so check these by hand after a deploy:
+
+- Start a Run, lock the phone, unlock it, and tap Lap a few times while the run goes on. The
+  Time and the running lap carry on from the real clock, every stamped lap keeps its time,
+  and the screen stays awake.
+- Tap Lap with a thumb while moving: one tap adds one lap, and two quick taps add one.
+- Finish, open the workout, and check the laps, the summary line and the chart. Open Edit,
+  correct a time with the keyboard (`m:ss` works on the phone keyboard) and save.

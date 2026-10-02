@@ -9,8 +9,9 @@ import { exerciseById, isCardioExercise } from '../data/exercises';
 import type { ExerciseDef } from '../data/exercises';
 import { SET_FIELDS } from './routineValidation';
 import { lastWorkoutSets } from './exerciseHistory';
+import { LAP_KM, LAP_SEC, closeLap, finishLaps, lapTotals, readLaps } from './laps';
 import { LIMITS, blankSet, findDuplicateExercise, workoutItemsFromRoutine, workoutTotals } from './routines';
-import type { ExerciseLookup, LoggedSet, PlanItem, Routine, SetPlan, WorkoutItem, WorkoutLog, WorkoutTotals } from './routines';
+import type { ExerciseLookup, Lap, LoggedSet, PlanItem, Routine, SetPlan, WorkoutItem, WorkoutLog, WorkoutTotals } from './routines';
 
 export type Session = {
   title: string;
@@ -233,7 +234,9 @@ export function addSet(session: Session, index: number, lookup: ExerciseLookup =
   if (item.sets.length >= LIMITS.setsPerItem) return fail(`An exercise can have up to ${LIMITS.setsPerItem} sets.`);
   const last = item.sets[item.sets.length - 1];
   const e = lookup(item.exerciseId);
+  // A new set copies the numbers, never the laps: those belong to the set they were stamped on.
   const next: LoggedSet = last ? { ...last, done: false } : e ? { ...blankSet(e), done: false } : { done: false };
+  delete next.laps;
   return ok({ ...session, items: session.items.map((it, k) => (k === index ? { ...it, sets: [...it.sets, next] } : it)) });
 }
 
@@ -304,6 +307,82 @@ export function syncFollow(session: Session, now: Date): Session {
   return changed ? { ...session, items } : session;
 }
 
+// ---------------- Laps ----------------
+// Laps live on the first set of a distance cardio exercise (the cardio card shows
+// one set). They never touch the run's own Time and Distance, except that a lap
+// stamped with a distance fills an empty run distance.
+
+const round3 = (n: number): number => Math.round(n * 1000) / 1000;
+
+// The cardio set at `index` changed by `fn`, or the same session when there is none.
+function withFirstSet(session: Session, index: number, fn: (set: LoggedSet) => LoggedSet | null): Session {
+  const first = within(session.items, index) ? session.items[index].sets[0] : undefined;
+  const next = first ? fn(first) : null;
+  if (!next) return session;
+  return { ...session, items: session.items.map((it, k) => (k === index ? { ...it, sets: [next, ...it.sets.slice(1)] } : it)) };
+}
+
+// A set with these laps, and no `laps` key at all when there are none.
+function withLaps(set: LoggedSet, laps: Lap[]): LoggedSet {
+  const { laps: _old, ...rest } = set;
+  return laps.length > 0 ? { ...rest, laps } : rest;
+}
+
+/**
+ * Tap on Lap: stamps the time since the last lap (or since Start) on the cardio
+ * card at `index`, with `km` when a lap distance is chosen. Nothing happens under
+ * a second after the last lap. The Time keeps following the clock. An empty run
+ * distance, or one that is only the laps added up so far, becomes the laps' sum;
+ * a distance the person typed is left alone.
+ */
+export function addLap(session: Session, index: number, now: Date, km?: number): Session {
+  return withFirstSet(session, index, (set) => {
+    const laps = set.laps ?? [];
+    if (laps.length >= LIMITS.lapsPerSet) return null;
+    const lap = closeLap(laps, (now.getTime() - Date.parse(session.startedAt)) / 1000, km);
+    if (!lap) return null;
+    const before = lapTotals(laps).km;
+    const next = withLaps(set, [...laps, lap]);
+    const typed = set.km ?? 0;
+    if (lap.km !== undefined && (typed === 0 || Math.abs(typed - before) < 0.0005)) next.km = round3(before + lap.km);
+    return next;
+  });
+}
+
+// "+ Add lap" in Edit workout: a row with no time yet. It is saved once it has one.
+export function addBlankLap(session: Session, index: number): Session {
+  return withFirstSet(session, index, (set) => {
+    const laps = set.laps ?? [];
+    return laps.length >= LIMITS.lapsPerSet ? null : withLaps(set, [...laps, { sec: 0 }]);
+  });
+}
+
+export type LapPatch = { sec?: number | undefined; km?: number | undefined };
+
+// Sets a lap's time and distance. A time that is not a number (an empty box) leaves the row with no
+// time, a distance that is not a number above 0 clears it.
+export function updateLap(session: Session, index: number, lapIndex: number, patch: LapPatch): Session {
+  return withFirstSet(session, index, (set) => {
+    const laps = set.laps;
+    if (!laps || lapIndex < 0 || lapIndex >= laps.length) return null;
+    const lap = { ...laps[lapIndex] };
+    if ('sec' in patch) lap.sec = typeof patch.sec === 'number' && Number.isFinite(patch.sec) && patch.sec > 0 ? Math.min(LAP_SEC[1], Math.round(patch.sec)) : 0;
+    if ('km' in patch) {
+      if (typeof patch.km === 'number' && Number.isFinite(patch.km) && patch.km > 0) lap.km = Math.min(LAP_KM[1], round3(patch.km));
+      else delete lap.km;
+    }
+    return withLaps(set, laps.map((l, j) => (j === lapIndex ? lap : l)));
+  });
+}
+
+export function removeLap(session: Session, index: number, lapIndex: number): Session {
+  return withFirstSet(session, index, (set) => {
+    const laps = set.laps;
+    if (!laps || lapIndex < 0 || lapIndex >= laps.length) return null;
+    return withLaps(set, laps.filter((_, j) => j !== lapIndex));
+  });
+}
+
 export function setTitle(session: Session, title: string): Session {
   return { ...session, title: title.slice(0, 80) };
 }
@@ -342,6 +421,7 @@ export function setCounts(session: Session): { done: number; total: number; unti
 // ---------------- Finishing ----------------
 
 // Only the fields the exercise's metric uses, whole reps, inside the API's ranges.
+// Distance cardio keeps its laps that have a time.
 function cleanSet(e: ExerciseDef | undefined, s: LoggedSet): LoggedSet {
   const out: LoggedSet = { done: true };
   const fields = e ? SET_FIELDS[e.metric] : {};
@@ -351,6 +431,8 @@ function cleanSet(e: ExerciseDef | undefined, s: LoggedSet): LoggedSet {
     if (key === 'reps') v = Math.round(v);
     out[key as keyof SetPlan] = Math.min(max, Math.max(min, v));
   }
+  const laps = e?.metric === 'distance_time' ? finishLaps(s.laps) : undefined;
+  if (laps) out.laps = laps;
   return out;
 }
 
@@ -529,6 +611,8 @@ export function parseStoredSession(raw: string | null): Session | null {
         const v = s[key];
         if (typeof v === 'number' && Number.isFinite(v)) set[key] = v;
       }
+      const laps = readLaps(s.laps);
+      if (laps.length > 0) set.laps = laps;
       sets.push(set);
     }
     items.push({ exerciseId: it.exerciseId, ...(typeof it.notes === 'string' && it.notes ? { notes: it.notes.slice(0, 300) } : {}), sets });

@@ -6,7 +6,7 @@ import * as feedback from '@/lib/feedback';
 import { instantiateRoutine, setXp, workoutItemsFromRoutine } from '@/lib/routines';
 import type { LoggedSet, Routine, WorkoutTotals } from '@/lib/routines';
 import * as S from '@/lib/session';
-import type { Removal, Session, SessionResult, SetPatch } from '@/lib/session';
+import type { LapPatch, Removal, Session, SessionResult, SetPatch } from '@/lib/session';
 import { useWakeLock } from '@/lib/useWakeLock';
 import { useProgress } from '@/components/ProgressProvider';
 import type { SaveWorkoutResult } from '@/components/ProgressProvider';
@@ -44,6 +44,11 @@ type WorkoutSessionValue = {
   updateSet: (index: number, setIndex: number, patch: SetPatch) => void;
   /** The cardio card's Time and Distance. Time above zero counts as done, and typing a Time stops it following the clock. */
   updateCardio: (index: number, patch: SetPatch) => void;
+  /** Tap on Lap: stamps the time since the last lap on the cardio card, with the chosen distance in km. Does nothing under a second after the last lap, and leaves the Time following the clock. */
+  addLap: (index: number, km?: number) => void;
+  /** Corrects a stamped lap's time (whole seconds) or distance (km). */
+  updateLap: (index: number, lapIndex: number, patch: LapPatch) => void;
+  removeLap: (index: number, lapIndex: number) => void;
   /** Returns whether the set is now ticked and the XP it is worth, for the "+5 XP" pop. */
   toggleSet: (index: number, setIndex: number) => { done: boolean; xp: number } | null;
   setTitle: (title: string) => void;
@@ -267,6 +272,34 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
     [commit]
   );
 
+  const addLap = useCallback(
+    (index: number, km?: number) => {
+      const cur = sessionRef.current;
+      if (!cur) return;
+      const next = S.addLap(cur, index, new Date(), km);
+      if (next === cur) return;
+      commit(next);
+      feedback.tick();
+    },
+    [commit]
+  );
+
+  const updateLap = useCallback(
+    (index: number, lapIndex: number, patch: LapPatch) => {
+      const cur = sessionRef.current;
+      if (cur) commit(S.updateLap(cur, index, lapIndex, patch));
+    },
+    [commit]
+  );
+
+  const removeLap = useCallback(
+    (index: number, lapIndex: number) => {
+      const cur = sessionRef.current;
+      if (cur) commit(S.removeLap(cur, index, lapIndex));
+    },
+    [commit]
+  );
+
   const toggleSet = useCallback(
     (index: number, setIndex: number) => {
       const cur = sessionRef.current;
@@ -365,6 +398,9 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
     removeSet,
     updateSet,
     updateCardio,
+    addLap,
+    updateLap,
+    removeLap,
     toggleSet,
     setTitle,
     setItemNotes,
@@ -381,8 +417,8 @@ export function useWorkoutSession(): WorkoutSessionValue {
   return ctx;
 }
 
-/** The time since the workout started, as "12m 05s", ticking every second. Empty until the client is ready. */
-export function useElapsed(startedAt: string | undefined): string {
+/** The time now in ms, ticking every second while a workout is running. Null until the client is ready, or without a workout. */
+export function useNow(startedAt: string | undefined): number | null {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
     if (!startedAt) {
@@ -393,6 +429,12 @@ export function useElapsed(startedAt: string | undefined): string {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, [startedAt]);
+  return startedAt ? now : null;
+}
+
+/** The time since the workout started, as "12m 05s", ticking every second. Empty until the client is ready. */
+export function useElapsed(startedAt: string | undefined): string {
+  const now = useNow(startedAt);
   if (!startedAt || now === null) return '';
   return S.formatElapsed(now - Date.parse(startedAt));
 }

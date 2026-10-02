@@ -95,6 +95,36 @@ ticked sets. The workout stays in progress until the save succeeds. It resolves
 to the saved workout, an XP snapshot before and after, and the celebration
 events the workout caused. Those events are not played yet.
 
+### Laps on a run
+
+A distance cardio set (`distance_time`) can carry `laps?: Lap[]`, with
+`Lap = { sec: number; km?: number }` (`LoggedSet` in `lib/routines.ts`). The run keeps its
+own total `min` and `km` on the same set, so XP, records and "beat last time" never read
+laps: a run is judged on its whole time and distance. Limits: up to 200 laps a set, `sec` a
+whole number from 1 to 86,400, `km` from 0 to 100.
+
+The field is optional and additive, so **there is no migration and no backup key**: every
+workout saved before laps is valid as it is, and the server never writes `laps` unless the
+client sent some. `lib/laps.ts` holds the pure helpers (`closeLap`, `lapTotals`,
+`fastestLap`, lap time formatting and parsing, the chart heights, the distance chips).
+
+Every path a set passes through keeps laps, so anything new that rebuilds sets field by
+field has to be checked:
+
+- `parseLoggedSets` in `lib/routineValidation.ts` (save and edit both use it). It rejects
+  laps on any other metric.
+- `cleanSet` in `lib/session.ts` (finishing and saving an edit). It drops laps that have no
+  time, which is how an added row left empty is not saved.
+- `parseStoredSession` (the workout in progress on the device) and `sessionFromWorkout`
+  (Edit workout).
+- `updateRoutineFromWorkout` strips laps, and `lastWorkoutSets` (prefill) never copied them:
+  a routine plans numbers only.
+
+The live Lap button is `addLap` in `lib/session.ts`. It stamps the seconds since Start minus
+the laps already stamped and leaves the Time following the clock. The lap distance chip is
+component state in `CardioFields`, not stored. The running lap row ticks from the one clock
+`LogScreen` already has (`useNow`), passed down as `elapsedSec`.
+
 ### Victory and the reward moments
 
 `/workout/done` shows the Victory screen from the last finished workout (in

@@ -3,8 +3,9 @@
 // clean value (only known fields, trimmed strings) or an error message.
 import { AVOID_TAGS, EQUIPMENT_ORDER, JOINTS, MUSCLE_ORDER, exerciseById } from '../data/exercises';
 import type { AvoidTag, CustomExercise, Equipment, Joint, Metric, Muscle } from '../data/exercises';
+import { LAP_KM, LAP_SEC } from './laps';
 import { LIMITS, findDuplicateExercise } from './routines';
-import type { ExerciseLookup, LoggedSet, PlanItem, Prefs, Routine, RoutineItem, SetPlan, WorkoutItem, WorkoutLog } from './routines';
+import type { ExerciseLookup, Lap, LoggedSet, PlanItem, Prefs, Routine, RoutineItem, SetPlan, WorkoutItem, WorkoutLog } from './routines';
 
 export type Parsed<T> = { ok: true; value: T } | { ok: false; error: string };
 
@@ -99,6 +100,21 @@ function parsePlannedSets(metric: Metric, raw: unknown): Parsed<SetPlan[]> {
   return ok(sets);
 }
 
+// The laps of a run: up to 200, each a whole number of seconds (1 to 86,400) and
+// optionally a distance in km (0 to 100). An empty list is the same as none.
+function parseLaps(raw: unknown): Parsed<Lap[]> {
+  if (!Array.isArray(raw)) return fail('invalid laps');
+  if (raw.length > LIMITS.lapsPerSet) return fail('too many laps');
+  const laps: Lap[] = [];
+  for (const l of raw) {
+    if (!isObj(l)) return fail('invalid lap');
+    if (!inRange(l.sec, LAP_SEC[0], LAP_SEC[1]) || !Number.isInteger(l.sec)) return fail('lap time must be a whole number of seconds, 1 to 86400');
+    if (l.km !== undefined && l.km !== null && !inRange(l.km, LAP_KM[0], LAP_KM[1])) return fail('lap distance is out of range');
+    laps.push({ sec: l.sec, ...(typeof l.km === 'number' ? { km: l.km } : {}) });
+  }
+  return ok(laps);
+}
+
 function parseLoggedSets(metric: Metric, raw: unknown): Parsed<LoggedSet[]> {
   if (!Array.isArray(raw) || raw.length < 1 || raw.length > LIMITS.setsPerItem) return fail('invalid sets');
   const sets: LoggedSet[] = [];
@@ -106,7 +122,15 @@ function parseLoggedSets(metric: Metric, raw: unknown): Parsed<LoggedSet[]> {
     if (!isObj(s) || typeof s.done !== 'boolean') return fail('invalid set');
     const r = parseSetFields(metric, s);
     if (!r.ok) return r;
-    sets.push({ ...r.value, done: s.done });
+    const set: LoggedSet = { ...r.value, done: s.done };
+    // Laps only belong on distance cardio. Old workouts have none, and that stays valid.
+    if (s.laps !== undefined && s.laps !== null) {
+      if (metric !== 'distance_time') return fail('laps only belong on distance cardio');
+      const laps = parseLaps(s.laps);
+      if (!laps.ok) return laps;
+      if (laps.value.length > 0) set.laps = laps.value;
+    }
+    sets.push(set);
   }
   return ok(sets);
 }

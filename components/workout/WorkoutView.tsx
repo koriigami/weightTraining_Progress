@@ -24,6 +24,7 @@ import { Screen } from '@/components/ui/Screen';
 import { Thumb } from '@/components/ui/Thumb';
 import { DeleteWorkoutDialog } from './DeleteWorkoutDialog';
 import { MarkChip } from './ExerciseBlock';
+import { RunLaps } from './LapTable';
 import { WorkoutNotFound } from './WorkoutNotFound';
 
 /** Back to where the workout was opened from, or Home when there is nowhere to go back to. */
@@ -196,6 +197,7 @@ export function WorkoutView() {
                 </div>
               ))}
             </div>
+            {sets.map((s, j) => (s.laps && s.laps.length > 0 ? <RunLaps key={j} laps={s.laps} units={units} kind={e.cardioKind} /> : null))}
           </div>
         );
       })}

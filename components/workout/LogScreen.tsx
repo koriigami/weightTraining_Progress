@@ -8,12 +8,12 @@ import { untickedSets } from '@/lib/finishSummary';
 import { dailyBonusLive, liveXp, statTiles } from '@/lib/liveStats';
 import { fillOnTick } from '@/lib/setColumns';
 import type { SetPatch } from '@/lib/session';
-import { localWhen } from '@/lib/session';
+import { formatElapsed, localWhen } from '@/lib/session';
 import { dailyBonusPaid, dayMinutes, liveMarks } from '@/lib/workoutScoring';
 import { useDesktopLayout, useWideLayout } from '@/lib/useMediaQuery';
 import { useToday } from '@/lib/useToday';
 import { useProgress } from '@/components/ProgressProvider';
-import { useElapsed, useWorkoutSession } from '@/components/WorkoutSessionProvider';
+import { useNow, useWorkoutSession } from '@/components/WorkoutSessionProvider';
 import { ExerciseInfoSheet } from '@/components/exercises/ExerciseDetail';
 import { ExercisePicker } from '@/components/exercises/ExercisePicker';
 import { LibraryPanel } from '@/components/exercises/LibraryPanel';
@@ -49,7 +49,11 @@ export function LogScreen() {
   const { openStart } = useShell();
   const desktop = useDesktopLayout();
   const wide = useWideLayout();
-  const elapsed = useElapsed(ws.session?.startedAt);
+  // One clock for the screen: the elapsed text, and the running lap on a cardio card.
+  const now = useNow(ws.session?.startedAt);
+  const startedMs = ws.session ? Date.parse(ws.session.startedAt) : NaN;
+  const elapsed = now !== null && Number.isFinite(startedMs) ? formatElapsed(now - startedMs) : '';
+  const elapsedSec = now !== null && Number.isFinite(startedMs) ? (now - startedMs) / 1000 : undefined;
   const today = useToday();
   const panelRef = useRef<LibraryPanelHandle>(null);
 
@@ -228,7 +232,20 @@ export function LogScreen() {
         }}
         onToggleSet={(j) => tick(i, j)}
         mark={marks.find((m) => m.exerciseId === item.exerciseId)}
-        cardio={e.metric === 'distance_time' ? { follow: Boolean(session.follow?.includes(item.exerciseId)), onChange: (patch: SetPatch) => ws.updateCardio(i, patch) } : undefined}
+        cardio={
+          e.metric === 'distance_time'
+            ? {
+                follow: Boolean(session.follow?.includes(item.exerciseId)),
+                onChange: (patch: SetPatch) => ws.updateCardio(i, patch),
+                laps: {
+                  onStamp: (km) => ws.addLap(i, km),
+                  elapsedSec,
+                  onUpdate: (lapIndex, patch) => ws.updateLap(i, lapIndex, patch),
+                  onRemove: (lapIndex) => ws.removeLap(i, lapIndex),
+                },
+              }
+            : undefined
+        }
       />
     );
   });

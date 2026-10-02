@@ -3,14 +3,15 @@
 import { ArrowUp, Crown, EllipsisVertical } from 'lucide-react';
 import type { ExerciseDef } from '@/data/exercises';
 import type { Units } from '@/lib/setColumns';
-import type { SetPlan } from '@/lib/routines';
+import type { LoggedSet, SetPlan } from '@/lib/routines';
 import type { SetPatch } from '@/lib/session';
 import { Thumb } from '@/components/ui/Thumb';
 import type { LiveMark } from '@/lib/workoutScoring';
 import { CardioFields, CardioPill } from './CardioCard';
+import type { CardioLapControls } from './CardioCard';
 import { SetTable } from './SetTable';
 
-export type BlockItem = { exerciseId: string; notes?: string; sets: (SetPlan & { done?: boolean })[] };
+export type BlockItem = { exerciseId: string; notes?: string; sets: (SetPlan & { done?: boolean; laps?: LoggedSet['laps'] })[] };
 
 export type ExerciseBlockProps = {
   mode: 'editor' | 'log';
@@ -28,7 +29,7 @@ export type ExerciseBlockProps = {
   /** Log only: the live "Beat last time" or "Record" chip. */
   mark?: LiveMark;
   /** Log only, distance cardio with one set: shows the roomy cardio card instead of the set table. */
-  cardio?: { follow: boolean; onChange: (patch: SetPatch) => void };
+  cardio?: { follow: boolean; onChange: (patch: SetPatch) => void; laps?: CardioLapControls };
 };
 
 /** The gold Record or green Beat last time chip, with its XP. */
@@ -67,7 +68,7 @@ export function ExerciseBlock({ mode, exercise, item, units, previous, onOpenExe
       </div>
       {card ? (
         <>
-          <CardioFields exercise={exercise} set={item.sets[0]} units={units} follow={card.follow} previous={previous} onChange={card.onChange} />
+          <CardioFields exercise={exercise} set={item.sets[0]} units={units} follow={card.follow} previous={previous} onChange={card.onChange} laps={card.laps} />
           {mark && <MarkChip mark={mark} />}
         </>
       ) : (

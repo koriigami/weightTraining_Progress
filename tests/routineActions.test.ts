@@ -360,6 +360,58 @@ describe('addCustomExercise', () => {
   });
 });
 
+describe('laps', () => {
+  const day = '2026-10-09';
+  const withLaps = (laps: unknown, exerciseId = 'run') => {
+    const set = exerciseId === 'run' ? { min: 30, km: 5, done: true } : { reps: 10, done: true };
+    return input(day, { items: [{ exerciseId, sets: [{ ...set, laps }] }] }, exerciseId);
+  };
+  const save = (laps: unknown, exerciseId?: string) => run(emptyState(), { action: 'saveWorkout', workout: withLaps(laps, exerciseId) });
+  const good = [{ sec: 360, km: 1 }, { sec: 98 }];
+
+  it('accepts good laps on a run, on save and on edit', () => {
+    const saved = expectOk(save(good));
+    expect(saved.workouts![0].items[0].sets[0].laps).toEqual(good);
+    const edited = expectOk(run(saved, { action: 'updateWorkout', id: `in-${day}-run`, items: [{ exerciseId: 'run', sets: [{ min: 30, km: 5, done: true, laps: [{ sec: 100 }] }] }] }));
+    expect(edited.workouts![0].items[0].sets[0].laps).toEqual([{ sec: 100 }]);
+  });
+
+  it('accepts 200 laps, an empty list as none, and a workout with no laps at all', () => {
+    expectOk(save(Array.from({ length: 200 }, () => ({ sec: 60 }))));
+    expect(expectOk(save([])).workouts![0].items[0].sets[0].laps).toBeUndefined();
+    expect(expectOk(run(emptyState(), { action: 'saveWorkout', workout: input(day, { items: [{ exerciseId: 'run', sets: [{ min: 30, km: 5, done: true }] }] }, 'run') })).workouts).toHaveLength(1);
+  });
+
+  it('rejects more than 200 laps', () => {
+    expectFail(save(Array.from({ length: 201 }, () => ({ sec: 60 }))), 'too many laps');
+  });
+
+  it('rejects a lap time of 0, a fraction, or over 86,400', () => {
+    expectFail(save([{ sec: 0 }]), 'lap time');
+    expectFail(save([{ sec: 59.5 }]), 'lap time');
+    expectFail(save([{ sec: 86401 }]), 'lap time');
+    expectFail(save([{ sec: '60' }]), 'lap time');
+    expectOk(save([{ sec: 86400 }]));
+  });
+
+  it('rejects a lap distance outside 0 to 100 km', () => {
+    expectFail(save([{ sec: 60, km: -1 }]), 'distance');
+    expectFail(save([{ sec: 60, km: 100.5 }]), 'distance');
+    expectOk(save([{ sec: 60, km: 100 }, { sec: 60, km: 0 }]));
+  });
+
+  it('rejects laps that are not a list of laps', () => {
+    expectFail(save('nope'), 'invalid laps');
+    expectFail(save([5]), 'invalid lap');
+  });
+
+  it('rejects laps on a metric other than distance_time', () => {
+    expectFail(save(good, 'pushup'), 'laps only belong on distance cardio');
+    const saved = expectOk(save(good));
+    expectFail(run(saved, { action: 'updateWorkout', id: `in-${day}-run`, items: [{ exerciseId: 'pushup', sets: [{ reps: 10, done: true, laps: good }] }] }), 'laps only belong');
+  });
+});
+
 describe('unknown action', () => {
   it('is refused', () => {
     expectFail(run(emptyState(), { action: 'tick' }), 'unknown action');
