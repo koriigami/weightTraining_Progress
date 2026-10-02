@@ -27,8 +27,10 @@ export function markText(mark: WorkoutMark, weight: WeightUnit = 'kg', distance:
 // day to 20 minutes, and otherwise 0 with the reason: an earlier workout already
 // paid it, or the day is still short. `minutes` is this workout's own training
 // minutes and `dayMinutes` the date's total once it is counted. `pastDay` words it
-// for a workout on an earlier day ("that day" instead of "today").
-export function bonusLines(p: { dailyXp: number; comebackXp: number; weeklyXp: number; minutes: number; dayMinutes: number; weeklyGoal: number; pastDay?: boolean }): XpLine[] {
+// for a workout on an earlier day ("that day" instead of "today"). `weekRun` is the
+// weeks in a row the weekly goal had been met when it paid, and shows from the
+// second week in a row.
+export function bonusLines(p: { dailyXp: number; comebackXp: number; weeklyXp: number; weekRun?: number; minutes: number; dayMinutes: number; weeklyGoal: number; pastDay?: boolean }): XpLine[] {
   const lines: XpLine[] = [];
   if (p.dailyXp > 0) {
     lines.push({ key: 'daily', title: 'Daily bonus', xp: p.dailyXp });
@@ -37,7 +39,11 @@ export function bonusLines(p: { dailyXp: number; comebackXp: number; weeklyXp: n
     lines.push({ key: 'daily', title: 'Daily bonus', xp: 0, sub: paidBefore ? `Already earned ${p.pastDay ? 'that day' : 'today'}` : minutesTodayText(p.dayMinutes, !p.pastDay) });
   }
   if (p.comebackXp > 0) lines.push({ key: 'comeback', title: 'Comeback', xp: p.comebackXp, sub: 'First training day after a week off' });
-  if (p.weeklyXp > 0) lines.push({ key: 'weekly', title: 'Weekly goal', xp: p.weeklyXp, sub: `${p.weeklyGoal} of ${p.weeklyGoal} training ${p.weeklyGoal === 1 ? 'day' : 'days'} this week` });
+  if (p.weeklyXp > 0) {
+    const days = `${p.weeklyGoal} of ${p.weeklyGoal} training ${p.weeklyGoal === 1 ? 'day' : 'days'}`;
+    const run = p.weekRun ?? 0;
+    lines.push({ key: 'weekly', title: 'Weekly goal', xp: p.weeklyXp, sub: run >= 2 ? `${days}, ${run} weeks in a row` : `${days} this week` });
+  }
   return lines;
 }
 
@@ -79,7 +85,7 @@ export function xpLines(workout: Pick<WorkoutLog, 'items'>, score: WorkoutScore 
       });
     }
   }
-  lines.push(...bonusLines({ dailyXp: score.dailyXp, comebackXp: score.comebackXp, weeklyXp: score.weeklyXp, minutes: score.minutes, dayMinutes: score.dayMinutes, weeklyGoal, pastDay }));
+  lines.push(...bonusLines({ dailyXp: score.dailyXp, comebackXp: score.comebackXp, weeklyXp: score.weeklyXp, weekRun: score.parts.weekRun, minutes: score.minutes, dayMinutes: score.dayMinutes, weeklyGoal, pastDay }));
   return lines;
 }
 

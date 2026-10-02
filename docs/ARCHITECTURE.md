@@ -213,8 +213,17 @@ rules are the XP Rulebook (`docs/design/xp-reference.html`), called rules v3:
   does not matter. A date that reaches 20 minutes is a **training day**. The
   amount is stored in `xpParts.finish`, the key the old finish bonus used, so
   no stored data had to move. `WORKOUT_XP` in `lib/routines.ts` holds the numbers.
-- **Weekly goal**: +50 on the workout that makes a Monday to Sunday week's count
-  of training days reach the weekly goal.
+- **Weekly goal** (rules v4): on the workout that makes a Monday to Sunday week's
+  count of training days reach the weekly goal, +50 the first week and +10 more for
+  each week in a row the goal is met, up to +100 from week 6 (`weeklyGoalXp(run)`
+  in `lib/routines.ts`, with `weeklyGoalStep` and `weeklyGoalMax` in `WORKOUT_XP`).
+  A week that does not reach the goal, even one with training, starts the run again
+  at +50. `scoreWorkouts` keeps the run per week: when a workout makes its week reach
+  the goal, the run is the previous week's run plus one (0 if that week missed).
+  Workouts are scored in date order, so the previous week is final by then. The run
+  is stored next to the amount as `xpParts.weekRun` (only when `weekly` is more than
+  0). The goal is the current `prefs.weeklyGoal` applied to every week, so changing
+  it checks the runs again. Every goal week paid +50 under v3, so XP never goes down.
 - **Comeback**: +25 on the first training day after a whole Monday to Sunday week
   with none, never for a person's first training day (`xpParts.comeback`, a
   missing value reads as 0).
@@ -233,8 +242,9 @@ rules are the XP Rulebook (`docs/design/xp-reference.html`), called rules v3:
   - *The Victory screen and the workout page* (`bonusLines` in `lib/victory.ts`,
     used by `xpLines` and by `xpBreakdown` in `lib/history.ts`) list the daily
     bonus, the comeback and the weekly goal. A daily bonus of 0 says why: already
-    earned today, or N of 20 min today. The Finish dialog only warns about
-    unticked sets.
+    earned today, or N of 20 min today. The Weekly goal line says "3 of 3 training
+    days, 4 weeks in a row" from the second week in a row (`weekRun`), else "this
+    week". The Finish dialog only warns about unticked sets.
   - *Every day view* uses one rule, `dayRules` and `dayKind` in `lib/week.ts`:
     a day is `training`, `rest` or `open`. Rest is a past day without a training
     day on or after the first logged workout, or a day still to come this week
@@ -245,6 +255,13 @@ rules are the XP Rulebook (`docs/design/xp-reference.html`), called rules v3:
     The Calendar adds a dot on days with a workout under 20 minutes.
     `comebackPending` drives the "Comeback bonus" hint on the Today card:
     last week and this week have no training day and an earlier one exists.
+  - *The weekly goal bonus on Home* is `goalRun` in `lib/week.ts`, returned by
+    `weekSummary` as `goalRun`: the weeks in a row up to last week, whether this
+    week is met, what this week pays and what next week pays. It reads the same
+    training days and the same `weeklyGoalXp` ladder as scoring, and a test checks
+    that the two agree. `goalRunText` words it and `WeekCard` shows it under the
+    streak row: "Goal bonus this week: +80 XP" with "Goal met 3 weeks in a row", or
+    once met "Goal met 4 weeks in a row: +80 XP" with "Next week pays +90 XP".
   - *XP bars* show XP into the level over what the level takes (`xpIntoLevel` in
     `lib/progress.ts`), never the running total. The Rank Road's level rows show
     the XP to go (`LevelRow.xpToGo` in `lib/rankRoad.ts`).
@@ -273,12 +290,15 @@ rules are the XP Rulebook (`docs/design/xp-reference.html`), called rules v3:
 - **Rules notes.** `AppState.rulesV2Note` is set once by the store for a person
   who already had workouts or plan days, so Home can say "XP was worked out
   again with the new rules". `rulesV3Note` does the same for the daily bonus
-  rules: true when the state has workouts the first time it is read, false
-  otherwise. Seeing a note sets its flag to false (`setRulesNote`,
-  `setRulesV3Note`). Home's `RulesNote` shows the v3 note when it is set (and
-  then clears both flags on "Got it"), else the v2 note. The pass that sets `rulesV3Note` also works the stored `xp`
-  and `xpParts` of every workout out again, so the workout pages match the new
-  rules at once. Reading again changes nothing.
+  rules, and `rulesV4Note` for the growing weekly goal bonus: true when the state
+  has workouts the first time it is read, false otherwise. Seeing a note sets its
+  flag to false (`setRulesNote`, `setRulesV3Note`, `setRulesV4Note`). Home's
+  `RulesNote` shows the newest note that is waiting (v4, then v3, then v2) and
+  "Got it" clears every waiting one. The pass that sets `rulesV3Note` or
+  `rulesV4Note` also works the stored `xp` and `xpParts` of every workout out
+  again, so the workout pages match the new rules at once. Before the v4 pass
+  rescores a state that has workouts, it copies the state as it was to
+  `wt:user:{id}:backup:v11`, only if that key is free. Reading again changes nothing.
 
 ## Storage
 
@@ -289,6 +309,7 @@ Redis keys, all per person (`{id}` is the Google account id):
 | `wt:user:{id}:state` | The whole `AppState` document, `version: 2` |
 | `wt:user:{id}:profile` | Email, name, photo, created time (`createdAt` is the join date Insights uses) |
 | `wt:user:{id}:backup:v7` | The state exactly as it was before the plan days became workouts, written once and never changed |
+| `wt:user:{id}:backup:v11` | The state exactly as it was before the weekly goal bonus started to grow (rules v4) and the stored XP was worked out again. Written once, only for a state that had workouts, and never changed |
 | `wt:invites` | The invite list: a de-duplicated array of trimmed, lowercased emails. Server only |
 | `wt:state:v2`, `wt:state` | The owner's older single-user progress. Read only, never written or deleted |
 
@@ -321,8 +342,10 @@ first time `getState` reads a state that still has a `days` log (`upgrade` in
    18:00 start and finish, and a `plan` holding everything scheduled that day.
 3. `days` is dropped and the state is saved. Reading it again changes nothing.
 
-`rulesV2Note` is set in the same pass (and `rulesV3Note`, see the rules notes above). `tests/planMigration.test.ts` and
-`tests/store.test.ts` cover the migration, the backup and idempotence.
+`rulesV2Note` is set in the same pass (and `rulesV3Note` and `rulesV4Note`, see the rules notes above). `tests/planMigration.test.ts` and
+`tests/store.test.ts` cover the migration, the backups and idempotence, and
+`tests/xpIntegrity.test.ts` checks that a rules change never lowers XP (see
+"XP integrity check" in `docs/AGENTS.md`).
 
 ### The share card
 

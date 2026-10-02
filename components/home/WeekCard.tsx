@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Check, ChevronRight, Flame } from 'lucide-react';
+import { goalRunText } from '@/lib/week';
 import type { WeekSummary } from '@/lib/week';
 import { cn } from '@/components/ui/cn';
 
@@ -10,9 +11,11 @@ const weekday = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateStrin
 /**
  * This week: M to S days with a tick on each training day, "Rest" on days off (the
  * past ones, and the rest of the week once the goal is met), today ringed, the
- * weekly streak and "N of goal this week" in training days. The whole card opens the calendar.
+ * weekly streak and "N of goal this week" in training days, then what the weekly goal
+ * bonus pays and the weeks in a row. The whole card opens the calendar.
  */
 export function WeekCard({ week }: { week: WeekSummary }) {
+  const bonus = goalRunText(week.goalRun);
   return (
     <Link href="/calendar" className="wt-card wt-weekcard">
       <div className="wt-cardhead">
@@ -45,6 +48,10 @@ export function WeekCard({ week }: { week: WeekSummary }) {
         <span style={{ color: 'var(--muted)' }}>
           {week.count} of {week.goal} training days
         </span>
+      </div>
+      <div className="wt-goalbonus">
+        <b>{bonus.title}</b>
+        {bonus.sub && <span>{bonus.sub}</span>}
       </div>
     </Link>
   );

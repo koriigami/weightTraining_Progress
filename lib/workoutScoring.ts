@@ -1,6 +1,6 @@
 // XP, records, training days and weekly streaks for logged workouts. Pure functions.
 //
-// Rules (v3):
+// Rules (v4):
 //   +5 XP per ticked strength set that has a rep (or a 5 second hold). Cardio is
 //   1 XP a minute (30 at most a set) plus 10 when a distance is logged. An
 //   interval set is its work plus easy minutes, also capped at 30. See setXp in
@@ -14,7 +14,9 @@
 //   minutes (not capped, only the XP is). The plan does not matter. A date that
 //   reaches 20 minutes is a training day.
 //   +50 on the workout that makes the Monday to Sunday week's training days
-//   reach the weekly goal.
+//   reach the weekly goal, and +10 more for each week in a row the goal was met,
+//   up to +100 from the 6th week (weeklyGoalXp). A week that does not reach the
+//   goal, even one with training, starts the run again at +50.
 //   +25 comeback on the first training day after a whole Monday to Sunday week
 //   with none, never for a person's first training day.
 //
@@ -25,7 +27,7 @@
 import { exerciseById } from '../data/exercises';
 import type { ExerciseDef, Muscle } from '../data/exercises';
 import { addDaysStr, mondayOf } from './date';
-import { WORKOUT_XP, setXp, stateLookup, weeklyGoalOf, workoutTotals } from './routines';
+import { WORKOUT_XP, setXp, stateLookup, weeklyGoalOf, weeklyGoalXp, workoutTotals } from './routines';
 import type { ExerciseLookup, LoggedSet, PlanItem, WorkoutItem, WorkoutLog, WorkoutMark, XpParts } from './routines';
 import type { AppState } from './progress';
 
@@ -336,6 +338,9 @@ export function scoreWorkouts(workouts: WorkoutLog[], opts: ScoreOptions): Worko
   const bestByExercise = new Map<string, Perf>();
   const minutesByDate = new Map<string, number>();
   const trainingDaysByWeek = new Map<string, number>();
+  // The weeks in a row the goal was met, for each week (its Monday) that met it. A
+  // week is final when a later one is scored, because workouts come in date order.
+  const goalRunByWeek = new Map<string, number>();
   const trainingDates = new Set<string>();
   let firstTrainingDay: string | null = null;
   const scores: WorkoutScore[] = [];
@@ -404,7 +409,12 @@ export function scoreWorkouts(workouts: WorkoutLog[], opts: ScoreOptions): Worko
       const week = mondayOf(w.date);
       const inWeek = (trainingDaysByWeek.get(week) ?? 0) + 1;
       trainingDaysByWeek.set(week, inWeek);
-      if (inWeek === opts.weeklyGoal) parts.weekly = WORKOUT_XP.weeklyGoal;
+      if (inWeek === opts.weeklyGoal) {
+        const run = (goalRunByWeek.get(addDaysStr(week, -7)) ?? 0) + 1;
+        goalRunByWeek.set(week, run);
+        parts.weekly = weeklyGoalXp(run);
+        parts.weekRun = run;
+      }
       // First training day of its week, the week before it was empty, and there
       // was training before that.
       if (inWeek === 1 && !trainingDaysByWeek.has(addDaysStr(week, -7)) && firstTrainingDay !== null && firstTrainingDay < w.date) parts.comeback = WORKOUT_XP.comeback;

@@ -132,7 +132,7 @@ export function WeeklyGoalFields({ value, onChange }: { value: number; onChange:
   return (
     <div className={cn('wt-wgoal')}>
       <Stepper label="Weekly goal" value={value} min={1} max={7} onChange={onChange} format={(v) => `${v} training ${v === 1 ? 'day' : 'days'}`} />
-      <p>A week runs Monday to Sunday. A day counts once you have trained for 20 minutes. Reach your goal and you earn a 50 XP bonus. Nothing forces a schedule.</p>
+      <p>A week runs Monday to Sunday. A day counts once you have trained for 20 minutes. Reach your goal for +50 XP, and +10 more for each week in a row you reach it, up to +100. Nothing forces a schedule.</p>
     </div>
   );
 }

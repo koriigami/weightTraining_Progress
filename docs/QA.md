@@ -86,6 +86,12 @@ Tick these on each screen below, at 390 px and at 1440 px.
       sits inside the tile, today's gold ring is complete with a small gap, and
       rest days have a thin border. On the Calendar the selected day has a dark
       ring; today keeps only its gold ring when selected.
+- [ ] Under the streak row, This week shows the weekly goal bonus. Before the goal is met:
+      "Goal bonus this week: +80 XP", and when there is a run a second line, "Goal met 3 weeks in a
+      row" ("1 week in a row" for one). Once met: "Goal met 4 weeks in a row: +80 XP" (a first
+      goal week says "Goal met this week: +50 XP") and "Next week pays +90 XP", never over +100.
+      A week short of the goal, or with no training, starts it again at +50. It fits a 390 px phone
+      and the desktop card without overflow, and the card still opens the Calendar.
 - [ ] After a week with no training day (and none yet this week) the Today card
       says "Comeback bonus: +25 XP on your first training day". It is gone once
       this week has a training day.
@@ -94,7 +100,10 @@ Tick these on each screen below, at 390 px and at 1440 px.
 - [ ] For someone who had workouts before v8, the "XP was worked out again" note
       shows once and does not come back after it is dismissed. Someone who has
       both notes waiting sees only "XP was worked out again with the new daily
-      bonus", and dismissing it clears both.
+      bonus", and dismissing it clears both. For someone with workouts before v11 the
+      newest note shows, "The weekly goal bonus now grows with each week in a row. XP was
+      worked out again.", and Got it clears every note that is waiting. Their goal weeks in a
+      row now pay more than +50 on the workout rows, and nothing pays less.
 - [ ] Phone: the tab bar has Home, Routines, a raised WORKOUT button, Rank,
       Profile.
 
@@ -222,9 +231,11 @@ Tick these on each screen below, at 390 px and at 1440 px.
       effort, move the slider: each change saves on its own ("Saved" shows in Workout details), and
       neither changes the XP. Finish and Log workout both end here with nothing picked.
 - [ ] Edit the title, date and time, and notes (the box says "Anything to remember?"). The changes save. (There is no photo control yet: it waits for file storage.)
-- [ ] The XP lines follow rules v3: sets, cardio, beat or record, then Daily
+- [ ] The XP lines follow rules v4: sets, cardio, beat or record, then Daily
       bonus (0 with "Already earned today" or "N of 20 min today" when not paid),
-      Comeback and Weekly goal only when earned. No "Workout finished" or
+      Comeback and Weekly goal only when earned. The Weekly goal line shows its real
+      amount (+50 to +100) and, from the second week in a row, "3 of 3 training days,
+      4 weeks in a row". The workout page's XP breakdown says the same. No "Workout finished" or
       "Missed" line.
 - [ ] Share opens the sheet with the share card as the preview: a random sky,
       the muscles worked, the stats and the workout's own XP. A renamed title
@@ -329,7 +340,9 @@ For each of Level up, Rank up and Badge unlock:
 
 - [ ] Account: name, email and photo from Google.
 - [ ] Training: units, equipment, things to avoid and weekly goal each open an
-      editor. Save, reload, and the value is still there.
+      editor. Save, reload, and the value is still there. The weekly goal editor says: "Reach
+      your goal for +50 XP, and +10 more for each week in a row you reach it, up to +100."
+      Changing the goal checks past weeks and the run again.
 - [ ] App: Sounds and Haptics switches persist.
 - [ ] Sign out: a confirm with the solid red button. On desktop the sidebar user
       row opens an account menu with Profile, Settings and Sign out (and

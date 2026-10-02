@@ -38,16 +38,20 @@ decisions are made, so it is not delegated.
 
 Ordered by how soon the trigger is likely. None of these should be built early.
 
-### 1. XP integrity check (skill plus a script)
+### 1. XP integrity check (a test, plus a skill still to come)
 - **Trigger:** the next change to scoring, badges, goal rewards or rank thresholds. It fired with v10
-  (rules v3); the rescore was checked by hand with a before and after script on
-  `tests/fixtures/legacyPlanState.ts` (level 11 to 12). Make it a committed script before the next rules change.
+  (rules v3), checked by hand on `tests/fixtures/legacyPlanState.ts` (level 11 to 12), and again with v11
+  stage 4 (rules v4), when it became a committed test: `tests/xpIntegrity.test.ts`.
 - **Why Levl needs it:** XP and rank are the product. A rule change silently
   re-scores everyone's history (it happened in v8). Strava had to build integrity
   checks once leaderboards mattered.
-- **Job:** a script replays fixture histories (`tests/fixtures/`) under the old and
-  new rules and prints the XP, level and rank change per person; the skill has the
-  reviewer look for farming loopholes against `docs/design/xp-reference.html`.
+- **What exists:** the test replays the plan migration fixture and a few built histories, compares
+  XP, level and rank under the new rules with the old ones, and fails if anything goes down or if
+  the difference is not exactly what the rule says (for v4, the ladder). Print the before and after
+  table with `XP_REPORT=1 npx vitest run tests/xpIntegrity.test.ts --silent=false`. On the next rules
+  change, update its "before" side to the rules being replaced and add a history that shows the change.
+- **Still to come (the skill):** a reviewer pass that looks for farming loopholes against
+  `docs/design/xp-reference.html`.
 - **Checkpoint:** the user signs off the before and after table.
 
 ### 2. Migration review (skill)

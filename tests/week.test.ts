@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { comebackPending, dayKind, dayRules, trainedDates, upNextRoutines, weekDots, weekSummary } from '../lib/week';
+import { comebackPending, dayKind, dayRules, goalRun, goalRunText, trainedDates, upNextRoutines, weekDots, weekSummary } from '../lib/week';
 import { emptyState } from '../lib/progress';
 import type { AppState } from '../lib/progress';
 import { defaultPrefs } from '../lib/routines';
 import type { Routine } from '../lib/routines';
+import { scoreWorkouts } from '../lib/workoutScoring';
+import { addDaysStr } from '../lib/date';
 import { stateWith, trainingDay, workout } from './helpers';
 
 // Tuesday 29 September 2026. Its week runs Monday 28 Sep to Sunday 4 Oct.
@@ -156,6 +158,88 @@ describe('comeback hint', () => {
     const short = workout('2026-09-28', [{ id: 'pushup', sets: [{ reps: 10 }, { reps: 10 }] }]);
     expect(weekSummary(stateWith([trainingDay('2026-09-08'), short]), TODAY).comeback).toBe(true);
     expect(weekSummary(stateWith([short]), TODAY).comeback).toBe(false);
+  });
+});
+
+describe('goal run', () => {
+  // Today is Wednesday 14 October. This week is 12 to 18 October. Monday 21 September starts the first of the weeks below.
+  const TODAY_G = '2026-10-14';
+  const MON_G = '2026-09-21';
+  const wk = (n: number, days: number) => Array.from({ length: days }, (_, i) => addDaysStr(MON_G, 7 * n + i)); // week 0 is 21 Sep, week 3 is 12 Oct
+
+  it('has no run and pays +50 with no history', () => {
+    expect(goalRun([], 3, TODAY_G)).toEqual({ run: 0, met: false, weeks: 0, thisWeek: 50, nextWeek: 50 });
+  });
+
+  it('before the goal is met: the run up to last week, and what this week pays', () => {
+    const g = goalRun([...wk(0, 3), ...wk(1, 3), ...wk(2, 3), ...wk(3, 2)], 3, TODAY_G);
+    expect(g).toMatchObject({ run: 3, met: false, weeks: 3, thisWeek: 80 });
+    expect(goalRunText(g)).toEqual({ title: 'Goal bonus this week: +80 XP', sub: 'Goal met 3 weeks in a row' });
+  });
+
+  it('after the goal is met: the run counts this week, and next week pays one step more', () => {
+    const g = goalRun([...wk(0, 3), ...wk(1, 3), ...wk(2, 3), ...wk(3, 3)], 3, TODAY_G);
+    expect(g).toEqual({ run: 3, met: true, weeks: 4, thisWeek: 80, nextWeek: 90 });
+    expect(goalRunText(g)).toEqual({ title: 'Goal met 4 weeks in a row: +80 XP', sub: 'Next week pays +90 XP' });
+  });
+
+  it('the first goal week says "this week", and a run of one says "1 week" in the singular', () => {
+    const first = goalRun(wk(3, 3), 3, TODAY_G);
+    expect(first).toMatchObject({ run: 0, met: true, weeks: 1, thisWeek: 50, nextWeek: 60 });
+    expect(goalRunText(first)).toEqual({ title: 'Goal met this week: +50 XP', sub: 'Next week pays +60 XP' });
+    expect(goalRunText(goalRun(wk(2, 3), 3, TODAY_G))).toEqual({ title: 'Goal bonus this week: +60 XP', sub: 'Goal met 1 week in a row' });
+  });
+
+  it('shows no second line before the goal is met when there is no run', () => {
+    expect(goalRunText(goalRun(wk(3, 1), 3, TODAY_G))).toEqual({ title: 'Goal bonus this week: +50 XP' });
+  });
+
+  it('stops at +100: the sixth week and every one after pays the same', () => {
+    const six = [0, 1, 2, 3].flatMap((n) => wk(n, 3));
+    const early = goalRun([...[-2, -1].flatMap((n) => wk(n, 3)), ...six], 3, TODAY_G); // six weeks counting this one
+    expect(early).toMatchObject({ run: 5, met: true, weeks: 6, thisWeek: 100, nextWeek: 100 });
+    expect(goalRunText(early)).toEqual({ title: 'Goal met 6 weeks in a row: +100 XP', sub: 'Next week pays +100 XP' });
+  });
+
+  it('a missed week or a week under the goal ends the run', () => {
+    expect(goalRun([...wk(0, 3), ...wk(1, 3), ...wk(2, 2)], 3, TODAY_G).run).toBe(0); // last week short
+    expect(goalRun([...wk(0, 3), ...wk(2, 3)], 3, TODAY_G).run).toBe(1); // week 1 missed, then last week met
+    expect(goalRun([...wk(0, 3), ...wk(1, 3)], 3, TODAY_G).run).toBe(0); // last week missed
+  });
+
+  it('this week never ends the run before it is over', () => {
+    expect(goalRun([...wk(1, 3), ...wk(2, 3)], 3, TODAY_G)).toMatchObject({ run: 2, met: false, thisWeek: 70 });
+  });
+
+  it('uses the goal it is given for every week, and never loops for a goal below 1', () => {
+    const days = [...wk(0, 2), ...wk(1, 2), ...wk(2, 2), ...wk(3, 2)];
+    expect(goalRun(days, 2, TODAY_G)).toMatchObject({ run: 3, met: true, weeks: 4 });
+    expect(goalRun(days, 3, TODAY_G)).toMatchObject({ run: 0, met: false });
+    expect(goalRun(days, 0, TODAY_G)).toMatchObject({ run: 0, met: false });
+  });
+
+  it('is part of the week summary, from the prefs goal and training days only', () => {
+    const short = workout(addDaysStr(MON_G, 14), [{ id: 'pushup', sets: [{ reps: 10 }] }]);
+    const days = [...wk(0, 3), ...wk(1, 3)].map((d) => trainingDay(d));
+    const s = weekSummary(stateWith([...days, short]), TODAY_G);
+    expect(s.goalRun).toMatchObject({ run: 0, met: false, thisWeek: 50 }); // the short week 2 is not a goal week
+    expect(weekSummary(stateWith([...days, ...wk(2, 3).map((d) => trainingDay(d))]), TODAY_G).goalRun).toMatchObject({ run: 3, met: false, thisWeek: 80 });
+  });
+
+  it('agrees with scoring: on every workout that pays the goal bonus, the run and the amount are what Home shows', () => {
+    // Weeks of 3, 3, 2, 4, 3, 3, 1, 3, 3, 3 training days, so runs build, break and build again.
+    const perWeek = [3, 3, 2, 4, 3, 3, 1, 3, 3, 3];
+    const days = perWeek.flatMap((n, i) => Array.from({ length: n }, (_, d) => addDaysStr('2026-08-03', 7 * i + d)));
+    const scores = scoreWorkouts(days.map((d) => trainingDay(d)), { weeklyGoal: 3 });
+    const paid = scores.filter((s) => s.weeklyXp > 0);
+    expect(paid.map((s) => s.weeklyXp)).toEqual([50, 60, 50, 60, 70, 50, 60, 70]);
+    for (const s of paid) {
+      const upTo = days.filter((d) => d <= s.date);
+      const g = goalRun(upTo, 3, s.date);
+      expect(g.met).toBe(true);
+      expect(g.weeks).toBe(s.parts.weekRun);
+      expect(g.thisWeek).toBe(s.weeklyXp);
+    }
   });
 });
 

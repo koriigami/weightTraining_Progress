@@ -210,6 +210,16 @@ describe('saveWorkout', () => {
     }
     expect(s.workouts!.map((w) => w.xp)).toEqual([85, 85, 135, 85]);
   });
+
+  it('pays the weekly goal bonus more for each week in a row, and keeps the run in xpParts', () => {
+    let s = emptyState();
+    for (const d of ['2026-09-21', '2026-09-22', '2026-09-23', '2026-09-28', '2026-09-29', '2026-09-30', '2026-10-05', '2026-10-06', '2026-10-07']) {
+      s = expectOk(run(s, { action: 'saveWorkout', workout: input(d, { items: [training] }) }));
+    }
+    expect(s.workouts!.map((w) => w.xp)).toEqual([85, 85, 135, 85, 85, 145, 85, 85, 155]);
+    expect(s.workouts!.at(-1)!.xpParts).toMatchObject({ weekly: 70, weekRun: 3 });
+    expect(s.workouts![0].xpParts).not.toHaveProperty('weekRun');
+  });
 });
 
 describe('workout source', () => {
@@ -547,6 +557,23 @@ describe('setRulesV3Note', () => {
 
   it('cannot raise the note, and only takes a boolean false', () => {
     for (const value of [true, 'false', 0, null, undefined]) expectFail(run(emptyState(), { action: 'setRulesV3Note', value }), 'invalid note flag');
+  });
+});
+
+describe('setRulesV4Note', () => {
+  it('puts the weekly goal bonus note away, and leaves the earlier notes alone', () => {
+    const next = expectOk(run({ ...emptyState(), rulesV2Note: true, rulesV3Note: true, rulesV4Note: true }, { action: 'setRulesV4Note', value: false }));
+    expect(next.rulesV4Note).toBe(false);
+    expect(next.rulesV3Note).toBe(true);
+    expect(next.rulesV2Note).toBe(true);
+  });
+
+  it('is harmless when the note is already gone', () => {
+    expect(expectOk(run(emptyState(), { action: 'setRulesV4Note', value: false })).rulesV4Note).toBe(false);
+  });
+
+  it('cannot raise the note, and only takes a boolean false', () => {
+    for (const value of [true, 'false', 0, null, undefined]) expectFail(run(emptyState(), { action: 'setRulesV4Note', value }), 'invalid note flag');
   });
 });
 
