@@ -232,6 +232,63 @@ describe('workout source', () => {
   });
 });
 
+describe('how it felt', () => {
+  const id = 'in-2026-10-09-db-ohp';
+  const save = (extra: Record<string, unknown>) => run(emptyState(), { action: 'saveWorkout', workout: { ...input('2026-10-09'), ...extra } });
+  const edit = (s: AppState, patch: Record<string, unknown>) => run(s, { action: 'updateWorkout', id, ...patch });
+  const felt = (s: AppState) => ({ feel: s.workouts![0].feel, effort: s.workouts![0].effort });
+
+  it('accepts each face and each effort from 1 to 10, and a workout without them has neither', () => {
+    for (const feel of ['rough', 'tough', 'ok', 'good', 'great']) expect(expectOk(save({ feel })).workouts![0].feel).toBe(feel);
+    for (let effort = 1; effort <= 10; effort++) expect(expectOk(save({ effort })).workouts![0].effort).toBe(effort);
+    expect(felt(expectOk(save({})))).toEqual({ feel: undefined, effort: undefined });
+  });
+
+  it('refuses any other face, and an effort that is not a whole number from 1 to 10', () => {
+    for (const feel of ['meh', '', 'Good', 3, null, true]) expectFail(save({ feel }), 'feel');
+    for (const effort of [0, 11, -1, 6.5, '6', null, true]) expectFail(save({ effort }), 'effort');
+  });
+
+  it('sets and changes them on an edit', () => {
+    let s = expectOk(save({}));
+    s = expectOk(edit(s, { feel: 'tough', effort: 8 }));
+    expect(felt(s)).toEqual({ feel: 'tough', effort: 8 });
+    s = expectOk(edit(s, { feel: 'great' }));
+    expect(felt(s)).toEqual({ feel: 'great', effort: 8 });
+  });
+
+  it('clears with null, and clearing one leaves the other', () => {
+    const s = expectOk(save({ feel: 'good', effort: 6 }));
+    const noFace = expectOk(edit(s, { feel: null }));
+    expect(noFace.workouts![0]).not.toHaveProperty('feel');
+    expect(noFace.workouts![0].effort).toBe(6);
+    const noEffort = expectOk(edit(s, { effort: null }));
+    expect(noEffort.workouts![0]).not.toHaveProperty('effort');
+    expect(noEffort.workouts![0].feel).toBe('good');
+  });
+
+  it('refuses a bad value on an edit and changes nothing', () => {
+    const s = expectOk(save({ feel: 'good', effort: 6 }));
+    expectFail(edit(s, { feel: 'meh' }), 'feel');
+    expectFail(edit(s, { effort: 6.5 }), 'effort');
+    expectFail(edit(s, { effort: 11 }), 'effort');
+    expect(felt(s)).toEqual({ feel: 'good', effort: 6 });
+  });
+
+  it('keeps them when other parts of the workout are edited', () => {
+    const s = expectOk(save({ feel: 'good', effort: 6 }));
+    const edited = expectOk(edit(s, { title: 'Renamed', notes: 'Heavy', date: '2026-10-08' }));
+    expect(felt(edited)).toEqual({ feel: 'good', effort: 6 });
+  });
+
+  it('earns no XP: the same workout scores the same with and without them', () => {
+    const plain = expectOk(save({ items: [training] })).workouts![0];
+    const rated = expectOk(save({ items: [training], feel: 'great', effort: 10 })).workouts![0];
+    expect(rated.xp).toBe(plain.xp);
+    expect(rated.xpParts).toEqual(plain.xpParts);
+  });
+});
+
 describe('updateWorkout', () => {
   const base = () => expectOk(run(emptyState(), { action: 'saveWorkout', workout: input('2026-10-09') }));
   const id = 'in-2026-10-09-db-ohp';

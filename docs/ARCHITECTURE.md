@@ -433,6 +433,37 @@ Log workout sets `log` (`buildLoggedWorkout`). The server (`parseWorkoutInput`) 
 value, and edits never touch it. A workout saved before this existed has none and counts as live,
 so there is no migration.
 
+## How it felt
+
+A saved workout has an optional `feel: 'rough' | 'tough' | 'ok' | 'good' | 'great'` and an optional
+`effort`, a whole number from 1 to 10. Both are additive, like `source`, so there is no migration, and
+neither earns XP: scoring never reads them and the XP breakdown is the same with or without them.
+- **Validation.** `parseWorkoutInput` refuses any other value (the Edit and Log screens do not send them,
+  but the API still checks). `parseWorkoutPatch` takes them on `updateWorkout`, where `null` clears one and
+  the other stays. `rescoreWorkouts` spreads the rest of the workout, so they survive rescoring, and
+  `buildWorkoutPatch` never sends them, so editing a workout never touches them.
+- **Pure logic, `lib/feel.ts`.** `FEELS` (key, label and the colour token), `isFeel`, `isEffort`,
+  `effortWord` (1 to 3 Easy, 4 to 6 Moderate, 7 and 8 Hard, 9 and 10 All out), `effortReadout`
+  ("6, Moderate"), `feltPhrase` ("Felt good") and `feelSummary(workouts, today)`: counts per face, the
+  effort average (over workouts with an effort only, one decimal), how many have an effort and how many
+  were rated at all, over the last 30 days (today and the 29 before it).
+- **Colours.** The five face colours and the picked-face tint are tokens at the top of `app/globals.css`
+  (`--feel-rough` to `--feel-great`, `--feel-pick`, `--feel-pick-line`). `FEELS` holds them as
+  `var(--feel-...)`, so the faces, the Profile bar and its legend read one set.
+- **Where it is set, and nowhere else.** `components/workout/HowItFelt.tsx` is the control (five faces with
+  `aria-pressed`, tap the picked one to clear; "Add effort" opens a 1 to 10 slider at 6, "Remove" clears it).
+  The slider saves once when a drag ends (the native change event), not on every step. Victory uses it in its
+  own card between the level card and Workout details and saves with its existing `edit(patch, true)`. The
+  workout page uses it too and calls `updateWorkout` on tap: after Exercises on a phone, above Notes in the
+  side column on a wide screen. Edit and Log do not have it.
+- **Where it shows.** `FeedItem.feel` puts a small face (`components/ui/FeelFace.tsx`, labelled "Felt good")
+  beside the title in `WorkoutCard`, which Home, Profile and the Calendar all use. Profile has a
+  "How workouts felt, last 30 days" card (`components/profile/FeelCard.tsx`) under the weekly chart: a bar
+  in the five colours, the legend with counts and "Effort average 6.4 of 10, on 9 rated workouts". It is
+  hidden when nothing in the last 30 days has a face or an effort.
+- The Notes placeholder on Victory, Edit and Log reads "Anything to remember?", so "How did it feel?" is
+  asked once.
+
 ## Rendering and layout
 
 - Every route is a static shell. Pages that depend on a person's routine ids
@@ -456,7 +487,7 @@ so there is no migration.
 
 `npm test` runs vitest over `tests/`. The tests are pure: scoring, badges, badge
 cards, the rank road, goals and units, the session, routine actions and
-validation, the celebration queue, the plan migration, Insights (including the
+validation (including how it felt), the celebration queue, the plan migration, Insights (including the
 5 person rule and the owner gate), and the store with an in-memory KV. There is
 no component test suite. Screens are checked two ways:
 

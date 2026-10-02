@@ -114,6 +114,15 @@ export function applyRoutineAction(
         if (patch[key] === null) delete updated[key];
         else updated[key] = patch[key] as string;
       }
+      // How it felt: null clears a face or an effort, and one never touches the other.
+      if (patch.feel !== undefined) {
+        if (patch.feel === null) delete updated.feel;
+        else updated.feel = patch.feel;
+      }
+      if (patch.effort !== undefined) {
+        if (patch.effort === null) delete updated.effort;
+        else updated.effort = patch.effort;
+      }
       return { ok: true, state: withWorkouts(workouts.map((w) => (w.id === patch.id ? updated : w))) };
     }
     case 'deleteWorkout': {

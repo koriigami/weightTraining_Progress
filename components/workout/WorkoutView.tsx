@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ClipboardList, Eye, Pencil, Share2, Trash2 } from 'lucide-react';
 import { formatDay, formatWhen } from '@/lib/date';
+import type { Feel } from '@/lib/feel';
 import { workoutSummary, feedTiles } from '@/lib/feed';
 import { deleteSentence, deletedToast, setLine, xpBreakdown } from '@/lib/history';
 import { musclesOfExercises } from '@/lib/muscles';
@@ -24,6 +25,7 @@ import { Screen } from '@/components/ui/Screen';
 import { Thumb } from '@/components/ui/Thumb';
 import { DeleteWorkoutDialog } from './DeleteWorkoutDialog';
 import { MarkChip } from './ExerciseBlock';
+import { HowItFelt } from './HowItFelt';
 import { RunLaps } from './LapTable';
 import { WorkoutNotFound } from './WorkoutNotFound';
 
@@ -68,16 +70,16 @@ function XpEarnedModal({ open, onClose, lines, total }: { open: boolean; onClose
 /**
  * A finished workout: title, routine chip and date, the stats (the XP tile has an
  * eye that opens where the XP came from), the muscles, every exercise with its
- * sets and chips, the notes, Share, and Delete. It reads /workout/view?id=.
- * Phone: one column. Wide screens: stats, exercises and Delete on the left,
- * muscles and notes in the side column.
+ * sets and chips, How did it feel? (saved on tap), the notes, Share, and Delete. It
+ * reads /workout/view?id=. Phone: one column. Wide screens: stats, exercises and
+ * Delete on the left, muscles, How did it feel? and notes in the side column.
  */
 export function WorkoutView() {
   const id = useSearchParams().get('id');
   const leave = useLeave();
   const desktop = useDesktopLayout();
   const wide = useWideLayout();
-  const { state, workouts, routines, lookup, prefs, progress, loading, deleteWorkout, showToast } = useProgress();
+  const { state, workouts, routines, lookup, prefs, progress, loading, updateWorkout, deleteWorkout, showToast } = useProgress();
   const today = useToday();
   const [xpOpen, setXpOpen] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -126,6 +128,12 @@ export function WorkoutView() {
     setLeaving(true);
     leave();
     showToast(deletedToast(r.before.level, r.after.level));
+  }
+
+  // How it felt saves on tap, with no Save button. The screen updates at once from the stored workout.
+  async function saveFelt(patch: { feel?: Feel | null; effort?: number | null }) {
+    const r = await updateWorkout({ id: w!.id, ...patch });
+    if (!r.ok) showToast(r.error);
   }
 
   const shareButton = (
@@ -204,6 +212,8 @@ export function WorkoutView() {
     </Card>
   );
 
+  const feelCard = <HowItFelt feel={w.feel} effort={w.effort} onFeel={(next) => void saveFelt({ feel: next })} onEffort={(next) => void saveFelt({ effort: next })} />;
+
   const notes = w.notes?.trim() ? (
     <Card>
       <CardHead title="Notes" />
@@ -240,10 +250,11 @@ export function WorkoutView() {
   );
 
   return (
-    <Screen header={header} narrow={!wide} aside={wide ? <>{muscles}{notes}</> : undefined}>
+    <Screen header={header} narrow={!wide} aside={wide ? <>{muscles}{feelCard}{notes}</> : undefined}>
       {head}
       {!wide && muscles}
       {exerciseCard}
+      {!wide && feelCard}
       {!wide && notes}
       {end}
 

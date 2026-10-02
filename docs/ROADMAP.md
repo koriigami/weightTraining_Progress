@@ -37,13 +37,14 @@ Sign-ups are open to any Google account since 1 October 2026 (`SIGNUPS=invite` c
 | v10.2 | Home header as a mini hunter card (board 08), day tiles of one height with a full today ring and bordered rest days, no penalty for time away | Done, live |
 | v11 stage 1 | Laps: a live Lap button on a run, walk or ride, optional lap distance, editable lap rows, the lap table and bars on the workout page. Records and XP still judge the whole run (board 10, `docs/V11_PLAN.md`). Released with equal-width button pairs across the app | Done, live |
 | v11 stage 2 | Log workout: add a workout you already did from Home, a routine's menu or a routine's page. The Edit screen with a chosen day and time, then Victory (board 10 round 3, `docs/V11_PLAN.md`) | Done, live |
-| v11 stages 3 and 4 | How it felt (faces plus effort, no XP), consistency (the weekly goal bonus grows with each week in a row) | Planned, see `docs/V11_PLAN.md` |
+| v11 stage 3 | How it felt: five SVG faces and an optional 1 to 10 effort on Victory and the workout page, a face beside the title in workout rows, a "How workouts felt, last 30 days" card on Profile. Earns no XP (board 10 round 1, `docs/V11_PLAN.md`) | Done, on branch, not live |
+| v11 stage 4 | Consistency: the weekly goal bonus grows with each week in a row | Planned, see `docs/V11_PLAN.md` |
 
 
 ### Next
 
-v11 stage 1 (laps) is live since 2 October 2026. Stage 2 (Log workout) is live since 2 October 2026. v11 continues with how it felt
-and consistency (`docs/V11_PLAN.md`). Besides that, these two come first, in this order (agreed when sign-ups opened):
+v11 stage 1 (laps) is live since 2 October 2026. Stage 2 (Log workout) is live since 2 October 2026. Stage 3 (how it felt) is built on the
+feature branch and not live yet. v11 continues with consistency, the growing weekly goal bonus (`docs/V11_PLAN.md`). Besides that, these two come first, in this order (agreed when sign-ups opened):
 
 1. **An in-app feedback box.** "Send feedback" in Settings, stored per person. The cheapest
    source of roadmap signal, and what feedback triage needs later (`docs/AGENTS.md`).

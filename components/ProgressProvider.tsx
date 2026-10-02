@@ -7,7 +7,7 @@ import type { AppState, FullProgress, Goal, GoalDirection, Rank } from '@/lib/pr
 import type { CustomExercise } from '@/data/exercises';
 import { applyRoutineAction } from '@/lib/routineActions';
 import { resolvePrefs, stateLookup } from '@/lib/routines';
-import type { ExerciseLookup, PlanItem, Prefs, Routine, WorkoutItem, WorkoutLog } from '@/lib/routines';
+import type { ExerciseLookup, Feel, PlanItem, Prefs, Routine, WorkoutItem, WorkoutLog } from '@/lib/routines';
 import type { WorkoutInput } from '@/lib/session';
 import { allEarnedBadges } from '@/lib/badges';
 import { todayStr } from '@/lib/date';
@@ -46,6 +46,8 @@ export type WorkoutPatchInput = {
   when?: string;
   notes?: string | null;
   photo?: string | null;
+  feel?: Feel | null;
+  effort?: number | null;
   items?: WorkoutItem[];
   plan?: PlanItem[];
   startedAt?: string;

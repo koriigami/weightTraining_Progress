@@ -74,6 +74,10 @@ export type WorkoutMark = {
 // scored before then have none, and a missing value reads as 0.
 export type XpParts = { sets: number; cardio: number; beat: number; record: number; finish: number; weekly: number; comeback?: number };
 
+// How a workout felt, from a frown to a big smile. Set on the Victory screen or the
+// workout page. It earns no XP.
+export type Feel = 'rough' | 'tough' | 'ok' | 'good' | 'great';
+
 export type WorkoutLog = {
   id: string;
   date: string; // YYYY-MM-DD, the day it counts on (edited to log later)
@@ -89,6 +93,10 @@ export type WorkoutLog = {
   // How it was made: 'live' is started and finished in the app, 'log' is Log workout
   // afterwards. A workout saved before this existed has none and counts as live.
   source?: 'live' | 'log';
+  // How it felt: a face, and an effort as a whole number from 1 to 10. Both are
+  // optional and added later, so an older workout has neither. Neither earns XP.
+  feel?: Feel;
+  effort?: number;
   // What the workout set out to do, taken at Start. Workouts saved before v8 have
   // none: their own items and ticked sets stand in as the plan.
   plan?: PlanItem[];

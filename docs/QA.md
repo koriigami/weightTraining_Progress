@@ -178,7 +178,8 @@ Tick these on each screen below, at 390 px and at 1440 px.
       15 November 2026). A routine's page has Edit, Log and Start, three buttons of one width.
 - [ ] The Log screen is the Edit screen, titled "Log workout", with Cancel and Save and no "XP is
       worked out again" line and no Delete. The date and time start an hour ago, Duration starts at
-      the routine's estimate, and sets that have numbers are ticked.
+      the routine's estimate, and sets that have numbers are ticked. The Notes box says "Anything to
+      remember?", and How did it feel? is not here: it comes on Victory afterwards.
 - [ ] A Run: type a Time and a distance and the Duration follows the Time until you use the
       stepper. "+ Add lap" adds rows. Nothing counts until the Time is typed.
 - [ ] Change the date to yesterday and Save: the Victory screen plays (XP, level, badge moments),
@@ -203,6 +204,12 @@ Tick these on each screen below, at 390 px and at 1440 px.
       (taller is faster, the fastest in green) and the read-only lap table under
       its totals. Edit shows the same table with a "+ Add lap" button under it;
       an added lap that has no time is not saved.
+- [ ] How did it feel? sits after Exercises on a phone and above Notes in the side column on a wide
+      screen. Tapping a face picks it (tinted, with a gold edge) and saves at once, with no Save
+      button. Tapping the picked face again clears it. "Add effort (1 to 10)" shows the slider at
+      "6, Moderate" and saves 6. Dragging changes the words (Easy, Moderate, Hard, All out) and saves
+      once when you let go. Remove clears the effort and brings the button back. Reload: it is all still
+      there. Edit shows none of this.
 - [ ] A missing or wrong id shows a friendly not-found state.
 
 ## Victory `/workout/done`
@@ -211,7 +218,10 @@ Tick these on each screen below, at 390 px and at 1440 px.
 - [ ] Reward moments start about 1.8 seconds later, or at the first tap if that is
       sooner. Never on top of the banner at once.
 - [ ] Order: level up or rank up first, then new badges, one at a time.
-- [ ] Edit the title, date and time, and notes. The changes save. (There is no photo control yet: it waits for file storage.)
+- [ ] How did it feel? is its own card between the level card and Workout details. Pick a face, add an
+      effort, move the slider: each change saves on its own ("Saved" shows in Workout details), and
+      neither changes the XP. Finish and Log workout both end here with nothing picked.
+- [ ] Edit the title, date and time, and notes (the box says "Anything to remember?"). The changes save. (There is no photo control yet: it waits for file storage.)
 - [ ] The XP lines follow rules v3: sets, cardio, beat or record, then Daily
       bonus (0 with "Already earned today" or "N of 20 min today" when not paid),
       Comeback and Weekly goal only when earned. No "Workout finished" or
@@ -297,7 +307,11 @@ For each of Level up, Rank up and Badge unlock:
       your unit. Out-of-range values are refused.
 - [ ] This month strip: training days green, rest days sand, a legend, "N
       training days in October". Calendar opens the full month.
-- [ ] Workouts feed, newest first. A workout opens with its details.
+- [ ] How workouts felt, last 30 days sits under the weekly chart: a bar in the five colours, the legend
+      with a count per face, and "Effort average 6.4 of 10, on 9 rated workouts". It is not there when
+      no workout in the last 30 days has a face or an effort.
+- [ ] Workouts feed, newest first. A rated workout shows a small face beside its title, and a screen
+      reader says "Felt good". A workout opens with its details.
 - [ ] Desktop: Goals, Weight and This month sit in a sticky side column.
 
 ## Statistics `/stats`, Calendar `/calendar`
@@ -406,6 +420,17 @@ Automated checks fake the clock, so check these by hand after a deploy:
 - Tap Lap with a thumb while moving: one tap adds one lap, and two quick taps add one.
 - Finish, open the workout, and check the laps, the summary line and the chart. Open Edit,
   correct a time with the keyboard (`m:ss` works on the phone keyboard) and save.
+
+## How it felt on a real phone
+
+- Faces: each face is easy to hit with a thumb, the picked one is clearly tinted, and tapping it again
+  clears it. The five labels stay on one line at the smallest phone width.
+- Slider (iPhone Safari and Android Chrome): "Add effort (1 to 10)" shows it at 6. Dragging with a thumb
+  changes "6, Moderate" as you go and saves once on lifting the finger. Tapping the track jumps to that
+  value. Remove puts the button back. With VoiceOver or TalkBack the slider says "Effort from 1 to 10"
+  and the value with its word, and adjusting it saves.
+- After Finish and after Log workout, pick a face on Victory, tap Done, and check the face is beside the
+  title on Home and on the workout page.
 
 ## Log workout on a real phone
 

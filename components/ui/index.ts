@@ -21,6 +21,7 @@ export { PageHeader } from './PageHeader';
 export { Screen } from './Screen';
 export { MuscleMap, BodySvg, highlightFill } from './MuscleMap';
 export { Thumb } from './Thumb';
+export { FeelFace } from './FeelFace';
 export { Avatar } from './Avatar';
 export { cn } from './cn';
 export * from './Icon';

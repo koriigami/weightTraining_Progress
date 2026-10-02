@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, ChevronRight, Crown, Share2 } from 'lucide-react';
 import { formatWhen } from '@/lib/date';
+import type { Feel } from '@/lib/feel';
 import { workoutTotals } from '@/lib/routines';
 import type { Routine } from '@/lib/routines';
 import { RANK_TITLES, rankForLevel } from '@/lib/progress';
@@ -28,6 +29,7 @@ import { Field, Input, Textarea } from '@/components/ui/Field';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Screen } from '@/components/ui/Screen';
 import { XpBar } from '@/components/ui/XpBar';
+import { HowItFelt } from '@/components/workout/HowItFelt';
 import { ShareSheet } from './ShareSheet';
 
 const SAVE_DELAY_MS = 700;
@@ -35,14 +37,14 @@ const MAX_CROWNS = 10;
 
 const pct = (s: XpSnapshot) => (s.needed > 0 ? (s.current / s.needed) * 100 : 0);
 
-type Patch = { title?: string; when?: string; notes?: string };
+type Patch = { title?: string; when?: string; notes?: string; feel?: Feel | null; effort?: number | null };
 type Status = 'idle' | 'saving' | 'saved' | 'error';
 
 /**
  * Victory: the workout is saved and its XP is already counted, so there is no
- * claim step. It shows the banner, the XP lines, the level card, the details you
- * can still edit (title, date and time, notes), the "Save weights to <routine>" switch and
- * Share. Done goes Home.
+ * claim step. It shows the banner, the XP lines, the level card, How did it feel? (a
+ * face and an effort, saved on tap), the details you can still edit (title, date and
+ * time, notes), the "Save weights to <routine>" switch and Share. Done goes Home.
  *
  * A photo for the workout is not built yet: it needs file storage (Vercel Blob),
  * so the details card has no photo control. The workout still has a `photo` field
@@ -95,6 +97,8 @@ function Victory({ finished }: { finished: Finished }) {
   const [when, setWhen] = useState(saved.when);
   const [dateOpen, setDateOpen] = useState(false);
   const [notes, setNotes] = useState(saved.notes ?? '');
+  const [feel, setFeel] = useState(saved.feel);
+  const [effort, setEffort] = useState(saved.effort);
   const [status, setStatus] = useState<Status>('idle');
   const [errors, setErrors] = useState<Partial<Record<keyof Patch, string>>>({});
   const pending = useRef<Patch>({});
@@ -112,7 +116,7 @@ function Victory({ finished }: { finished: Finished }) {
     if (!result.ok) {
       const error = result.error;
       setStatus('error');
-      const key: keyof Patch = /title/i.test(error) ? 'title' : /notes/i.test(error) ? 'notes' : 'when';
+      const key: keyof Patch = /title/i.test(error) ? 'title' : /notes/i.test(error) ? 'notes' : /feel/i.test(error) ? 'feel' : /effort/i.test(error) ? 'effort' : 'when';
       setErrors((e) => ({ ...e, [key]: error }));
       return false;
     }
@@ -310,6 +314,20 @@ function Victory({ finished }: { finished: Finished }) {
         </div>
       </Card>
 
+      <HowItFelt
+        feel={feel}
+        effort={effort}
+        error={errors.feel ?? errors.effort}
+        onFeel={(next) => {
+          setFeel(next ?? undefined);
+          edit({ feel: next }, true);
+        }}
+        onEffort={(next) => {
+          setEffort(next ?? undefined);
+          edit({ effort: next }, true);
+        }}
+      />
+
       <Card>
         <CardHead
           title="Workout details"
@@ -363,7 +381,7 @@ function Victory({ finished }: { finished: Finished }) {
           <Textarea
             value={notes}
             maxLength={1000}
-            placeholder="How did it feel?"
+            placeholder="Anything to remember?"
             onChange={(e) => {
               setNotes(e.target.value);
               edit({ notes: e.target.value });

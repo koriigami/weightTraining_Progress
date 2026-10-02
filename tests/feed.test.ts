@@ -23,6 +23,12 @@ describe('workouts in the feed', () => {
     expect(item.exercises[0].exercise).toMatchObject({ primary: 'shoulders' });
   });
 
+  it('carries how it felt for the face by the title, or null', () => {
+    const w = workout('2026-10-10', [{ id: 'pushup', sets: [{ reps: 10 }] }]);
+    expect(workoutToFeedItem({ ...w, feel: 'good', effort: 6 })!.feel).toBe('good');
+    expect(workoutToFeedItem(w)!.feel).toBeNull();
+  });
+
   it('has no volume for a workout without weights, and skips exercises with no ticked set', () => {
     const w = workout('2026-10-10', [
       { id: 'pushup', sets: [{ reps: 10 }] },
