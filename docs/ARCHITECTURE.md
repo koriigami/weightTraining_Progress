@@ -585,7 +585,15 @@ rules notes. `ProgressProvider` has a method for each, resolving to an error mes
 - `/?news=1` is a preview: every page of the newest update, nothing remembered, and it does not count as this
   load's one thing. It is how an update is seen before a release.
 - `/news` (`app/news/page.tsx`) is a static page listing every update newest first, each page with its picture,
-  title and words. A Settings row for it comes in the last v12 stage.
+  title and words. Settings > What's new opens it.
+
+### Settings and the release step
+- Settings, App group: **How Levl works** opens `/?guide=1` (plays the guide, remembers nothing),
+  **What's new** opens `/news`, and **Setup questions** (called Welcome tour before v12) opens
+  `/onboarding` again.
+- The release skill (`.claude/skills/levl-release/SKILL.md`) asks before every release whether it
+  changes something people see or the XP rules. If so, an update goes into `lib/news.ts` with its
+  pictures, and the owner sees it with `/?news=1` before it goes live.
 
 ### The spotlight guide
 

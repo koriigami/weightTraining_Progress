@@ -73,7 +73,7 @@ Tick these on each screen below, at 390 px and at 1440 px.
       Continue work, Continue is pinned at the bottom on the phone.
 - [ ] "Build my own routine" opens the editor. "Start from a ready-made routine"
       opens Explore. "Just log as I go" opens Home.
-- [ ] Settings > Welcome tour opens it again without wiping anything.
+- [ ] Settings > Setup questions opens it again without wiping anything.
 
 ## Home `/`
 
@@ -358,6 +358,9 @@ For each of Level up, Rank up and Badge unlock:
       your goal for +50 XP, and +10 more for each week in a row you reach it, up to +100."
       Changing the goal checks past weeks and the run again.
 - [ ] App: Sounds and Haptics switches persist.
+- [ ] App: How Levl works plays the first-run guide on Home and changes nothing that is
+      remembered. What's new opens `/news`, every update newest first. Setup questions opens
+      the setup again without wiping anything.
 - [ ] Sign out: a confirm with the solid red button. On desktop the sidebar user
       row opens an account menu with Profile, Settings and Sign out (and
       Insights, for the owner).
@@ -468,3 +471,18 @@ Automated checks fake the clock, so check these by hand after a deploy:
   workout page. Open the workout and check it shows yesterday and the chosen time.
 - Start a workout, switch to Home, and log another one from the Log workout button. Resume the
   first one: nothing in it has changed.
+
+## First-run guide and What's new on a real phone
+
+- A new Google account: after the setup questions the guide plays on Home. Each gold ring sits
+  evenly around its element, bottom shadow included, and each step card has one gold border.
+- Thumb through all seven steps on iPhone Safari and Android Chrome. Nothing behind the dim
+  reacts to a tap, and the page does not scroll under a finger.
+- Android Back on a step ends the guide and stays on Home. It does not come back on the next open.
+- On a small phone the week step scrolls into view and its card stays on screen.
+- With VoiceOver or TalkBack each card reads its title and words first, then Skip and Next.
+- An account that joined before v12: the October update shows once, four pages, on the first
+  open after the release. Got it, then reopen the app: nothing shows, and the Home rules note
+  about the weekly goal bonus is gone.
+- Start a workout, go to Home: neither the guide nor What's new shows.
+

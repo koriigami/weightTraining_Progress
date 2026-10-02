@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { BarChart3, ChevronRight, Compass, Dumbbell, FileText, LogOut, Mail, Scale, ShieldCheck, Target, Volume2, Vibrate, X } from 'lucide-react';
+import { BarChart3, ChevronRight, CircleHelp, Compass, Dumbbell, FileText, LogOut, Mail, Scale, ShieldCheck, Sparkles, Target, Volume2, Vibrate, X } from 'lucide-react';
 import { useShell } from '@/components/nav/ShellContext';
 import { AvoidFields, EquipmentFields, UnitsFields, WeeklyGoalFields } from '@/components/prefs/PrefsFields';
 import { useProgress } from '@/components/ProgressProvider';
@@ -145,7 +145,9 @@ export default function SettingsPage() {
       <Card className="wt-setpanel">
         <SwitchRow icon={<Volume2 size={20} aria-hidden="true" />} label="Sounds" checked={prefs.sound} onChange={toggleSound} />
         <SwitchRow icon={<Vibrate size={20} aria-hidden="true" />} label="Haptics" checked={prefs.haptic} onChange={toggleHaptic} />
-        <Row icon={<Compass size={20} aria-hidden="true" />} label="Welcome tour" onClick={() => router.push('/onboarding')} />
+        <Row icon={<CircleHelp size={20} aria-hidden="true" />} label="How Levl works" onClick={() => router.push('/?guide=1')} />
+        <Row icon={<Sparkles size={20} aria-hidden="true" />} label="What's new" onClick={() => router.push('/news')} />
+        <Row icon={<Compass size={20} aria-hidden="true" />} label="Setup questions" onClick={() => router.push('/onboarding')} />
         {auth?.user?.isOwner && <Row icon={<BarChart3 size={20} aria-hidden="true" />} label="Insights" onClick={() => router.push('/insights')} />}
       </Card>
 
