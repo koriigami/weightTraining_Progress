@@ -1,6 +1,8 @@
 // The Recent workouts feed: the logged workouts with a ticked set, newest first.
 import { exerciseById } from '../data/exercises';
 import type { ExerciseDef } from '../data/exercises';
+import { isFeel } from './feel';
+import type { Feel } from './feel';
 import { distanceCardio, fmtMinutes, fmtSpeed, statsKind } from './liveStats';
 import type { StatsKind } from './liveStats';
 import type { AppState } from './progress';
@@ -29,6 +31,7 @@ export type FeedItem = {
   sets: number;
   xp: number;
   notes: string | null;
+  feel: Feel | null; // how it felt, for the face next to the title
   exercises: FeedExercise[];
   routine: string | null; // title of the routine it came from, when that routine still exists
   added: number; // exercises done that were not in the plan
@@ -89,6 +92,7 @@ export function workoutSummary(w: WorkoutLog, lookup: ExerciseLookup = exerciseB
     sets: totals.sets,
     xp: w.xp,
     notes: w.notes?.trim() || null,
+    feel: isFeel(w.feel) ? w.feel : null,
     exercises,
     routine: routine?.title ?? null,
     added: exercises.filter((e) => e.added).length,

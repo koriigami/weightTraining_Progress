@@ -43,6 +43,8 @@ export type AppState = {
   // The same, for the v3 rules (the daily bonus): the store sets it once, true when
   // the state already has workouts, false otherwise, and the note puts it away.
   rulesV3Note?: boolean;
+  // And for the v4 rules (the weekly goal bonus grows with each week in a row).
+  rulesV4Note?: boolean;
 };
 
 export function emptyState(): AppState {

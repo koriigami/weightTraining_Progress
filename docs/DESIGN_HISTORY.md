@@ -463,6 +463,18 @@ Agreed in the conversation after a UI check of v10 (no board; the plan is in `do
   - Log in three places: Home, a routine's menu with a New pill, and a routine's page with Edit, Log and Start at equal widths.
 
   Built as v11 stage 2 (`docs/V11_PLAN.md`).
+- **Built (v11 stage 4, rules v4):** the growing weekly goal bonus from round 1, option a:
+  - +50 the first week the goal is met, +10 more for each week in a row, up to +100 from week 6.
+    A week short of the goal, even with training, starts it again at +50. Every goal week paid
+    +50 before, so nobody's XP goes down.
+  - **Home line chosen on 2 October 2026**, over the board's separate card: two short lines under
+    the streak row of This week ("Goal bonus this week: +80 XP" and "Goal met 3 weeks in a row",
+    then "Goal met 4 weeks in a row: +80 XP" and "Next week pays +90 XP"). Nothing else on Home
+    changes and the phone header stays as it was.
+  - Victory and the workout page show the real amount, with "3 of 3 training days, 4 weeks in a
+    row" from the second week in a row. Settings says how the bonus grows.
+  - A one-time note on Home, a copy of the state kept first (`backup:v11`) and a committed XP
+    integrity test that prints a before and after table (`tests/xpIntegrity.test.ts`).
 
 ## Where the chat lives
 

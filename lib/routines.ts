@@ -71,8 +71,14 @@ export type WorkoutMark = {
 // Where a workout's XP came from, worked out by rescoreWorkouts. `finish` is the
 // key the finish bonus was stored under before rules v3. It now holds the daily
 // bonus, so nothing stored needs to move. `comeback` was added in v3: workouts
-// scored before then have none, and a missing value reads as 0.
-export type XpParts = { sets: number; cardio: number; beat: number; record: number; finish: number; weekly: number; comeback?: number };
+// scored before then have none, and a missing value reads as 0. `weekRun` came with
+// v4: the weeks in a row the weekly goal had been met when `weekly` was paid. It is
+// set only when `weekly` is more than 0.
+export type XpParts = { sets: number; cardio: number; beat: number; record: number; finish: number; weekly: number; comeback?: number; weekRun?: number };
+
+// How a workout felt, from a frown to a big smile. Set on the Victory screen or the
+// workout page. It earns no XP.
+export type Feel = 'rough' | 'tough' | 'ok' | 'good' | 'great';
 
 export type WorkoutLog = {
   id: string;
@@ -89,6 +95,10 @@ export type WorkoutLog = {
   // How it was made: 'live' is started and finished in the app, 'log' is Log workout
   // afterwards. A workout saved before this existed has none and counts as live.
   source?: 'live' | 'log';
+  // How it felt: a face, and an effort as a whole number from 1 to 10. Both are
+  // optional and added later, so an older workout has neither. Neither earns XP.
+  feel?: Feel;
+  effort?: number;
   // What the workout set out to do, taken at Start. Workouts saved before v8 have
   // none: their own items and ticked sets stand in as the plan.
   plan?: PlanItem[];
@@ -137,7 +147,11 @@ export const WORKOUT_XP = {
   intervalCap: 30,
   beat: 10,
   record: 25,
+  // The weekly goal pays weeklyGoal the first week it is met, and weeklyGoalStep
+  // more for each week in a row, up to weeklyGoalMax (see weeklyGoalXp).
   weeklyGoal: 50,
+  weeklyGoalStep: 10,
+  weeklyGoalMax: 100,
   // The daily bonus: once a day, when the day's training adds up to dailyMinutes.
   // A ticked strength set that earns XP counts minutesPerSet minutes, cardio counts
   // its own minutes. The first training day after a whole empty week pays comeback.
@@ -146,6 +160,14 @@ export const WORKOUT_XP = {
   minutesPerSet: 3,
   comeback: 25,
 };
+
+// What the weekly goal pays for the Nth week in a row it is met: +50 the first week,
+// +10 more each week after, never over +100 (from the 6th week). A run below 1 reads
+// as the first week.
+export function weeklyGoalXp(run: number): number {
+  const weeks = Math.max(1, Math.floor(run));
+  return Math.min(WORKOUT_XP.weeklyGoalMax, WORKOUT_XP.weeklyGoal + WORKOUT_XP.weeklyGoalStep * (weeks - 1));
+}
 
 // A ticked strength set only earns XP with something behind it: a rep, or a
 // five second hold.

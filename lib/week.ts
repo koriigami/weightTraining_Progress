@@ -10,7 +10,7 @@
 import type { AppState } from './progress';
 import { addDaysStr, mondayOf } from './date';
 import { trainingDaysOf, weeklyStreaks } from './workoutScoring';
-import { weeklyGoalOf } from './routines';
+import { weeklyGoalOf, weeklyGoalXp } from './routines';
 import type { Routine, WorkoutLog } from './routines';
 
 const hasTickedSet = (w: WorkoutLog): boolean => w.items.some((it) => it.sets.some((s) => s.done));
@@ -99,12 +99,50 @@ export function comebackPending(dates: readonly string[], today: string): boolea
   return dates.some((d) => d < lastMonday) && !dates.some((d) => d >= lastMonday);
 }
 
+export type GoalRun = {
+  run: number; // weeks in a row the goal was met, ending with last week
+  met: boolean; // this week's training days reach the goal
+  weeks: number; // the run counting this week once it is met (`run` until then)
+  thisWeek: number; // what the goal pays this week, already earned when `met`
+  nextWeek: number; // what next week pays as things stand: a step up once this week is met, else +50
+};
+
+// The weekly goal bonus as Home shows it. `dates` are training days, `goal` the
+// weekly goal. A week meets the goal with `goal` training days, and the run is the
+// weeks in a row that did, ending with last week (this week is still open). The
+// amounts come from weeklyGoalXp, the same ladder scoreWorkouts pays, and a test
+// keeps the two in step.
+export function goalRun(dates: readonly string[], goal: number, today: string): GoalRun {
+  const perWeek = new Map<string, number>();
+  for (const d of dates) {
+    const week = mondayOf(d);
+    perWeek.set(week, (perWeek.get(week) ?? 0) + 1);
+  }
+  const metWeek = (monday: string) => goal >= 1 && (perWeek.get(monday) ?? 0) >= goal;
+  const thisMonday = mondayOf(today);
+  let run = 0;
+  for (let w = addDaysStr(thisMonday, -7); metWeek(w); w = addDaysStr(w, -7)) run++;
+  const met = metWeek(thisMonday);
+  const weeks = met ? run + 1 : run;
+  return { run, met, weeks, thisWeek: weeklyGoalXp(run + 1), nextWeek: weeklyGoalXp(weeks + 1) };
+}
+
+// The words for Home's goal bonus block: a headline and, when there is something
+// more to say, a second line. Before the goal is met it says what this week pays
+// and the run so far. Once met it says the run with the pay, and what next week pays.
+export function goalRunText(g: GoalRun): { title: string; sub?: string } {
+  const weeks = (n: number) => `${n} ${n === 1 ? 'week' : 'weeks'} in a row`;
+  if (!g.met) return { title: `Goal bonus this week: +${g.thisWeek} XP`, ...(g.run >= 1 ? { sub: `Goal met ${weeks(g.run)}` } : {}) };
+  return { title: g.weeks === 1 ? `Goal met this week: +${g.thisWeek} XP` : `Goal met ${weeks(g.weeks)}: +${g.thisWeek} XP`, sub: `Next week pays +${g.nextWeek} XP` };
+}
+
 export type WeekSummary = {
   dots: WeekDot[];
   count: number; // training days this week
   goal: number;
   streak: number; // weeks in a row with at least one training day
   comeback: boolean; // the next training day pays the comeback bonus
+  goalRun: GoalRun; // the weekly goal bonus and the weeks in a row
   rules: DayRules; // the day rule, for the Calendar and the Profile month strip
 };
 
@@ -120,6 +158,7 @@ export function weekSummary(state: AppState, today: string): WeekSummary {
     goal,
     streak: weeklyStreaks(dates, today).current,
     comeback: comebackPending(dates, today),
+    goalRun: goalRun(dates, goal, today),
     rules,
   };
 }

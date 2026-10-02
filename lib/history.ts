@@ -84,7 +84,7 @@ export function xpBreakdown(
   if (beats.length > 0) lines.push({ key: 'beat', title: 'Beat last time', sub: beats.map((m) => nameOf(m.exerciseId)).join(', '), xp: parts.beat });
   const minutes = trainingMinutes(w.items, lookup);
   lines.push(
-    ...bonusLines({ dailyXp: parts.finish, comebackXp: parts.comeback ?? 0, weeklyXp: parts.weekly, minutes, dayMinutes: opts.dayMinutes ?? minutes, weeklyGoal: opts.weeklyGoal ?? 3, pastDay: opts.pastDay })
+    ...bonusLines({ dailyXp: parts.finish, comebackXp: parts.comeback ?? 0, weeklyXp: parts.weekly, weekRun: parts.weekRun, minutes, dayMinutes: opts.dayMinutes ?? minutes, weeklyGoal: opts.weeklyGoal ?? 3, pastDay: opts.pastDay })
   );
   return { lines, total: w.xp };
 }

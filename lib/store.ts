@@ -113,7 +113,7 @@ export function backfillGoalCreatedAt<T extends AppState>(state: T): T {
 // Someone new starts with no routines, has not been through onboarding yet and
 // has no "XP was worked out again" notes to see.
 export function newUserState(): AppState {
-  return { ...emptyState(), routines: [], prefs: defaultPrefs(), rulesV2Note: false, rulesV3Note: false };
+  return { ...emptyState(), routines: [], prefs: defaultPrefs(), rulesV2Note: false, rulesV3Note: false, rulesV4Note: false };
 }
 
 export type Profile = { email: string; name: string; image: string; createdAt: string };
@@ -132,30 +132,38 @@ const profileKey = (userId: string) => `wt:user:${userId}:profile`;
 // The emails allowed to sign in while invite-only, a list of lowercased emails.
 const INVITES_KEY = 'wt:invites';
 const backupKey = (userId: string) => `wt:user:${userId}:backup:v7`;
+// The state exactly as it was before the weekly goal bonus started to grow (v11), kept once.
+const backupKeyV11 = (userId: string) => `wt:user:${userId}:backup:v11`;
 
 export function createStore(kv: KV) {
-  // Brings a state read for the first time under v8 or v10 up to date. A state that
-  // still has plan days is copied untouched to the v7 backup (only if that key is
-  // free), its days become workouts and the result is saved. A state without the
+  // Brings a state read for the first time under v8, v10 or v11 up to date. A state
+  // that still has plan days is copied untouched to the v7 backup (only if that key
+  // is free), its days become workouts and the result is saved. A state without the
   // rulesV2Note flag gets it, once: true when it already had workouts or plan days,
   // false otherwise. The rulesV3Note flag works the same way for the daily bonus
-  // rules, and the same pass works every workout's stored XP out again, so what the
-  // workout pages show matches the new rules. A state with none of these is
-  // returned as it is, and nothing is written for a goal that only needed its
-  // createdAt filled in.
+  // rules, and rulesV4Note for the weekly goal bonus that grows. Either one works
+  // every workout's stored XP out again, so what the workout pages show matches the
+  // new rules. For v4 a state that already has workouts is also copied untouched to
+  // the v11 backup first (only if that key is free), since their stored XP is
+  // replaced. A state with none of these is returned as it is, and nothing is
+  // written for a goal that only needed its createdAt filled in.
   async function upgrade(userId: string, raw: LegacyState): Promise<AppState> {
     const state = backfillGoalCreatedAt(raw);
     const hadDays = hasLegacyDays(raw);
     const noteUnset = raw.rulesV2Note === undefined;
     const noteV3Unset = raw.rulesV3Note === undefined;
-    if (!hadDays && !('days' in raw) && !noteUnset && !noteV3Unset) return state;
+    const noteV4Unset = raw.rulesV4Note === undefined;
+    if (!hadDays && !('days' in raw) && !noteUnset && !noteV3Unset && !noteV4Unset) return state;
     if (hadDays && (await kv.get(backupKey(userId))) === null) await kv.set(backupKey(userId), raw);
     const migrated = migratePlanDays(state, { today: todayStr() });
     const hadData = hadDays || (raw.workouts ?? []).length > 0;
     let next: AppState = noteUnset ? { ...migrated, rulesV2Note: hadData } : migrated;
-    if (noteV3Unset) {
+    if (noteV3Unset || noteV4Unset) {
       const workouts = next.workouts ?? [];
-      next = { ...next, ...(workouts.length > 0 ? { workouts: rescoreWorkouts(next, workouts, todayStr()) } : {}), rulesV3Note: workouts.length > 0 };
+      if (noteV4Unset && (raw.workouts ?? []).length > 0 && (await kv.get(backupKeyV11(userId))) === null) await kv.set(backupKeyV11(userId), raw);
+      if (workouts.length > 0) next = { ...next, workouts: rescoreWorkouts(next, workouts, todayStr()) };
+      if (noteV3Unset) next = { ...next, rulesV3Note: workouts.length > 0 };
+      if (noteV4Unset) next = { ...next, rulesV4Note: workouts.length > 0 };
     }
     await kv.set(stateKey(userId), next);
     return next;
@@ -172,7 +180,7 @@ export function createStore(kv: KV) {
         const legacy = v2 ?? (v1 ? migrateV1ToV2(v1) : null);
         if (legacy) return upgrade(userId, structuredClone(legacy));
         // The owner has no prefs of their own, which reads as their setup and skips onboarding.
-        return { ...emptyState(), routines: [], rulesV2Note: false, rulesV3Note: false };
+        return { ...emptyState(), routines: [], rulesV2Note: false, rulesV3Note: false, rulesV4Note: false };
       }
       return newUserState();
     },

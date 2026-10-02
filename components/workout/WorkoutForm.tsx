@@ -210,7 +210,7 @@ export function WorkoutForm({
         </Button>
         <Card>
           <CardHead title="Notes" />
-          <Textarea aria-label="Workout notes" className="wt-notes-area" value={notes} maxLength={1000} placeholder="How did it feel?" onChange={(e) => onNotes(e.target.value)} />
+          <Textarea aria-label="Workout notes" className="wt-notes-area" value={notes} maxLength={1000} placeholder="Anything to remember?" onChange={(e) => onNotes(e.target.value)} />
         </Card>
         {end}
       </div>

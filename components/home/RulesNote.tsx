@@ -9,20 +9,22 @@ import { Card } from '@/components/ui/Card';
 
 /**
  * A one-time note after the XP rules changed. "Got it" puts it away for good. When
- * both the v2 and the v3 note are waiting, only the v3 one shows and "Got it"
- * clears both.
+ * several notes are waiting, only the newest one shows (v4, then v3, then v2) and
+ * "Got it" clears them all.
  */
 export function RulesNote() {
-  const { state, dismissRulesNote, dismissRulesV3Note, showToast } = useProgress();
+  const { state, dismissRulesNote, dismissRulesV3Note, dismissRulesV4Note, showToast } = useProgress();
   const [busy, setBusy] = useState(false);
   const v2 = state.rulesV2Note === true;
   const v3 = state.rulesV3Note === true;
-  if (!v2 && !v3) return null;
+  const v4 = state.rulesV4Note === true;
+  if (!v2 && !v3 && !v4) return null;
 
   async function gotIt() {
     setBusy(true);
     let error: string | null = null;
-    if (v3) error = await dismissRulesV3Note();
+    if (v4) error = await dismissRulesV4Note();
+    if (v3) error = (await dismissRulesV3Note()) ?? error;
     if (v2) error = (await dismissRulesNote()) ?? error;
     setBusy(false);
     if (error) showToast(error);
@@ -32,7 +34,9 @@ export function RulesNote() {
     <Card as="section" className="wt-rnote" aria-label="XP rules changed">
       <Info size={20} aria-hidden="true" className="ic" />
       <div className="grow">
-        {v3 ? (
+        {v4 ? (
+          <b>The weekly goal bonus now grows with each week in a row. XP was worked out again.</b>
+        ) : v3 ? (
           <b>XP was worked out again with the new daily bonus.</b>
         ) : (
           <>

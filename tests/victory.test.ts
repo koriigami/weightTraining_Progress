@@ -117,6 +117,23 @@ describe('victory XP lines', () => {
     expect(lines.find((l) => l.key === 'weekly')!.sub).toBe('1 of 1 training day this week');
   });
 
+  it('names the weeks in a row on the weekly goal line from the second week, and not before', () => {
+    const sub = (weekRun?: number) => bonusLines({ dailyXp: 50, comebackXp: 0, weeklyXp: 80, weekRun, minutes: 21, dayMinutes: 21, weeklyGoal: 3 }).find((l) => l.key === 'weekly')!;
+    expect(sub(4)).toEqual({ key: 'weekly', title: 'Weekly goal', xp: 80, sub: '3 of 3 training days, 4 weeks in a row' });
+    expect(sub(2).sub).toBe('3 of 3 training days, 2 weeks in a row');
+    expect(sub(1).sub).toBe('3 of 3 training days this week');
+    expect(sub(undefined).sub).toBe('3 of 3 training days this week');
+  });
+
+  it('shows the grown weekly goal bonus on the Victory lines of a third week in a row', () => {
+    const days = ['2026-09-21', '2026-09-22', '2026-09-23', '2026-09-28', '2026-09-29', '2026-09-30', '2026-10-05', '2026-10-06', '2026-10-07'].map((d) => trainingDay(d));
+    const state = stateWith(days);
+    const scores = scoreState(state);
+    const weekly = xpLines(days[8], scores[8]).find((l) => l.key === 'weekly')!;
+    expect(weekly).toEqual({ key: 'weekly', title: 'Weekly goal', xp: 70, sub: '3 of 3 training days, 3 weeks in a row' });
+    expect(xpLines(days[2], scores[2]).find((l) => l.key === 'weekly')!.sub).toBe('3 of 3 training days this week');
+  });
+
   it('describes a mark by its metric', () => {
     expect(markText({ exerciseId: 'a', kind: 'beat', sec: 45 })).toBe('45 s');
     expect(markText({ exerciseId: 'a', kind: 'record', km: 5, min: 28 })).toBe('5 km in 28 min');

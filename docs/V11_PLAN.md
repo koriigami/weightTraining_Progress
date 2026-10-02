@@ -7,9 +7,9 @@ A runner who uses Levl asked for laps back. Laps were removed in v8 to keep the 
 
 ## Stages
 1. **Laps** (done, live since 2 October 2026).
-2. **Log workout**: add a workout you already did (signed off in board 10 round 3).
-3. **How it felt**: faces plus an optional effort score after finishing, no XP (signed off in round 1).
-4. **Consistency**: the weekly goal bonus grows with each week in a row the goal is met, +50 then +10 a week up to +100 (signed off in round 1; the Home line chosen on 2 October 2026).
+2. **Log workout**: add a workout you already did (done, live since 2 October 2026).
+3. **How it felt**: faces plus an optional effort score after finishing, no XP (done, live since 2 October 2026).
+4. **Consistency**: the weekly goal bonus grows with each week in a row the goal is met, +50 then +10 a week up to +100 (done, live since 2 October 2026; the Home line chosen that day).
 
 ## Stage 1: laps
 
@@ -215,7 +215,7 @@ A runner who uses Levl asked for laps back. Laps were removed in v8 to keep the 
 - **Five faces, drawn as SVG, no emoji.** Rough, Tough, OK, Good and Great, from frown to big smile, as in the board's script (`docs/design/10-runs-logging-board.html`, the `FEELS` list). Colours: Rough `#E5534B`, Tough `#F08A3C`, OK `#E8B83A`, Good `#7BC74D`, Great `#2BA438`, as tokens at the top of `app/globals.css`.
 - **The control**, titled "How did it feel?":
   - the five faces in a row with their labels under them, one tap each. The picked face is tinted as on the board. Tapping it again clears it. Each face is a button with `aria-pressed`;
-  - a small secondary "+ Add effort (1 to 10)" button. It shows the slider at 6 and saves 6;
+  - a dashed in-card "+ Add effort (1 to 10)" button, like "+ Add set". It shows the slider at 6 and saves 6;
   - the slider reads "6, Moderate". The words: 1 to 3 Easy, 4 to 6 Moderate, 7 and 8 Hard, 9 and 10 All out. A "Remove" text button clears the effort;
   - everything is optional and nothing earns XP.
 - **Set in two places only:**

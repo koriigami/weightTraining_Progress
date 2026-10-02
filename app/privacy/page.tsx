@@ -37,8 +37,8 @@ export default function PrivacyPage() {
         <h3>What you log in Levl</h3>
         <ul>
           <li>
-            Workouts: exercises, sets, reps, weights, hold times, cardio time and distance, notes, and when each workout
-            started and finished.
+            Workouts: exercises, sets, reps, weights, hold times, cardio time and distance, notes, how each workout felt,
+            and when each workout started and finished.
           </li>
           <li>Routines, custom exercises and goals.</li>
           <li>Body weight entries.</li>

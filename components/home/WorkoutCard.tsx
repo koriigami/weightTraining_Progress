@@ -4,8 +4,10 @@ import Link from 'next/link';
 import { ChevronRight, ClipboardList } from 'lucide-react';
 import { formatWhen } from '@/lib/date';
 import { feedTiles } from '@/lib/feed';
+import { feltPhrase } from '@/lib/feel';
 import type { FeedItem } from '@/lib/feed';
 import type { Units } from '@/lib/setColumns';
+import { FeelFace } from '@/components/ui/FeelFace';
 import { Thumb } from '@/components/ui/Thumb';
 
 const SHOWN = 3;
@@ -18,7 +20,7 @@ function whenOf(item: FeedItem): string {
 /**
  * A workout in a list (Home, Profile, Calendar): the whole card is one link to the
  * workout page. It shows the date, the title, the routine it came from, how many
- * exercises were added to it, the stats and the first three exercises. The rest are
+ * exercises were added to it, how it felt (a small face by the title), the stats and the first three exercises. The rest are
  * counted ("+2 more"), since a link cannot hold a button.
  */
 export function WorkoutCard({ item, units }: { item: FeedItem; units: Units }) {
@@ -30,7 +32,10 @@ export function WorkoutCard({ item, units }: { item: FeedItem; units: Units }) {
         <span className="grow">{whenOf(item)}</span>
         <ChevronRight size={18} aria-hidden="true" />
       </div>
-      <h3>{item.title}</h3>
+      <div className="wt-wctitle">
+        <h3>{item.title}</h3>
+        {item.feel && <FeelFace feel={item.feel} size={26} label={feltPhrase(item.feel)} />}
+      </div>
       {(item.routine || item.added > 0) && (
         <div className="wt-metaline">
           {item.routine && (

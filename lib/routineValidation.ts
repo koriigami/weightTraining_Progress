@@ -3,9 +3,10 @@
 // clean value (only known fields, trimmed strings) or an error message.
 import { AVOID_TAGS, EQUIPMENT_ORDER, JOINTS, MUSCLE_ORDER, exerciseById } from '../data/exercises';
 import type { AvoidTag, CustomExercise, Equipment, Joint, Metric, Muscle } from '../data/exercises';
+import { isEffort, isFeel } from './feel';
 import { LAP_KM, LAP_SEC } from './laps';
 import { LIMITS, findDuplicateExercise } from './routines';
-import type { ExerciseLookup, Lap, LoggedSet, PlanItem, Prefs, Routine, RoutineItem, SetPlan, WorkoutItem, WorkoutLog } from './routines';
+import type { ExerciseLookup, Feel, Lap, LoggedSet, PlanItem, Prefs, Routine, RoutineItem, SetPlan, WorkoutItem, WorkoutLog } from './routines';
 
 export type Parsed<T> = { ok: true; value: T } | { ok: false; error: string };
 
@@ -230,6 +231,8 @@ export function parseWorkoutInput(raw: unknown, lookup: ExerciseLookup): Parsed<
   const span = Date.parse(raw.finishedAt) - Date.parse(raw.startedAt);
   if (span < 0 || span > 24 * 3600 * 1000) return fail('finish must be after the start, within a day');
   if (raw.source !== undefined && raw.source !== 'live' && raw.source !== 'log') return fail('invalid source');
+  if (raw.feel !== undefined && !isFeel(raw.feel)) return fail('invalid feel');
+  if (raw.effort !== undefined && !isEffort(raw.effort)) return fail('effort must be a whole number from 1 to 10');
   const notes = optText(raw.notes, 1000);
   if (!notes.ok) return fail('notes are too long');
   const photo = optText(raw.photo, 2000);
@@ -250,6 +253,8 @@ export function parseWorkoutInput(raw: unknown, lookup: ExerciseLookup): Parsed<
     items,
     xp: 0,
     ...(raw.source ? { source: raw.source } : {}),
+    ...(raw.feel ? { feel: raw.feel } : {}),
+    ...(raw.effort ? { effort: raw.effort } : {}),
     ...(notes.value ? { notes: notes.value } : {}),
     ...(photo.value ? { photo: photo.value } : {}),
     ...(plan.value ? { plan: plan.value } : {}),
@@ -263,6 +268,8 @@ export type WorkoutPatch = {
   when?: string;
   notes?: string | null; // null clears
   photo?: string | null; // null clears
+  feel?: Feel | null; // null clears
+  effort?: number | null; // null clears
   items?: WorkoutItem[];
   plan?: PlanItem[];
   startedAt?: string;
@@ -295,6 +302,15 @@ export function parseWorkoutPatch(raw: Obj, lookup: ExerciseLookup = exerciseByI
     const r = optText(raw[key], key === 'notes' ? 1000 : 2000);
     if (!r.ok) return fail(key === 'notes' ? 'notes are too long' : 'photo is too large');
     patch[key] = r.value ?? null;
+  }
+  // How it felt: a face and an effort, each cleared with null.
+  if (raw.feel !== undefined) {
+    if (raw.feel !== null && !isFeel(raw.feel)) return fail('invalid feel');
+    patch.feel = raw.feel;
+  }
+  if (raw.effort !== undefined) {
+    if (raw.effort !== null && !isEffort(raw.effort)) return fail('effort must be a whole number from 1 to 10');
+    patch.effort = raw.effort;
   }
   if (raw.items !== undefined) {
     const items = parseWorkoutItems(raw.items, lookup);

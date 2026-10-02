@@ -160,6 +160,15 @@ describe('the XP breakdown', () => {
     expect(paid.lines[3].sub).toBe('3 of 3 training days this week');
   });
 
+  it('writes the weeks in a row on the weekly goal line from the stored run', () => {
+    const w = row({ xp: 195, xpParts: { sets: 15, cardio: 0, beat: 0, record: 0, finish: 50, weekly: 80, weekRun: 4 } });
+    const weekly = xpBreakdown(w, { weeklyGoal: 3 }).lines.find((l) => l.key === 'weekly')!;
+    expect(weekly).toMatchObject({ xp: 80, sub: '3 of 3 training days, 4 weeks in a row' });
+    // A workout saved before the run was kept reads as the plain line.
+    const old = row({ xp: 165, xpParts: { sets: 15, cardio: 0, beat: 0, record: 0, finish: 50, weekly: 50 } });
+    expect(xpBreakdown(old, { weeklyGoal: 3 }).lines.find((l) => l.key === 'weekly')!.sub).toBe('3 of 3 training days this week');
+  });
+
   it('says why the daily bonus is 0: already earned earlier that day, or the day is still short', () => {
     const w = row({ xp: 15, xpParts: { sets: 15, cardio: 0, beat: 0, record: 0, finish: 0, weekly: 0 } });
     // The day reached 30 minutes with this workout, which has 9 of them: an earlier workout paid.

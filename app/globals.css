@@ -48,6 +48,14 @@
   --lap-best: #e9f8e1;
   --bad: #dd3f33;
   --bad-ink: #c8322a;
+  /* how a workout felt, from board 10: the five faces and the Profile bar, and the picked face */
+  --feel-rough: #e5534b;
+  --feel-tough: #f08a3c;
+  --feel-ok: #e8b83a;
+  --feel-good: #7bc74d;
+  --feel-great: #2ba438;
+  --feel-pick: #fff1cf;
+  --feel-pick-line: #e3b03a;
 
   /* body map */
   --muscle: #eadcba;
@@ -3533,6 +3541,23 @@ textarea.wt-input {
 .wt-flame {
   color: #ff7a2f;
 }
+/* The weekly goal bonus under the streak row: what this week pays, and the weeks in a row. */
+.wt-goalbonus {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+.wt-goalbonus b {
+  font-weight: 800;
+}
+.wt-goalbonus span {
+  color: var(--muted);
+  font-weight: 700;
+}
 .wt-homegrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -6483,4 +6508,179 @@ button.wt-frow:focus-visible {
   color: var(--muted);
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------
+   How it felt (v11 stage 3, board 10): the five faces, the effort slider,
+   the face beside a workout title and the Profile bar.
+   ------------------------------------------------------------------ */
+.wt-face {
+  display: block;
+  flex: none;
+}
+.wt-face-bg {
+  stroke: rgba(0, 0, 0, 0.25);
+  stroke-width: 2;
+}
+.wt-face-ink {
+  fill: var(--ink);
+}
+.wt-face-mouth {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+}
+.wt-faces {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  max-width: 440px;
+}
+.wt-facebtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 12px;
+}
+.wt-facebtn svg {
+  transition: transform 0.15s;
+}
+.wt-facebtn[aria-pressed='true'] {
+  color: var(--ink);
+  background: var(--feel-pick);
+  box-shadow: inset 0 0 0 2px var(--feel-pick-line);
+}
+.wt-facebtn[aria-pressed='true'] svg {
+  transform: scale(1.12);
+}
+.wt-effort-add {
+  margin-top: 12px;
+}
+.wt-effort {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+}
+.wt-effort-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.wt-effort-head b {
+  font-family: var(--font-num);
+  font-weight: 400;
+  font-size: 18px;
+}
+/* the effort slider in the app's colours: a soft track, green up to the value, a white thumb.
+   --fill is set on the input from the value. */
+.wt-effort input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 36px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.wt-effort input[type='range']::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--ok) var(--fill, 55%), var(--track) var(--fill, 55%));
+}
+.wt-effort input[type='range']::-moz-range-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--track);
+}
+.wt-effort input[type='range']::-moz-range-progress {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--ok);
+}
+.wt-effort input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  margin-top: -9px;
+  border-radius: 50%;
+  background: var(--cell);
+  border: 3px solid var(--ok);
+  box-shadow: 0 2px 0 var(--ok-deep);
+}
+.wt-effort input[type='range']::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--cell);
+  border: 3px solid var(--ok);
+  box-shadow: 0 2px 0 var(--ok-deep);
+}
+.wt-effort input[type='range']:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+.wt-feel-err {
+  display: block;
+  margin-top: 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wt-facebtn svg {
+    transition: none;
+  }
+}
+/* the title row of a workout card: the face sits beside the title and never wraps under it */
+.wt-wctitle {
+  flex-wrap: nowrap;
+}
+.wt-wctitle h3 {
+  min-width: 0;
+}
+/* Profile: how the last 30 days felt */
+.wt-feelbar {
+  display: flex;
+  height: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.wt-feelbar i {
+  display: block;
+  height: 100%;
+}
+.wt-feellegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.wt-feellegend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.wt-feellegend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+.wt-feelnote {
+  display: block;
+  color: var(--muted);
+}
+.wt-feellegend + .wt-feelnote {
+  margin-top: 10px;
 }

@@ -124,8 +124,8 @@ ul.plain li::marker{color:var(--xp-deep)}
 <main class="wrap">
   <header>
     <h1 class="gt">XP Rulebook</h1>
-    <p>How Levl turns training into XP, levels, ranks and badges. These are rules v3 (October 2026): one daily bonus for 20 minutes of training, strength and cardio together, training days for the weekly goal and the streak, rest days and a comeback bonus.</p>
-    <div class="status"><span class="pill new">New in v3</span><span class="pill" style="background:#FFF2C9;border-color:#E3B03A;color:#6B4410">Changed in v3</span><span class="pill">Unchanged</span></div>
+    <p>How Levl turns training into XP, levels, ranks and badges. These are rules v4 (October 2026): one daily bonus for 20 minutes of training, strength and cardio together, training days for the weekly goal and the streak, rest days, a comeback bonus, and a weekly goal bonus that grows with each week in a row.</p>
+    <div class="status"><span class="pill new">New in v3</span><span class="pill" style="background:#FFF2C9;border-color:#E3B03A;color:#6B4410">Changed in v3 or v4</span><span class="pill">Unchanged</span></div>
   </header>
 
   <section aria-labelledby="p">
@@ -150,7 +150,7 @@ ul.plain li::marker{color:var(--xp-deep)}
         <tr><td><b>Record</b></td><td class="xp">+25</td><td>Once per exercise per workout, when your best set beats every earlier workout. Paid instead of the +10, never both.</td><td><span class="tag same">Unchanged</span></td></tr>
         <tr><td><b>Daily bonus</b></td><td class="xp">+50</td><td>Once a day, when the day's training adds up to 20 minutes. Each ticked strength set counts 3 minutes, cardio counts its minutes, and every workout that day adds up. It's paid on the workout that reaches 20 minutes. Plans don't matter: a skipped treadmill or a removed exercise changes nothing.</td><td><span class="tag new">New</span><small>Replaces the finish bonus (up to 50, 2 a day, needed the whole plan)</small></td></tr>
         <tr><td><b>Training day</b></td><td class="xp">0</td><td>A day that reached 20 minutes. The weekly goal, the streak and some badges count training days.</td><td><span class="tag new">New</span></td></tr>
-        <tr><td><b>Weekly goal</b></td><td class="xp">+50</td><td>The first time in a Monday to Sunday week that your training days reach your weekly goal.</td><td><span class="tag chg">Changed</span><small>Was workouts that finished their plan</small></td></tr>
+        <tr><td><b>Weekly goal</b></td><td class="xp">+50 to +100</td><td>The first time in a Monday to Sunday week that your training days reach your weekly goal. It pays +50 the first week, and +10 more for each week in a row you reach it, up to +100 from week 6. A week without the goal met, even one with training, starts it again at +50. Your goal applies to every week.</td><td><span class="tag chg">Changed</span><small>Was a flat +50 before v4, and workouts that finished their plan before v3</small></td></tr>
         <tr><td><b>Comeback</b></td><td class="xp">+25</td><td>Your first training day after a whole Monday to Sunday week with none. Not paid for your very first training day.</td><td><span class="tag new">New</span></td></tr>
         <tr><td><b>Weigh-in</b></td><td class="xp">+10</td><td>Each day you log your weight.</td><td><span class="tag same">Unchanged</span></td></tr>
         <tr><td><b>Badges</b></td><td class="xp">25 to 500</td><td>Each badge tier: Bronze 25, Silver 50, Gold 100, Diamond 200, Master 350, Legend 500. Monthly badges 75, special badges 50.</td><td><span class="tag same">Unchanged</span></td></tr>
@@ -264,7 +264,7 @@ ul.plain li::marker{color:var(--xp-deep)}
 
   <section aria-labelledby="fair">
     <h2 class="gt" id="fair">Same week, two people</h2>
-    <p class="lede">Both train 4 times a week, 15 sets a session, and beat last time on 2 exercises each session, with one record a week. One lifts 8 kg dumbbells, the other lifts 40 kg.</p>
+    <p class="lede">Both train 4 times a week, 15 sets a session, and beat last time on 2 exercises each session, with one record a week. One lifts 8 kg dumbbells, the other lifts 40 kg. The weekly goal is shown as a first goal week, +50. It grows by 10 for each week in a row, up to +100.</p>
     <div class="two">
       <div class="card person"><header><span class="av" style="background:linear-gradient(160deg,#5AA2FF,#14318F)">S</span><div><b>College student</b><small>8 kg dumbbells</small></div></header>
         <div class="ex-row"><span>60 sets</span><b>+300</b></div><div class="ex-row"><span>Beat last time, 7 times</span><b>+70</b></div><div class="ex-row"><span>1 record</span><b>+25</b></div><div class="ex-row"><span>4 daily bonuses</span><b>+200</b></div><div class="ex-row"><span>Weekly goal</span><b>+50</b></div><div class="ex-row total"><span><b style="font-family:var(--font-ui);font-size:15px">This week</b></span><b>645 XP</b></div>
@@ -285,7 +285,7 @@ ul.plain li::marker{color:var(--xp-deep)}
 
   <section aria-labelledby="lv">
     <h2 class="gt" id="lv">Levels and ranks</h2>
-    <p class="lede">Level n starts at 50 × n × (n − 1) XP, so each level costs 100 more XP than the one before. There is no top level. The weeks column assumes the 645 XP steady week above, before any badge or goal XP, which makes it quicker in practice.</p>
+    <p class="lede">Level n starts at 50 × n × (n − 1) XP, so each level costs 100 more XP than the one before. There is no top level. The weeks column assumes that steady week every week with the weekly goal met each time, so the goal bonus grows from +50 to +100 (645 XP in the first week, 695 from week 6), before any badge or goal XP, which makes it quicker in practice.</p>
     <div class="ranks" id="ranks"></div>
     <div class="note"><span>Pace stays as it is for now. After about 3 weeks of your testers' data, the Insights page shows how fast people really climb, and we look at the curve again.</span></div>
     <div class="tbl"><table>
@@ -379,14 +379,24 @@ ul.plain li::marker{color:var(--xp-deep)}
         <tr><td><b>You delete a workout</b></td><td>The confirm names the XP, and adds "You'll go back to level 6" only when a level or rank drops. After it, a toast: XP updated · Level 6.</td></tr>
         <tr><td><b>You edit a workout</b><small>Fewer sets, a lower weight, a removed exercise</small></td><td>The same toast after Save, only when the level changes.</td></tr>
         <tr><td><b>You move a workout's date</b><small>Records and beat last time follow the order of dates</small></td><td>The same toast.</td></tr>
-        <tr><td><b>You change your weekly goal</b><small>Past weeks are checked again</small></td><td>The weekly goal editor says so before you save. The same toast after.</td></tr>
+        <tr><td><b>You change your weekly goal</b><small>Past weeks, and the weeks in a row, are checked again</small></td><td>The weekly goal editor says so before you save. The same toast after.</td></tr>
         <tr><td><b>You delete a weigh-in</b></td><td>The same toast.</td></tr>
         <tr><td><b>Badge tiers are lost</b><small>Only through the deletes above</small></td><td>The badge shows as not earned again, with no moment.</td></tr>
         <tr><td><b>v3 goes live</b></td><td>One note on Home the first time: "XP was worked out again with the new daily bonus."</td></tr>
+        <tr><td><b>v4 goes live</b></td><td>One note on Home the first time: "The weekly goal bonus now grows with each week in a row. XP was worked out again." If an older note is still waiting, only this one shows, and Got it clears them all.</td></tr>
       </tbody>
     </table></div>
     <div class="note"><span>Goals no longer drop: once achieved, a goal keeps its XP and badge. Reaching a level again after a drop doesn't replay its level up moment.</span></div>
-    <div class="note"><span>Time away never lowers your XP, level or rank. There are no missed days and no penalty: a week with no training day ends the streak and misses that week's goal, and coming back pays +25.</span></div>
+    <div class="note"><span>Time away never lowers your XP, level or rank. There are no missed days and no penalty: a week with no training day ends the streak and misses that week's goal, a week short of the goal starts the goal bonus again at +50, and coming back pays +25.</span></div>
+  </section>
+
+  <section aria-labelledby="ch4">
+    <h2 class="gt" id="ch4">When v4 goes live</h2>
+    <div class="card"><ul class="plain">
+      <li>Every workout is scored again, so a goal week that is part of a run now pays more than +50. Every goal week paid +50 before, so nobody's XP, level or rank goes down. Level up moments you already saw don't play again.</li>
+      <li>The run is worked out from your own training days, Monday to Sunday, with your current weekly goal applied to every week. Change the goal and the runs are checked again.</li>
+      <li>A copy of your data is kept before it is scored again. Nothing you logged changes.</li>
+    </ul></div>
   </section>
 
   <section aria-labelledby="ch">
@@ -407,7 +417,10 @@ let uid=0;
 function shield(r,size){const id='s'+(++uid),m=RM[r];return `<svg viewBox="0 0 120 132" width="${size}" height="${Math.round(size*1.1)}" role="img" aria-label="${r} rank"><defs><linearGradient id="${id}a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${m.rim[0]}"/><stop offset="1" stop-color="${m.rim[1]}"/></linearGradient><linearGradient id="${id}f" x1="0" y1="0" x2=".6" y2="1"><stop offset="0" stop-color="${m.face[0]}"/><stop offset="1" stop-color="${m.face[1]}"/></linearGradient></defs><path d="${SH}" fill="url(#${id}a)"/><path d="${SH}" fill="url(#${id}f)" transform="translate(60 66) scale(.82) translate(-60 -66)"/><text x="60" y="83" text-anchor="middle" font-family="Lilita One, Arial Rounded MT Bold, sans-serif" font-size="60" fill="#fff">${r}</text></svg>`;}
 const xpFor=n=>50*n*(n-1), rankFor=l=>l>=30?'S':l>=20?'A':l>=15?'B':l>=10?'C':l>=5?'D':'E', fmt=n=>n.toLocaleString('en-GB');
 const WEEK=645, GATES=[[1,'E'],[5,'D'],[10,'C'],[15,'B'],[20,'A'],[30,'S']];
-const weeks=x=>x===0?'Day one':x/WEEK<1?'Under a week':`${Math.round(x/WEEK)} wks`;
+/* Week k of the steady week pays the weekly goal for the kth week in a row: min(100, 50 + 10 (k - 1)). */
+const goalPay=k=>Math.min(100,50+10*(k-1)), weekXp=k=>WEEK-50+goalPay(k);
+const weeksFor=x=>{let k=1,sum=0;while(sum+weekXp(k)<x){sum+=weekXp(k);k++;}return k-1+(x-sum)/weekXp(k);};
+const weeks=x=>x===0?'Day one':weeksFor(x)<1?'Under a week':`${Math.round(weeksFor(x))} wks`;
 document.getElementById('ranks').innerHTML=GATES.map(([l,r])=>`<div class="rk">${shield(r,46)}<b>${r} rank</b><small>Level ${l}</small><small>${fmt(xpFor(l))} XP</small><small>${weeks(xpFor(l))}</small></div>`).join('');
 const RC={E:'#7E8896',D:'#1FA56A',C:'#3B7BE8',B:'#9147D6',A:'#E0A21A',S:'#E0405F'};
 let rows='';for(let n=1;n<=35;n++){const r=rankFor(n),gate=GATES.some(g=>g[0]===n);rows+=`<tr class="${gate?'gate':''}"><td>Level ${n}</td><td><span class="rdot" style="background:${RC[r]}"></span>${r}${gate&&n>1?' (new rank)':''}</td><td class="num">${fmt(xpFor(n))}</td><td class="num">${fmt(100*n)}</td><td class="num">${weeks(xpFor(n))}</td></tr>`;}

@@ -27,6 +27,7 @@ export const ROUTINE_ACTIONS = [
   'addCustomExercise',
   'setRulesNote',
   'setRulesV3Note',
+  'setRulesV4Note',
 ] as const;
 
 export type RoutineAction = (typeof ROUTINE_ACTIONS)[number];
@@ -114,6 +115,15 @@ export function applyRoutineAction(
         if (patch[key] === null) delete updated[key];
         else updated[key] = patch[key] as string;
       }
+      // How it felt: null clears a face or an effort, and one never touches the other.
+      if (patch.feel !== undefined) {
+        if (patch.feel === null) delete updated.feel;
+        else updated.feel = patch.feel;
+      }
+      if (patch.effort !== undefined) {
+        if (patch.effort === null) delete updated.effort;
+        else updated.effort = patch.effort;
+      }
       return { ok: true, state: withWorkouts(workouts.map((w) => (w.id === patch.id ? updated : w))) };
     }
     case 'deleteWorkout': {
@@ -147,6 +157,11 @@ export function applyRoutineAction(
       // The same for the v3 note: it can only be put away here, and the store raises it.
       if (body.value !== false) return fail('invalid note flag');
       return { ok: true, state: { ...state, rulesV3Note: false } };
+    }
+    case 'setRulesV4Note': {
+      // The same for the v4 note.
+      if (body.value !== false) return fail('invalid note flag');
+      return { ok: true, state: { ...state, rulesV4Note: false } };
     }
     default:
       return fail('unknown action');

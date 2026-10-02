@@ -119,7 +119,7 @@ export function dayStr(daysAgo = 0) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-function workout(id, daysAgo, title, minutes, items, plan, at = '18:00') {
+function workout(id, daysAgo, title, minutes, items, plan, at = '18:00', felt = {}) {
   const date = dayStr(daysAgo);
   const start = new Date(`${date}T${at}:00`);
   return {
@@ -131,6 +131,7 @@ function workout(id, daysAgo, title, minutes, items, plan, at = '18:00') {
     finishedAt: new Date(start.getTime() + minutes * 60_000).toISOString(),
     items: items.map(([exerciseId, sets]) => ({ exerciseId, sets: sets.map((s) => ({ ...s, done: true })) })),
     ...(plan ? { plan } : {}),
+    ...felt,
     xp: 0,
   };
 }
@@ -141,6 +142,7 @@ const three = (kg, reps) => [{ kg, reps }, { kg, reps }, { kg, reps }];
  * The `basic` preset: onboarded prefs, a strength, run, ride, mixed and short workout, weights, a goal, a routine. Safe to run twice.
  * Training days (20 minutes or more): strength today (7 sets), run yesterday, ride 3 days ago, mixed 4 days ago.
  * The short workout is 2 sets (6 minutes) 2 days ago, so that day is a rest day on Home and its workout page shows "6 of 20 min today".
+ * How it felt: the run is Good with an effort of 6, the ride is Great and the mixed workout is Tough with an effort of 8. The strength and short workouts are unrated, so their rows have no face and the Victory flow starts with nothing picked.
  * "Rest" on the week strip needs a past day in the current week, so it shows from Wednesday on.
  */
 export async function seed(context) {
@@ -163,10 +165,10 @@ export async function seed(context) {
       { exerciseId: 'db-bench', sets: 4 },
       { exerciseId: 'bb-squat', sets: 3 },
     ], '00:05'), // early today, so a workout logged now comes after it
-    workout(IDS.run, 1, 'Morning Run', 31, [['run', [{ min: 31, km: 5.2 }]]]),
+    workout(IDS.run, 1, 'Morning Run', 31, [['run', [{ min: 31, km: 5.2 }]]], undefined, '18:00', { feel: 'good', effort: 6 }),
     workout(IDS.short, 2, 'Quick Push-ups', 8, [['pushup', [{ reps: 12 }, { reps: 10 }]]]),
-    workout(IDS.ride, 3, 'Evening Ride', 46, [['cycle', [{ min: 46, km: 18.4 }]]]),
-    workout(IDS.mixed, 4, 'Legs and a Jog', 58, [['bb-squat', three(70, 6)], ['run', [{ min: 12, km: 2.1 }]]]),
+    workout(IDS.ride, 3, 'Evening Ride', 46, [['cycle', [{ min: 46, km: 18.4 }]]], undefined, '18:00', { feel: 'great' }),
+    workout(IDS.mixed, 4, 'Legs and a Jog', 58, [['bb-squat', three(70, 6)], ['run', [{ min: 12, km: 2.1 }]]], undefined, '18:00', { feel: 'tough', effort: 8 }),
   ];
   for (const w of workouts) if (!have.has(w.id)) await api(context, 'saveWorkout', { workout: w });
   await api(context, 'weight', { date: dayStr(7), kg: 82.4 });

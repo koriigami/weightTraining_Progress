@@ -235,6 +235,7 @@ function memoryKv(seed: Record<string, unknown> = {}): KV & { data: Map<string, 
 const OWNER = 'owner@example.com';
 const STATE = 'wt:user:sub:state';
 const BACKUP = 'wt:user:sub:backup:v7';
+const BACKUP_V11 = 'wt:user:sub:backup:v11';
 let prevOwner: string | undefined;
 
 beforeEach(() => {
@@ -331,7 +332,7 @@ describe('the store on read', () => {
   });
 
   it('leaves the flag alone once the note has been seen', async () => {
-    const kv = memoryKv({ [STATE]: { ...emptyState(), workouts: [byDate(migrate(legacyPlanState), '2026-09-26')], rulesV2Note: false, rulesV3Note: false } });
+    const kv = memoryKv({ [STATE]: { ...emptyState(), workouts: [byDate(migrate(legacyPlanState), '2026-09-26')], rulesV2Note: false, rulesV3Note: false, rulesV4Note: false } });
     expect((await createStore(kv).getState('sub', 'x@example.com')).rulesV2Note).toBe(false);
     expect(kv.writes).toEqual([]);
   });
@@ -369,6 +370,67 @@ describe('the store on read', () => {
     const writes = kv.writes.length;
     expect(await store.getState('sub', 'x@example.com')).toEqual(s);
     expect(kv.writes).toHaveLength(writes);
+  });
+
+  // Three weeks in a row of three training days, saved under rules v3: every goal week paid +50, and the
+  // stored snapshots say so. Mondays in 2025, well in the past because the store scores against the real clock.
+  const v3Weeks = () => {
+    const days = ['2025-03-10', '2025-03-11', '2025-03-12', '2025-03-17', '2025-03-18', '2025-03-19', '2025-03-24', '2025-03-25', '2025-03-26'];
+    return days.map((d, i) => ({ ...trainingDay(d), xp: i % 3 === 2 ? 135 : 85, xpParts: { sets: 35, cardio: 0, beat: 0, record: 0, finish: 50, weekly: i % 3 === 2 ? 50 : 0, comeback: 0 } }));
+  };
+  const seen = { ...emptyState(), rulesV2Note: false, rulesV3Note: false };
+
+  it('sets the weekly goal note for a state that has workouts, and for nobody else', async () => {
+    const withWorkouts = { ...seen, workouts: v3Weeks() };
+    expect((await createStore(memoryKv({ [STATE]: withWorkouts })).getState('sub', 'x@example.com')).rulesV4Note).toBe(true);
+
+    // A saved state with no workouts is marked as having no note, so a first workout later does not trigger it.
+    const kv = memoryKv({ [STATE]: seen });
+    const store = createStore(kv);
+    expect((await store.getState('sub', 'x@example.com')).rulesV4Note).toBe(false);
+    await store.saveState('sub', { ...(kv.data.get(STATE) as AppState), workouts: v3Weeks() });
+    expect((await store.getState('sub', 'x@example.com')).rulesV4Note).toBe(false);
+
+    // New users and a brand new owner start without it.
+    expect((await createStore(memoryKv()).getState('sub', 'new@example.com')).rulesV4Note).toBe(false);
+    expect((await createStore(memoryKv()).getState('sub', OWNER)).rulesV4Note).toBe(false);
+  });
+
+  it('works the stored XP out again for the growing weekly bonus, and keeps the earlier notes as they were', async () => {
+    const kv = memoryKv({ [STATE]: { ...seen, rulesV2Note: true, workouts: v3Weeks() } });
+    const s = await createStore(kv).getState('sub', 'x@example.com');
+    expect(s).toMatchObject({ rulesV2Note: true, rulesV3Note: false, rulesV4Note: true });
+    expect(s.workouts!.filter((w) => w.xpParts!.weekly > 0).map((w) => [w.xpParts!.weekly, w.xpParts!.weekRun, w.xp])).toEqual([[50, 1, 135], [60, 2, 145], [70, 3, 155]]);
+    expect(kv.data.get(STATE)).toEqual(s);
+  });
+
+  it('keeps the state as it was in the v11 backup, once, and never overwrites it', async () => {
+    const raw = { ...seen, workouts: v3Weeks() };
+    const kv = memoryKv({ [STATE]: raw });
+    const store = createStore(kv);
+    await store.getState('sub', 'x@example.com');
+    expect(kv.data.get(BACKUP_V11)).toEqual(raw); // the old snapshots, untouched
+    expect(kv.writes.filter((k) => k === BACKUP_V11)).toHaveLength(1);
+    expect(kv.data.has(BACKUP)).toBe(false); // no plan days, so no v7 backup
+
+    // A second read finds nothing to do: no write at all, same state.
+    const writes = kv.writes.length;
+    const again = await store.getState('sub', 'x@example.com');
+    expect(kv.writes).toHaveLength(writes);
+    expect(again).toEqual(kv.data.get(STATE));
+
+    // An existing backup is never replaced.
+    const old = { marker: 'older copy' };
+    const kv2 = memoryKv({ [STATE]: raw, [BACKUP_V11]: old });
+    await createStore(kv2).getState('sub', 'x@example.com');
+    expect(kv2.data.get(BACKUP_V11)).toEqual(old);
+    expect(kv2.writes).not.toContain(BACKUP_V11);
+  });
+
+  it('writes no v11 backup for a state with no workouts', async () => {
+    const kv = memoryKv({ [STATE]: seen });
+    await createStore(kv).getState('sub', 'x@example.com');
+    expect(kv.data.has(BACKUP_V11)).toBe(false);
   });
 
   it('never seeds routines: an owner keeps what they have and starts with none otherwise', async () => {

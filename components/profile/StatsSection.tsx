@@ -11,9 +11,10 @@ import { profileTiles } from '@/lib/profileStats';
 import { WEEKLY_METRICS, weeklySeries } from '@/lib/weekly';
 import type { WeeklyMetric } from '@/lib/weekly';
 import { useToday } from '@/lib/useToday';
+import { FeelCard } from './FeelCard';
 import { WeeklyChart, chartUnit, chartValue } from './WeeklyChart';
 
-/** Profile > Stats: the weekly chart with XP, Sets and Volume, and four stat tiles. "See all" opens Statistics. */
+/** Profile > Stats: the weekly chart with XP, Sets and Volume, four stat tiles, and how the last 30 days felt. "See all" opens Statistics. */
 export function StatsSection() {
   const { state, prefs } = useProgress();
   const today = useToday();
@@ -64,6 +65,7 @@ export function StatsSection() {
           ))}
         </div>
       </Card>
+      <FeelCard />
     </section>
   );
 }
