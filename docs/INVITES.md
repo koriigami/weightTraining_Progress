@@ -32,3 +32,4 @@ Say "remove <email> from the invites". It goes through `POST /api/invites` with 
 | Before 2 Oct 2026 | about 16 | `ALLOWED_EMAILS` on Vercel, by hand |
 | 2 Oct 2026 | 2 | Invite list. 5 other form sign-ups were already in `ALLOWED_EMAILS` |
 | 2 Oct 2026 | 1 | Invite list, a later form submission |
+| 2 Oct 2026 | 1 | Invite list, another late form submission |
