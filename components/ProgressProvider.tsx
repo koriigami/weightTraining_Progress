@@ -89,6 +89,10 @@ type ProgressContextValue = {
   dismissRulesV3Note: () => Promise<string | null>;
   /** The same for the "weekly goal bonus grows" note. */
   dismissRulesV4Note: () => Promise<string | null>;
+  /** Marks the first-run guide played or skipped. It never comes back on its own. */
+  finishGuide: () => Promise<string | null>;
+  /** Marks the update with this id, and every older one, as seen. A rules update also puts away the Home rules notes. */
+  markNewsSeen: (id: string) => Promise<string | null>;
   addCustomExercise: (exercise: CustomExerciseInput) => Promise<AddCustomExerciseResult>;
   logWeight: (date: string, kg: number) => void;
   addGoal: (goal: Omit<Goal, 'id' | 'createdAt'>) => Promise<string | null>;
@@ -516,6 +520,19 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     return r.ok ? null : r.error;
   }, [runRoutineAction]);
 
+  const finishGuide = useCallback(async (): Promise<string | null> => {
+    const r = await runRoutineAction({ action: 'setGuideDone', value: true });
+    return r.ok ? null : r.error;
+  }, [runRoutineAction]);
+
+  const markNewsSeen = useCallback(
+    async (id: string): Promise<string | null> => {
+      const r = await runRoutineAction({ action: 'setNewsSeen', id });
+      return r.ok ? null : r.error;
+    },
+    [runRoutineAction]
+  );
+
   const addCustomExercise = useCallback(
     async (exercise: CustomExerciseInput): Promise<AddCustomExerciseResult> => {
       // The id is picked here so the optimistic copy and the server's agree.
@@ -570,6 +587,8 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     dismissRulesNote,
     dismissRulesV3Note,
     dismissRulesV4Note,
+    finishGuide,
+    markNewsSeen,
     addCustomExercise,
     logWeight,
     addGoal,

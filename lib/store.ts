@@ -8,6 +8,7 @@ import { todayStr } from './date';
 import { cleanList } from './invites';
 import { isOwnerEmail } from './owner';
 import { rescoreWorkouts } from './workoutScoring';
+import { latestNewsId } from './news';
 
 const STATE_KEY_V2 = 'wt:state:v2';
 const STATE_KEY_V1 = 'wt:state';
@@ -111,9 +112,19 @@ export function backfillGoalCreatedAt<T extends AppState>(state: T): T {
 }
 
 // Someone new starts with no routines, has not been through onboarding yet and
-// has no "XP was worked out again" notes to see.
+// has no "XP was worked out again" notes to see. The guide waits for them, and the
+// updates up to today count as seen: they only hear about what changes after they joined.
 export function newUserState(): AppState {
-  return { ...emptyState(), routines: [], prefs: defaultPrefs(), rulesV2Note: false, rulesV3Note: false, rulesV4Note: false };
+  return {
+    ...emptyState(),
+    routines: [],
+    prefs: defaultPrefs(),
+    rulesV2Note: false,
+    rulesV3Note: false,
+    rulesV4Note: false,
+    guideDone: false,
+    newsSeen: latestNewsId(),
+  };
 }
 
 export type Profile = { email: string; name: string; image: string; createdAt: string };
@@ -146,7 +157,9 @@ export function createStore(kv: KV) {
   // new rules. For v4 a state that already has workouts is also copied untouched to
   // the v11 backup first (only if that key is free), since their stored XP is
   // replaced. A state with none of these is returned as it is, and nothing is
-  // written for a goal that only needed its createdAt filled in.
+  // written for a goal that only needed its createdAt filled in. guideDone and
+  // newsSeen are never filled in here: a state without them is someone who joined
+  // before they existed, and that is what they are read as.
   async function upgrade(userId: string, raw: LegacyState): Promise<AppState> {
     const state = backfillGoalCreatedAt(raw);
     const hadDays = hasLegacyDays(raw);
@@ -180,7 +193,7 @@ export function createStore(kv: KV) {
         const legacy = v2 ?? (v1 ? migrateV1ToV2(v1) : null);
         if (legacy) return upgrade(userId, structuredClone(legacy));
         // The owner has no prefs of their own, which reads as their setup and skips onboarding.
-        return { ...emptyState(), routines: [], rulesV2Note: false, rulesV3Note: false, rulesV4Note: false };
+        return { ...emptyState(), routines: [], rulesV2Note: false, rulesV3Note: false, rulesV4Note: false, guideDone: false, newsSeen: latestNewsId() };
       }
       return newUserState();
     },

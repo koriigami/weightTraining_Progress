@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { applyRoutineAction } from '../lib/routineActions';
+import { applyRoutineAction, isRoutineAction } from '../lib/routineActions';
 import type { ActionResult } from '../lib/routineActions';
+import { NEWS, latestNewsId } from '../lib/news';
+import type { NewsEntry } from '../lib/news';
 import { emptyState } from '../lib/progress';
 import type { AppState } from '../lib/progress';
 import { LIMITS, defaultPrefs } from '../lib/routines';
@@ -591,3 +593,97 @@ describe('setRulesNote', () => {
     for (const value of [true, 'false', 0, null, undefined]) expectFail(run(emptyState(), { action: 'setRulesNote', value }), 'invalid note flag');
   });
 });
+
+describe('savePrefs and the guide', () => {
+  const finished = () => ({ ...defaultPrefs(), onboarded: true });
+  // Someone who signed up before the guide existed and has not finished the setup questions.
+  const notYet = (): AppState => ({ ...emptyState(), prefs: defaultPrefs() });
+
+  it('finishing the setup questions for the first time makes the guide wait and marks the updates so far as seen', () => {
+    const next = expectOk(run(notYet(), { action: 'savePrefs', prefs: finished() }));
+    expect(next.guideDone).toBe(false);
+    expect(next.newsSeen).toBe(latestNewsId());
+  });
+
+  it('leaves a guide that was already played, and an update already seen, as they were', () => {
+    const next = expectOk(run({ ...notYet(), guideDone: true, newsSeen: '2020-01' }, { action: 'savePrefs', prefs: finished() }));
+    expect(next.guideDone).toBe(true);
+    expect(next.newsSeen).toBe('2020-01');
+  });
+
+  it('changes neither on a later visit to the setup questions', () => {
+    const existing: AppState = { ...emptyState(), prefs: finished() };
+    const next = expectOk(run(existing, { action: 'savePrefs', prefs: { ...finished(), weeklyGoal: 4 } }));
+    expect(next).not.toHaveProperty('guideDone');
+    expect(next).not.toHaveProperty('newsSeen');
+    const played = expectOk(run({ ...existing, guideDone: true, newsSeen: '2020-01' }, { action: 'savePrefs', prefs: finished() }));
+    expect([played.guideDone, played.newsSeen]).toEqual([true, '2020-01']);
+  });
+
+  it('changes neither while the setup questions are still not finished, or for someone with no stored prefs', () => {
+    const unfinished = expectOk(run(notYet(), { action: 'savePrefs', prefs: { ...defaultPrefs(), weeklyGoal: 4 } }));
+    expect(unfinished).not.toHaveProperty('guideDone');
+    // No stored prefs reads as set up already (the owner), so saving a setting is not finishing onboarding.
+    const owner = expectOk(run(emptyState(), { action: 'savePrefs', prefs: finished() }));
+    expect(owner).not.toHaveProperty('guideDone');
+    expect(owner).not.toHaveProperty('newsSeen');
+  });
+});
+
+describe('setGuideDone', () => {
+  it('marks the guide done, and keeps everything else', () => {
+    const next = expectOk(run({ ...emptyState(), guideDone: false, newsSeen: '2026-10', rulesV4Note: true }, { action: 'setGuideDone', value: true }));
+    expect(next).toMatchObject({ guideDone: true, newsSeen: '2026-10', rulesV4Note: true });
+  });
+
+  it('only takes a boolean true, so it cannot raise the guide again', () => {
+    for (const value of [false, 'true', 1, null, undefined]) expectFail(run({ ...emptyState(), guideDone: true }, { action: 'setGuideDone', value }), 'invalid guide flag');
+  });
+
+  it('is a state action the route accepts', () => {
+    expect(isRoutineAction('setGuideDone')).toBe(true);
+    expect(isRoutineAction('setNewsSeen')).toBe(true);
+  });
+});
+
+describe('setNewsSeen', () => {
+  const page = { title: 'A page', text: 'Words', image: '/news/a.jpg' };
+  const entry = (id: string, rules?: boolean): NewsEntry => ({ id, date: `${id}-01`, label: id, pages: [rules ? { ...page, rules: true } : page] });
+  const plain = [entry('2027-02'), entry('2027-01')]; // newest first, no rules page
+  const withRules = [entry('2027-02'), entry('2027-01', true)];
+  const waiting: AppState = { ...emptyState(), rulesV2Note: true, rulesV3Note: true, rulesV4Note: true };
+  const seeNews = (state: AppState, id: unknown, news?: NewsEntry[]) => applyRoutineAction(state, { action: 'setNewsSeen', id }, { ...ctx, news });
+
+  it('remembers the update, and keeps everything else', () => {
+    const next = expectOk(run({ ...emptyState(), guideDone: true }, { action: 'setNewsSeen', id: NEWS[0].id }));
+    expect(next).toMatchObject({ newsSeen: NEWS[0].id, guideDone: true });
+  });
+
+  it('refuses an id that is not in the update list', () => {
+    for (const id of ['2019-01', '', 5, null, undefined, { $ne: 1 }]) expectFail(run(emptyState(), { action: 'setNewsSeen', id }), 'unknown update');
+  });
+
+  it('clears the rules notes that are waiting when the update has a rules page, and nothing else', () => {
+    const next = expectOk(run(waiting, { action: 'setNewsSeen', id: '2026-10' })); // the real October update has one
+    expect(next).toMatchObject({ rulesV2Note: false, rulesV3Note: false, rulesV4Note: false });
+    // A note that was never raised stays unset instead of becoming false.
+    expect(expectOk(run({ ...emptyState(), rulesV4Note: true }, { action: 'setNewsSeen', id: '2026-10' }))).not.toHaveProperty('rulesV2Note');
+  });
+
+  it('leaves the rules notes alone for an update with no rules page', () => {
+    const next = expectOk(seeNews(waiting, '2027-02', plain));
+    expect(next).toMatchObject({ newsSeen: '2027-02', rulesV2Note: true, rulesV3Note: true, rulesV4Note: true });
+  });
+
+  it('clears the notes when an older unseen update with a rules page is closed along with a newer one', () => {
+    expect(expectOk(seeNews(waiting, '2027-02', withRules)).rulesV4Note).toBe(false);
+    // Once the rules update was seen, closing a later one does not touch a note.
+    expect(expectOk(seeNews({ ...waiting, newsSeen: '2027-01' }, '2027-02', withRules)).rulesV4Note).toBe(true);
+  });
+
+  it('never moves what is remembered back to an older update', () => {
+    const next = expectOk(seeNews({ ...emptyState(), newsSeen: '2027-02' }, '2027-01', plain));
+    expect(next.newsSeen).toBe('2027-02');
+  });
+});
+

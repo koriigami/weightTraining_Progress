@@ -45,6 +45,13 @@ export type AppState = {
   rulesV3Note?: boolean;
   // And for the v4 rules (the weekly goal bonus grows with each week in a row).
   rulesV4Note?: boolean;
+  // The first-run guide: false while it waits to play on Home, true once it has
+  // been played or skipped. Both fields below are additive, like `source`, with no
+  // migration. A state without them is someone who joined before they existed: no
+  // guide waits for them, and every update in lib/news.ts is unseen.
+  guideDone?: boolean;
+  // The id of the newest update in lib/news.ts the person has seen.
+  newsSeen?: string;
 };
 
 export function emptyState(): AppState {

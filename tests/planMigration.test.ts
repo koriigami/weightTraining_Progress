@@ -433,6 +433,24 @@ describe('the store on read', () => {
     expect(kv.data.has(BACKUP_V11)).toBe(false);
   });
 
+  it('never writes the guide fields: a state without them is read as it is, and an upgrade does not add them', async () => {
+    // Nothing to upgrade: no write and no backup.
+    const kv = memoryKv({ [STATE]: { ...seen, rulesV4Note: false } });
+    const s = await createStore(kv).getState('sub', 'x@example.com');
+    expect(s).not.toHaveProperty('guideDone');
+    expect(s).not.toHaveProperty('newsSeen');
+    expect(kv.writes).toEqual([]);
+
+    // A state that does get upgraded (it has workouts and no v4 note) still does not gain them.
+    const kv2 = memoryKv({ [STATE]: { ...seen, workouts: v3Weeks() } });
+    const upgraded = await createStore(kv2).getState('sub', 'x@example.com');
+    expect(upgraded.rulesV4Note).toBe(true);
+    expect(upgraded).not.toHaveProperty('guideDone');
+    expect(upgraded).not.toHaveProperty('newsSeen');
+    expect(kv2.data.get(STATE)).not.toHaveProperty('guideDone');
+    expect(kv2.data.get(STATE)).not.toHaveProperty('newsSeen');
+  });
+
   it('never seeds routines: an owner keeps what they have and starts with none otherwise', async () => {
     const kv = memoryKv({ [STATE]: { ...emptyState(), rulesV2Note: false } });
     expect((await createStore(kv).getState('sub', OWNER)).routines).toBeUndefined();

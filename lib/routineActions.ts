@@ -3,9 +3,11 @@
 // optimistic update, so both end up with the same numbers. Nothing is mutated.
 import { EXERCISES, exerciseById } from '../data/exercises';
 import { addDaysStr } from './date';
-import { LIMITS, stateLookup } from './routines';
+import { LIMITS, resolvePrefs, stateLookup } from './routines';
 import type { WorkoutLog } from './routines';
 import type { AppState } from './progress';
+import { NEWS, advanceNewsSeen, closesRulesUpdate, latestNewsId } from './news';
+import type { NewsEntry } from './news';
 import {
   isObj,
   isValidId,
@@ -28,6 +30,8 @@ export const ROUTINE_ACTIONS = [
   'setRulesNote',
   'setRulesV3Note',
   'setRulesV4Note',
+  'setGuideDone',
+  'setNewsSeen',
 ] as const;
 
 export type RoutineAction = (typeof ROUTINE_ACTIONS)[number];
@@ -45,12 +49,14 @@ function defaultId(): string {
 }
 
 // today is the caller's date (YYYY-MM-DD). A workout can be dated up to
-// tomorrow, to allow for time zones, and no later.
+// tomorrow, to allow for time zones, and no later. news is the update list
+// (lib/news.ts), and only a test passes another one.
 export function applyRoutineAction(
   state: AppState,
   body: Record<string, unknown>,
-  ctx: { today: string; makeId?: () => string }
+  ctx: { today: string; makeId?: () => string; news?: NewsEntry[] }
 ): ActionResult {
+  const news = ctx.news ?? NEWS;
   const maxDate = addDaysStr(ctx.today, 1);
   const lookup = stateLookup(state);
   const workouts = state.workouts ?? [];
@@ -133,8 +139,16 @@ export function applyRoutineAction(
     case 'savePrefs': {
       const parsed = parsePrefs(body.prefs);
       if (!parsed.ok) return fail(parsed.error);
+      const base: AppState = { ...state, prefs: parsed.value };
+      // Finishing the setup questions for the first time: the guide waits for the
+      // person, and the updates up to now count as seen. Someone with no stored prefs
+      // reads as set up already, and a later visit to Setup questions changes neither.
+      if (!resolvePrefs(state).onboarded && parsed.value.onboarded) {
+        if (base.guideDone !== true) base.guideDone = false;
+        if (base.newsSeen === undefined) base.newsSeen = latestNewsId(news);
+      }
       // The weekly goal decides which workout earns the weekly bonus.
-      return { ok: true, state: withWorkouts(workouts, { ...state, prefs: parsed.value }) };
+      return { ok: true, state: withWorkouts(workouts, base) };
     }
     case 'addCustomExercise': {
       if (!isObj(body.exercise)) return fail('invalid exercise');
@@ -162,6 +176,23 @@ export function applyRoutineAction(
       // The same for the v4 note.
       if (body.value !== false) return fail('invalid note flag');
       return { ok: true, state: { ...state, rulesV4Note: false } };
+    }
+    case 'setGuideDone': {
+      // The guide can only be marked done. It is raised when onboarding finishes (savePrefs).
+      if (body.value !== true) return fail('invalid guide flag');
+      return { ok: true, state: { ...state, guideDone: true } };
+    }
+    case 'setNewsSeen': {
+      // Only an update that exists, and what is remembered never moves back to an older one.
+      const id = body.id;
+      if (typeof id !== 'string' || !news.some((e) => e.id === id)) return fail('unknown update');
+      const next: AppState = { ...state, newsSeen: advanceNewsSeen(state.newsSeen, id, news) };
+      // Closing an update that changed the XP rules also puts away the Home notes about them,
+      // so nobody is told twice. Only a note that is waiting is touched.
+      if (closesRulesUpdate(state.newsSeen, id, news)) {
+        for (const key of ['rulesV2Note', 'rulesV3Note', 'rulesV4Note'] as const) if (next[key] === true) next[key] = false;
+      }
+      return { ok: true, state: next };
     }
     default:
       return fail('unknown action');

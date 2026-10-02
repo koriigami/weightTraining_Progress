@@ -17,7 +17,7 @@ Fonts are Figtree (reading) and Lilita One (game titles).
 |---|---|
 | `app/` | Routes. Each page is a thin client component that reads a provider and composes components. `app/api/state/route.ts` is the data API for a person's own state, `app/api/insights/route.ts` is the owner-only Insights API, `app/api/invites/route.ts` manages the invite list with a secret key, and `app/api/auth/` is Auth.js. `app/globals.css` holds every style. |
 | `components/` | React components. `ProgressProvider.tsx`, `WorkoutSessionProvider.tsx` and `AppShell.tsx` sit at the top. Sub-folders per area: `ui/` (buttons, cards, sheets, dialogs), `nav/`, `home/`, `routines/`, `exercises/`, `workout/`, `victory/`, `celebrate/`, `rank/`, `profile/`, `goals/`, `stats/`, `calendar/`, `prefs/`, `onboarding/`, `insights/`. |
-| `lib/` | Pure logic with no React and no browser access, so it is testable. Scoring, badges, the rank road, goals, units, the workout session, routine actions and validation, feed and stat builders. `feedback.ts`, `useToday.ts`, `useMediaQuery.ts` and `useBackToClose.ts` are the few browser-facing helpers. `migrations/planDays.ts` turns the old plan log into workouts. |
+| `lib/` | Pure logic with no React and no browser access, so it is testable. Scoring, badges, the rank road, goals, units, the workout session, routine actions and validation, feed and stat builders, the What's new list (`news.ts`) and the guide's words, ring and placement rules (`guide.ts`). `feedback.ts`, `useToday.ts`, `useMediaQuery.ts` and `useBackToClose.ts` are the few browser-facing helpers. `migrations/planDays.ts` turns the old plan log into workouts. |
 | `data/` | `exercises.ts`: the library, muscle groups, equipment and metrics. |
 | `tests/` | Vitest, over `lib/` and the store. `tests/fixtures/` holds an old plan-era state for the migration tests. |
 | `docs/` | This file, the roadmap, the design history, `design/` (the boards) and `screenshots/`. |
@@ -299,6 +299,8 @@ rules are the XP Rulebook (`docs/design/xp-reference.html`), called rules v3:
   again, so the workout pages match the new rules at once. Before the v4 pass
   rescores a state that has workouts, it copies the state as it was to
   `wt:user:{id}:backup:v11`, only if that key is free. Reading again changes nothing.
+  From v12 a rules change is also announced in What's new, and closing that update clears the waiting
+  notes (see "The first-run guide and What's new").
 
 ## Storage
 
@@ -487,6 +489,70 @@ neither earns XP: scoring never reads them and the XP breakdown is the same with
 - The Notes placeholder on Victory, Edit and Log reads "Anything to remember?", so "How did it feel?" is
   asked once.
 
+## The first-run guide and What's new
+
+Two things Home can show once: a spotlight guide for new people, and a paged What's new card for
+everyone after a release that changed something people can see or the XP rules. This section is the
+state, the update list and the rules behind them. The card and the tour are built on top of it.
+
+### What is remembered
+
+`AppState` has two optional fields, additive like `source` on a workout, so there is no migration, no
+write on read and no backup.
+- `guideDone`: false while the guide waits to play on Home, true once it was played or skipped.
+- `newsSeen`: the id of the newest update the person has seen.
+
+A state without them is someone who joined before they existed: no guide waits for them, and every
+update in `lib/news.ts` is unseen. `lib/store.ts` never fills them in (`upgrade` leaves them alone).
+
+New people start with `guideDone: false` and `newsSeen` set to the newest update (`newUserState`, and an
+owner with nothing saved), so they never hear about what changed before they joined. The `savePrefs`
+action covers everyone else: when `prefs.onboarded` goes from not true to true (the first time the
+setup questions are finished) it sets `guideDone: false`, unless it is already true, and sets `newsSeen`
+to the newest update if it is missing. That catches someone who signed up before the guide and never
+finished setup. Visiting the setup questions again changes neither, and neither does someone with no
+stored prefs (the owner's migrated progress already reads as set up).
+
+### The actions
+
+Two more actions in `lib/routineActions.ts`, run by the client first and by `/api/state` after, like the
+rules notes. `ProgressProvider` has a method for each, resolving to an error message or null.
+- `setGuideDone` (`finishGuide()`): the value must be `true`. The guide cannot be raised again from here.
+- `setNewsSeen` (`markNewsSeen(id)`): the id must be in the update list. `newsSeen` becomes that id, and
+  never moves back to an older one. If any update that becomes seen with it (that id, and every older
+  unseen one) has a page with `rules: true`, the waiting `rulesV2Note`, `rulesV3Note` and `rulesV4Note`
+  are set to false, so nobody is told about a rules change twice.
+
+### The update list
+
+`lib/news.ts` holds `NEWS`, newest first: `{ id, date, label, pages: [{ title, text, image, rules? }] }`.
+- `latestNewsId()`, `unseenEntries(newsSeen)` and `unseenPages(newsSeen)`: the pages of the updates
+  newer than `newsSeen`, newest update first, at most 5, each with its update's id and label. A missing or
+  unknown `newsSeen` means every update is unseen.
+- To add an update, put a new entry at the top of `NEWS` with an id such as `2026-11` and its pictures in
+  `public/news/` (named like `2026-10-laps.jpg`, about 640 px wide, cut from the real screen). Mark a page
+  `rules: true` when it announces an XP rules change: it gets the "XP rules changed" tag and closing it
+  clears the Home rules notes. A rules change is announced here from now on, not with a new Home note.
+  `tests/news.test.ts` checks the list is newest first and that every picture exists.
+
+### The guide's pure parts
+
+`lib/guide.ts` has no React and no browser access.
+- `GUIDE_STEPS`: the seven steps, each with a `data-guide` name to light up and its words for a phone and a
+  computer. On a computer the Routines step also covers `exercises` (`alsoOnDesktop`). `GUIDE_WELCOME` and
+  `GUIDE_XP` are the words of the first and last cards. The XP numbers must match `WORKOUT_XP`, and a test
+  checks it.
+- `bevelDepth(boxShadow)`: reads a computed `box-shadow` and returns the deepest shadow that is not inset and
+  has no blur and no spread (4 on a card, 5 on the Workout button, 0 on a tab).
+- `ringRect(rect, bevel, radius, gap = 4)`: the gold ring, a 4 px gap on all four sides with the bottom measured
+  from the bottom of the bevel, and the radius plus the gap.
+- `bubblePlace(ring, viewport, layout, bubbleWidth)`: where the step card goes. Below the ring when its centre is
+  in the top half of the screen, above it otherwise, centred on it and 12 px inside the screen. On a computer a
+  ring in the sidebar gets the card to its right.
+- `introToShow({ guideDone, onboarded, unseenCount, sessionActive, shownThisLoad })`: `'guide'`, `'news'` or
+  `null`. Nothing before onboarding, while a workout is in progress, or when something was already shown this
+  load. The guide comes first (`guideDone === false`), What's new next.
+
 ## Rendering and layout
 
 - Every route is a static shell. Pages that depend on a person's routine ids
@@ -510,7 +576,7 @@ neither earns XP: scoring never reads them and the XP breakdown is the same with
 
 `npm test` runs vitest over `tests/`. The tests are pure: scoring, badges, badge
 cards, the rank road, goals and units, the session, routine actions and
-validation (including how it felt), the celebration queue, the plan migration, Insights (including the
+validation (including how it felt), the What's new list and the guide's rules, the celebration queue, the plan migration, Insights (including the
 5 person rule and the owner gate), and the store with an in-memory KV. There is
 no component test suite. Screens are checked two ways:
 

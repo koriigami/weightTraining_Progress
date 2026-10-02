@@ -4,6 +4,7 @@ import type { KV } from '../lib/store';
 import { emptyState } from '../lib/progress';
 import type { AppState } from '../lib/progress';
 import { resolvePrefs } from '../lib/routines';
+import { latestNewsId, unseenPages } from '../lib/news';
 import { legacyPlanState } from './fixtures/legacyPlanState';
 
 function memoryKv(seed: Record<string, unknown> = {}): KV & { data: Map<string, unknown> } {
@@ -61,6 +62,28 @@ describe('per-user state', () => {
     const saved: AppState = { ...newUserState(), routines: [{ id: 'r', title: 'R', items: [] }] };
     await store.saveState('u', saved);
     expect(await store.getState('u', 'u@example.com')).toEqual(saved);
+  });
+});
+
+describe('the guide and What is new, for new and existing people', () => {
+  it('starts new people with the guide waiting and the newest update as seen', async () => {
+    expect(newUserState()).toMatchObject({ guideDone: false, newsSeen: latestNewsId() });
+    const s = await createStore(memoryKv()).getState('new-sub', 'new@example.com');
+    expect(s).toMatchObject({ guideDone: false, newsSeen: latestNewsId() });
+    expect(unseenPages(s.newsSeen)).toEqual([]); // nothing from before they joined
+  });
+
+  it('starts an owner with nothing saved the same way', async () => {
+    const s = await createStore(memoryKv()).getState('owner-sub', OWNER);
+    expect(s).toMatchObject({ guideDone: false, newsSeen: latestNewsId() });
+  });
+
+  it('reads a saved state without the fields as someone who joined before the guide: no guide, every update unseen', async () => {
+    const kv = memoryKv({ 'wt:user:old:state': { ...emptyState(), rulesV2Note: false, rulesV3Note: false, rulesV4Note: false } });
+    const s = await createStore(kv).getState('old', 'old@example.com');
+    expect(s.guideDone).toBeUndefined();
+    expect(s.newsSeen).toBeUndefined();
+    expect(unseenPages(s.newsSeen).length).toBeGreaterThan(0);
   });
 });
 
