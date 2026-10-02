@@ -7,9 +7,9 @@ A runner who uses Levl asked for laps back. Laps were removed in v8 to keep the 
 
 ## Stages
 1. **Laps** (done, live since 2 October 2026).
-2. **Log workout**: add a workout you already did (signed off in board 10 round 3).
-3. **How it felt**: faces plus an optional effort score after finishing, no XP (signed off in round 1).
-4. **Consistency**: the weekly goal bonus grows with each week in a row the goal is met, +50 then +10 a week up to +100 (signed off in round 1; the Home line chosen on 2 October 2026).
+2. **Log workout**: add a workout you already did (done, live since 2 October 2026).
+3. **How it felt**: faces plus an optional effort score after finishing, no XP (done, live since 2 October 2026).
+4. **Consistency**: the weekly goal bonus grows with each week in a row the goal is met, +50 then +10 a week up to +100 (done, live since 2 October 2026; the Home line chosen that day).
 
 ## Stage 1: laps
 
