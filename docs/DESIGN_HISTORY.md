@@ -476,6 +476,31 @@ Agreed in the conversation after a UI check of v10 (no board; the plan is in `do
   - A one-time note on Home, a copy of the state kept first (`backup:v11`) and a committed XP
     integrity test that prints a before and after table (`tests/xpIntegrity.test.ts`).
 
+## 11 Guide and What's new
+
+`docs/design/11-guide-board.html` (images in `docs/design/11-guide/`), published as an artifact.
+The user asked for a lasting way to explain Levl, like games do: a short guide for someone new
+(the tabs, how XP works, the basics) and a What's new card the next time people open the app
+after a release. Also a record of every screen as it is today, leaving out the early boards whose
+screens nobody sees any more.
+
+- **Round 1** shows:
+  - **The app today:** 40 phone screens and 7 computer screens from the live build with demo
+    data, each with what it is for, what you can do, the board where its design was last set, and
+    a tag: 23 Stable, 14 Changed in v11, 3 New in v11. Then How XP works in plain words (rules v4).
+  - **The first-run guide:** A, a spotlight tour on Home after the setup questions (a welcome
+    card, seven steps on the real screen, a How XP works card; playable at phone and computer
+    size); B, story cards in the teaser stories' look; C, first-visit tips per tab. My pick: A.
+  - **What's new:** A, a paged game card (one change per page, a real picture, one button, an
+    "XP rules changed" tag for rule changes); B, an update screen; C, a card on Home. The example
+    is the real October update: laps, Log workout, How it felt and the growing goal bonus. My
+    pick: A.
+  - **How it works:** one thing per open, only on Home, never during a workout or on Victory; new
+    people get the guide and never old updates; per person on the server, guide done and the last
+    update seen; an update is one entry in a list, added with the release; two new Settings rows
+    (How Levl works, What's new) and Welcome tour renamed Setup questions.
+- **Waiting for answers.** Badges and chests (board 09) stay as they are.
+
 ## Where the chat lives
 
 The conversation is not stored in the repo. Long chats are summarized when the
