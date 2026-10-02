@@ -8,8 +8,8 @@ A runner who uses Levl asked for laps back. Laps were removed in v8 to keep the 
 ## Stages
 1. **Laps** (done, live since 2 October 2026).
 2. **Log workout**: add a workout you already did (signed off in board 10 round 3).
-3. **How it felt**: faces plus an optional effort score after finishing, no XP (signed off in round 1, built after stage 2).
-4. **Consistency**: the weekly goal bonus grows with each week in a row the goal is met, +50 then +10 a week up to +100 (signed off in round 1, built after stage 2).
+3. **How it felt**: faces plus an optional effort score after finishing, no XP (signed off in round 1).
+4. **Consistency**: the weekly goal bonus grows with each week in a row the goal is met, +50 then +10 a week up to +100 (signed off in round 1; the Home line chosen on 2 October 2026).
 
 ## Stage 1: laps
 
@@ -208,3 +208,62 @@ A runner who uses Levl asked for laps back. Laps were removed in v8 to keep the 
   - refuses more than 200.
 - `source` is accepted and refused correctly, and is defaulted.
 - Each new Insights number, and the threshold switching with the mode.
+
+## Stage 3: How it felt
+
+### Signed-off decisions (board 10 round 1, option c)
+- **Five faces, drawn as SVG, no emoji.** Rough, Tough, OK, Good and Great, from frown to big smile, as in the board's script (`docs/design/10-runs-logging-board.html`, the `FEELS` list). Colours: Rough `#E5534B`, Tough `#F08A3C`, OK `#E8B83A`, Good `#7BC74D`, Great `#2BA438`, as tokens at the top of `app/globals.css`.
+- **The control**, titled "How did it feel?":
+  - the five faces in a row with their labels under them, one tap each. The picked face is tinted as on the board. Tapping it again clears it. Each face is a button with `aria-pressed`;
+  - a small secondary "+ Add effort (1 to 10)" button. It shows the slider at 6 and saves 6;
+  - the slider reads "6, Moderate". The words: 1 to 3 Easy, 4 to 6 Moderate, 7 and 8 Hard, 9 and 10 All out. A "Remove" text button clears the effort;
+  - everything is optional and nothing earns XP.
+- **Set in two places only:**
+  - **Victory**, in its own card between the level card and Workout details. Finish and Log workout both end there, and it saves on tap like the date;
+  - **the workout page**, the same control, saving on tap. On a wide screen it sits in the side column above Notes; on a phone, after Exercises.
+
+  Not on Edit or Log, so there are only two places to set it.
+- **Shown:**
+  - in workout rows (Home, Profile, Calendar), a small face next to the title;
+  - on Profile, a "How workouts felt, last 30 days" card next to the weekly chart: a bar in the five colours, the legend "Rough 1, Tough 2, OK 3, Good 5, Great 4" and "Effort average 6.4 of 10, on 9 rated workouts". It is hidden when nothing was rated in the last 30 days.
+- **Notes** placeholders read "Anything to remember?" instead of "How did it feel?", so the question is asked once.
+
+### Build
+- **Data:** `feel?: 'rough' | 'tough' | 'ok' | 'good' | 'great'` and `effort?: number` (a whole number 1 to 10) on `WorkoutLog`. Both are optional and additive, like `source`, so there is no migration. They are validated in `parseWorkoutInput`, and in `parseWorkoutPatch` where `null` clears them, like `notes`.
+- **Pure logic, new `lib/feel.ts`:** `FEELS` (key, label, colour), `effortWord(n)` and `feelSummary(workouts, today)` (counts per face, average effort and the number rated, over the last 30 days).
+- **UI:** a new `components/workout/HowItFelt.tsx`, used by Victory and the workout page; `feel` on `FeedItem` for the row face; the Profile card.
+
+### Tests (one per rule)
+- Validation: each face and effort 1 to 10 are accepted; anything else and decimals are refused; `null` clears on edit and the other fields stay.
+- `effortWord` at the edges of each band.
+- `feelSummary`: the 30-day window, unrated workouts left out, the average over workouts with effort only, nothing rated.
+- Scoring ignores how it felt.
+
+## Stage 4: the growing weekly goal bonus (rules v4)
+
+### Signed-off decisions (board 10 round 1, option a; Home line chosen on 2 October 2026)
+- **The rule:** +50 the first week the weekly goal is met, +10 more for each week in a row it is met, up to +100 from week 6. A week without the goal met starts it again from +50, also a week with training that fell short of the goal. Weeks still run Monday to Sunday, the goal is still the current weekly goal (changing it checks past weeks again), and time away still never lowers XP. Every goal week paid +50 before, so nobody's XP goes down.
+- **Home:** one line under the streak row of the This week card. Nothing else on Home changes.
+  - Before the goal is met: "Goal bonus this week: +80 XP" and, when there is a run, "Goal met 3 weeks in a row".
+  - After: "Goal met 4 weeks in a row: +80 XP" and "Next week pays +90 XP" (at the top, "Next week pays +100 XP").
+- **Victory and the workout page:** the Weekly goal line shows the real amount, with "3 of 3 training days, 4 weeks in a row" from the second week in a row.
+- **Settings:** "Reach your goal for +50 XP, and +10 more for each week in a row you reach it, up to +100."
+- **A one-time note on Home** (the existing rules note): "The weekly goal bonus now grows with each week in a row. XP was worked out again." with Got it.
+
+### Build
+- `WORKOUT_XP` gets `weeklyGoalStep: 10` and `weeklyGoalMax: 100`, and `weeklyGoalXp(run)` gives the amount for the Nth week in a row.
+- `scoreWorkouts` keeps the run per week. When a workout makes the week reach the goal, the run is last week's run plus one (0 if last week missed), and the bonus is `weeklyGoalXp(run)`. Workouts are scored in date order, so last week is final by then. `XpParts.weekRun` records the run next to `weekly`.
+- `goalRun(...)` in `lib/week.ts` gives Home the run up to last week, whether this week is met, what this week pays and what next week pays.
+- **Migration on read**, like the v3 pass: a state without `rulesV4Note` that has workouts is copied once to `wt:user:{id}:backup:v11` (only if that key is free), its stored XP is worked out again, and `rulesV4Note` is set. New people get `false`. When several rules notes are waiting, the newest shows and Got it clears them all.
+- **XP integrity check** (the trigger in `docs/AGENTS.md`): a committed test replays `tests/fixtures/legacyPlanState.ts` and the QA seed, checks that XP under v4 is at least XP with every goal week at +50 and that the difference is the ladder, and prints an XP, level and rank table with `XP_REPORT=1`.
+- **Docs:** `docs/design/xp-reference.html` becomes rules v4 (the Weekly goal row, the example, the levels table, a "v4 goes live" note); ARCHITECTURE, QA, ROADMAP, DESIGN_HISTORY and AGENTS follow.
+
+### Tests (one per rule)
+- The ladder +50 to +100 and the cap; a missed week resets; a short week resets; the first goal week after time away is +50; a workout logged into a past week extends the later run once rescored; changing the goal checks the runs again; still paid once a week, on the workout that reaches the goal.
+- `goalRun` before and after the goal is met, and at the cap; it agrees with scoring.
+- The Weekly goal sub-line with and without a run.
+- The migration: rescored and flagged, the backup written once, a second read changes nothing, new people get `false`.
+
+### Done when (stages 3 and 4)
+- `npm run verify` passes and `next build` succeeds.
+- At 390 and 1440, no console errors, no overflow, equal-width pairs and app button sizes: Victory after Finish and after Log, the workout page, Home (rows, This week before and after the goal, the rules note), Profile, Settings.
