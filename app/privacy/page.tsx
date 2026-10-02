@@ -78,7 +78,7 @@ export default function PrivacyPage() {
           <li>To keep Levl secure and fix problems.</li>
           <li>
             To understand how Levl is used as a whole. For this we look only at totals across everyone, such as how many
-            workouts were logged this week, and any group of fewer than 5 people is hidden.
+            workouts were logged this week.
           </li>
           <li>
             So the person who runs Levl can see who is using it and ask for feedback: your name, email, the date you
