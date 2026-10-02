@@ -6855,3 +6855,204 @@ button.wt-frow:focus-visible {
 .wt-feellegend + .wt-feelnote {
   margin-top: 10px;
 }
+
+/* ---- The first-run guide: the welcome and How XP works cards (the game modal) and the spotlight (board 11) ---- */
+.wt-guide {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+}
+.wt-guide:focus,
+.wt-guide-card:focus,
+.wt-guide-card h2:focus,
+.wt-gb-h:focus {
+  outline: none;
+}
+.wt-guide-dim {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim);
+  animation: wt-fade 0.2s;
+}
+/* A transparent layer under the ring: a tap on the page behind the spotlight goes nowhere. */
+.wt-guide-catch {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+/* The ring is the spotlight: a 4 px gold ring, a glow, and a huge spread of the scrim as the dim. */
+.wt-guide-ring {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  box-shadow: 0 0 0 4px #ffd34d, 0 0 26px 8px rgba(255, 211, 77, 0.7), 0 0 0 4000px var(--scrim);
+  transition: left 0.35s, top 0.35s, width 0.35s, height 0.35s, border-radius 0.35s;
+}
+
+/* The step card: the game modal's cream and gold edge, one 3 px border and only a soft drop shadow. */
+.wt-gb {
+  position: absolute;
+  z-index: 2;
+  background: linear-gradient(180deg, #fffdf5, #fff1cf);
+  border: 3px solid #e3b03a;
+  border-radius: 20px;
+  box-shadow: 0 18px 36px -16px rgba(60, 30, 0, 0.6);
+  padding: 10px 16px 14px;
+  color: var(--ink);
+  animation: wt-gbin 0.28s cubic-bezier(0.2, 1.3, 0.4, 1);
+}
+@keyframes wt-gbin {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+}
+/* The arrow: a rotated square on the edge facing the ring, --ax or --ay along that edge. */
+.wt-gb::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: #fffdf5;
+  border: 3px solid #e3b03a;
+  transform: rotate(45deg);
+}
+.wt-gb.below::before {
+  top: -12px;
+  left: var(--ax);
+  border-right: 0;
+  border-bottom: 0;
+}
+.wt-gb.above::before {
+  bottom: -12px;
+  left: var(--ax);
+  background: #fff1cf;
+  border-left: 0;
+  border-top: 0;
+}
+.wt-gb.right::before {
+  left: -12px;
+  top: var(--ay);
+  border-top: 0;
+  border-right: 0;
+}
+.wt-gb-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.wt-gb-cnt {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--xp-ink);
+}
+/* A text button with a 44 px hit area, in line with the card's edge. */
+.wt-gb-skip {
+  min-width: 44px;
+  height: 44px;
+  margin-right: -8px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--link);
+}
+.wt-gb-h {
+  margin: 0 0 4px;
+  font-family: var(--font-num);
+  font-size: 23px;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0.005em;
+  text-wrap: balance;
+}
+.wt-gb p {
+  margin: 0 0 12px;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+/* The welcome and How XP works cards: the game modal, with the words and list scrolling on a short screen. */
+.wt-guide-card {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+.wt-guide-card .wt-gm-rib {
+  flex: none;
+}
+.wt-guide-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.wt-guide-card .wt-gm-art {
+  margin: 16px auto 6px;
+}
+.wt-guide-card .wt-gm-body p {
+  margin-bottom: 14px;
+}
+.wt-guide-first {
+  padding-top: 16px;
+}
+.wt-guide-foot {
+  flex: none;
+  padding: 0 20px 18px;
+}
+.wt-guide-xp {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  text-align: left;
+}
+.wt-guide-xp li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 2px;
+  border-bottom: 1.5px dashed #ecd8a6;
+  font-weight: 700;
+  font-size: 14px;
+}
+.wt-guide-xp li b {
+  font-family: var(--font-num);
+  font-weight: 400;
+  font-size: 17px;
+  color: var(--xp-ink);
+  white-space: nowrap;
+}
+/* "Show me around" is a long label: give the pair the room on a small phone, and stack them when it still does not fit. */
+@media (max-width: 400px) {
+  .wt-guide-foot {
+    padding-inline: 14px;
+  }
+}
+@media (max-width: 339px) {
+  .wt-guide-card .wt-gm-btns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.wt-guide-note {
+  margin: 2px 0 0;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .wt-guide-ring {
+    transition: none;
+  }
+  .wt-gb,
+  .wt-guide-card,
+  .wt-guide-dim {
+    animation: none;
+  }
+}

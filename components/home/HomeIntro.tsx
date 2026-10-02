@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useCelebrating } from '@/components/celebrate/CelebrationProvider';
+import { GuideTour } from '@/components/guide/GuideTour';
 import { NewsModal } from '@/components/news/NewsModal';
 import { useProgress } from '@/components/ProgressProvider';
 import { useWorkoutSession } from '@/components/WorkoutSessionProvider';
@@ -14,8 +15,9 @@ import type { NewsCardPage } from '@/lib/news';
 // lives in memory only: the next time Levl is opened it starts false again.
 let shownThisLoad = false;
 
-// What is on screen. `markId` is the update a close marks as seen: null for the preview.
-type Showing = { kind: 'news'; pages: NewsCardPage[]; markId: string | null } | { kind: 'guide' };
+// What is on screen. `markId` is the update a close marks as seen: null for the preview. A guide
+// that is a replay (`?guide=1`) remembers nothing when it ends.
+type Showing = { kind: 'news'; pages: NewsCardPage[]; markId: string | null } | { kind: 'guide'; replay: boolean };
 
 // Resolves when the picture has loaded or failed, or after `ms`, whichever is first, so
 // the card opens with its picture in place and never waits long for it.
@@ -38,13 +40,16 @@ function pictureReady(src: string, ms = 1500): Promise<void> {
  *
  * `/?news=1` is a preview: it opens every page of the newest update whatever the person
  * has seen, remembers nothing, and does not count as this load's one thing. It is for
- * seeing an update before a release.
+ * seeing an update before a release. `/?guide=1` plays the guide the same way, for the
+ * Settings row that shows it again.
  */
 export function HomeIntro() {
-  const { state, loading, prefs, markNewsSeen, showToast } = useProgress();
+  const { state, loading, prefs, markNewsSeen, finishGuide, showToast } = useProgress();
   const { session, ready } = useWorkoutSession();
   const celebrating = useCelebrating();
-  const preview = useSearchParams()?.get('news') === '1';
+  const params = useSearchParams();
+  const preview = params?.get('news') === '1';
+  const replay = params?.get('guide') === '1';
   const [showing, setShowing] = useState<Showing | null>(null);
   const decided = useRef(false); // this visit to Home has already chosen
   const alive = useRef(false);
@@ -62,6 +67,12 @@ export function HomeIntro() {
   useEffect(() => {
     if (!settled || decided.current) return;
 
+    if (replay) {
+      decided.current = true;
+      setShowing({ kind: 'guide', replay: true });
+      return;
+    }
+
     if (preview) {
       decided.current = true;
       const pages = latestPages();
@@ -78,7 +89,7 @@ export function HomeIntro() {
 
     if (kind === 'guide') {
       shownThisLoad = true;
-      setShowing({ kind: 'guide' });
+      setShowing({ kind: 'guide', replay: false });
       return;
     }
     const markId = newestUnseenId(state.newsSeen);
@@ -87,13 +98,22 @@ export function HomeIntro() {
       shownThisLoad = true;
       setShowing({ kind: 'news', pages, markId });
     });
-  }, [settled, preview, sessionActive, state.newsSeen, state.guideDone, prefs.onboarded]);
+  }, [settled, preview, replay, sessionActive, state.newsSeen, state.guideDone, prefs.onboarded]);
 
   if (!showing) return null;
 
-  // Stage 3 plugs the first-run guide in here: render <GuideTour onClose={...} /> and call
-  // finishGuide() from useProgress() when it ends in any way. Nothing is shown until then.
-  if (showing.kind === 'guide') return null;
+  // Skip, Escape, Back and Start training all end the guide. Ending it marks it done for good, except a replay.
+  if (showing.kind === 'guide') {
+    const replaying = showing.replay;
+    return (
+      <GuideTour
+        onClose={() => {
+          setShowing(null);
+          if (!replaying) void finishGuide().then((error) => error && showToast(error));
+        }}
+      />
+    );
+  }
 
   const markId = showing.markId;
   function close() {

@@ -17,7 +17,7 @@ const weekday = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateStrin
 export function WeekCard({ week }: { week: WeekSummary }) {
   const bonus = goalRunText(week.goalRun);
   return (
-    <Link href="/calendar" className="wt-card wt-weekcard">
+    <Link href="/calendar" className="wt-card wt-weekcard" data-guide="week">
       <div className="wt-cardhead">
         <b>This week</b>
         <span className="wt-linkhint">

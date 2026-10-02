@@ -33,7 +33,15 @@ The seeded person has the first-run guide put away, so ordinary runs never show 
 and has already seen the newest update, so What's new does not show either. Open
 `/?news=1` to preview the What's new card with every page of the newest update (it
 remembers nothing). In a flow script, `withApp(fn, { guide: true })` leaves the guide
-waiting, as it is for a brand new person.
+waiting, as it is for a brand new person. `/?guide=1` plays the guide again and
+remembers nothing, so it can be driven as often as needed.
+
+The first-run guide, at 390 and at 1440 (and 320 x 568 for the small phone): the
+welcome card, each of the seven rings with its step card, and the How XP works card.
+Check the ring gap is even on all four sides (the bottom is measured from the bottom
+of the bevel), the step card has one gold border, the card stays on screen, Skip and
+Escape end it for good, Back ends it, nothing behind the dim can be tapped or scrolled,
+and Tab stays inside the card.
 
 ## Every screen, every width
 

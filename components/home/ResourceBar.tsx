@@ -23,6 +23,7 @@ export function ResourceBar({ week }: { week: WeekSummary }) {
       <Link
         href="/rank"
         className="wt-rbar"
+        data-guide="level"
         aria-label={`Level ${progress.level}, ${RANK_TITLES[progress.rank]}, ${into} of ${takes} XP to level ${progress.level + 1}, ${week.streak} week streak, ${week.count} of ${week.goal} training days this week. Open Rank`}
       >
         <span className="wt-rbar-shield" aria-hidden="true">

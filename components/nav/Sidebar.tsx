@@ -125,7 +125,7 @@ export function Sidebar({ onStart, onSignOut }: { onStart: () => void; onSignOut
         <img src="/logo.svg" alt="" width={36} height={36} aria-hidden="true" />
         <span className="gt">Levl</span>
       </Link>
-      <Button size="lg" onClick={onStart}>
+      <Button size="lg" onClick={onStart} data-guide="workout">
         + Workout
       </Button>
       <nav aria-label="Main" className="flex flex-col gap-1" data-testid="side-nav">
@@ -133,7 +133,7 @@ export function Sidebar({ onStart, onSignOut }: { onStart: () => void; onSignOut
           const Icon = item.icon;
           const on = item.active(pathname);
           return (
-            <Link key={item.key} href={item.href} className="wt-navi" aria-current={on ? 'page' : undefined} onClick={(e) => onRetap(e, on, item.key)}>
+            <Link key={item.key} href={item.href} className="wt-navi" data-guide={item.key} aria-current={on ? 'page' : undefined} onClick={(e) => onRetap(e, on, item.key)}>
               <Icon size={22} aria-hidden="true" />
               <span>{item.label}</span>
             </Link>

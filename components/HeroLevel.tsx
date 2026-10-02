@@ -15,7 +15,7 @@ export function HeroLevel() {
   const into = current.toLocaleString('en-US');
   const takes = needed.toLocaleString('en-US');
   return (
-    <Hero>
+    <Hero data-guide="level">
       <div className="wt-hero-row">
         <RankShield rank={progress.rank} level={progress.level} size={66} />
         <div style={{ flex: 1, minWidth: 0 }}>

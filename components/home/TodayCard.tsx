@@ -120,7 +120,7 @@ export function TodayCard({ model, comeback = false }: { model: TodayModel; come
 
   if (model.kind === 'done') {
     return (
-      <Card as="section" className="wt-tcard" aria-label="Today">
+      <Card as="section" className="wt-tcard" aria-label="Today" data-guide="today">
         <div className="wt-tc-h">
           <span className="wt-eyebrow ok">
             <Check size={14} aria-hidden="true" /> Done today
@@ -142,7 +142,7 @@ export function TodayCard({ model, comeback = false }: { model: TodayModel; come
   const it = model.routine;
   const chip = it ? weekChip(it) : null;
   return (
-    <Card as="section" className="wt-tcard" aria-label="Today">
+    <Card as="section" className="wt-tcard" aria-label="Today" data-guide="today">
       <div className="wt-tc-h">
         <span className="wt-eyebrow">Today&apos;s workout</span>
         {chip && <span className="wt-wk">{chip}</span>}

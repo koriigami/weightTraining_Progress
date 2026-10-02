@@ -12,7 +12,7 @@ function Tab({ item, pathname }: { item: NavItem; pathname: string }) {
   const on = item.active(pathname);
   const Icon = item.icon;
   return (
-    <Link href={item.href} className="wt-tab" aria-current={on ? 'page' : undefined} onClick={(e) => onRetap(e, on, item.key)}>
+    <Link href={item.href} className="wt-tab" data-guide={item.key} aria-current={on ? 'page' : undefined} onClick={(e) => onRetap(e, on, item.key)}>
       <span className="pill">
         <Icon size={24} aria-hidden="true" />
       </span>
@@ -41,7 +41,7 @@ export function TabBar({ onStart, showMini }: { onStart: () => void; showMini: b
         {TAB_ITEMS.left.map((item) => (
           <Tab key={item.key} item={item} pathname={pathname} />
         ))}
-        <button type="button" className="wt-startfab" aria-label="Workout: start a workout" onClick={onStart}>
+        <button type="button" className="wt-startfab" data-guide="workout" aria-label="Workout: start a workout" onClick={onStart}>
           <Plus size={22} strokeWidth={3} aria-hidden="true" />
           WORKOUT
         </button>

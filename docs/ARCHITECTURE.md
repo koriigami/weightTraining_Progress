@@ -493,7 +493,7 @@ neither earns XP: scoring never reads them and the XP breakdown is the same with
 
 Two things Home can show once: a spotlight guide for new people, and a paged What's new card for
 everyone after a release that changed something people can see or the XP rules. This section is the
-state, the update list and the rules behind them. The card and the tour are built on top of it.
+state, the update list and the rules behind them, then the card and the tour built on top of it.
 
 ### What is remembered
 
@@ -550,9 +550,19 @@ rules notes. `ProgressProvider` has a method for each, resolving to an error mes
   has no blur and no spread (4 on a card, 5 on the Workout button, 0 on a tab).
 - `ringRect(rect, bevel, radius, gap = 4)`: the gold ring, a 4 px gap on all four sides with the bottom measured
   from the bottom of the bevel, and the radius plus the gap.
-- `bubblePlace(ring, viewport, layout, bubbleWidth)`: where the step card goes. Below the ring when its centre is
-  in the top half of the screen, above it otherwise, centred on it and 12 px inside the screen. On a computer a
-  ring in the sidebar gets the card to its right.
+- `bubblePlace(ring, viewport, layout, bubbleWidth, bubbleHeight)`: where the step card goes. Below the ring when
+  its centre is in the top half of the screen, above it otherwise, centred on it and 12 px inside the screen. On
+  a computer a ring in the sidebar gets the card to its right.
+- `stepWords(step, layout)` and `stepTargets(step, layout)`: the words for a phone or a computer, and the
+  `data-guide` names one ring covers (the Exercises link joins Routines on a computer).
+- `unionBox(boxes)`: the box around several elements. `flatRingRadius(own)`: a tab or sidebar link has no
+  bevel, so its ring corner is the link's radius plus 2 (a phone tab has none of its own and borrows its icon
+  pill's 14).
+- `keepRingOnScreen(ring, viewport)`: pulls in a side of the ring that touches the screen edge (the Profile tab),
+  so the 4 px gold line is not cut off.
+- `placeOnScreen(...)`: `bubblePlace` with the card's measured height, kept inside the screen when even the
+  roomier side is too short. `scrollToFit(...)`: on a short screen, how far to scroll the page more so the card
+  covers the least of the ring.
 - `introToShow({ guideDone, onboarded, unseenCount, sessionActive, shownThisLoad })`: `'guide'`, `'news'` or
   `null`. Nothing before onboarding, while a workout is in progress, or when something was already shown this
   load. The guide comes first (`guideDone === false`), What's new next.
@@ -565,7 +575,9 @@ rules notes. `ProgressProvider` has a method for each, resolving to an error mes
   variable (memory only, so one thing per app open). It decides once per visit to Home, and only when the state
   and the stored workout have been read and no level-up or badge moment is showing, queued or held back
   (`useCelebrating()` in `CelebrationProvider`). For `'news'` it waits for the first picture, up to 1.5 s, then
-  opens `NewsModal`. For `'guide'` it renders nothing yet: the guide tour plugs in at that branch.
+  opens `NewsModal`. For `'guide'` it opens `GuideTour` at once, and when the tour ends in any way it calls
+  `finishGuide()`. `/?guide=1` replays the guide the same way `/?news=1` previews an update: it remembers
+  nothing and does not use up this load's one thing.
 - `components/news/NewsModal.tsx` is the game modal with a picture, the kicker, the title and words, dots and one
   full-width button. It uses `useDialog` and `useBackToClose`: Got it, Escape, the scrim and Back all close the
   whole card and call `onClose` once, and `HomeIntro` then calls `markNewsSeen(newestUnseenId)`. The picture and
@@ -574,6 +586,50 @@ rules notes. `ProgressProvider` has a method for each, resolving to an error mes
   load's one thing. It is how an update is seen before a release.
 - `/news` (`app/news/page.tsx`) is a static page listing every update newest first, each page with its picture,
   title and words. A Settings row for it comes in the last v12 stage.
+
+### The spotlight guide
+
+`components/guide/GuideTour.tsx` is the welcome card, seven spotlight steps and the How XP works card, in a
+portal like the dialogs. The welcome and XP cards are the game modal (`wt-gmodal`, `wt-gm-*`, with the ribbon)
+and keep their bevel. A step is the gold ring plus a step card (`wt-gb`) with one 3 px gold border and only a
+soft drop shadow. The CSS is the "first-run guide" block at the end of `app/globals.css`.
+
+How a step finds and measures its target:
+- **Anchors.** Real elements carry `data-guide="<name>"`: `level` (the phone bar `a.wt-rbar`, the computer level
+  card), `today` (the phone Today card, and every card in the computer Today row), `workout` (the phone Workout
+  button, the sidebar "+ Workout"), `week` (`WeekCard`), and `routines`, `exercises`, `rank`, `profile` on the tab
+  bar and sidebar links (set from the nav item's key). Attributes only, no visual change.
+- **Find.** `stepTargets` gives the names for the layout (`useDesktopLayout`, the 768 px break). Every element
+  with one of those names that is shown (`getClientRects().length`, so the other layout's copies, which are
+  `display: none`, drop out) belongs to the step. A step with no shown element is skipped, and the count in
+  "N of 7" is of the steps that play.
+- **Scroll.** If the elements are not fully inside the part of the screen the page's own bars leave free (under
+  the sticky top bar, above the tab bar), `scrollIntoView({ block: 'center', behavior: 'instant' })` brings them
+  in. Fixed and sticky things are never scrolled to. Where the page was is remembered and put back when the tour
+  reaches the XP card or ends.
+- **Measure.** `getBoundingClientRect` of each, their union, the bevel from `bevelDepth(getComputedStyle(el).boxShadow)`
+  (the deepest over the elements) and the radius from `borderTopLeftRadius` (the largest). `ringRect` makes the
+  ring; a ring with no bevel is a flat link and gets `flatRingRadius`; `keepRingOnScreen` keeps its gold line on
+  the screen.
+- **Ring.** One positioned element, so it slides between steps. It has the board's box-shadow: a 4 px gold ring,
+  a glow, and a 4000 px spread of `--scrim` as the dim. It is not tappable, and a transparent layer under it
+  catches taps, so nothing behind it can be pressed.
+- **Card.** `placeOnScreen` with the card's real height, measured after it renders. If neither side of the ring has
+  room on a short screen, `scrollToFit` scrolls the page once more, and what still does not fit stays on the
+  screen over part of the ring.
+- **Keep up.** Scroll (captured, so the main area's scroll counts), resize and a `ResizeObserver` on the targets
+  re-measure through `requestAnimationFrame`. A re-measure moves the ring at once; only a new step slides.
+
+Behaviour:
+- Skip (on every card), Escape, Back (`useBackToClose`) and Start training all end it, and `onClose` runs once.
+  Back runs the end; every other way asks Back to, so the history entry the guide pushed is used up. Tapping the
+  dim does nothing, so a stray tap cannot end the guide for good.
+- `useDialog` on the tour's root traps focus in the current card, locks the body scroll and puts focus back when
+  it ends. Each card is its own labelled dialog (`aria-labelledby` the title, `aria-describedby` the words), so
+  a screen reader reads both when focus moves in. Focus starts on the card's title (`tabIndex={-1}`
+  `data-autofocus`, no outline), never on a button, so no focus ring shows before anyone uses the keyboard.
+- Reduced motion: no ring movement and no card animation.
+- On a phone under 340 px wide the welcome card's two buttons stack, since "Show me around" does not fit beside Skip.
 
 ## Rendering and layout
 

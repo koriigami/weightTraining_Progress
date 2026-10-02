@@ -126,6 +126,49 @@ export function ringRect(rect: Box, bevel: number, radius: number, gap = 4): Rin
   };
 }
 
+// The gold line is drawn outside the ring's box (4 px thick). A ring at the edge of the screen,
+// such as the Profile tab, would lose that line off the edge, so each side is pulled in until the
+// line fits. Only a ring that already touches the edge changes.
+export function keepRingOnScreen(ring: Ring, viewport: { width: number; height: number }, stroke = 4): Ring {
+  const left = Math.max(ring.x, stroke);
+  const top = Math.max(ring.y, stroke);
+  const right = Math.min(ring.x + ring.width, viewport.width - stroke);
+  const bottom = Math.min(ring.y + ring.height, viewport.height - stroke);
+  return { ...ring, x: left, y: top, width: Math.max(0, right - left), height: Math.max(0, bottom - top) };
+}
+
+export type Layout = 'phone' | 'desktop';
+
+// The words a step says on a layout.
+export function stepWords(step: GuideStep, layout: Layout): GuideWords {
+  return layout === 'desktop' ? step.desktop : step.phone;
+}
+
+// The `data-guide` names one ring lights up together: the step's target, and on a computer
+// the ones in `alsoOnDesktop` (the Exercises link joins Routines).
+export function stepTargets(step: GuideStep, layout: Layout): string[] {
+  return layout === 'desktop' ? [step.target, ...(step.alsoOnDesktop ?? [])] : [step.target];
+}
+
+// The smallest box that holds all of them, for a ring around several elements.
+export function unionBox(boxes: Box[]): Box {
+  if (boxes.length === 0) return { x: 0, y: 0, width: 0, height: 0 };
+  const left = Math.min(...boxes.map((b) => b.x));
+  const top = Math.min(...boxes.map((b) => b.y));
+  const right = Math.max(...boxes.map((b) => b.x + b.width));
+  const bottom = Math.max(...boxes.map((b) => b.y + b.height));
+  return { x: left, y: top, width: right - left, height: bottom - top };
+}
+
+const TAB_PILL_RADIUS = 14; // the icon pill inside a phone tab; the tab link itself has no radius
+
+// The ring's corner for a flat link (a tab or a sidebar link, no bevel): the link's own
+// radius plus 2, not plus the 4 px gap a card gets, so the ring hugs the link. A phone tab
+// has no radius of its own, so it borrows its icon pill's. This replaces the radius ringRect gives.
+export function flatRingRadius(own: number): number {
+  return (own > 0 ? own : TAB_PILL_RADIUS) + 2;
+}
+
 // ---------------- The step card ----------------
 
 export type BubblePlace = {
@@ -154,7 +197,7 @@ const ARROW = 18; // the arrow is a square, rotated
 export function bubblePlace(
   ring: Box,
   viewport: { width: number; height: number },
-  layout: 'phone' | 'desktop',
+  layout: Layout,
   bubbleWidth: number,
   bubbleHeight = 180
 ): BubblePlace {
@@ -169,6 +212,45 @@ export function bubblePlace(
   const arrow = Math.min(Math.max(ARROW, centreX - left - ARROW / 2), bubbleWidth - 2 * ARROW);
   if (centreY < viewport.height / 2) return { side: 'below', left, top: ring.y + ring.height + GAP, arrow };
   return { side: 'above', left, bottom: viewport.height - ring.y + GAP, arrow };
+}
+
+// bubblePlace with the card's real height, kept on the screen. bubblePlace puts the card on the
+// side of the ring with more room, so when even that side is too short (a tall ring on a short
+// screen) the card stays on the screen over the ring instead of leaving it.
+export function placeOnScreen(
+  ring: Box,
+  viewport: { width: number; height: number },
+  layout: Layout,
+  bubbleWidth: number,
+  bubbleHeight: number
+): BubblePlace {
+  const p = bubblePlace(ring, viewport, layout, bubbleWidth, bubbleHeight);
+  if (p.side === 'right') return p;
+  if (p.side === 'below') {
+    return { ...p, top: Math.min(ring.y + ring.height + GAP, Math.max(EDGE, viewport.height - bubbleHeight - EDGE)) };
+  }
+  const top = Math.max(EDGE, ring.y - GAP - bubbleHeight);
+  return { side: 'above', left: p.left, bottom: viewport.height - top - bubbleHeight, arrow: p.arrow };
+}
+
+// After a target is centred on a short screen, neither side of its ring may have room for the
+// card, and the card would cover part of the ring. This is how far to scroll the page more
+// (positive: the content moves up) to cover the least: the ring at `minTop`, just under the page's
+// own sticky bar, with the card below it, or at the bottom of the free area (`maxBottom`, above the
+// tab bar) with the card above it. It is 0 when a side already has room, when the ring is taller
+// than the free area, and when neither move helps.
+export function scrollToFit(ring: Box, viewportHeight: number, bubbleHeight: number, minTop: number, maxBottom = viewportHeight - EDGE): number {
+  const lead = bubbleHeight + GAP;
+  const coverBelow = (y: number) => Math.max(0, y + ring.height + lead - (viewportHeight - EDGE));
+  const coverAbove = (y: number) => Math.max(0, EDGE + lead - y);
+  const now = Math.min(coverBelow(ring.y), coverAbove(ring.y));
+  if (now === 0 || ring.height > maxBottom - minTop) return 0;
+  const moves = [
+    { y: minTop, cover: coverBelow(minTop) },
+    { y: maxBottom - ring.height, cover: coverAbove(maxBottom - ring.height) },
+  ].sort((a, b) => a.cover - b.cover || Math.abs(ring.y - a.y) - Math.abs(ring.y - b.y));
+  const best = moves[0];
+  return best.cover < now - 1 ? ring.y - best.y : 0;
 }
 
 // ---------------- What Home shows ----------------

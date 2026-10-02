@@ -25,7 +25,7 @@ export function DesktopToday({ model, routines, hasRoutines, comeback = false }:
   const { openStart, openLog } = useShell();
 
   const routineCard = (it: UpNextItem) => (
-    <Card key={it.routine.id} as="article" className="wt-upcard" aria-label={it.routine.title}>
+    <Card key={it.routine.id} as="article" className="wt-upcard" aria-label={it.routine.title} data-guide="today">
       <h3>{it.routine.title}</h3>
       <small className="wt-upcard-meta">{routineWeekLine(it)}</small>
       <ExerciseRows items={it.routine.items} max={3} showMore={false} />
@@ -36,7 +36,7 @@ export function DesktopToday({ model, routines, hasRoutines, comeback = false }:
   );
 
   const other = (
-    <Card key="other" as="article" className="wt-upcard empty" aria-label="Something else">
+    <Card key="other" as="article" className="wt-upcard empty" aria-label="Something else" data-guide="today">
       <h3>Something else</h3>
       <small className="wt-upcard-meta">Another routine, cardio or a custom workout, or one you already did.</small>
       <div className="wt-upcard-btns">
@@ -52,7 +52,7 @@ export function DesktopToday({ model, routines, hasRoutines, comeback = false }:
 
   if (model.kind === 'done') {
     const done = model.workouts.map((w) => (
-      <Card key={w.id} as="article" className="wt-upcard done" aria-label={w.title}>
+      <Card key={w.id} as="article" className="wt-upcard done" aria-label={w.title} data-guide="today">
         <h3>
           {w.title} <DoneChip />
         </h3>
@@ -92,7 +92,7 @@ export function DesktopToday({ model, routines, hasRoutines, comeback = false }:
       <div className="wt-upnext">
         {routines.slice(0, SLOTS - 1).map(routineCard)}
         {!hasRoutines && (
-          <Card className="wt-upcard" style={{ justifyContent: 'center' }}>
+          <Card className="wt-upcard" style={{ justifyContent: 'center' }} data-guide="today">
             <h3>No routines yet</h3>
             <small className="wt-upcard-meta">Build one, or start a custom workout and log as you go.</small>
             <Link href="/routine/new" className="wt-textbtn sm">

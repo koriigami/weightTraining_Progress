@@ -1,7 +1,7 @@
 // The first-run guide: its steps and words, the gold ring, where the step card goes,
 // and when Home may show the guide or What's new.
 import { describe, expect, it } from 'vitest';
-import { GUIDE_STEPS, GUIDE_XP, bevelDepth, bubblePlace, introToShow, ringRect } from '../lib/guide';
+import { GUIDE_STEPS, GUIDE_XP, bevelDepth, bubblePlace, flatRingRadius, introToShow, keepRingOnScreen, placeOnScreen, ringRect, scrollToFit, stepTargets, stepWords, unionBox } from '../lib/guide';
 import { WORKOUT_XP } from '../lib/routines';
 
 // The real computed box-shadows (what getComputedStyle gives), resolved from app/globals.css.
@@ -56,6 +56,66 @@ describe('ringRect', () => {
   });
 });
 
+describe('keepRingOnScreen', () => {
+  const PHONE = { width: 390, height: 844 };
+
+  it('leaves a ring whose gold line fits on the screen alone', () => {
+    const ring = { x: 8, y: 4, width: 374, height: 81, radius: 24 };
+    expect(keepRingOnScreen(ring, PHONE)).toEqual(ring);
+  });
+
+  it('pulls in the side of a ring that touches the screen edge, so its gold line is not cut off', () => {
+    // the Profile tab ends 4 px short of the right edge, so its ring box ends on the edge
+    const profile = { x: 312, y: 775, width: 78, height: 59, radius: 16 };
+    expect(keepRingOnScreen(profile, PHONE)).toEqual({ x: 312, y: 775, width: 74, height: 59, radius: 16 });
+    expect(keepRingOnScreen({ x: 0, y: 2, width: 100, height: 100, radius: 10 }, PHONE)).toEqual({ x: 4, y: 4, width: 96, height: 98, radius: 10 });
+    expect(keepRingOnScreen({ x: 10, y: 800, width: 100, height: 60, radius: 10 }, PHONE).height).toBe(844 - 4 - 800);
+  });
+});
+
+describe('unionBox', () => {
+  it('is the smallest box that holds every box', () => {
+    const cards = [
+      { x: 312, y: 375, width: 220, height: 253 },
+      { x: 548, y: 375, width: 220, height: 253 },
+      { x: 784, y: 375, width: 236, height: 240 },
+    ];
+    expect(unionBox(cards)).toEqual({ x: 312, y: 375, width: 708, height: 253 });
+  });
+
+  it('is the box itself for one, and empty for none', () => {
+    expect(unionBox([{ x: 5, y: 6, width: 7, height: 8 }])).toEqual({ x: 5, y: 6, width: 7, height: 8 });
+    expect(unionBox([])).toEqual({ x: 0, y: 0, width: 0, height: 0 });
+  });
+});
+
+describe('flatRingRadius', () => {
+  it('is the link radius plus 2 for a sidebar link', () => {
+    expect(flatRingRadius(12)).toBe(14);
+  });
+
+  it('falls back to the icon pill for a phone tab, whose link has no radius', () => {
+    expect(flatRingRadius(0)).toBe(16);
+  });
+});
+
+describe('stepWords and stepTargets', () => {
+  const routines = GUIDE_STEPS.find((s) => s.id === 'routines')!;
+  const workout = GUIDE_STEPS.find((s) => s.id === 'workout')!;
+
+  it('says the phone words on a phone and the computer words on a computer', () => {
+    expect(stepWords(workout, 'phone').text).toBe('Tap Workout to start a routine, a run or a custom workout. Tick each set as you go.');
+    expect(stepWords(workout, 'desktop').text).toBe('Start a routine, a run or a custom workout. Tick each set as you go.');
+    expect(stepWords(routines, 'desktop').title).toBe('Routines and Exercises');
+  });
+
+  it('lights up the Exercises link with Routines on a computer only', () => {
+    expect(stepTargets(routines, 'phone')).toEqual(['routines']);
+    expect(stepTargets(routines, 'desktop')).toEqual(['routines', 'exercises']);
+    expect(stepTargets(workout, 'desktop')).toEqual(['workout']);
+  });
+});
+
 describe('bubblePlace', () => {
   const PHONE = { width: 390, height: 844 };
   const DESK = { width: 1440, height: 900 };
@@ -103,6 +163,58 @@ describe('bubblePlace', () => {
 
   it('uses the phone placement for a ring in the sidebar area when the layout is a phone', () => {
     expect(bubblePlace({ x: 8, y: 300, width: 235, height: 108 }, PHONE, 'phone', 300).side).toBe('below');
+  });
+});
+
+describe('placeOnScreen', () => {
+  const SMALL = { width: 320, height: 568 };
+  const HEIGHT = 190;
+
+  it('is bubblePlace when the card fits on its side', () => {
+    const ring = { x: 8, y: 4, width: 374, height: 81 };
+    const phone = { width: 390, height: 844 };
+    expect(placeOnScreen(ring, phone, 'phone', 300, HEIGHT)).toEqual(bubblePlace(ring, phone, 'phone', 300, HEIGHT));
+    const low = { x: 140, y: 764, width: 110, height: 75 };
+    expect(placeOnScreen(low, phone, 'phone', 300, HEIGHT)).toEqual(bubblePlace(low, phone, 'phone', 300, HEIGHT));
+  });
+
+  it('keeps a card below a tall ring on the screen, 12 px from the bottom', () => {
+    const p = placeOnScreen({ x: 12, y: 40, width: 296, height: 369 }, SMALL, 'phone', 296, HEIGHT);
+    expect(p).toMatchObject({ side: 'below', top: 568 - HEIGHT - 12 });
+  });
+
+  it('keeps a card above a tall ring on the screen, 12 px from the top', () => {
+    const p = placeOnScreen({ x: 12, y: 150, width: 296, height: 369 }, SMALL, 'phone', 296, HEIGHT);
+    expect(p).toMatchObject({ side: 'above', bottom: 568 - 12 - HEIGHT });
+    expect(p.top).toBeUndefined();
+  });
+
+  it('leaves a card beside the sidebar where bubblePlace put it', () => {
+    const ring = { x: 8, y: 300, width: 235, height: 108 };
+    expect(placeOnScreen(ring, { width: 1440, height: 900 }, 'desktop', 340, HEIGHT)).toEqual(bubblePlace(ring, { width: 1440, height: 900 }, 'desktop', 340, HEIGHT));
+  });
+});
+
+describe('scrollToFit', () => {
+  const HEIGHT = 190;
+
+  it('is 0 when a side of the ring has room for the card', () => {
+    expect(scrollToFit({ x: 12, y: 93, width: 366, height: 369 }, 844, HEIGHT, 96, 770)).toBe(0);
+  });
+
+  it('moves the ring to just under the top bar when neither side has room but the two fit together', () => {
+    // a 236 px ring centred on a 568 px screen: 166 above and 166 below, and the card needs 206
+    expect(scrollToFit({ x: 12, y: 166, width: 296, height: 236 }, 568, HEIGHT, 96, 488)).toBe(70);
+  });
+
+  it('picks the move that covers the least of the ring when the two cannot fit together', () => {
+    // a 242 px ring and a 229 px card on a 568 px screen with an 85 px bar and a 72 px tab bar: the card
+    // would cover 24 px of the ring below it and 11 px above it, against 92 px where the ring now is
+    expect(scrollToFit({ x: 12, y: 165, width: 296, height: 242 }, 568, 229, 93, 488)).toBe(165 - (488 - 242));
+  });
+
+  it('is 0 when the ring is taller than the free area', () => {
+    expect(scrollToFit({ x: 12, y: 100, width: 296, height: 400 }, 568, 229, 93, 488)).toBe(0);
   });
 });
 
