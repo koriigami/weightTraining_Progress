@@ -33,7 +33,8 @@ import { WorkoutStats } from './WorkoutStats';
 type PickerState = { mode: 'add' } | { mode: 'replace'; index: number } | null;
 
 /**
- * Log workout, laid out like Hevy.
+ * The workout in progress, laid out like Hevy. Its phone title is "Workout", so it is never
+ * mistaken for the Log workout screen (a workout done earlier).
  * Phone: Finish in the top bar, the live stats under it, the exercises, then
  * Add exercise (full width, primary when the workout is empty) and, below a
  * dashed line, Settings and "Discard workout" side by side. Nothing is pinned, so the sets get the
@@ -90,9 +91,9 @@ export function LogScreen() {
     return dailyBonusLive(dayMinutes(workouts, today, items ?? [], lookup, now), dailyBonusPaid(workouts, today, lookup, now));
   }, [workouts, today, items, lookup]);
 
-  if (!ws.ready) return <Screen header={<PageHeader title="Log workout" back="/" />}>{null}</Screen>;
+  if (!ws.ready) return <Screen header={<PageHeader title="Workout" back="/" />}>{null}</Screen>;
 
-  if (!session && leaving) return <Screen header={<PageHeader title="Log workout" back="/" />}>{null}</Screen>;
+  if (!session && leaving) return <Screen header={<PageHeader title="Workout" back="/" />}>{null}</Screen>;
 
   if (!session) {
     return (
@@ -271,7 +272,7 @@ export function LogScreen() {
     />
   ) : (
     <PageHeader
-      title="Log workout"
+      title="Workout"
       back
       onBack={leave}
       backLabel="Minimize workout"

@@ -57,6 +57,7 @@ export function WorkoutForm({
   info,
   empty,
   end,
+  latestDate,
 }: {
   draft: WorkoutDraft;
   when: string;
@@ -71,6 +72,8 @@ export function WorkoutForm({
   info?: ReactNode;
   empty: { title: string; text: string };
   end?: ReactNode;
+  /** The last day the date picker offers. Edit allows a day ahead for time zones; Log stops at today. */
+  latestDate?: string;
 }) {
   const { session, ref, commit } = draft;
   const today = useToday();
@@ -212,7 +215,7 @@ export function WorkoutForm({
         {end}
       </div>
 
-      <DateTimeModal open={dateOpen} value={when} max={maxWorkoutDate(today)} onCancel={() => setDateOpen(false)} onDone={(next) => { onWhen(next); setDateOpen(false); }} />
+      <DateTimeModal open={dateOpen} value={when} max={latestDate ?? maxWorkoutDate(today)} onCancel={() => setDateOpen(false)} onDone={(next) => { onWhen(next); setDateOpen(false); }} />
 
       <ExerciseMenu
         open={menuIndex !== null && Boolean(menuEx)}

@@ -118,15 +118,18 @@ describe('buildLoggedWorkout', () => {
     expect(buildLoggedWorkout(s, { when: '2026-10-10T18:37', minutes: 30, notes: '', now: NOW }).ok).toBe(true);
   });
 
-  it('makes a cardio-only workout at least as long as its cardio minutes', () => {
+  it('makes a workout at least as long as the cardio in it', () => {
     const run = updateCardio(must(logSession({ cardio: 'run' }, NOW)), 0, { min: 50, km: 8 });
     const r = buildLoggedWorkout(run, { when: '2026-10-09T19:30', minutes: 10, notes: '', now: NOW });
     if (!r.ok) throw new Error(r.error);
     expect(r.workout.startedAt).toBe(new Date(2026, 9, 9, 18, 40).toISOString());
-    // A mixed workout takes the minutes as given.
+    // A mixed workout with a 20 minute run is at least 20 minutes, and longer when given.
     const mixed = buildLoggedWorkout(ticked(), { when: '2026-10-09T19:30', minutes: 10, notes: '', now: NOW });
     if (!mixed.ok) throw new Error(mixed.error);
-    expect(mixed.workout.startedAt).toBe(new Date(2026, 9, 9, 19, 20).toISOString());
+    expect(mixed.workout.startedAt).toBe(new Date(2026, 9, 9, 19, 10).toISOString());
+    const longer = buildLoggedWorkout(ticked(), { when: '2026-10-09T19:30', minutes: 45, notes: '', now: NOW });
+    if (!longer.ok) throw new Error(longer.error);
+    expect(longer.workout.startedAt).toBe(new Date(2026, 9, 9, 18, 45).toISOString());
   });
 
   it('falls back to a title from the time of day when it is empty', () => {

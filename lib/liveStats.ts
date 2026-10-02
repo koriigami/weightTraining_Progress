@@ -119,9 +119,9 @@ export function liveXp(items: readonly WorkoutItem[], marks: readonly LiveMark[]
 
 // ---------------- The daily bonus, live ----------------
 
-/** "12 of 20 min today". Whole minutes, rounded down, so it never reads 20 of 20 before the bar is reached. */
-export function minutesTodayText(minutes: number): string {
-  return `${Math.floor(Math.max(0, minutes))} of ${WORKOUT_XP.dailyMinutes} min today`;
+/** "12 of 20 min today", or "that day" for a past day. Whole minutes, rounded down, so it never reads 20 of 20 before the bar is reached. */
+export function minutesTodayText(minutes: number, today = true): string {
+  return `${Math.floor(Math.max(0, minutes))} of ${WORKOUT_XP.dailyMinutes} min ${today ? 'today' : 'that day'}`;
 }
 
 // short: still under the bar. earned: this workout takes the day over it.

@@ -133,6 +133,12 @@ A runner who uses Levl asked for laps back. Laps were removed in v8 to keep the 
 - **Shell:** `openLog()` (the Start sheet in log mode), plus a mode for `openCardio` and `openCustom`. The "finish or discard your workout first" block applies to start mode only.
 - **New pill:** `.wt-newpill`, 24 px tall, 10 px padding each side, in the secondary gold. It shows until 15 November 2026.
 
+### Changed after QA
+- The live workout screen on the phone was also titled "Log workout". It is now "Workout", so the two screens are never confused.
+- A workout lasts at least as long as the cardio in it, also when it mixes strength and cardio. Duration never shows less.
+- The Log screen's date picker stops at today. Edit keeps a day ahead for time zones.
+- On Victory and the workout page, a past day's daily bonus line says "that day" instead of "today".
+
 ### Not in this stage
 - A Log screen left half done is not kept. It behaves like Edit.
 - There is no warning when the same routine is logged twice on one day.

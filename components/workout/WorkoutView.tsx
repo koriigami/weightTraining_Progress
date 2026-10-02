@@ -97,8 +97,8 @@ export function WorkoutView() {
   // The date's training minutes once this workout is counted, for the daily bonus line.
   const dayMinutes = useMemo(() => (w ? scoreState(state, today).find((s) => s.id === w.id)?.dayMinutes : undefined), [state, today, w]);
   const breakdown = useMemo(
-    () => (w ? xpBreakdown(w, { lookup, weight: units.weight, distance: units.distance, weeklyGoal: prefs.weeklyGoal, dayMinutes }) : null),
-    [w, lookup, units, prefs.weeklyGoal, dayMinutes]
+    () => (w ? xpBreakdown(w, { lookup, weight: units.weight, distance: units.distance, weeklyGoal: prefs.weeklyGoal, dayMinutes, pastDay: w.date < today }) : null),
+    [w, lookup, units, prefs.weeklyGoal, dayMinutes, today]
   );
 
   if (leaving || (loading && !w)) return <Screen header={<PageHeader title="Workout" back />}>{null}</Screen>;

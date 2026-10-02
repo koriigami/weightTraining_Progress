@@ -656,7 +656,7 @@ export function cardioMinutesLogged(session: Session, lookup: ExerciseLookup = e
 export type LogDraft = { when: string; minutes: number; notes: string; now: Date; lookup?: ExerciseLookup; id?: string };
 
 // The saveWorkout payload for a logged workout. `when` is the finish, the start is `when`
-// minus the minutes (at least the cardio minutes on a cardio-only workout), and the day
+// minus the minutes (at least the workout's cardio minutes), and the day
 // is the day of `when`. A time that has not happened yet is refused.
 export function buildLoggedWorkout(session: Session, draft: LogDraft): BuildResult {
   const lookup = draft.lookup ?? exerciseById;
@@ -667,7 +667,8 @@ export function buildLoggedWorkout(session: Session, draft: LogDraft): BuildResu
   if (ticked > LIMITS.setsPerWorkout) return { ok: false, error: `A workout can have up to ${LIMITS.setsPerWorkout} sets.` };
 
   let span = (Number.isFinite(draft.minutes) ? Math.max(1, Math.round(draft.minutes)) : 1) * 60_000;
-  if (isCardioOnly(items, lookup)) span = Math.max(span, workoutTotals(items, lookup).cardioMinutes * 60_000);
+  // A workout lasts at least as long as the cardio in it.
+  span = Math.max(span, workoutTotals(items, lookup).cardioMinutes * 60_000);
   // The API takes a workout up to a day long.
   if (span >= DAY_MS) span = DAY_MS - 60_000;
 

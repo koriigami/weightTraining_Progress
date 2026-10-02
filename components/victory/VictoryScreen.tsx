@@ -188,7 +188,7 @@ function Victory({ finished }: { finished: Finished }) {
   const { before: from, after: to } = finished;
   const gained = to.xp - from.xp;
   const score = scoreState(state, today).find((s) => s.id === live.id);
-  const lines = xpLines(live, score, lookup, progress.workout.weeklyGoal, prefs.units.weight, prefs.units.distance);
+  const lines = xpLines(live, score, lookup, progress.workout.weeklyGoal, prefs.units.weight, prefs.units.distance, live.date < today);
   const { total, other } = xpTotal(lines, gained);
   const totals = workoutTotals(live.items, lookup);
   const span = Date.parse(live.finishedAt) - Date.parse(live.startedAt);

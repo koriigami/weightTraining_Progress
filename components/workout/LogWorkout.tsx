@@ -4,7 +4,8 @@ import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { buildLoggedWorkout, cardioMinutesLogged, defaultLogWhen, logSession, prefillFrom, stepDuration } from '@/lib/session';
 import type { LogSource, Session } from '@/lib/session';
-import { estimateMinutes } from '@/lib/routines';
+import { estimateMinutes, workoutTotals } from '@/lib/routines';
+import { useToday } from '@/lib/useToday';
 import { useProgress } from '@/components/ProgressProvider';
 import { useWorkoutSession } from '@/components/WorkoutSessionProvider';
 import { Button, ButtonLink } from '@/components/ui/Button';
@@ -79,6 +80,7 @@ function LogEditor({ initial, opened }: { initial: Session; opened: Date }) {
   const leave = useLeave();
   const ws = useWorkoutSession();
   const { workouts, lookup, showToast } = useProgress();
+  const today = useToday();
 
   const draft = useWorkoutDraft(() => initial);
   const [when, setWhen] = useState(() => defaultLogWhen(opened));
@@ -89,8 +91,11 @@ function LogEditor({ initial, opened }: { initial: Session; opened: Date }) {
   const [saving, setSaving] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
+  // A workout lasts at least as long as the cardio in it, so a run inside a routine
+  // stretches the estimate too, and the stepper never goes below it.
   const cardio = cardioMinutesLogged(draft.session, lookup);
-  const minutes = stepped ?? (cardio !== null ? Math.max(1, Math.round(cardio)) : estimate);
+  const cardioAll = Math.round(workoutTotals(draft.session.items, lookup).cardioMinutes);
+  const minutes = Math.max(stepped ?? (cardio !== null ? Math.max(1, Math.round(cardio)) : estimate), cardioAll);
   const history = useMemo(() => workouts.filter((x) => x.when < when), [workouts, when]);
 
   if (leaving) return <Screen header={<PageHeader title="Log workout" back />}>{null}</Screen>;
@@ -143,6 +148,7 @@ function LogEditor({ initial, opened }: { initial: Session; opened: Date }) {
         onNotes={setNotes}
         history={history}
         empty={{ title: 'No exercises yet', text: 'Add what you did, one exercise at a time.' }}
+        latestDate={today}
       />
     </Screen>
   );

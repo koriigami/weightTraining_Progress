@@ -26,14 +26,15 @@ export function markText(mark: WorkoutMark, weight: WeightUnit = 'kg', distance:
 // The daily bonus always has a line. It is worth 50 on the workout that takes the
 // day to 20 minutes, and otherwise 0 with the reason: an earlier workout already
 // paid it, or the day is still short. `minutes` is this workout's own training
-// minutes and `dayMinutes` the date's total once it is counted.
-export function bonusLines(p: { dailyXp: number; comebackXp: number; weeklyXp: number; minutes: number; dayMinutes: number; weeklyGoal: number }): XpLine[] {
+// minutes and `dayMinutes` the date's total once it is counted. `pastDay` words it
+// for a workout on an earlier day ("that day" instead of "today").
+export function bonusLines(p: { dailyXp: number; comebackXp: number; weeklyXp: number; minutes: number; dayMinutes: number; weeklyGoal: number; pastDay?: boolean }): XpLine[] {
   const lines: XpLine[] = [];
   if (p.dailyXp > 0) {
     lines.push({ key: 'daily', title: 'Daily bonus', xp: p.dailyXp });
   } else {
     const paidBefore = p.dayMinutes - p.minutes >= WORKOUT_XP.dailyMinutes;
-    lines.push({ key: 'daily', title: 'Daily bonus', xp: 0, sub: paidBefore ? 'Already earned today' : minutesTodayText(p.dayMinutes) });
+    lines.push({ key: 'daily', title: 'Daily bonus', xp: 0, sub: paidBefore ? `Already earned ${p.pastDay ? 'that day' : 'today'}` : minutesTodayText(p.dayMinutes, !p.pastDay) });
   }
   if (p.comebackXp > 0) lines.push({ key: 'comeback', title: 'Comeback', xp: p.comebackXp, sub: 'First training day after a week off' });
   if (p.weeklyXp > 0) lines.push({ key: 'weekly', title: 'Weekly goal', xp: p.weeklyXp, sub: `${p.weeklyGoal} of ${p.weeklyGoal} training ${p.weeklyGoal === 1 ? 'day' : 'days'} this week` });
@@ -43,8 +44,8 @@ export function bonusLines(p: { dailyXp: number; comebackXp: number; weeklyXp: n
 // The XP lines, in the order the design shows them: sets done, cardio minutes,
 // beat last time, records, then the daily bonus, comeback and weekly goal.
 // `score` is the workout's own score (from scoreState). Without it (a workout
-// that does not count yet) only the set lines show.
-export function xpLines(workout: Pick<WorkoutLog, 'items'>, score: WorkoutScore | undefined, lookup: ExerciseLookup = exerciseById, weeklyGoal = 3, weight: WeightUnit = 'kg', distance: DistanceUnit = 'km'): XpLine[] {
+// that does not count yet) only the set lines show. `pastDay` is true for a workout on an earlier day.
+export function xpLines(workout: Pick<WorkoutLog, 'items'>, score: WorkoutScore | undefined, lookup: ExerciseLookup = exerciseById, weeklyGoal = 3, weight: WeightUnit = 'kg', distance: DistanceUnit = 'km', pastDay = false): XpLine[] {
   let strengthSets = 0;
   let strengthXp = 0;
   let cardioXp = 0;
@@ -78,7 +79,7 @@ export function xpLines(workout: Pick<WorkoutLog, 'items'>, score: WorkoutScore 
       });
     }
   }
-  lines.push(...bonusLines({ dailyXp: score.dailyXp, comebackXp: score.comebackXp, weeklyXp: score.weeklyXp, minutes: score.minutes, dayMinutes: score.dayMinutes, weeklyGoal }));
+  lines.push(...bonusLines({ dailyXp: score.dailyXp, comebackXp: score.comebackXp, weeklyXp: score.weeklyXp, minutes: score.minutes, dayMinutes: score.dayMinutes, weeklyGoal, pastDay }));
   return lines;
 }
 

@@ -55,7 +55,7 @@ const num = (v: number | undefined): number => (typeof v === 'number' && Number.
 // day is taken to be this workout alone.
 export function xpBreakdown(
   w: Pick<WorkoutLog, 'items' | 'marks' | 'xpParts' | 'xp'>,
-  opts: { lookup?: ExerciseLookup; weight?: WeightUnit; distance?: DistanceUnit; weeklyGoal?: number; dayMinutes?: number } = {}
+  opts: { lookup?: ExerciseLookup; weight?: WeightUnit; distance?: DistanceUnit; weeklyGoal?: number; dayMinutes?: number; pastDay?: boolean } = {}
 ): { lines: BreakdownLine[]; total: number } {
   const lookup = opts.lookup ?? exerciseById;
   const parts = w.xpParts ?? { sets: 0, cardio: 0, beat: 0, record: 0, finish: 0, weekly: 0, comeback: 0 };
@@ -84,7 +84,7 @@ export function xpBreakdown(
   if (beats.length > 0) lines.push({ key: 'beat', title: 'Beat last time', sub: beats.map((m) => nameOf(m.exerciseId)).join(', '), xp: parts.beat });
   const minutes = trainingMinutes(w.items, lookup);
   lines.push(
-    ...bonusLines({ dailyXp: parts.finish, comebackXp: parts.comeback ?? 0, weeklyXp: parts.weekly, minutes, dayMinutes: opts.dayMinutes ?? minutes, weeklyGoal: opts.weeklyGoal ?? 3 })
+    ...bonusLines({ dailyXp: parts.finish, comebackXp: parts.comeback ?? 0, weeklyXp: parts.weekly, minutes, dayMinutes: opts.dayMinutes ?? minutes, weeklyGoal: opts.weeklyGoal ?? 3, pastDay: opts.pastDay })
   );
   return { lines, total: w.xp };
 }

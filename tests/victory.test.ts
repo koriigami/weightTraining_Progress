@@ -92,6 +92,8 @@ describe('victory XP lines', () => {
       { key: 'daily', title: 'Daily bonus', xp: 0, sub: 'Already earned today' },
     ]);
     expect(xpLines(ws[2], scores[2]).find((l) => l.key === 'daily')).toMatchObject({ xp: 0, sub: 'Already earned today' });
+    // A workout on an earlier day (one logged after the fact) says "that day".
+    expect(xpLines(ws[2], scores[2], undefined, 3, 'kg', 'km', true).find((l) => l.key === 'daily')).toMatchObject({ sub: 'Already earned that day' });
     expect(xpTotal(later, scores[1].xp)).toEqual({ total: 35, other: 0 });
   });
 

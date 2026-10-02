@@ -285,6 +285,7 @@ describe('live chips and the XP popover', () => {
     expect(dailyBonusLive(0, false).text).toBe('0 of 20 min today');
     expect(dailyBonusLive(19.5, false).text).toBe('19 of 20 min today');
     expect(minutesTodayText(6)).toBe('6 of 20 min today');
+    expect(minutesTodayText(6, false)).toBe('6 of 20 min that day');
   });
 
   it('the daily bonus line says earned once the day reaches 20 minutes', () => {
