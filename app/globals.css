@@ -6564,11 +6564,55 @@ button.wt-frow:focus-visible {
   font-weight: 400;
   font-size: 18px;
 }
+/* the effort slider in the app's colours: a soft track, green up to the value, a white thumb.
+   --fill is set on the input from the value. */
 .wt-effort input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
-  height: 32px;
+  height: 36px;
   margin: 0;
-  accent-color: var(--ok);
+  background: transparent;
+  cursor: pointer;
+}
+.wt-effort input[type='range']::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--ok) var(--fill, 55%), var(--track) var(--fill, 55%));
+}
+.wt-effort input[type='range']::-moz-range-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--track);
+}
+.wt-effort input[type='range']::-moz-range-progress {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--ok);
+}
+.wt-effort input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  margin-top: -9px;
+  border-radius: 50%;
+  background: var(--cell);
+  border: 3px solid var(--ok);
+  box-shadow: 0 2px 0 var(--ok-deep);
+}
+.wt-effort input[type='range']::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--cell);
+  border: 3px solid var(--ok);
+  box-shadow: 0 2px 0 var(--ok-deep);
+}
+.wt-effort input[type='range']:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 10px;
 }
 .wt-feel-err {
   display: block;

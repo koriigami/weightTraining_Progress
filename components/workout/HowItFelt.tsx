@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { Plus } from 'lucide-react';
 import { EFFORT_MAX, EFFORT_MIN, EFFORT_START, FEELS, effortReadout } from '@/lib/feel';
 import type { Feel } from '@/lib/feel';
@@ -94,6 +95,7 @@ export function HowItFelt({ feel, effort, onFeel, onEffort, error }: Props) {
             value={shown}
             aria-label="Effort from 1 to 10"
             aria-valuetext={effortReadout(shown)}
+            style={{ '--fill': `${((shown - EFFORT_MIN) / (EFFORT_MAX - EFFORT_MIN)) * 100}%` } as CSSProperties}
             onChange={(e) => setDraft(Number(e.target.value))}
           />
         </div>
@@ -102,7 +104,8 @@ export function HowItFelt({ feel, effort, onFeel, onEffort, error }: Props) {
           <Button
             ref={addButton}
             size="sm"
-            variant="secondary"
+            variant="tertiary"
+            block
             icon={<Plus size={16} aria-hidden="true" />}
             onClick={() => {
               focusNext.current = 'slider';
