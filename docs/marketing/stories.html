@@ -16,7 +16,9 @@ h1 { font-size: clamp(40px, 7vw, 64px); line-height: 1; color: #fff; -webkit-tex
 h2 { font-size: 24px; }
 .lede { max-width: 66ch; margin: 10px 0 0; font-weight: 700; }
 .tag { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #8f5c00; background: var(--paper); border: 2px solid var(--gold); border-radius: 999px; padding: 4px 14px; box-shadow: 0 3px 0 #c8932a; margin-bottom: 14px; }
-.strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 18px; }
+.strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr)); gap: 16px; }
+.carousel { display: flex; gap: 0; overflow-x: auto; scroll-snap-type: x mandatory; border-radius: 16px; box-shadow: 0 4px 0 var(--bevel); }
+.carousel img { flex: none; width: min(100%, 420px); aspect-ratio: 4 / 5; scroll-snap-align: start; display: block; }
 figure { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 figure img { display: block; width: 100%; aspect-ratio: 9 / 16; border-radius: 18px; box-shadow: 0 4px 0 var(--bevel), 0 18px 30px -18px rgba(60, 30, 0, .55); background: var(--paper); }
 figcaption { font-size: 14px; font-weight: 700; }
@@ -36,25 +38,43 @@ code { font-weight: 800; color: var(--ink); }
   <header>
     <span class="tag">Early access · by invite</span>
     <h1>Levl teaser stories</h1>
-    <p class="lede">Five 9:16 stories for WhatsApp Status and Instagram Stories, made from screenshots of the real app. Post them in order. The last one sends people to the waitlist.</p>
+    <p class="lede">Stories and an Instagram carousel made from the real app, filled with demo data. Every set ends with the waitlist.</p>
   </header>
 
-  <section class="strip" aria-label="The five stories">
-    <figure><img src="levl-story-1-game.png" alt="Your workouts, now a game. Home screen with level 6, D rank and today's training." loading="eager"><figcaption>1. The hook<span>Home: level, rank, streak</span></figcaption></figure>
-    <figure><img src="levl-story-2-rank.png" alt="Climb from E to S rank. The Rank Road with the D-Rank Hunter card." loading="eager"><figcaption>2. The goal<span>Rank Road, E to S</span></figcaption></figure>
-    <figure><img src="levl-story-3-laps.png" alt="Every lap counts. A run with five laps and the fastest marked." loading="eager"><figcaption>3. For runners<span>Laps and the fastest lap</span></figcaption></figure>
-    <figure><img src="levl-story-4-log.png" alt="Log it after. The Log workout button on Home." loading="eager"><figcaption>4. No excuses<span>Log a workout after</span></figcaption></figure>
-    <figure><img src="levl-story-5-join.png" alt="Want in? Three steps and the waitlist link tally.so/r/kdMyYM." loading="eager"><figcaption>5. The ask<span>Waitlist link</span></figcaption></figure>
+  <section class="card">
+    <h2>Stories, 9:16</h2>
+    <p class="note">For WhatsApp Status and Instagram Stories. Post 1 to 5 in order. Story 5 comes in two versions: Instagram leaves room for your link sticker, WhatsApp prints the link.</p>
+    <div class="strip" aria-label="The stories">
+      <figure><img src="levl-story-1-game.png" alt="Your workouts, now a game. Home before today's workout, with Start." loading="eager"><figcaption>1. The hook<span>Home, today still to do</span></figcaption></figure>
+      <figure><img src="levl-story-2-rank.png" alt="Climb from E to S rank. The S-Rank Hunter card on the Rank Road." loading="eager"><figcaption>2. The goal<span>S-Rank Hunter</span></figcaption></figure>
+      <figure><img src="levl-story-3-laps.png" alt="Every lap counts. A run with five laps, the fastest marked." loading="eager"><figcaption>3. For runners<span>Laps</span></figcaption></figure>
+      <figure><img src="levl-story-4-log.png" alt="Log it after. The Log workout screen dated yesterday." loading="eager"><figcaption>4. No excuses<span>Log workout</span></figcaption></figure>
+      <figure><img src="levl-story-5-join-instagram.png" alt="Want in? Three steps and an empty space for the link sticker." loading="eager"><figcaption>5. Instagram<span>Add the link sticker in the dashed box</span></figcaption></figure>
+      <figure><img src="levl-story-5-join-whatsapp.png" alt="Want in? Three steps and the waitlist link." loading="eager"><figcaption>5. WhatsApp<span>Link printed, and in the caption</span></figcaption></figure>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Instagram carousel, 4:5</h2>
+    <p class="note">Six slides cut from one wide sky, so the clouds run on from one slide to the next as people swipe. Upload all six in this order.</p>
+    <div class="carousel" aria-label="The carousel slides, swipe sideways">
+      <img src="levl-carousel-1.png" alt="Slide 1: Your workouts, now a game." loading="eager">
+      <img src="levl-carousel-2.png" alt="Slide 2: Every set earns XP. The XP earned breakdown." loading="eager">
+      <img src="levl-carousel-3.png" alt="Slide 3: Climb from E to S rank." loading="eager">
+      <img src="levl-carousel-4.png" alt="Slide 4: Every lap counts." loading="eager">
+      <img src="levl-carousel-5.png" alt="Slide 5: Log it after." loading="eager">
+      <img src="levl-carousel-6.png" alt="Slide 6: Want in? Link in bio." loading="eager">
+    </div>
   </section>
 
   <div class="two">
     <section class="card">
       <h2>Save and post</h2>
       <ol>
-        <li>On a phone, press and hold a story, then Save image (on a computer, right-click and Save image as). Each is 1080 by 1920.</li>
-        <li><b>Instagram:</b> on story 5, add a Link sticker with <code>https://tally.so/r/kdMyYM</code> and place it over the dashed box.</li>
-        <li><b>WhatsApp Status:</b> links in images can't be tapped, so paste the caption below with the link when you post story 5.</li>
-        <li>Post 1 to 5 in one go, at an hour your friends check their phones (around 8 to 9 pm).</li>
+        <li>On a phone, press and hold an image, then Save image (on a computer, right-click and Save image as).</li>
+        <li><b>Instagram story 5:</b> add a Link sticker with <code>https://tally.so/r/kdMyYM</code> over the dashed box.</li>
+        <li><b>WhatsApp Status:</b> post story 5 (WhatsApp) and paste the WhatsApp caption with it.</li>
+        <li><b>Carousel:</b> put <code>tally.so/r/kdMyYM</code> in your Instagram bio before posting, then use the carousel caption.</li>
       </ol>
       <p class="note">When new names land in the waitlist, tell me "invite the new people" in our chat.</p>
     </section>
@@ -62,13 +82,19 @@ code { font-weight: 800; color: var(--ink); }
     <section class="card">
       <h2>Captions</h2>
       <div class="cap">
+        <p id="cap-car">Levl turns your training into a game. Every set earns XP, every workout moves you up the Rank Road from E to S, and runners get a Lap button that marks their fastest lap.
+
+Forgot to start the timer? Log the workout after and the XP still lands on the right day.
+
+Early access is invite only. Join the waitlist through the link in my bio and your invite comes by email.
+
+#fitness #workout #gym #running #levelup #fitnessjourney</p>
+        <button type="button" data-copy="cap-car">Copy carousel caption</button>
+      </div>
+      <div class="cap">
         <p id="cap-wa">Building a workout app that turns your training into a game: XP for every set, levels, ranks from E to S. Early access is invite only. Join the waitlist and I'll send you an invite:
 https://tally.so/r/kdMyYM</p>
         <button type="button" data-copy="cap-wa">Copy WhatsApp caption</button>
-      </div>
-      <div class="cap">
-        <p id="cap-ig">Levl: your workouts, now a game. Opening in small batches. Waitlist link in the sticker.</p>
-        <button type="button" data-copy="cap-ig">Copy Instagram caption</button>
       </div>
     </section>
   </div>
