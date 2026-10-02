@@ -19,7 +19,11 @@ Say "invite the new people". Claude then:
 6. **Records** the batch below: date and count only.
 
 ## Invite status (for the routine)
-`GET /api/invites/status` with the `INVITE_KEY` returns `signedIn` (name, email, joined date, workout count, last workout date) and `invitedNotJoined` (emails). Read only, no level, rank or workout details. The invite list does not store invite dates yet, so "2 days after the invite" is not available until it does.
+`GET /api/invites/status` with the `INVITE_KEY` returns `signedIn` (name, email, joined date, workout count, last workout date) and `invitedNotJoined` (email and `invitedOn`). Read only, no level, rank or workout details.
+
+`invitedOn` is the day the person was added to the invite list, kept in the Redis key `wt:invites:dates` (email to YYYY-MM-DD), apart from the list itself. It is set when someone is added, dropped when they are removed, and `null` for the first group in `ALLOWED_EMAILS`, who have no recorded day. To fix or backfill a day, POST `{"dates": {"a@x.com": "2026-10-02"}}` to `/api/invites`, for emails already on the list. `GET /api/invites` also returns `dates`.
+
+The nudge goes to people with `invitedOn` two or more days ago, or `null`. The check-in goes to people in `signedIn` with `workoutsTotal` 0 whose `joined` is two or more days ago.
 
 ## Nudge and check-in
 Both read Insights (People list and "Invited, not signed in yet") or the status endpoint above. The wording is in `docs/marketing/stories.html`. Gmail drafts use the same text, the same "Open Levl" link and the same sign-off.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyInvites, cleanList, createRateLimiter, keyMatches } from '../lib/invites';
+import { applyInviteDates, applyInvites, cleanDates, cleanList, createRateLimiter, keyMatches } from '../lib/invites';
 
 describe('invite key', () => {
   it('refuses a missing header, a wrong key and a header that is not Bearer', () => {
@@ -67,5 +67,46 @@ describe('rate limit', () => {
     expect(l.take('a', 20)).toBe(false);
     expect(l.take('b', 20)).toBe(true);
     expect(l.take('a', 1001)).toBe(true);
+  });
+});
+
+describe('invite dates', () => {
+  const add = (current: string[], emails: string[]) => {
+    const r = applyInvites(current, { add: emails });
+    if (!r.ok) throw new Error(r.error);
+    return r;
+  };
+
+  it('stamps new invites with today and keeps an earlier day', () => {
+    const r = add([], ['a@example.com', 'b@example.com']);
+    const first = applyInviteDates({}, r.emails, r, {}, '2026-10-02');
+    expect(first).toEqual({ ok: true, dates: { 'a@example.com': '2026-10-02', 'b@example.com': '2026-10-02' }, changed: true });
+    const again = applyInviteDates(first.ok ? first.dates : {}, r.emails, add(r.emails, ['a@example.com']), {}, '2026-10-09');
+    expect(again).toMatchObject({ ok: true, changed: false, dates: { 'a@example.com': '2026-10-02' } });
+  });
+
+  it('drops the day of someone removed, and a re-invite gets a new day', () => {
+    const removed = applyInvites(['a@example.com'], { remove: ['a@example.com'] });
+    if (!removed.ok) throw new Error(removed.error);
+    const gone = applyInviteDates({ 'a@example.com': '2026-10-02' }, removed.emails, removed, {}, '2026-10-05');
+    expect(gone).toMatchObject({ ok: true, dates: {}, changed: true });
+    const back = add([], ['a@example.com']);
+    expect(applyInviteDates({}, back.emails, back, {}, '2026-10-09')).toMatchObject({ dates: { 'a@example.com': '2026-10-09' } });
+  });
+
+  it('backfills days for people on the list and refuses the rest', () => {
+    const none = applyInvites(['a@example.com'], {});
+    if (!none.ok) throw new Error(none.error);
+    const ok = applyInviteDates({}, none.emails, none, { dates: { 'A@example.com': '2026-09-30' } }, '2026-10-02');
+    expect(ok).toMatchObject({ ok: true, changed: true, dates: { 'a@example.com': '2026-09-30' } });
+    for (const bad of [{ dates: { 'z@example.com': '2026-09-30' } }, { dates: { 'a@example.com': 'yesterday' } }, { dates: { 'a@example.com': '2026-13-45' } }, { dates: ['a@example.com'] }]) {
+      expect(applyInviteDates({}, none.emails, none, bad, '2026-10-02').ok).toBe(false);
+    }
+  });
+
+  it('tidies stored dates', () => {
+    expect(cleanDates({ 'B@x.com': '2026-10-02', 'c@x.com': 'soon', 'd@x.com': 4 })).toEqual({ 'b@x.com': '2026-10-02' });
+    expect(cleanDates(null)).toEqual({});
+    expect(cleanDates(['a'])).toEqual({});
   });
 });

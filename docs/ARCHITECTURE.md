@@ -434,7 +434,7 @@ server, only in invite mode, and only at sign-in. If it cannot be read, nobody e
 It is never sent to a browser, except that the owner's Insights People card lists the emails on it
 that have not signed in yet (`invitedNotJoined`).
 
-`/api/invites` is how the owner edits it from chat. It is a dynamic API route, so pages stay static. `/api/invites/status` is a read only view for the owner's invite routine: per signed-in person the name, email, joined day, workout count and last workout date, plus the emails still waiting. It never returns what anyone trained.
+`/api/invites` is how the owner edits it from chat. It is a dynamic API route, so pages stay static. `/api/invites/status` is a read only view for the owner's invite routine: per signed-in person the name, email, joined day, workout count and last workout date, plus the people still waiting with the day they were invited. It never returns what anyone trained. The invite days live in `wt:invites:dates`, a separate key from the list, so the list that sign-in reads keeps its shape and needs no migration.
 - Every call needs `Authorization: Bearer <INVITE_KEY>`. The key is compared in constant time
   (both sides hashed, then `timingSafeEqual` on equal-length buffers). With `INVITE_KEY` unset,
   or a missing or wrong key, the answer is a bare 401.

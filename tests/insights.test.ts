@@ -344,6 +344,11 @@ describe('inviteStatus', () => {
   it('leaves signed-in people out of invitedNotJoined and skips profiles with no email', () => {
     const s = inviteStatus([row({ email: 'a@example.com' }), row({ email: '  ' })], ['a@example.com', 'c@example.com'], ['b@example.com']);
     expect(s.signedIn).toHaveLength(1);
-    expect(s.invitedNotJoined).toEqual(['b@example.com', 'c@example.com']);
+    expect(s.invitedNotJoined.map((w) => w.email)).toEqual(['b@example.com', 'c@example.com']);
+  });
+
+  it('gives each waiting person their invite day, or null when none is recorded', () => {
+    const s = inviteStatus([], ['c@example.com'], ['b@example.com'], { 'c@example.com': '2026-10-02' });
+    expect(s.invitedNotJoined).toEqual([{ email: 'b@example.com', invitedOn: null }, { email: 'c@example.com', invitedOn: '2026-10-02' }]);
   });
 });

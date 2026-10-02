@@ -5,7 +5,8 @@ import { defaultPrefs } from './routines';
 import { completionToDayLog, hasLegacyDays, migratePlanDays } from './migrations/planDays';
 import type { LegacyDayLog, LegacyState } from './migrations/planDays';
 import { todayStr } from './date';
-import { cleanList } from './invites';
+import { cleanDates, cleanList } from './invites';
+import type { InviteDates } from './invites';
 import { isOwnerEmail } from './owner';
 import { rescoreWorkouts } from './workoutScoring';
 
@@ -131,6 +132,8 @@ const profileKey = (userId: string) => `wt:user:${userId}:profile`;
 // The state exactly as it was before the plan days became workouts, kept once.
 // The emails allowed to sign in while invite-only, a list of lowercased emails.
 const INVITES_KEY = 'wt:invites';
+// The day each invite was added, by email. Kept apart from the list so the list sign-in reads never changes shape.
+const INVITE_DATES_KEY = 'wt:invites:dates';
 const backupKey = (userId: string) => `wt:user:${userId}:backup:v7`;
 // The state exactly as it was before the weekly goal bonus started to grow (v11), kept once.
 const backupKeyV11 = (userId: string) => `wt:user:${userId}:backup:v11`;
@@ -207,6 +210,12 @@ export function createStore(kv: KV) {
     async saveInvites(emails: string[]): Promise<void> {
       await kv.set(INVITES_KEY, cleanList(emails));
     },
+    async getInviteDates(): Promise<InviteDates> {
+      return cleanDates(await kv.get<InviteDates>(INVITE_DATES_KEY));
+    },
+    async saveInviteDates(dates: InviteDates): Promise<void> {
+      await kv.set(INVITE_DATES_KEY, cleanDates(dates));
+    },
     async saveProfile(userId: string, p: Omit<Profile, 'createdAt'>): Promise<void> {
       const prev = await kv.get<Profile>(profileKey(userId));
       await kv.set(profileKey(userId), { ...p, createdAt: prev?.createdAt ?? new Date().toISOString() });
@@ -264,3 +273,5 @@ export const listUserIds = () => active().listUserIds();
 export const saveProfile = (userId: string, p: Omit<Profile, 'createdAt'>) => active().saveProfile(userId, p);
 export const getInvites = () => active().getInvites();
 export const saveInvites = (emails: string[]) => active().saveInvites(emails);
+export const getInviteDates = () => active().getInviteDates();
+export const saveInviteDates = (dates: InviteDates) => active().saveInviteDates(dates);
