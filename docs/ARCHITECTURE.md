@@ -121,7 +121,9 @@ field has to be checked:
   a routine plans numbers only.
 
 The live Lap button is `addLap` in `lib/session.ts`. It stamps the seconds since Start minus
-the laps already stamped and leaves the Time following the clock. The lap distance chip is
+the laps already stamped and leaves the Time following the clock. The run's Distance follows
+the laps (`followLaps`) only while it is nothing but their sum and every lap has a distance, so
+a warm-up lap without one stops the filling and a typed distance never moves. The lap distance chip is
 component state in `CardioFields`, not stored. The running lap row ticks from the one clock
 `LogScreen` already has (`useNow`), passed down as `elapsedSec`.
 

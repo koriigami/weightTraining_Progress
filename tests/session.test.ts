@@ -502,6 +502,23 @@ describe('laps', () => {
     expect(s.items[0].sets[0].km).toBeUndefined();
   });
 
+  it('a warm-up lap with no distance stops the laps from filling the run distance', () => {
+    let s = addLap(run(), 0, at(1200));
+    s = addLap(s, 0, at(1560), 1);
+    s = addLap(s, 0, at(1920), 1);
+    expect(s.items[0].sets[0].km).toBeUndefined();
+  });
+
+  it('the run distance follows a corrected or removed lap while it is only the laps added up', () => {
+    let s = addLap(addLap(run(), 0, at(360), 1), 0, at(710), 1);
+    s = updateLap(s, 0, 0, { km: 1.02 });
+    expect(s.items[0].sets[0].km).toBe(2.02);
+    s = removeLap(s, 0, 1);
+    expect(s.items[0].sets[0].km).toBe(1.02);
+    s = removeLap(s, 0, 0);
+    expect(s.items[0].sets[0].km).toBeUndefined();
+  });
+
   it('typing a Time ends the clock but keeps the laps', () => {
     const s = updateCardio(addLap(run(), 0, at(360)), 0, { min: 31 });
     expect(s.follow).toBeUndefined();

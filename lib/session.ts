@@ -309,8 +309,8 @@ export function syncFollow(session: Session, now: Date): Session {
 
 // ---------------- Laps ----------------
 // Laps live on the first set of a distance cardio exercise (the cardio card shows
-// one set). They never touch the run's own Time and Distance, except that a lap
-// stamped with a distance fills an empty run distance.
+// one set). They never touch the run's own Time, and the run's Distance only while
+// it is nothing but the laps added up (see followLaps).
 
 const round3 = (n: number): number => Math.round(n * 1000) / 1000;
 
@@ -328,24 +328,34 @@ function withLaps(set: LoggedSet, laps: Lap[]): LoggedSet {
   return laps.length > 0 ? { ...rest, laps } : rest;
 }
 
+// The set with its laps changed from `before` to `after`. The run's distance follows
+// the laps while it is only their sum (empty, or equal to the laps' distance before
+// the change): it becomes the new sum when every lap has a distance, and empty again
+// when no lap has one. Laps with and without a distance leave it alone, so a warm-up
+// lap never makes the run look shorter than it was, and a typed distance never moves.
+function followLaps(set: LoggedSet, before: readonly Lap[], after: Lap[]): LoggedSet {
+  const next = withLaps(set, after);
+  const was = set.km ?? 0;
+  const following = was === 0 || (before.length > 0 && Math.abs(was - lapTotals(before).km) < 0.0005);
+  if (!following) return next;
+  const withKm = after.filter((l) => (l.km ?? 0) > 0).length;
+  if (withKm === 0) delete next.km;
+  else if (withKm === after.length) next.km = lapTotals(after).km;
+  return next;
+}
+
 /**
  * Tap on Lap: stamps the time since the last lap (or since Start) on the cardio
  * card at `index`, with `km` when a lap distance is chosen. Nothing happens under
- * a second after the last lap. The Time keeps following the clock. An empty run
- * distance, or one that is only the laps added up so far, becomes the laps' sum;
- * a distance the person typed is left alone.
+ * a second after the last lap. The Time keeps following the clock, and the run's
+ * distance follows the laps as followLaps says.
  */
 export function addLap(session: Session, index: number, now: Date, km?: number): Session {
   return withFirstSet(session, index, (set) => {
     const laps = set.laps ?? [];
     if (laps.length >= LIMITS.lapsPerSet) return null;
     const lap = closeLap(laps, (now.getTime() - Date.parse(session.startedAt)) / 1000, km);
-    if (!lap) return null;
-    const before = lapTotals(laps).km;
-    const next = withLaps(set, [...laps, lap]);
-    const typed = set.km ?? 0;
-    if (lap.km !== undefined && (typed === 0 || Math.abs(typed - before) < 0.0005)) next.km = round3(before + lap.km);
-    return next;
+    return lap ? followLaps(set, laps, [...laps, lap]) : null;
   });
 }
 
@@ -371,7 +381,7 @@ export function updateLap(session: Session, index: number, lapIndex: number, pat
       if (typeof patch.km === 'number' && Number.isFinite(patch.km) && patch.km > 0) lap.km = Math.min(LAP_KM[1], round3(patch.km));
       else delete lap.km;
     }
-    return withLaps(set, laps.map((l, j) => (j === lapIndex ? lap : l)));
+    return followLaps(set, laps, laps.map((l, j) => (j === lapIndex ? lap : l)));
   });
 }
 
@@ -379,7 +389,7 @@ export function removeLap(session: Session, index: number, lapIndex: number): Se
   return withFirstSet(session, index, (set) => {
     const laps = set.laps;
     if (!laps || lapIndex < 0 || lapIndex >= laps.length) return null;
-    return withLaps(set, laps.filter((_, j) => j !== lapIndex));
+    return followLaps(set, laps, laps.filter((_, j) => j !== lapIndex));
   });
 }
 

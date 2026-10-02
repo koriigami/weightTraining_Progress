@@ -41,7 +41,7 @@ A runner who uses Levl asked for laps back. Laps were removed in v8 to keep the 
 - Formatting:
   - lap times as `m:ss` (`h:mm:ss` from an hour);
   - pace and speed through the existing `cardioRate` (`lib/liveStats.ts`), with `sec / 60` as minutes.
-- If the run's distance is empty when a lap with a distance is stamped, the run's distance becomes the laps' sum. A distance the person typed is never overwritten.
+- The run's distance follows the laps while it is only their sum (empty, or equal to the laps' distance before a change). It becomes the new sum when every lap has a distance, and goes back to empty when no lap has one. A lap without a distance (a warm-up) stops the filling, so the run never looks shorter than it was. A distance the person typed is never overwritten. (Changed after QA: the first build filled the distance from some laps only, which gave a wrong pace.)
 
 ### Session (`lib/session.ts`)
 - **New functions:**
@@ -70,7 +70,7 @@ A runner who uses Levl asked for laps back. Laps were removed in v8 to keep the 
 - `closeLap` subtracts the earlier laps and refuses a lap under 1 second.
 - `fastestLap` ranks by pace when laps have a distance, by time when none do, and is null for one lap.
 - `lapTotals` adds up time and distance.
-- Stamping a lap with a distance fills an empty run distance, and leaves a typed one alone.
+- Stamping a lap with a distance fills an empty run distance, and leaves a typed one alone. A warm-up lap with no distance stops the filling. Correcting or removing a lap moves a filled distance with it.
 - `addLap` keeps the Time following the clock.
 - Validation accepts good laps and rejects:
   - more than 200 laps;
