@@ -18,6 +18,11 @@ Say "invite the new people". Claude then:
 5. **Writes one Gmail draft per person** in the owner's Gmail: the app link, "sign in with this Google account", and a line asking for feedback. Sign them "Ketan Damle", then "Kagadmodyaa Studio". Send them as HTML with the app link as the text "Open Levl", so no long URL shows (Gmail wraps raw links in a long google.com/url redirect). The owner reads them and presses Send.
 6. **Records** the batch below: date and count only.
 
+## Nudge and check-in
+Both read Insights (People list and "Invited, not signed in yet"). The wording is in `docs/marketing/stories.html`. Gmail drafts use the same text, the same "Open Levl" link and the same sign-off.
+- **Nudge**: people under "Invited, not signed in yet", a few days after their invite, not on the day.
+- **Check-in**: people in the People list with "No workout yet".
+
 ## Removing someone
 Say "remove <email> from the invites". It goes through `POST /api/invites` with `remove`. Their saved data stays until they ask for it to be deleted (Privacy Policy).
 
@@ -33,3 +38,4 @@ Say "remove <email> from the invites". It goes through `POST /api/invites` with 
 | 2 Oct 2026 | 2 | Invite list. 5 other form sign-ups were already in `ALLOWED_EMAILS` |
 | 2 Oct 2026 | 1 | Invite list, a later form submission |
 | 2 Oct 2026 | 1 | Invite list, another late form submission |
+| 2 Oct 2026 | 1 | Invite list, asked on WhatsApp |
