@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { agoLabel, aggregate, invitedNotJoined, minGroupFor, parseRange, personFacts, personRow, personSummary, sortRoster } from '../lib/insights';
 import type { PersonFacts, PersonRow } from '../lib/insights';
+import { inviteStatus } from '../lib/inviteStatus';
 import { insightsStatus, isOwnerEmail } from '../lib/owner';
 import { computeProgress } from '../lib/progress';
 import { defaultPrefs } from '../lib/routines';
@@ -326,5 +327,23 @@ describe('invitedNotJoined', () => {
 
   it('is empty when everyone invited has signed in', () => {
     expect(invitedNotJoined(['a@example.com'], ['a@example.com'], ['a@example.com'])).toEqual([]);
+  });
+});
+
+describe('inviteStatus', () => {
+  const row = (over: Partial<PersonRow>): PersonRow => ({ name: '', email: '', joined: '2026-09-30', setUp: true, level: 1, rank: 'E', lastWorkout: null, daysSince: null, workouts30: 0, trainingDays7: 0, workoutsTotal: 0, ...over });
+
+  it('lists signed-in people oldest first with only what the routine needs', () => {
+    const { signedIn } = inviteStatus([row({ name: 'B', email: 'B@Example.com', joined: '2026-10-02', level: 4 }), row({ name: 'A', email: 'a@example.com', joined: '2026-09-29', workoutsTotal: 2, lastWorkout: '2026-10-01' })], [], []);
+    expect(signedIn).toEqual([
+      { name: 'A', email: 'a@example.com', joined: '2026-09-29', workoutsTotal: 2, lastWorkout: '2026-10-01' },
+      { name: 'B', email: 'b@example.com', joined: '2026-10-02', workoutsTotal: 0, lastWorkout: null },
+    ]);
+  });
+
+  it('leaves signed-in people out of invitedNotJoined and skips profiles with no email', () => {
+    const s = inviteStatus([row({ email: 'a@example.com' }), row({ email: '  ' })], ['a@example.com', 'c@example.com'], ['b@example.com']);
+    expect(s.signedIn).toHaveLength(1);
+    expect(s.invitedNotJoined).toEqual(['b@example.com', 'c@example.com']);
   });
 });

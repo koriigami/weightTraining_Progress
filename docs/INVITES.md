@@ -18,8 +18,11 @@ Say "invite the new people". Claude then:
 5. **Writes one Gmail draft per person** in the owner's Gmail: the app link, "sign in with this Google account", and a line asking for feedback. Sign them "Ketan Damle", then "Kagadmodyaa Studio". Send them as HTML with the app link as the text "Open Levl", so no long URL shows (Gmail wraps raw links in a long google.com/url redirect). The owner reads them and presses Send.
 6. **Records** the batch below: date and count only.
 
+## Invite status (for the routine)
+`GET /api/invites/status` with the `INVITE_KEY` returns `signedIn` (name, email, joined date, workout count, last workout date) and `invitedNotJoined` (emails). Read only, no level, rank or workout details. The invite list does not store invite dates yet, so "2 days after the invite" is not available until it does.
+
 ## Nudge and check-in
-Both read Insights (People list and "Invited, not signed in yet"). The wording is in `docs/marketing/stories.html`. Gmail drafts use the same text, the same "Open Levl" link and the same sign-off.
+Both read Insights (People list and "Invited, not signed in yet") or the status endpoint above. The wording is in `docs/marketing/stories.html`. Gmail drafts use the same text, the same "Open Levl" link and the same sign-off.
 - **Nudge**: people under "Invited, not signed in yet", a few days after their invite, not on the day.
 - **Check-in**: people in the People list with "No workout yet".
 
