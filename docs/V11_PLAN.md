@@ -3,11 +3,11 @@
 (v10, v10.1, v10.2 and open sign-ups are done and on `main`.)
 
 ## Context
-A runner who uses Levl asked for laps back. Laps were removed in v8 to keep the run card simple, but people who train for pace use them every run. Board 10 (`docs/design/10-runs-logging-board.html`) also covered logging a workout done earlier, how a workout felt, and a reward for training week after week. Laps are signed off and ship first. The rest waits for board 10 round 3.
+A runner who uses Levl asked for laps back. Laps were removed in v8 to keep the run card simple, but people who train for pace use them every run. Board 10 (`docs/design/10-runs-logging-board.html`) also covered logging a workout done earlier, how a workout felt, and a reward for training week after week. Laps shipped first. Log workout was signed off in round 3.
 
 ## Stages
-1. **Laps** (signed off, this release).
-2. **Log a past workout** (board 10 round 3, not signed off yet).
+1. **Laps** (done, live since 2 October 2026).
+2. **Log workout**: add a workout you already did (signed off in board 10 round 3).
 3. **How it felt**: faces plus an optional effort score after finishing, no XP (signed off in round 1, built after stage 2).
 4. **Consistency**: the weekly goal bonus grows with each week in a row the goal is met, +50 then +10 a week up to +100 (signed off in round 1, built after stage 2).
 
@@ -90,3 +90,74 @@ A runner who uses Levl asked for laps back. Laps were removed in v8 to keep the 
 ### Done when
 - `npm run verify` passes and `next build` succeeds.
 - The QA flow works at 390 and 1440, with no console errors and no overflow: start a Run from the Cardio sheet, tap Lap three times (the dev clock can be faked by moving `startedAt`), finish, open the workout page, then Edit and add a lap.
+
+## Stage 2: Log workout
+
+### Signed-off decisions (board 10 round 3)
+- **Start stays exactly as it is.**
+  - The Workout button's sheet is unchanged (S1).
+  - Every other start point stays Start only.
+- **Log appears in three places only:**
+  - **Home:** a secondary button, full width, 48 px, under the Today card's three tiles (H1). It shows before and after today's workout. On desktop it goes in the Something else card, under Choose, at the same width.
+  - **A routine's menu** (Routines tab, the three dots): "Log workout" first, with a New pill.
+  - **A routine's page:** Edit, Log and Start, three equal buttons. "Start routine" becomes "Start".
+- **The words** are "Log workout" (the user's "keep it simple"), in the app's sentence case like "Start workout". The routine page's button is "Log".
+- **The Log sheet** (from Home) is the Start sheet, element for element, titled "Log a workout":
+  - routine rows have a small secondary Log button;
+  - Run, Walk and Ride open the Cardio sheet with "Pick an activity, then log." and a "Log workout" button;
+  - Custom workout reads "Pick exercises, then log", and the picker's button is "Log workout · N".
+- **The Log screen** is the Edit workout screen, titled "Log workout", with Cancel and Save:
+  - **Date and time** starts an hour ago, rounded down to 5 minutes. It is the time the workout finished, as in Edit. A future time is not allowed.
+  - **Duration** starts at the routine's estimate. For a cardio-only log it follows the cardio Time until the person changes it.
+  - **Sets that have numbers come in ticked.** Untick one to leave it out. A set without numbers stays unticked, so it never earns XP. A run counts once its Time is typed, and "+ Add lap" adds lap rows.
+  - "+ Add exercise", Swap, Remove and Notes work as in Edit.
+  - There is no "XP is worked out again" line and no Delete. The empty state reads "No exercises yet" and "Add what you did, one exercise at a time."
+- **After Save** the Victory screen plays, as after Finish: XP, records, level and badge moments. The workout's XP lands on the chosen day, rescored like any edit.
+- **Logging never touches a workout in progress.** Log can be used while one runs.
+
+### Build
+- **Pure logic, `lib/session.ts`:**
+  - `logSession(source, now, lookup, prefill?)` makes the draft from a routine (`sessionFromRoutine`), a cardio activity (`cardioSession`, with no clock following) or picked exercises (`customSession` with last time's numbers). It ticks the sets that have numbers.
+  - `defaultLogWhen(now)` is an hour ago, rounded down to 5 minutes.
+  - `buildLoggedWorkout(session, { when, minutes, notes, now, lookup })` returns the saveWorkout payload:
+    - `date` is the day of `when`, `finishedAt` is `when`, and `startedAt` is `when` minus the minutes;
+    - a future time is refused with "Pick a time that has already happened.";
+    - a cardio-only workout lasts at least its cardio minutes;
+    - the title falls back to the default;
+    - the plan is kept as Finish keeps it;
+    - "Tick at least one set first." when nothing is ticked.
+- **Route:** `/workout/log`, a static page (Suspense, like `/workout/edit`). It reads `?routine=<id>`, `?cardio=<exerciseId>` or `?ex=a,b,c`. An unknown routine shows the not-found state.
+- **The form:** the Edit workout form body is shared between Edit and Log, not copied.
+- **Saving:** a provider method `logWorkout(input)` saves with `celebrate: false` and sets `lastFinished` with `logged: true`, then replaces the route with `/workout/done`.
+- **Victory:** for a logged workout, "Save weights to <routine>" starts off and is not applied by itself, because an old workout's weights should not overwrite the routine.
+- **Shell:** `openLog()` (the Start sheet in log mode), plus a mode for `openCardio` and `openCustom`. The "finish or discard your workout first" block applies to start mode only.
+- **New pill:** `.wt-newpill`, 24 px tall, 10 px padding each side, in the secondary gold. It shows until 15 November 2026.
+
+### Not in this stage
+- A Log screen left half done is not kept. It behaves like Edit.
+- There is no warning when the same routine is logged twice on one day.
+- How it felt and the growing weekly goal bonus are stages 3 and 4.
+
+### Tests (one per rule)
+- `logSession`:
+  - it ticks only sets with numbers;
+  - a cardio draft has no clock following;
+  - picked exercises get last time's numbers.
+- `defaultLogWhen`: an hour ago, rounding down, and across midnight.
+- `buildLoggedWorkout`:
+  - the date and start come from `when` and the minutes;
+  - a future time is refused;
+  - a cardio-only log is at least its minutes long;
+  - the title fallback;
+  - nothing ticked;
+  - laps are kept.
+
+### Done when
+- `npm run verify` passes and `next build` succeeds.
+- These flows work at 390 and 1440, with no console errors and no overflow, every button pair equal width, and buttons at the app's sizes only:
+  - Home, then Log workout, then a routine, then Save, then Victory, then the workout page on the chosen day;
+  - a Run with time and laps;
+  - a custom workout with two exercises;
+  - a routine's menu;
+  - a routine's page;
+  - Log while a workout is in progress.

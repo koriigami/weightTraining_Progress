@@ -456,6 +456,13 @@ Agreed in the conversation after a UI check of v10 (no board; the plan is in `do
     - three for the Home button (a button under the tiles, a text link, a fourth tile);
     - two for the Workout sheet (unchanged, or one button on top);
     - four wordings.
+- **Round 3 answers:**
+  - Home: H1, the button under the tiles (under Choose on desktop).
+  - The Workout button's sheet: S1, unchanged.
+  - The words: "Log workout", the user's "keep it simple", in sentence case like "Start workout".
+  - Log in three places: Home, a routine's menu with a New pill, and a routine's page with Edit, Log and Start at equal widths.
+
+  Built as v11 stage 2 (`docs/V11_PLAN.md`).
 
 ## Where the chat lives
 
