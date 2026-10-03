@@ -565,6 +565,65 @@ screens nobody sees any more.
     and tier up are answered here; the new badge list and XP for new families wait for board 09
     round 2.
 
+- **Round 1 answers (3 October 2026):**
+  - **Art:** 3D (B). Loved the wooden chest; Golden, Pillow, Bronze, Silver and Diamond kept.
+    Crystal and Prismatic: no spikes, redesign. Obsidian: one more option. Monthly: less white.
+    Royal: new gold tone and gem. Gold medal: no laurels, the red is wrong. Master and Legend:
+    options; Legend must not read as a plain circle. 3D icons too large. Locked: stone, centred
+    in its ring.
+  - **Sound:** the chest music did not suit Levl; the badge sound sounded sad ("the main
+    character died"); the chest opening said "you have failed"; close, Saved and Got it were
+    shrill or weird; several sounds too loud, the landing too quiet.
+  - **Stage:** the open chest fell off screen; earlier badges vanished; the summary medals were
+    small; drop the "You got" heading. Wanted a swirling badge reveal, a tier up that turns into
+    the next tier, a real shatter for rank up, skeleton loading, and a full flow: Finish, Victory,
+    then the chest, with the XP at the top counting up.
+  - **Approved:** the library rules, the Music switch, badge tilt, and retiring the other chat's
+    motion-language board.
+- **Round 2, shown (3 October 2026):**
+  - **Checked, not guessed:** every candidate was pitch-tracked and key-checked
+    (`tools/contour.py` in the working files). The sad sounds were minor or falling, and the badge
+    bell sat a tritone from the music's key. Good moments now keep only rising, major candidates,
+    and every reward sound plays in the key of the chest music. Files are levelled by loudness
+    (EBU R128) with per-slot volumes.
+  - **Music:** nine chest pieces in three feels (bright game-pop, cinematic, upbeat workout) cut
+    on bar lines, a code-made shimmer that lifts with each tap, and None; four level-up options;
+    rank up trimmed to 4 s.
+  - **Art:** 3D only, with chest options (Silver, Crystal, Obsidian, Prismatic, Monthly, Royal)
+    and medal options (Gold, Master, Legend), no laurels, smaller icons, a stone locked medal.
+  - **Stage:** the open chest settles in the lower third; each badge swirls out and gets a card
+    framed in its tier colour; earlier badges fly to a tray that becomes the summary (no
+    heading); the XP counts up with the XP-lines sound; a full finish and a rank up to play; a
+    half-speed switch.
+  - **The 34:** the round 1 fixes, soft close and open sounds, a skeleton, a seal for the
+    weekly goal, the reward cards in 3D, a real shatter for rank up.
+- **Which chest opens (decided 3 October 2026):** the user asked how the chest is chosen, since
+  with "the best badge decides" most people would only see Wooden and Silver. A simulation with
+  the real rules confirmed it: a regular lifter (3 a week) gets 21 chests in 156 workouts, 12 of
+  them in the first 3 months; a casual one (2 a week) gets 10 a year and never sees Obsidian or
+  Prismatic. The user proposed a Clash Royale style road where crossing a rank opens a chest.
+  Decided: **your rank decides your chest** (E Wooden, D Silver, C Golden, B Crystal, A Obsidian,
+  S Prismatic). A workout that earns a badge opens your rank's chest; crossing a rank opens the
+  new rank's chest for the first time with the title and frame; Monthly, Royal and Pillow stay for
+  monthly, special and secret badges. Nothing new is stored.
+
+## 13 Rank Road and chests
+
+- **Why:** the chest rule above needs a place where people see the chests coming. The user asked
+  for the Rank page to work like Clash Royale's Trophy Road, and what its milestone tiles would
+  hold when Levl has no gold or items.
+- **Round 1, shown (3 October 2026, `docs/design/13-rank-road.html`):**
+  - **The tiles hold badges:** the rows behind you show the badges you earned on that level; your
+    level shows Up next, the three closest badges; rank gates show their chest, what is inside,
+    and the badges that came out of it. Rows ahead stay as today. No new currency.
+  - **Two looks:** A, today's light road with chests (my pick); B, a Trophy Road of tiles on the
+    stage blue with a rail and a marker.
+  - **States** from a simulated regular lifter: new, D rank, one level before C, just reached C,
+    S rank; the computer layout; the rank up handing back to the road with the gate ticked.
+  - **Early levels:** no change now. The start is already quick (D rank by week 2 to 3); the slow
+    part is the middle. Insights (median days to D) decides in 4 to 6 weeks.
+  - **Later, not now:** small unlocks every few levels (share-card backgrounds, frame colours).
+
 ## Where the chat lives
 
 The conversation is not stored in the repo. Long chats are summarized when the

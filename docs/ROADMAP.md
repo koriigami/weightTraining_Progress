@@ -39,14 +39,15 @@ Sign-ups are open to any Google account since 1 October 2026 (`SIGNUPS=invite` c
 | v11 stage 2 | Log workout: add a workout you already did from Home, a routine's menu or a routine's page. The Edit screen with a chosen day and time, then Victory (board 10 round 3, `docs/V11_PLAN.md`) | Done, live |
 | v11 stage 3 | How it felt: five SVG faces and an optional 1 to 10 effort on Victory and the workout page, a face beside the title in workout rows, a "How workouts felt, last 30 days" card on Profile. Earns no XP (board 10 round 1, `docs/V11_PLAN.md`) | Done, live since 2 October 2026 |
 | v11 stage 4 | Rules v4: the weekly goal bonus grows with each week in a row (+50, then +10 more a week, up to +100), shown on Home, Victory, the workout page and Settings, with a one-time note, a v11 backup and a committed XP integrity test (board 10, `docs/V11_PLAN.md`) | Done, live since 2 October 2026 |
-| v13 design | Motion and sound library: new chests and medals in two art directions (vector and 3D), a tap-to-open reward stage, 34 interactions with timing, sound and haptic, CC0 sounds and music, a Music switch (board 12, `docs/design/12-motion-sound.html`) | Round 1 shown, waiting for sign-off |
+| v13 design | Motion and sound library: 3D chests and medals with options, a tap-to-open reward stage, 34 interactions with timing, sound and haptic, CC0 sounds and music in the chest music's key, a Music switch (board 12, `docs/design/12-motion-sound.html`) | Round 2 shown, waiting for sign-off |
+| v13 design | Which chest opens: your rank decides your chest (decided). The Rank Road with a chest at every rank gate, the badges you earned on each level, and Up next (board 13, `docs/design/13-rank-road.html`) | Round 1 shown, waiting for sign-off |
 | v12 | First-run guide and What's new: a spotlight tour on Home for new people (seven steps on the real screen, the ring wraps each element's shadow), a paged What's new card after releases starting with the October update, the `/news` page, and Settings rows How Levl works, What's new and Setup questions (board 11, `docs/V12_PLAN.md`) | Done, live since 3 October 2026 |
 
 
 ### Next
 
 v11 stage 1 (laps) is live since 2 October 2026. Stage 2 (Log workout) is live since 2 October 2026. Stages 3 (how it felt) and 4 (the growing weekly goal bonus, rules v4) are live since
-2 October 2026, which finishes v11 (`docs/V11_PLAN.md`). Board 09 (badges and chests) waits for another round with the owner. Board 12 (motion and sound, new chests and medals) is shown and waits for sign-off; after it comes `docs/V13_PLAN.md`. Besides that, these two come first, in this order (agreed when sign-ups opened):
+2 October 2026, which finishes v11 (`docs/V11_PLAN.md`). Board 09 (badges and chests) waits for another round with the owner. Board 12 (motion and sound, new chests and medals) round 2 and board 13 (the Rank Road with chests) are shown and wait for sign-off; after them comes `docs/V13_PLAN.md`, with the rule that your rank decides your chest. Besides that, these two come first, in this order (agreed when sign-ups opened):
 
 1. **An in-app feedback box.** "Send feedback" in Settings, stored per person. The cheapest
    source of roadmap signal, and what feedback triage needs later (`docs/AGENTS.md`).
@@ -56,9 +57,10 @@ v11 stage 1 (laps) is live since 2 October 2026. Stage 2 (Log workout) is live s
 
 Then:
 
-1. **Level-pace review.** After about 3 weeks of tester data, open Insights (days to D, C and B
+1. **Level-pace review.** After 4 to 6 weeks of tester data, open Insights (days to D, C and B
    rank, workouts a week) and decide whether the level curve `50 * n * (n - 1)` and the XP rules
-   need to change. Until then the curve stays.
+   need to change. Until then the curve stays. The simulation on board 13 puts D rank at week 2
+   to 3; if the median days to D is over 21, make levels 2 to 5 cheaper in a plan of its own.
 2. **Remove the page headers** (backlog). The phone tab screens keep a large title and the desktop
    a header row. Try screens without them, with the title only in the tab or the sidebar.
 3. **Rewards.** Coins, cosmetics, streak shields and a season road. Rewards never buy XP: XP stays
