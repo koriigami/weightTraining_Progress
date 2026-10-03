@@ -1,28 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { applyInvites, createRateLimiter, keyMatches } from '@/lib/invites';
-import { getInvites, saveInvites } from '@/lib/store';
+import { NextRequest } from 'next/server';
+import { applyInviteDates, applyInvites } from '@/lib/invites';
+import { getInviteDates, getInvites, saveInviteDates, saveInvites } from '@/lib/store';
+import { todayStr } from '@/lib/date';
+import { gate, json } from './gate';
 
 // The owner manages the invite list from chat with a secret key (INVITE_KEY). With no
 // key set, or a missing or wrong one, the answer is a bare 401. Emails are never logged.
 export const dynamic = 'force-dynamic';
 
-const limiter = createRateLimiter(30, 60_000); // per IP, per minute
-
-const deny = (status: number) => new NextResponse(null, { status, headers: { 'Cache-Control': 'no-store' } });
-const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
-
-function gate(req: NextRequest): NextResponse | null {
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  if (!limiter.take(ip)) return deny(429);
-  if (!keyMatches(req.headers.get('authorization'))) return deny(401);
-  return null;
-}
-
 export async function GET(req: NextRequest) {
   const blocked = gate(req);
   if (blocked) return blocked;
-  const emails = await getInvites();
-  return json({ emails, count: emails.length });
+  const [emails, dates] = await Promise.all([getInvites(), getInviteDates()]);
+  return json({ emails, count: emails.length, dates });
 }
 
 export async function POST(req: NextRequest) {
@@ -36,6 +26,9 @@ export async function POST(req: NextRequest) {
   }
   const change = applyInvites(await getInvites(), body);
   if (!change.ok) return json({ error: change.error }, 400);
+  const dated = applyInviteDates(await getInviteDates(), change.emails, change, body, todayStr());
+  if (!dated.ok) return json({ error: dated.error }, 400);
   if (change.added > 0 || change.removed > 0) await saveInvites(change.emails);
+  if (dated.changed) await saveInviteDates(dated.dates);
   return json({ added: change.added, removed: change.removed, count: change.emails.length });
 }

@@ -15,7 +15,7 @@ Fonts are Figtree (reading) and Lilita One (game titles).
 
 | Folder | What lives there |
 |---|---|
-| `app/` | Routes. Each page is a thin client component that reads a provider and composes components. `app/api/state/route.ts` is the data API for a person's own state, `app/api/insights/route.ts` is the owner-only Insights API, `app/api/invites/route.ts` manages the invite list with a secret key, and `app/api/auth/` is Auth.js. `app/globals.css` holds every style. |
+| `app/` | Routes. Each page is a thin client component that reads a provider and composes components. `app/api/state/route.ts` is the data API for a person's own state, `app/api/insights/route.ts` is the owner-only Insights API, `app/api/invites/route.ts` manages the invite list with a secret key and `app/api/invites/status/route.ts` reads who has signed in and who has not (same key, read only), and `app/api/auth/` is Auth.js. `app/globals.css` holds every style. |
 | `components/` | React components. `ProgressProvider.tsx`, `WorkoutSessionProvider.tsx` and `AppShell.tsx` sit at the top. Sub-folders per area: `ui/` (buttons, cards, sheets, dialogs), `nav/`, `home/`, `routines/`, `exercises/`, `workout/`, `victory/`, `celebrate/`, `rank/`, `profile/`, `goals/`, `stats/`, `calendar/`, `prefs/`, `onboarding/`, `insights/`. |
 | `lib/` | Pure logic with no React and no browser access, so it is testable. Scoring, badges, the rank road, goals, units, the workout session, routine actions and validation, feed and stat builders, the What's new list (`news.ts`) and the guide's words, ring and placement rules (`guide.ts`). `feedback.ts`, `useToday.ts`, `useMediaQuery.ts` and `useBackToClose.ts` are the few browser-facing helpers. `migrations/planDays.ts` turns the old plan log into workouts. |
 | `data/` | `exercises.ts`: the library, muscle groups, equipment and metrics. |
@@ -436,7 +436,7 @@ server, only in invite mode, and only at sign-in. If it cannot be read, nobody e
 It is never sent to a browser, except that the owner's Insights People card lists the emails on it
 that have not signed in yet (`invitedNotJoined`).
 
-`/api/invites` is how the owner edits it from chat. It is a dynamic API route, so pages stay static.
+`/api/invites` is how the owner edits it from chat. It is a dynamic API route, so pages stay static. `/api/invites/status` is a read only view for the owner's invite routine: per signed-in person the name, email, joined day, workout count and last workout date, plus the people still waiting with the day they were invited. It never returns what anyone trained. The invite days live in `wt:invites:dates`, a separate key from the list, so the list that sign-in reads keeps its shape and needs no migration.
 - Every call needs `Authorization: Bearer <INVITE_KEY>`. The key is compared in constant time
   (both sides hashed, then `timingSafeEqual` on equal-length buffers). With `INVITE_KEY` unset,
   or a missing or wrong key, the answer is a bare 401.

@@ -21,7 +21,7 @@ export function cleanList(raw: unknown): string[] {
   return [...new Set(raw.filter((x): x is string => typeof x === 'string').map(normaliseEmail).filter(Boolean))];
 }
 
-export type InviteChange = { ok: true; emails: string[]; added: number; removed: number } | { ok: false; error: string };
+export type InviteChange = { ok: true; emails: string[]; added: number; removed: number; addedEmails: string[]; removedEmails: string[] } | { ok: false; error: string };
 
 function parseEmails(raw: unknown, name: string): { ok: true; list: string[] } | { ok: false; error: string } {
   if (raw === undefined) return { ok: true, list: [] };
@@ -60,7 +60,54 @@ export function applyInvites(current: readonly string[], body: unknown): InviteC
     }
   }
   for (const e of remove.list) if (set.delete(e)) removed++;
-  return { ok: true, emails: [...set].sort(), added, removed };
+  const before = new Set(cleanList(current));
+  const emails = [...set].sort();
+  return { ok: true, emails, added, removed, addedEmails: emails.filter((e) => !before.has(e)), removedEmails: [...before].filter((e) => !set.has(e)).sort() };
+}
+
+/** The day each invite was added, YYYY-MM-DD, by lowercased email. Stored apart from the list (wt:invites:dates). */
+export type InviteDates = Record<string, string>;
+
+const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Tidies stored dates: lowercased emails with a valid day, nothing else. */
+export function cleanDates(raw: unknown): InviteDates {
+  const out: InviteDates = {};
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return out;
+  for (const [k, v] of Object.entries(raw)) {
+    const e = normaliseEmail(k);
+    if (e && typeof v === 'string' && DAY_RE.test(v)) out[e] = v;
+  }
+  return out;
+}
+
+export type DatesChange = { ok: true; dates: InviteDates; changed: boolean } | { ok: false; error: string };
+
+/**
+ * Keeps the invite dates in step with an invite change. Someone newly added gets
+ * `today` unless they already have a day, someone removed loses theirs, and a
+ * `dates` object in the body ({ "a@x.com": "2026-10-02" }) sets the day for people
+ * on the list (a backfill). Only people on the list keep a day. Idempotent.
+ */
+export function applyInviteDates(current: unknown, listed: readonly string[], change: { addedEmails: readonly string[]; removedEmails: readonly string[] }, body: unknown, today: string): DatesChange {
+  const before = cleanDates(current);
+  const next: InviteDates = { ...before };
+  for (const e of change.removedEmails) delete next[e];
+  for (const e of change.addedEmails) next[e] ??= today;
+  const asked = typeof body === 'object' && body !== null && !Array.isArray(body) ? (body as Record<string, unknown>).dates : undefined;
+  if (asked !== undefined) {
+    if (typeof asked !== 'object' || asked === null || Array.isArray(asked)) return { ok: false, error: 'dates must be an object of email to YYYY-MM-DD' };
+    const onList = new Set(cleanList(listed));
+    for (const [k, v] of Object.entries(asked)) {
+      const e = normaliseEmail(k);
+      if (typeof v !== 'string' || !DAY_RE.test(v) || Number.isNaN(Date.parse(v))) return { ok: false, error: 'dates must be an object of email to YYYY-MM-DD' };
+      if (!onList.has(e)) return { ok: false, error: 'dates has an email that is not on the invite list' };
+      next[e] = v;
+    }
+  }
+  const listedSet = new Set(cleanList(listed));
+  for (const e of Object.keys(next)) if (!listedSet.has(e)) delete next[e];
+  return { ok: true, dates: next, changed: JSON.stringify(Object.entries(next).sort()) !== JSON.stringify(Object.entries(before).sort()) };
 }
 
 /**
