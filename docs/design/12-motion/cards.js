@@ -1,8 +1,9 @@
 // Board 12: the 34 interactions. Each card has a live demo built from the app's
 // real components (sizes from app/globals.css), its timing, sound and haptic.
-import { S, SYN, PICK, play, music, buzz, preload } from './sound.js';
-import { springFrames, SPRINGS, EASE, DUR, wait, reduced } from './motion.js';
-import { FX } from './fx.js';
+// Round 2: the reward cards play in 3D, sharing one live view.
+import { S, SYN, PICK, play, music, buzz, preload, setRewardKey } from './sound.js';
+import { springFrames, SPRINGS, EASE, DUR, wait, reduced, ease } from './motion.js';
+import { FX, shatterEl } from './fx.js';
 import { chestSVG, medalSVG, shieldSVG } from './artvec.js';
 
 const h = (html) => {
@@ -56,6 +57,99 @@ const fxFor = (el, w, h2) => {
   el.appendChild(c);
   return new FX(c, w, h2);
 };
+// ---------- one live 3D view for the reward cards ----------
+// The cards share one WebGL view; its canvas moves into whichever card plays and
+// the others show a still picture of their first frame.
+let view3d = null;
+function get3dView() {
+  if (!view3d)
+    view3d = import('./stage3d.js').then(({ Stage3D }) => {
+      const s = new Stage3D(document.createElement('div'), { w: 300, h: 220 });
+      s.el.className = 'm3d';
+      s.runs = 0;
+      return s;
+    });
+  return view3d;
+}
+// camera position and target per kind of card
+const AIM = {
+  chest: [
+    [0, 2.3, 6.6],
+    [0, 0.75, 0],
+  ],
+  reveal: [
+    [0, 2.5, 8.4],
+    [0, 2.15, 0],
+  ],
+  medal: [
+    [0, -0.3, 6.4],
+    [0, -0.3, 0],
+  ],
+};
+// Takes the view for a card. live() stays true until another card takes it.
+async function claim3d(st, aim) {
+  const s = await get3dView();
+  if (s.owner && s.owner !== st) {
+    s.owner.querySelector('.poster')?.classList.remove('off');
+    s.owner.dispatchEvent(new CustomEvent('lost3d'));
+  }
+  s.owner = st;
+  const run = ++s.runs;
+  st.querySelector('.poster')?.classList.add('off');
+  st.prepend(s.el);
+  const [pos, look] = AIM[aim];
+  s.aimCamera = () => {
+    const cam = s.art.camera;
+    cam.fov = 34;
+    cam.position.set(...pos);
+    cam.lookAt(...look);
+    cam.updateProjectionMatrix();
+  };
+  s.art.resize(300, 220);
+  s.aimCamera();
+  return { s, live: () => s.owner === st && s.runs === run };
+}
+// a still from the board's picture renderer, framed like the live view
+function stillAt(a, obj, aim, rotY, shadow = true) {
+  const [pos, look] = AIM[aim];
+  const f = a.camera.fov;
+  a.camera.fov = 34;
+  const url = a.still(obj, { w: 300, h: 220, cam: pos, look, rotY, shadow });
+  a.camera.fov = f;
+  return url;
+}
+async function poster(st, ctx, draw) {
+  const img = h('<img class="poster" alt="">');
+  st.prepend(img);
+  try {
+    img.src = draw(await ctx.get3d());
+  } catch {
+    img.remove();
+  }
+}
+// runs fn once, when the element comes near the screen
+function whenNear(el, fn) {
+  const io = new IntersectionObserver(
+    (ents) => {
+      if (!ents.some((e) => e.isIntersecting)) return;
+      io.disconnect();
+      fn();
+    },
+    { rootMargin: '300px' },
+  );
+  io.observe(el);
+}
+function openLid(c) {
+  if (c.userData.hinge) c.userData.hinge.rotation.x = -1.95;
+  if (c.userData.inner) c.userData.inner.material.opacity = 1;
+}
+function shakeEl(el, px = 5) {
+  anim(el, [{ transform: 'translate(0,0)' }, { transform: `translate(${px}px,${-px / 2}px)` }, { transform: `translate(${-px}px,${px / 3}px)` }, { transform: 'translate(0,0)' }], { duration: 160, easing: 'linear', fill: 'none' });
+}
+function flashEl(st, o = 0.8, ms = 240) {
+  const f = st.querySelector('.mflash');
+  if (f && !reduced()) f.animate([{ opacity: 0 }, { opacity: o }, { opacity: 0 }], { duration: ms, easing: 'ease-out' });
+}
 const ICON = {
   home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
   list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
@@ -77,6 +171,7 @@ export const CARDS = [
   {
     g: 'Taps and controls',
     t: 'Green button press',
+    slots: ['tap'],
     when: 'Any green button',
     motion: 'Down 3 px and 3% smaller in 80 ms. On release it springs back with a small overshoot (bouncy spring).',
     sound: 'Soft pop, quiet tap bus',
@@ -91,6 +186,7 @@ export const CARDS = [
   {
     g: 'Taps and controls',
     t: 'Gold button press',
+    slots: ['tock'],
     when: 'Any gold button',
     motion: 'The same squish as green, 3 px.',
     sound: 'Wooden tock',
@@ -105,6 +201,7 @@ export const CARDS = [
   {
     g: 'Taps and controls',
     t: 'Tab switch',
+    slots: ['tick'],
     when: 'Tapping a tab',
     motion: 'The pill slides to the new tab (snappy spring), the icon pops to 115% and settles.',
     sound: 'Tick',
@@ -137,8 +234,10 @@ export const CARDS = [
   {
     g: 'Taps and controls',
     t: 'Segmented control',
+    changed: true,
+    slots: ['tick'],
     when: 'Switching Week, Month, Year',
-    motion: 'The green thumb slides under the labels (snappy spring); labels cross-fade in 160 ms.',
+    motion: 'The green thumb slides under the labels (snappy spring); labels cross-fade in 160 ms. The thumb is sized as a share of the control, so it always covers its label.',
     sound: 'Tick',
     haptic: 'Light',
     where: 'Statistics, Calendar, Profile charts',
@@ -148,15 +247,12 @@ export const CARDS = [
       const th = seg.querySelector('.thumb');
       const bs = [...seg.querySelectorAll('button')];
       let cur = 0;
-      const place = (i) => bs[i].offsetLeft;
-      requestAnimationFrame(() => {
-        th.style.width = `${bs[0].offsetWidth}px`;
-        th.style.transform = `translateX(${place(0)}px)`;
-      });
+      // one step is the thumb's own width plus the 6 px gap, so it fits at any width
+      const at = (v) => `translateX(calc(${v} * (100% + 6px)))`;
       bs.forEach((b, i) =>
         b.addEventListener('click', () => {
           if (i === cur) return;
-          spring(th, place(cur), place(i), (v) => `translateX(${v}px)`, SPRINGS.snappy);
+          spring(th, cur, i, at, SPRINGS.snappy);
           bs[cur].classList.remove('on');
           b.classList.add('on');
           cur = i;
@@ -169,6 +265,7 @@ export const CARDS = [
   {
     g: 'Taps and controls',
     t: 'Switch',
+    slots: ['switch'],
     when: 'Turning a setting on or off',
     motion: 'The knob springs across with a small overshoot and stretches while it moves; the track fades to green in 160 ms.',
     sound: 'Two notes: up for on, down for off',
@@ -194,6 +291,7 @@ export const CARDS = [
   {
     g: 'Taps and controls',
     t: 'Chip select',
+    slots: ['chip'],
     when: 'Picking equipment or a filter',
     motion: 'The chip bounces to 110% and back (bouncy); the tick pops in.',
     sound: 'Pip, a step higher for each chip picked',
@@ -220,8 +318,9 @@ export const CARDS = [
   {
     g: 'Taps and controls',
     t: 'Stepper',
+    changed: true,
     when: 'Changing weight or reps with minus and plus',
-    motion: 'The number rolls: the old one slides up and out, the new one in from below, 160 ms. Hold to repeat, faster the longer you hold.',
+    motion: 'One number on screen at a time: the new value rolls in from below (or above), 160 ms, replacing the last at once. Hold to repeat, faster the longer you hold; lifting or sliding off stops it.',
     sound: 'A tiny tick per step, pitch following the number',
     haptic: 'Light on each step (selection)',
     where: 'Set table, Log workout, goals',
@@ -229,46 +328,52 @@ export const CARDS = [
       const st = h(`<div class="mstep"><button type="button" class="sbtn" aria-label="Less">-</button><div class="sval"><span class="num">60</span></div><span class="sunit">kg</span><button type="button" class="sbtn" aria-label="More">+</button></div>`);
       el.append(st);
       let v = 60;
-      const box = st.querySelector('.sval');
+      const num = st.querySelector('.num');
       const step = (d) => {
         v = Math.max(0, v + d);
-        const old = box.querySelector('.num');
-        const nw = h(`<span class="num">${v}</span>`);
-        box.append(nw);
+        // one element only: a new step cancels the last roll, so numbers never stack
+        num.getAnimations().forEach((x) => x.cancel());
+        num.textContent = String(v);
         const dir = d > 0 ? 1 : -1;
-        anim(old, [{ transform: 'translateY(0)', opacity: 1 }, { transform: `translateY(${-100 * dir}%)`, opacity: 0 }], { duration: DUR.quick, easing: EASE.out }).then(() => old.remove());
-        anim(nw, [{ transform: `translateY(${100 * dir}%)`, opacity: 0 }, { transform: 'translateY(0)', opacity: 1 }], { duration: DUR.quick, easing: EASE.out });
+        anim(num, [{ transform: `translateY(${55 * dir}%)`, opacity: 0.25 }, { transform: 'translateY(0)', opacity: 1 }], { duration: DUR.quick, easing: EASE.out, fill: 'none' });
         SYN.roll(0.8 + (v % 20) / 25);
         buzz('light', el);
       };
       st.querySelectorAll('.sbtn').forEach((b, i) => {
-        let t;
-        let gap;
+        let t = 0;
+        let gap = 160;
         const d = i ? 2.5 : -2.5;
         const go = () => {
           step(d);
           gap = Math.max(50, gap * 0.82);
           t = setTimeout(go, gap);
         };
-        b.addEventListener('pointerdown', () => {
+        const stop = () => {
+          clearTimeout(t);
+          t = 0;
+        };
+        b.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
           S.ensure();
+          stop();
           step(d);
           gap = 160;
           t = setTimeout(go, 420);
         });
-        const stop = () => clearTimeout(t);
-        b.addEventListener('pointerup', stop);
-        b.addEventListener('pointerleave', stop);
-        b.addEventListener('keydown', (e) => e.key === 'Enter' && step(d));
+        ['pointerup', 'pointerleave', 'pointercancel', 'blur'].forEach((ev) => b.addEventListener(ev, stop));
+        b.addEventListener('contextmenu', (e) => e.preventDefault());
+        b.addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), step(d)));
       });
     },
   },
   {
     g: 'Taps and controls',
     t: 'Back and close',
+    changed: true,
+    slots: ['close'],
     when: 'The back arrow or a close button',
     motion: 'The arrow nudges 4 px the way it goes and springs back; the close cross turns a quarter as the sheet leaves.',
-    sound: 'Soft swish',
+    sound: 'A soft, low puff (round 1\u2019s swish was shrill)',
     haptic: 'None',
     where: 'Every page header, sheets, modals',
     build(el) {
@@ -276,12 +381,12 @@ export const CARDS = [
       el.append(hd);
       hd.querySelector('.back').addEventListener('click', (e) => {
         spring(e.currentTarget.firstElementChild, -6, 0, (v) => `translateX(${v}px)`, SPRINGS.bouncy);
-        play('back');
+        play('close');
       });
       hd.querySelector('.close').addEventListener('click', (e) => {
         const ic = e.currentTarget.firstElementChild;
         anim(ic, [{ transform: 'rotate(0)' }, { transform: 'rotate(90deg)' }], { duration: DUR.base, easing: EASE.out }).then(() => setTimeout(() => (ic.getAnimations().forEach((a) => a.cancel())), 400));
-        play('back');
+        play('close');
       });
     },
   },
@@ -289,9 +394,11 @@ export const CARDS = [
   {
     g: 'Overlays',
     t: 'Sheet in and out',
+    changed: true,
+    slots: ['open', 'close'],
     when: 'Opening and closing a bottom sheet',
     motion: 'In: rises with a snappy spring, the scrim fades in 160 ms. Out: a real exit, 200 ms down and away. Today sheets vanish with no exit.',
-    sound: 'Paper swish up on open, down on close',
+    sound: 'A soft lift as it opens, the same low puff as Back when it closes',
     haptic: 'None',
     where: 'Add exercise, Log workout, every sheet',
     tall: true,
@@ -305,12 +412,12 @@ export const CARDS = [
         area.classList.add('on');
         anim(sc, [{ opacity: 0 }, { opacity: 1 }], { duration: DUR.quick, easing: 'linear' });
         spring(sh, 100, 0, (v) => `translateY(${v}%)`, SPRINGS.snappy);
-        play('sheet');
+        play('open');
       });
       const close = () => {
         anim(sc, [{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: 'linear' });
         anim(sh, [{ transform: 'translateY(0)' }, { transform: 'translateY(105%)' }], { duration: 200, easing: EASE.in }).then(() => area.classList.remove('on'));
-        SYN.swish();
+        play('close');
       };
       area.querySelector('.shut').addEventListener('click', close);
       sc.addEventListener('click', close);
@@ -319,9 +426,11 @@ export const CARDS = [
   {
     g: 'Overlays',
     t: 'Game modal pop',
+    changed: true,
+    slots: ['modal', 'close'],
     when: 'A game modal opens or closes',
     motion: 'In: from 70% with an overshoot (320 ms), the ribbon drops in 80 ms later. Out: to 92% and fades in 160 ms.',
-    sound: 'Rising pop in, swish out',
+    sound: 'The pip and lift you liked on open; Got it closes with the soft puff',
     haptic: 'Light on open',
     where: "What's new, the guide's cards, confirmations",
     tall: true,
@@ -337,23 +446,24 @@ export const CARDS = [
         anim(sc, [{ opacity: 0 }, { opacity: 1 }], { duration: DUR.quick, easing: 'linear' });
         anim(m, [{ transform: 'translate(-50%,-50%) scale(.7)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }], { duration: 320, easing: EASE.over });
         anim(rib, [{ transform: 'translateY(-16px)', opacity: 0 }, { transform: 'translateY(0)', opacity: 1 }], { duration: 260, delay: 80, easing: EASE.over });
-        SYN.pip(0.7);
-        SYN.swishUp();
+        play('modal');
         buzz('light', el);
       });
       area.querySelector('.shut').addEventListener('click', () => {
         anim(sc, [{ opacity: 1 }, { opacity: 0 }], { duration: DUR.quick, easing: 'linear' });
         anim(m, [{ transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }, { transform: 'translate(-50%,-50%) scale(.92)', opacity: 0 }], { duration: DUR.quick, easing: EASE.in }).then(() => area.classList.remove('on'));
-        SYN.swish();
+        play('close');
       });
     },
   },
   {
     g: 'Overlays',
     t: 'Toast',
+    changed: true,
+    slots: ['chime', 'error'],
     when: 'Something was saved, or could not be',
     motion: 'Rises 60 px with a bounce, stays 2 s, sinks 20 px and fades in 200 ms. An error shakes once sideways.',
-    sound: 'A chime for good news, a low note for an error',
+    sound: 'Good news: the quiet chime made in code. An error: Kenney\u2019s error sound',
     haptic: 'Success, or the error pattern',
     where: 'Every save, sign-in problems, offline',
     tall: true,
@@ -382,8 +492,10 @@ export const CARDS = [
   {
     g: 'Overlays',
     t: 'Page change',
+    changed: true,
+    slots: ['tick'],
     when: 'Moving to another tab',
-    motion: 'The new page rises 8 px and fades in, 200 ms. Nothing slides sideways.',
+    motion: 'On a first visit, grey bars in the page\u2019s shape shimmer for about 400 ms while it loads. Then the page rises 8 px and fades in, 200 ms. Nothing slides sideways.',
     sound: 'None (the tab tick is enough)',
     haptic: 'None',
     where: 'Every tab and page',
@@ -397,11 +509,18 @@ export const CARDS = [
         Rank: '<div class="ln w6"></div><div class="blk b"></div><div class="ln w9"></div>',
       };
       pg.innerHTML = pages.Home;
+      let n = 0;
       seg.querySelectorAll('button').forEach((b) =>
-        b.addEventListener('click', () => {
+        b.addEventListener('click', async () => {
           seg.querySelectorAll('button').forEach((o) => o.classList.toggle('on', o === b));
-          SYN.tick();
+          play('tick');
+          const run = ++n;
+          // the skeleton: the next page's shape in grey, shimmering, while it loads
           pg.innerHTML = pages[b.textContent.trim()];
+          pg.classList.add('skel');
+          await wait(400);
+          if (run !== n) return;
+          pg.classList.remove('skel');
           anim(pg, [{ transform: 'translateY(8px)', opacity: 0 }, { transform: 'translateY(0)', opacity: 1 }], { duration: 200, easing: EASE.out });
         }),
       );
@@ -411,9 +530,10 @@ export const CARDS = [
   {
     g: 'Training',
     t: 'Set tick',
+    changed: true,
     when: 'Ticking a set',
     motion: 'The tick stamps from 135% (bouncy), an ink ring spreads, the row fills green from the left in 240 ms, and a +5 coin flies to the XP tile, which bumps.',
-    sound: 'A rising pop: two steps higher for each set in a row',
+    sound: 'A rising pop, quieter than round 1: two steps higher for each set in a row',
     haptic: 'Light',
     where: 'The set table in a workout',
     tall: true,
@@ -483,9 +603,11 @@ export const CARDS = [
   {
     g: 'Training',
     t: 'Exercise complete',
+    changed: true,
+    slots: ['done'],
     when: 'The last set of an exercise is ticked',
     motion: 'A gold light runs once round the card edge (600 ms) and a green check badge pops onto the title.',
-    sound: 'Chime',
+    sound: 'Its own sound now, quieter than Saved: two rising bells, or a marimba run, pizzicato or steel drum',
     haptic: 'Success',
     where: 'Each exercise card in a workout',
     build(el) {
@@ -497,7 +619,7 @@ export const CARDS = [
         void card.offsetWidth;
         card.classList.add('done');
         spring(card.querySelector('.ok'), 0, 1, (v) => `scale(${v})`, SPRINGS.bouncy);
-        play('chime');
+        play('done');
         buzz('success', el);
       });
     },
@@ -505,9 +627,11 @@ export const CARDS = [
   {
     g: 'Training',
     t: 'Beat last time',
+    changed: true,
+    slots: ['beat'],
     when: 'A set beats the same set last time',
     motion: 'The chip slams in from 220% to 100% (bouncy spring), the card gives a 4 px jolt.',
-    sound: 'Brass stab',
+    sound: 'A brass lift that rises and rings on (round 1\u2019s stab fell and stopped short)',
     haptic: 'Medium',
     where: 'Under the set, in the workout',
     build(el) {
@@ -519,7 +643,7 @@ export const CARDS = [
         slot.innerHTML = `<span class="bchip up">${svg('up', 14, 3)} Beat last time +10</span>`;
         spring(slot.firstChild, 2.2, 1, (v) => `scale(${v})`, SPRINGS.bouncy);
         anim(card, [{ transform: 'translateY(0)' }, { transform: 'translateY(4px)' }, { transform: 'translateY(0)' }], { duration: 160, delay: 120, easing: 'linear', fill: 'none' });
-        play('stab');
+        play('beat');
         buzz('medium', el);
       });
     },
@@ -527,9 +651,11 @@ export const CARDS = [
   {
     g: 'Training',
     t: 'New record',
+    changed: true,
+    slots: ['record'],
     when: 'A personal record',
     motion: 'A crown chip slams in, a ring of stars bursts from it, and the crown glints.',
-    sound: 'Short fanfare',
+    sound: 'The pizzicato jingle you liked, a little quieter',
     haptic: 'Success',
     where: 'Under the set, then on Victory',
     build(el) {
@@ -555,9 +681,11 @@ export const CARDS = [
   {
     g: 'Training',
     t: 'Lap',
+    changed: true,
+    slots: ['lap'],
     when: 'Tapping Lap during a run or ride',
     motion: 'The new lap drops into the list (8 px, 200 ms). When it is your fastest, its row flashes green once.',
-    sound: 'Stopwatch click',
+    sound: 'Stopwatch click, a little quieter',
     haptic: 'Medium',
     where: 'The cardio timer',
     tall: true,
@@ -609,9 +737,11 @@ export const CARDS = [
   {
     g: 'Training',
     t: 'Training day reached',
+    changed: true,
+    slots: ['coins'],
     when: 'The workout passes 20 minutes',
     motion: 'A banner drops from the top with a bounce while coins rain down and bounce once; it leaves after 2 s.',
-    sound: 'Coin shower',
+    sound: 'Sack of gold, quieter. May change later',
     haptic: 'Success',
     where: 'During a workout, once a day',
     tall: true,
@@ -642,25 +772,29 @@ export const CARDS = [
   {
     g: 'Training',
     t: 'Finish',
+    changed: true,
+    slots: ['riser', 'm-victory'],
     when: 'Tapping Finish workout',
-    motion: 'The screen dims and a ring charges round the button for 1.2 s, then the Victory stage takes over.',
-    sound: 'Drum roll into a rise, then the Victory music',
+    motion: 'The screen dims and a bar charges along the button for 0.9 s, then Victory takes over. The full finish on the stage goes on into the chest.',
+    sound: 'A shorter, quieter drum roll into a rise, then the Victory music',
     haptic: 'Heavy at the hand-over',
     where: 'The bottom of a workout',
     tall: true,
-    build(el) {
+    build(el, ctx) {
       const area = h('<div class="marea fin"><div class="mclock">52:10</div><p class="fsub">5 exercises, 18 sets ticked</p><div class="dim"></div><div class="vic"><div class="rays"></div><h4>VICTORY</h4></div></div>');
       const b = h('<button type="button" class="btn bp finbtn">Finish workout<i class="charge"></i></button>');
-      el.append(area, b);
+      const full = h('<button type="button" class="btn bs sm play">Play the full finish on the stage</button>');
+      el.append(area, b, full);
+      full.addEventListener('click', () => ctx.playFinish());
       b.addEventListener('click', async () => {
         S.ensure();
-        preload(['m-victory']);
+        preload(['m-victory', 'riser']);
         area.classList.remove('won');
         area.classList.add('on');
-        SYN.drumroll(1.2);
-        SYN.riser(1.2);
+        SYN.drumroll(0.9);
+        play('riser');
         b.classList.add('charging');
-        await wait(1200);
+        await wait(900);
         b.classList.remove('charging');
         area.classList.add('won');
         spring(area.querySelector('h4'), 2.4, 1, (v) => `scale(${v})`, SPRINGS.bouncy);
@@ -674,6 +808,7 @@ export const CARDS = [
   {
     g: 'Victory and progress',
     t: 'Victory entrance',
+    slots: ['m-victory'],
     when: 'Victory opens after Finish',
     motion: 'The blue stage fades in, rays turn, the banner slams from 240% (bouncy), stars burst behind it.',
     sound: 'The Victory sting (music)',
@@ -787,7 +922,7 @@ export const CARDS = [
   {
     g: 'Victory and progress',
     t: 'Crowns landing',
-    when: 'One crown per exercise finished, on Victory',
+    when: 'One crown per exercise finished, on Victory. May change later',
     motion: 'Each crown drops from 40 px above with a bounce, 180 ms apart, and glints as it lands.',
     sound: 'A clink per crown, each a little higher',
     haptic: 'Light per crown',
@@ -838,9 +973,11 @@ export const CARDS = [
   {
     g: 'Victory and progress',
     t: 'Weekly goal met',
+    changed: true,
+    slots: ['goal'],
     when: 'The training day that meets the weekly goal',
-    motion: "Today's tile flips green (rotate 180 degrees, 320 ms), the flame grows, and a Goal bonus stamp slams onto the card.",
-    sound: 'A flip, then a stamp and a chime',
+    motion: "Today's tile flips green (320 ms), the flame grows, and a green seal pops in from 60% with a small overshoot while a soft shine crosses it. No stamp.",
+    sound: 'A flip, then a soft seal and a major chord',
     haptic: 'Success',
     where: 'Home, This week; Victory',
     build(el) {
@@ -861,11 +998,10 @@ export const CARDS = [
         card.querySelector('.gtxt').textContent = '4 of 4 days, goal met';
         spring(card.querySelector('.fl'), 1.6, 1, (v) => `scale(${v})`, SPRINGS.bouncy);
         await wait(250);
-        const s = h('<span class="gstamp">Goal bonus +60</span>');
+        const s = h(`<span class="gseal"><i>${svg('check', 14, 3.4)}</i>Goal met +60 XP</span>`);
         card.querySelector('.stampslot').append(s);
-        spring(s, 2.2, 1, (v) => `scale(${v}) rotate(-6deg)`, SPRINGS.bouncy);
-        play('stamp');
-        setTimeout(() => play('chime'), 120);
+        spring(s, 0.6, 1, (v) => `scale(${v})`, SPRINGS.bouncy);
+        play('goal');
         buzz('success', el);
       });
     },
@@ -874,89 +1010,138 @@ export const CARDS = [
   {
     g: 'Rewards',
     t: 'Chest drop-in',
+    changed: true,
+    slots: ['land'],
     when: 'A reward moment starts',
-    motion: 'The chest falls for 430 ms (speeding up), lands with a squash (124% wide, 76% tall) and springs back; dust puffs out and the screen shakes 7 px.',
-    sound: 'Heavy thud, the chest music starts',
+    motion: 'The stage starts empty. A shadow gathers on the floor, the chest falls into it for 430 ms (speeding up), lands with a squash and springs back; dust puffs out and the stage shakes.',
+    sound: 'Heavy wood thud, louder than round 1; the chest music starts with the drop',
     haptic: 'Heavy',
     where: 'Every badge moment',
     tall: true,
-    build(el) {
-      const st = h('<div class="mstage"><div class="mchest"><div class="sq"></div></div></div>');
+    build(el, ctx) {
+      const st = h('<div class="mstage m3dh"></div>');
       const b = playBtn();
       el.append(st, b);
       const fx = fxFor(st, 300, 220);
-      st.querySelector('.sq').innerHTML = chestSVG('silver', { size: 150 });
       b.addEventListener('click', async () => {
         S.ensure();
         preload(['land']);
-        const box = st.querySelector('.mchest');
-        await anim(box, [{ transform: 'translate(-50%,-300px)' }, { transform: 'translate(-50%,0)' }], { duration: 430, easing: EASE.in });
-        play('land');
-        buzz('heavy', el);
-        fx.dust(150, 196, 14);
-        anim(st, [{ transform: 'translate(0,0)' }, { transform: 'translate(5px,-3px)' }, { transform: 'translate(-5px,2px)' }, { transform: 'translate(0,0)' }], { duration: 160, easing: 'linear', fill: 'none' });
-        spring(st.querySelector('.sq'), 1, 0, (v) => `scale(${1 + 0.24 * v}, ${1 - 0.24 * v})`, SPRINGS.bouncy);
+        const { s } = await claim3d(st, 'chest');
+        s.setChest('silver', ctx.chosen.chest.silver);
+        await s.drop(() => {
+          play('land');
+          buzz('heavy', el);
+          const p = s.chestPoint(0.05);
+          fx.dust(p.x, p.y, 14);
+          shakeEl(st, 5);
+        });
       });
     },
   },
   {
     g: 'Rewards',
     t: 'Chest idle',
+    changed: true,
+    slots: ['m-chest'],
     when: 'The chest waits for a tap',
-    motion: 'It breathes (3% over 1.2 s), glints twinkle on the trim, light leaks from the lid seam, and "Tap to open" bobs.',
-    sound: 'The chest music only',
+    motion: 'It breathes (about 1% over 2 s) and sways a little, the gem pulses, light leaks from the lid seam, and "Tap to open" bobs.',
+    sound: 'The chest music, looping until it opens',
     haptic: 'None',
     where: 'Every badge moment',
     tall: true,
-    build(el) {
-      const st = h('<div class="mstage"><div class="mchest idle"><div class="sq"></div></div><div class="mhint">Tap to open</div></div>');
-      el.append(st);
-      st.querySelector('.sq').innerHTML = chestSVG('gold', { size: 150 });
-      st.querySelector('.seam').style.opacity = '.8';
+    build(el, ctx) {
+      const st = h('<div class="mstage m3dh"><div class="mhint">Tap to open</div></div>');
+      const b = playBtn('Play the chest music');
+      el.append(st, b);
+      whenNear(st, () => poster(st, ctx, (a) => stillAt(a, a.chest('gold'), 'chest', -0.32)));
+      let on = false;
+      const stop = () => {
+        on = false;
+        b.textContent = 'Play the chest music';
+        S.stopMusic(0.4);
+      };
+      st.addEventListener('lost3d', () => on && stop());
+      b.addEventListener('click', async () => {
+        S.ensure();
+        if (on) return stop();
+        on = true;
+        b.textContent = 'Stop the music';
+        const { s } = await claim3d(st, 'chest');
+        s.setChest('gold');
+        s.rest();
+        s.leak = 0.35;
+        setRewardKey();
+        music('m-chest');
+      });
     },
   },
   {
     g: 'Rewards',
     t: 'Chest opens',
+    changed: true,
+    slots: ['crack', 'burst'],
     when: 'Tapping the chest',
-    motion: 'Each tap jolts and wobbles the chest and lets out more light. The last tap flashes the screen, the lid bursts off, a beam rises and sparks fly in the tier colour. Rare chests shiver for 0.8 s first.',
-    sound: 'A latch per tap, each higher; a rise before rare chests; the lid burst with a sparkle',
+    motion: 'Each tap jolts and wobbles the chest, lifts the lid a little and lets out more light. The last tap flashes the stage, the lid springs open, a beam rises and sparks fly in the tier colour. Rare chests shiver for 0.8 s first.',
+    sound: 'The latch per tap, each a step higher; the lid opens with the creak and a bright bloom',
     haptic: 'Medium per tap, the reward pattern on the burst',
     where: 'Every badge moment',
     tall: true,
     build(el, ctx) {
-      const st = h('<div class="mstage tapme" role="button" tabindex="0" aria-label="Tap the chest to open it"><div class="rays"></div><div class="mchest idle"><div class="sq"></div></div><div class="mhint">Tap to open</div></div>');
+      const st = h('<div class="mstage m3dh tapme" role="button" tabindex="0" aria-label="Tap the chest to open it"><div class="rays"></div><div class="mhint">Tap to open</div><div class="mflash"></div></div>');
       const b = h('<div class="pair"><button type="button" class="btn bs sm">Reset</button><button type="button" class="btn bs sm">Go to the stage</button></div>');
       el.append(st, b);
+      whenNear(st, () => poster(st, ctx, (a) => stillAt(a, a.chest('gold'), 'chest', -0.32)));
       const fx = fxFor(st, 300, 220);
+      const hint = st.querySelector('.mhint');
+      let view = null;
       let taps = 0;
-      const reset = () => {
+      let opened = false;
+      const clear = () => {
         taps = 0;
+        opened = false;
         st.classList.remove('lit', 'open');
-        st.querySelector('.sq').innerHTML = chestSVG('silver', { size: 150 });
-        st.querySelector('.mhint').style.opacity = '1';
+        hint.style.opacity = '1';
       };
-      reset();
+      st.addEventListener('lost3d', () => {
+        view = null;
+        clear();
+      });
+      const reset = () => {
+        clear();
+        if (view?.live()) {
+          view.s.setChest('gold');
+          view.s.rest();
+        }
+      };
       const tap = async () => {
         S.ensure();
+        if (opened) return;
+        if (!view?.live()) {
+          view = await claim3d(st, 'chest');
+          view.s.setChest('gold');
+          view.s.rest();
+          taps = 0;
+        }
         if (taps >= 2) return;
-        taps++;
-        const sq = st.querySelector('.sq');
-        play('crack', { rate: 1 + taps * 0.09 });
+        const { s, live } = view;
+        const i = taps++;
+        play('crack', { rate: 1 + i * 0.09 });
         buzz('medium', el);
-        st.querySelector('.seam').style.opacity = String(taps / 2);
         st.classList.add('lit');
-        anim(sq, [{ transform: 'rotate(0)' }, { transform: 'rotate(6deg) scale(1.08,.9)', offset: 0.2 }, { transform: 'rotate(-5deg)', offset: 0.45 }, { transform: 'rotate(3deg)', offset: 0.7 }, { transform: 'rotate(0)' }], { duration: 380, easing: 'linear', fill: 'none' });
-        if (taps < 2) return;
-        st.querySelector('.mhint').style.opacity = '0';
-        await wait(380);
-        st.classList.add('open');
+        const p = s.chestPoint(1);
+        fx.stars(p.x, p.y, 6 + i * 4, '#ffe27a', 60);
+        await s.tap(i, 2);
+        if (taps < 2 || !live()) return;
+        opened = true;
+        hint.style.opacity = '0';
+        flashEl(st);
         play('burst');
-        SYN.sparkle();
+        S.duck();
         buzz('reward', el);
-        fx.burst(150, 150, '#cfe7ff', 46, 0.6);
-        anim(st.querySelector('.lid'), [{ transform: 'translate(0,0)', opacity: 1 }, { transform: 'translate(0,-110px) rotate(-16deg)', opacity: 0 }], { duration: 520, easing: EASE.out });
-        st.querySelector('.inside').style.opacity = '1';
+        st.classList.add('open');
+        fx.burst(p.x, p.y, '#ffe27a', 46, 0.6);
+        shakeEl(st, 6);
+        await s.burst();
       };
       st.addEventListener('pointerdown', tap);
       st.addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), tap()));
@@ -967,94 +1152,162 @@ export const CARDS = [
   {
     g: 'Rewards',
     t: 'Badge reveal',
+    changed: true,
+    slots: ['whoosh', 'reveal'],
     when: 'A medal comes out of the chest',
-    motion: 'The medal spins up out of the chest (two turns, 820 ms), overshoots and settles; a ring bursts; the tier ribbon unrolls, then the name, then +XP. The counter on the chest drops by one.',
-    sound: 'Whoosh, the medal landing, a sparkle as the ribbon unrolls',
-    haptic: 'Medium on landing',
+    motion: 'The swirl: light spirals into the chest; the medal rises on a curve, spinning three turns (700 ms), small and dark against its own glow; it pauses at the top, backlit (260 ms), then flips to face you, big, with a flash and a ring, and settles.',
+    sound: 'A rising swirl as it leaves, then bells rising in the key of the chest music as it turns to you',
+    haptic: 'Medium on the flip',
     where: 'Every badge moment',
     tall: true,
-    build(el) {
-      const st = h('<div class="mstage"><div class="rays on"></div><div class="mmedal"></div><div class="mrib"><span>Gold</span></div><div class="mcount"><b>3</b></div></div>');
+    build(el, ctx) {
+      const st = h('<div class="mstage m3dh"><div class="rays on"></div><div class="mflash"></div></div>');
       const b = playBtn();
       el.append(st, b);
+      whenNear(st, () =>
+        poster(st, ctx, (a) => {
+          const c = a.chest('gold');
+          openLid(c);
+          return stillAt(a, c, 'reveal', -0.32);
+        }),
+      );
       const fx = fxFor(st, 300, 220);
-      st.querySelector('.mmedal').innerHTML = medalSVG('gold', 'diamond', 'trophy', { size: 110 });
-      st.querySelector('.mrib').classList.add('on');
-      let left = 3;
       b.addEventListener('click', async () => {
         S.ensure();
-        preload(['whoosh', 'stamp', 'sparkle']);
-        const m = st.querySelector('.mmedal');
-        m.innerHTML = medalSVG('gold', 'diamond', 'trophy', { size: 110 });
-        st.querySelector('.mrib').classList.remove('on');
-        play('whoosh');
-        await anim(m, [{ transform: 'translate(-50%,120px) scale(.25) rotateY(1440deg)' }, { transform: 'translate(-50%,-8px) scale(1.08) rotateY(180deg)', offset: 0.72 }, { transform: 'translate(-50%,0) scale(1) rotateY(0)' }], { duration: 820, easing: 'cubic-bezier(.15,.7,.3,1)' });
-        play('stamp');
-        buzz('medium', el);
-        fx.ring(150, 82, '#ffe27a', 20, 120, 0.5, 6);
-        st.querySelector('.mrib').classList.add('on');
-        play('sparkle');
-        left = left > 1 ? left - 1 : 3;
-        const c = st.querySelector('.mcount b');
-        c.textContent = left;
-        spring(c.parentElement, 1.35, 1, (v) => `scale(${v})`, SPRINGS.bouncy);
+        setRewardKey();
+        preload(['whoosh', 'reveal']);
+        const { s, live } = await claim3d(st, 'reveal');
+        s.setChest('gold');
+        s.rest();
+        s.idleOn = false;
+        openLid(s.chest);
+        s.light.intensity = 6;
+        s.beam.material.opacity = 0.35;
+        const cp = s.chestPoint(1);
+        fx.spiral(cp.x, cp.y, '#ffe27a', 22, 0.6);
+        await wait(250);
+        if (!live()) return;
+        await s.medalOut(
+          { tier: 'gold', shape: 'diamond', icon: 'trophy', variant: ctx.chosen.medal.gold },
+          {
+            onRise: () => play('whoosh'),
+            onFlip: () => {
+              flashEl(st, 0.5);
+              play('reveal');
+              buzz('medium', el);
+              const mp = s.medalPoint();
+              fx.ring(mp.x, mp.y, '#ffe27a', 20, 110, 0.5, 6);
+              fx.stars(mp.x, mp.y, 16, '#fff6c4', 110);
+            },
+          },
+        );
       });
     },
   },
   {
     g: 'Rewards',
     t: 'Tier up',
+    changed: true,
+    slots: ['tier'],
     when: 'A badge you have reaches its next tier',
-    motion: 'The old medal shakes as cracks spread over it (500 ms), breaks into shards, and the new tier stamps down from 160% with a ring. "Bronze to Silver" sits under it.',
-    sound: 'A crack, the shatter, then the medal landing',
-    haptic: 'Heavy on the stamp',
+    motion: 'No cracks. The medal spins faster and faster (four turns in 1.6 s) inside a swirl of light; each time it turns edge-on its metal and enamel step a little closer to the next tier. A bright flash, then the new tier settles with a punch, a ring and sparkles. "Bronze to Silver" sits under it.',
+    sound: 'A shimmer that climbs and resolves, then a sparkle',
+    haptic: 'Medium as it starts, heavy as it lands',
     where: 'Badge moments for a family you already have',
     tall: true,
-    build(el) {
-      const st = h('<div class="mstage"><div class="mmedal"></div><svg class="cracks" viewBox="0 0 110 110" width="110" height="110" aria-hidden="true"><path d="M55 10 L50 34 L62 46 L48 64 L58 84 M50 34 L30 40 M62 46 L84 40 M48 64 L28 74" fill="none" stroke="#2e1f0c" stroke-width="2.4" stroke-linecap="round"/></svg><div class="tierto">Bronze <span>to</span> Silver</div></div>');
+    build(el, ctx) {
+      const st = h('<div class="mstage m3dh"><div class="tierto">Bronze <span>to</span> Silver</div><div class="mflash"></div></div>');
       const b = playBtn();
       el.append(st, b);
+      whenNear(st, () => poster(st, ctx, (a) => stillAt(a, a.medal('bronze', 'hex', 'dumbbell'), 'medal', 0, false)));
       const fx = fxFor(st, 300, 220);
-      const m = st.querySelector('.mmedal');
-      const cracks = st.querySelector('.cracks path');
-      const reset = () => {
-        cracks.getAnimations().forEach((a) => a.cancel());
-        m.innerHTML = medalSVG('bronze', 'hex', 'dumbbell', { size: 110 });
-        m.style.opacity = '1';
-        cracks.style.strokeDasharray = '260';
-        cracks.style.strokeDashoffset = '260';
-        st.querySelector('.tierto').classList.remove('on');
-      };
-      reset();
+      const label = st.querySelector('.tierto');
+      st.addEventListener('lost3d', () => label.classList.remove('on'));
       b.addEventListener('click', async () => {
         S.ensure();
-        preload(['crack', 'shatter', 'stamp']);
-        reset();
-        play('crack');
-        anim(cracks, [{ strokeDashoffset: 260 }, { strokeDashoffset: 0 }], { duration: 500, easing: 'linear' });
-        await anim(m, Array.from({ length: 12 }, (_, i) => ({ transform: `translate(calc(-50% + ${(i % 2 ? 1 : -1) * (1 + i * 0.3)}px), 0)` })), { duration: 500, easing: 'linear', fill: 'none' });
-        play('shatter');
-        fx.shards(150, 82, ['#d98a4a', '#8c4a1f', '#ffd1a1'], 22);
-        m.style.opacity = '0';
-        cracks.getAnimations().forEach((a) => a.cancel());
-        cracks.style.strokeDashoffset = '260';
-        await wait(260);
-        m.innerHTML = medalSVG('silver', 'hex', 'dumbbell', { size: 110 });
-        m.style.opacity = '1';
-        await spring(m, 1.6, 1, (v) => `translate(-50%,0) scale(${v})`, SPRINGS.bouncy);
-        play('stamp');
-        fx.ring(150, 82, '#cfe7ff', 20, 120, 0.5, 6);
+        setRewardKey();
+        label.classList.remove('on');
+        const { s, live } = await claim3d(st, 'medal');
+        s.tw.clear();
+        s.root.clear();
+        s.chest = null;
+        s.medalIdle = false;
+        s.light.intensity = 0;
+        s.beam.material.opacity = 0;
+        s.halo.material.opacity = 0;
+        s.halo.material.color.set('#cfe7ff');
+        s.start();
+        const from = s.art.medal('bronze', 'hex', 'dumbbell');
+        const to = s.art.medal('silver', 'hex', 'dumbbell');
+        s.root.add(from);
+        s.medal = from;
+        s.medalY = 0;
+        const mats = (g) => {
+          const out = [];
+          g.traverse((o) => o.isMesh && out.push(o.material));
+          return out;
+        };
+        const A = mats(from);
+        const B = mats(to);
+        const A0 = A.map((m) => ({ color: m.color?.clone(), metalness: m.metalness, roughness: m.roughness }));
+        // each edge-on turn moves the medal one step closer to the next tier
+        const stepTo = (t) => {
+          if (A.length !== B.length) return;
+          A.forEach((m, i) => {
+            const n = B[i];
+            if (m.color && n.color) m.color.copy(A0[i].color).lerp(n.color, t);
+            if (n.metalness !== undefined) m.metalness = A0[i].metalness + (n.metalness - A0[i].metalness) * t;
+            if (n.roughness !== undefined) m.roughness = A0[i].roughness + (n.roughness - A0[i].roughness) * t;
+            if (t >= 0.5 && n.map && m.map !== n.map) {
+              m.map = n.map;
+              m.normalMap = n.normalMap || m.normalMap;
+              m.needsUpdate = true;
+            }
+          });
+        };
+        play('tier');
+        buzz('medium', el);
+        const c = s.medalPoint();
+        fx.spiral(c.x, c.y, '#cfe7ff', 26, 0.55);
+        setTimeout(() => live() && fx.spiral(c.x, c.y, '#ffffff', 22, 0.45), 650);
+        let steps = 0;
+        await s.tw.add(
+          1600,
+          (p) => {
+            const rot = ease.inOut(p) * Math.PI * 8;
+            from.rotation.y = rot;
+            from.scale.setScalar(1 - 0.12 * Math.sin(p * Math.PI));
+            s.halo.material.opacity = 0.9 * Math.sin(p * Math.PI);
+            s.halo.scale.setScalar(2.6 + 1.6 * p);
+            const passed = Math.max(0, Math.floor((rot - Math.PI / 2) / Math.PI) + 1);
+            while (steps < Math.min(passed, 8)) stepTo(++steps / 8);
+          },
+          ease.linear,
+        );
+        if (!live()) return;
+        flashEl(st, 0.85);
+        s.root.remove(from);
+        s.root.add(to);
+        s.medal = to;
+        SYN.sparkle();
         buzz('heavy', el);
-        st.querySelector('.tierto').classList.add('on');
+        fx.ring(c.x, c.y, '#cfe7ff', 20, 120, 0.5, 6);
+        fx.stars(c.x, c.y, 18, '#ffffff', 120);
+        label.classList.add('on');
+        await s.tw.spring((v) => to.scale.setScalar(1.3 - 0.3 * v), SPRINGS.bouncy);
+        s.tw.add(500, (p) => (s.halo.material.opacity = 0.5 * (1 - p)));
+        s.medalIdle = true;
       });
     },
   },
   {
     g: 'Rewards',
     t: 'Level up',
+    changed: true,
+    slots: ['m-level'],
     when: 'A workout takes you to the next level',
     motion: 'The shield slams from 200% (bouncy), a ring bursts, the level number rolls 12 to 13 and a gold glint crosses the shield.',
-    sound: 'The level-up fanfare (music)',
+    sound: 'The level-up music: five new options, all rising and major',
     haptic: 'Heavy',
     where: 'After Victory',
     tall: true,
@@ -1088,14 +1341,16 @@ export const CARDS = [
   {
     g: 'Rewards',
     t: 'Rank up',
+    changed: true,
+    slots: ['shatter', 'm-rank'],
     when: 'A level that starts a new rank',
-    motion: 'The old shield shakes and shatters, a pillar of light rises (400 ms), the new shield rises through it with a glow, and the title banner unrolls.',
-    sound: 'The shatter, a rise, then the rank-up fanfare (music)',
+    motion: 'The old shield shakes, flashes, and breaks into ten pieces that fly out, spin and fall. A pillar of light rises (400 ms), the new shield rises through it with a glow, and the title banner unrolls.',
+    sound: 'The shatter, a rise, then the rank-up fanfare, now 4 s',
     haptic: 'Heavy, then the reward pattern',
     where: 'After Victory, rarely',
     tall: true,
     build(el) {
-      const st = h('<div class="mstage"><div class="pillar"></div><div class="mshield"></div><div class="mtitle"><span>C-Rank Hunter</span></div></div>');
+      const st = h('<div class="mstage"><div class="pillar"></div><div class="mshield"></div><div class="mtitle"><span>C-Rank Hunter</span></div><div class="mflash"></div></div>');
       const b = playBtn();
       el.append(st, b);
       const fx = fxFor(st, 300, 220);
@@ -1106,12 +1361,16 @@ export const CARDS = [
         preload(['shatter', 'm-rank']);
         st.classList.remove('beam');
         st.querySelector('.mtitle').classList.remove('on');
+        st.querySelectorAll('.mshards').forEach((x) => x.remove());
         sh.innerHTML = shieldSVG('D', 9, { size: 90 });
         sh.style.opacity = '1';
         await anim(sh, Array.from({ length: 12 }, (_, i) => ({ transform: `translate(calc(-50% + ${(i % 2 ? 1 : -1) * (1 + i * 0.35)}px),0)` })), { duration: 480, easing: 'linear', fill: 'none' });
+        flashEl(st, 0.6, 160);
         play('shatter');
-        fx.shards(150, 96, ['#6fe0ab', '#0f7a4f', '#e6fff1'], 22);
-        sh.style.opacity = '0';
+        buzz('heavy', el);
+        shatterEl(st, sh, 10);
+        fx.shards(150, 96, ['#6fe0ab', '#0f7a4f', '#e6fff1'], 10);
+        await wait(380);
         SYN.riser(0.6);
         st.classList.add('beam');
         await wait(420);
@@ -1135,11 +1394,23 @@ export const CARDS = [
     haptic: 'None',
     where: 'The Badges tab and the badge view',
     tall: true,
-    build(el) {
-      const st = h(`<div class="mtilt"><div class="tiltme">${medalSVG('legend', 'star', 'star', { size: 130 })}<i class="glarebox"></i></div><small>Move your finger or mouse over the medal</small></div>`);
+    build(el, ctx) {
+      const st = h('<div class="mtilt"><div class="tiltme"><img alt="" width="150" height="150"><i class="glarebox"></i></div><small>Move your finger or mouse over the medal</small></div>');
       el.append(st);
       const m = st.querySelector('.tiltme');
+      const img = m.querySelector('img');
       const gl = st.querySelector('.glarebox');
+      whenNear(st, async () => {
+        try {
+          const a = await ctx.get3d();
+          const url = a.still(a.medal('gold', 'diamond', 'trophy', null, { variant: ctx.chosen.medal.gold }), { w: 320, h: 320, cam: [0, 0, 4.1], look: [0, 0, 0], rotY: 0, shadow: false });
+          img.src = url;
+          // the glare only lights the medal, not the square around it
+          gl.style.webkitMaskImage = gl.style.maskImage = `url(${url})`;
+        } catch {
+          m.innerHTML = medalSVG('gold', 'diamond', 'trophy', { size: 150 });
+        }
+      });
       let rx = 0;
       let ry = 0;
       st.addEventListener('pointermove', (e) => {
@@ -1149,7 +1420,7 @@ export const CARDS = [
         rx = -y * 32;
         ry = x * 32;
         m.style.transform = `perspective(600px) rotateX(${Math.max(-16, Math.min(16, rx))}deg) rotateY(${Math.max(-16, Math.min(16, ry))}deg)`;
-        gl.style.background = `radial-gradient(circle at ${(x + 0.5) * 100}% ${(y + 0.5) * 100}%, rgba(255,255,255,.55), rgba(255,255,255,0) 45%)`;
+        gl.style.background = `radial-gradient(circle at ${(x + 0.5) * 100}% ${(y + 0.5) * 100}%, rgba(255,255,255,.6), rgba(255,255,255,0) 45%)`;
       });
       st.addEventListener('pointerleave', () => {
         const a = rx;

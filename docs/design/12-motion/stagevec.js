@@ -110,10 +110,12 @@ export class StageVec {
     );
   }
 
-  async medalOut(r) {
+  async medalOut(r, { onRise, onFlip } = {}) {
     this.mFlip.innerHTML = medalSVG(r.tier, r.shape, r.icon, { size: 190, text: r.text || null });
     this.mBox.style.opacity = '1';
     this.mBox.classList.remove('float');
+    onRise?.();
+    setTimeout(() => onFlip?.(), 590);
     await anim(
       this.mFlip,
       [

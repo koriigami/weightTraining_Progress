@@ -1,10 +1,11 @@
-// Board 12: wiring. The switches at the top, the reward stage, the galleries
-// in both art directions, the sound and music pickers, and the 34 cards.
-import { S, SYN, SLOTS, MUSIC, PICK, setPick, play, buzz } from './sound.js';
-import { DUR, EASE, SPRINGS, springFrames, springMs } from './motion.js';
-import { RewardStage, REWARDS, TIER_UI } from './stage.js';
+// Board 12 (round 2): wiring. The switches at the top, the reward stage, the 3D
+// chest and badge galleries with their options, the 34 cards, and the sound and
+// music pickers. Option picks feed the stage and are remembered on this device.
+import { S, SYN, SHIMMER, SLOTS, MUSIC, PICK, setPick, play, buzz, setRewardKey } from './sound.js';
+import { DUR, EASE, SPRINGS, springFrames, springMs, setSpeed } from './motion.js';
+import { RewardStage, TIER_UI, RANK_CHEST } from './stage.js';
 import { CARDS } from './cards.js';
-import { chestSVG, medalSVG, CHEST_LOOK, todayChestSVG, todayMedalSVG, todayBadgeSVG } from './artvec.js';
+import { CHEST_LOOK } from './artvec.js';
 
 const $ = (s) => document.querySelector(s);
 
@@ -17,6 +18,7 @@ function toggle(id, on, set) {
     b.setAttribute('aria-checked', String(v));
     set(v);
     if (v) SYN.switchOn();
+    else SYN.switchOff();
   });
 }
 toggle('#t-sound', true, (v) => {
@@ -28,46 +30,76 @@ toggle('#t-music', true, (v) => {
   if (!v) S.stopMusic(0.2);
 });
 toggle('#t-hapt', true, (v) => (S.haptics = v));
+toggle('#t-slow', false, (v) => setSpeed(v ? 0.5 : 1));
 toggle('#t-red', false, (v) => (document.documentElement.dataset.reduced = v ? '1' : '0'));
 // browsers start audio only after a tap
 document.addEventListener('pointerdown', () => S.ensure(), { once: true });
 
+// ---------- the options and my picks ----------
+const CHEST_OPTS = {
+  silver: { cap: 'More contrast: slate-navy wood, polished silver and a sapphire.', pick: 'a' },
+  diamond: { cap: 'No spikes. Faceted crystal or clear ice, with frosted trims and a large cut diamond.', pick: 'a' },
+  master: { cap: 'Round 1, plus two more: molten gold trims with lava seams, or black-violet glass.', pick: 'b' },
+  legend: { cap: 'Redesigned, no spikes. Aurora’s bands drift slowly on the stage.', pick: 'b' },
+  monthly: { cap: 'Less white. In the app it takes the month’s colour.', pick: 'c' },
+  royal: { cap: 'New gold tones, each with its own gem.', pick: 'a' },
+};
+const MEDAL_OPTS = {
+  gold: { cap: 'No red and no laurels. Four enamels on the gold.', pick: 'emerald', shape: 'diamond', icon: 'trophy' },
+  master: { cap: 'Round 1’s ember, or two new crack colours.', pick: 'molten', shape: 'square', icon: 'week' },
+  legend: { cap: 'No laurels, and no longer just a circle: three frames around the same face.', pick: 'halo', shape: 'circle', icon: 'star' },
+};
+const ART_KEY = 'levl-b12-art-r2';
+const chosen = { chest: {}, medal: {} };
+for (const [k, o] of Object.entries(CHEST_OPTS)) chosen.chest[k] = o.pick;
+for (const [k, o] of Object.entries(MEDAL_OPTS)) chosen.medal[k] = o.pick;
+try {
+  const saved = JSON.parse(localStorage.getItem(ART_KEY) || '{}');
+  Object.assign(chosen.chest, saved.chest || {});
+  Object.assign(chosen.medal, saved.medal || {});
+} catch {}
+const saveArt = () => {
+  try {
+    localStorage.setItem(ART_KEY, JSON.stringify(chosen));
+  } catch {}
+};
+
 // ---------- 3D, loaded once and shared ----------
-let art3d = null;
-async function get3d() {
-  if (art3d) return art3d;
-  const m = await import('./art3d.js');
-  art3d = new m.Art({ width: 300, height: 260 });
-  return art3d;
+let artP = null;
+function get3d() {
+  if (!artP)
+    artP = import('./art3d.js').then((m) => {
+      const a = new m.Art({ width: 300, height: 260 });
+      a.mod = m;
+      return a;
+    });
+  return artP;
 }
-const still3d = (a, obj, o) => a.still(obj, o);
-const MEDAL_CAM = { cam: [0, 0.2, 5.4], look: [0, 0, 0], rotY: -0.28, shadow: false };
 
-// ---------- 1. today and new ----------
-const gold = REWARDS.gold[0];
-$('#now-today').innerHTML = `<div style="display:flex;flex-direction:column;align-items:center">${todayMedalSVG(['#FFE58A', '#C78A00'], 'trophy', 92)}${todayChestSVG(160)}</div>`;
-$('#now-a').innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:0">${medalSVG('gold', 'diamond', 'trophy', { size: 104 })}${chestSVG('gold', { size: 160 })}</div>`;
-
-// ---------- 3. the reward stage ----------
+// ---------- 2. the reward stage ----------
 const stage = new RewardStage($('#stagehost'));
-$('#stagehost').addEventListener('no3d', () => {
-  $('#no3d').style.display = 'block';
-  document.querySelectorAll('#stage .seg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === 'vec')));
-});
+stage.variant = chosen.chest;
+stage.medalVariant = chosen.medal;
+$('#stagehost').addEventListener('no3d', () => ($('#no3d').style.display = 'block'));
 const chestChips = $('#chestchips');
+// the rule: your rank decides your chest; the themed three are for monthly, special and secret badges
+const RANK_OF = Object.fromEntries(Object.entries(RANK_CHEST).map(([r, k]) => [k, r]));
 chestChips.innerHTML = Object.entries(CHEST_LOOK)
-  .map(([k, c]) => `<button type="button" class="chip${k === 'gold' ? ' on' : ''}" aria-pressed="${k === 'gold'}" data-k="${k}">${c.name}</button>`)
+  .map(([k, c]) => `<button type="button" class="chip${k === 'gold' ? ' on' : ''}" aria-pressed="${k === 'gold'}" data-k="${k}">${RANK_OF[k] ? `${RANK_OF[k]} rank: ` : ''}${c.name}</button>`)
   .join('');
+function pickChest(k) {
+  chestChips.querySelectorAll('.chip').forEach((c) => {
+    c.classList.toggle('on', c.dataset.k === k);
+    c.setAttribute('aria-pressed', String(c.dataset.k === k));
+  });
+  stage.key = k;
+  stage.stopRun();
+  stage.idle();
+}
 chestChips.addEventListener('click', (e) => {
   const b = e.target.closest('.chip');
   if (!b) return;
-  chestChips.querySelectorAll('.chip').forEach((c) => {
-    c.classList.toggle('on', c === b);
-    c.setAttribute('aria-pressed', String(c === b));
-  });
-  stage.key = b.dataset.k;
-  stage.stopRun();
-  stage.idle();
+  pickChest(b.dataset.k);
   play('chip');
 });
 $('#countchips').addEventListener('click', (e) => {
@@ -82,32 +114,36 @@ $('#countchips').addEventListener('click', (e) => {
   stage.count = Number(b.dataset.n);
   play('chip');
 });
-document.querySelectorAll('#stage .seg button').forEach((b) =>
-  b.addEventListener('click', async () => {
-    document.querySelectorAll('#stage .seg button').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
-    play('tick');
-    await stage.setMode(b.dataset.mode);
-  }),
-);
-$('#playstage').addEventListener('click', () => {
-  S.ensure();
-  stage.play();
-  // on a phone the stage sits above the button: bring it into view
+function showStage() {
+  // on a phone the stage sits above the buttons: bring it into view
   const r = $('#stagehost').getBoundingClientRect();
   if (r.top < 0 || r.bottom > innerHeight) $('#stagehost').scrollIntoView({ behavior: 'smooth', block: 'center' });
   $('#stagehost .rstage').focus({ preventScroll: true });
-});
-stage.host.addEventListener('done', () => {});
+}
+async function runStage(kind) {
+  S.ensure();
+  await start3d();
+  showStage();
+  if (kind === 'finish') stage.playFinish();
+  else if (kind === 'rank') stage.playFinish({ rankUp: 'D' });
+  else stage.play();
+}
+$('#playstage').addEventListener('click', () => runStage('open'));
+$('#playfinish').addEventListener('click', () => runStage('finish'));
+$('#playrank').addEventListener('click', () => runStage('rank'));
+stage.host.addEventListener('done', () => stage.idle());
 
 // start in 3D when it is on screen, so the page loads light
-let stageStarted = false;
+let started = null;
+function start3d() {
+  if (!started) started = stage.start3d();
+  return started;
+}
 new IntersectionObserver((ents) => {
-  if (stageStarted || !ents.some((e) => e.isIntersecting)) return;
-  stageStarted = true;
-  stage.setMode('three');
+  if (ents.some((e) => e.isIntersecting)) start3d();
 }).observe($('#stagehost'));
 
-// ---------- 4. chests ----------
+// ---------- 3. chests ----------
 const CHEST_FOR = {
   bronze: 'Bronze badges',
   silver: 'Silver badges',
@@ -115,17 +151,76 @@ const CHEST_FOR = {
   diamond: 'Diamond badges',
   master: 'Master badges',
   legend: 'Legend badges',
-  monthly: 'Monthly badges, in the badge colour',
-  royal: 'Special badges and milestones',
+  monthly: 'Monthly badges',
+  royal: 'Special badges',
   pillow: 'Secret rest badges',
 };
-$('#chestgrid').innerHTML = Object.entries(CHEST_LOOK)
-  .map(
-    ([k, c]) => `<div class="cbox"><div class="two blue"><div><span class="tag">A</span>${chestSVG(k, { size: 160 })}</div><div data-3d="${k}"><span class="tag">B</span></div></div><div class="cap2"><b>${c.name} chest</b><small>For ${CHEST_FOR[k]}. Opens with ${c.taps} ${c.taps === 1 ? 'tap' : 'taps'}.</small></div></div>`,
-  )
+const CHEST_CAM = { w: 360, h: 308, cam: [0, 2.0, 5.5], look: [0, 0.8, 0], rotY: -0.42 };
+$('#chest-kept').innerHTML = ['bronze', 'gold', 'pillow']
+  .map((k) => `<div class="otile"><div class="oimg blue" data-3d="chest:${k}"></div><div class="otxt"><b>${CHEST_LOOK[k].name}</b><small>For ${CHEST_FOR[k]}. Signed off.</small></div></div>`)
   .join('');
+const tile = (kind, k, o, mine, on) =>
+  `<button type="button" class="otile" data-kind="${kind}" data-k="${k}" data-v="${o.id}" aria-pressed="${on}">${mine ? '<span class="pick">My pick</span>' : ''}<div class="oimg blue" data-3d="${kind}:${k}:${o.id}"></div><div class="otxt"><b>${o.name}</b><small>${on ? 'Used on the stage' : 'Tap to use'}</small></div></button>`;
 
-// ---------- 5. badges ----------
+// option groups render once the 3D module is in (it holds the option lists)
+async function buildOptions() {
+  let a;
+  try {
+    a = await get3d();
+  } catch (e) {
+    $('#chest-opts').innerHTML = $('#medal-opts').innerHTML = '<p class="offline" style="display:block">3D could not start in this browser.</p>';
+    return;
+  }
+  const { CHEST_OPTIONS, MEDAL_OPTIONS } = a.mod;
+  $('#chest-opts').innerHTML = Object.entries(CHEST_OPTS)
+    .map(([k, info]) => {
+      const opts = CHEST_OPTIONS[k];
+      return `<div class="ogrp" data-grp="chest:${k}"><h3>${CHEST_LOOK[k].name} chest</h3><p class="cap">${info.cap} For ${CHEST_FOR[k]}; ${CHEST_LOOK[k].taps} ${CHEST_LOOK[k].taps === 1 ? 'tap' : 'taps'}.</p><div class="otiles">${opts
+        .map((o) => tile('chest', k, o, o.id === info.pick && opts.length > 1, chosen.chest[k] === o.id))
+        .join('')}</div><button type="button" class="btn sm bs" data-try="${k}">Open it on the stage</button></div>`;
+    })
+    .join('');
+  $('#medal-opts').innerHTML = Object.entries(MEDAL_OPTS)
+    .map(([t, info]) => {
+      const opts = MEDAL_OPTIONS[t];
+      return `<div class="ogrp" data-grp="medal:${t}"><h3>${TIER_UI[t].label}</h3><p class="cap">${info.cap}</p><div class="otiles">${opts
+        .map((o) => tile('medal', t, o, o.id === info.pick, chosen.medal[t] === o.id))
+        .join('')}</div><button type="button" class="btn sm bs" data-try="${t}">Open a ${TIER_UI[t].label} badge on the stage</button></div>`;
+    })
+    .join('');
+  document.querySelectorAll('#chest-opts [data-3d],#medal-opts [data-3d]').forEach((el) => io3.observe(el));
+}
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button.otile');
+  if (t) {
+    const { kind, k, v } = t.dataset;
+    chosen[kind][k] = v;
+    saveArt();
+    t.closest('.otiles')
+      .querySelectorAll('.otile')
+      .forEach((o) => {
+        const on = o === t;
+        o.setAttribute('aria-pressed', String(on));
+        o.querySelector('.otxt small').textContent = on ? 'Used on the stage' : 'Tap to use';
+      });
+    play('chip');
+    if (kind === 'chest' && stage.key === k) {
+      stage.stopRun();
+      stage.idle();
+    }
+    if (kind === 'medal') rerender(`#m-tiers [data-3d^="medal:${k}:"]`, `medal:${k}:${v}`);
+    return;
+  }
+  const tryBtn = e.target.closest('[data-try]');
+  if (tryBtn) {
+    pickChest(tryBtn.dataset.try);
+    $('#stage').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    S.ensure();
+    start3d().then(() => setTimeout(() => stage.play(), 500));
+  }
+});
+
+// ---------- 4. badges ----------
 const TIERS = ['bronze', 'silver', 'gold', 'diamond', 'master', 'legend'];
 const FAM = [
   ['shield', 'target', 'Finisher'],
@@ -135,35 +230,31 @@ const FAM = [
   ['square', 'week', 'Streak Keeper'],
   ['circle', 'star', 'All-Rounder'],
 ];
-$('#m-today').innerHTML = TIERS.map((t, i) => `<div>${todayBadgeSVG(t, FAM[i][0], FAM[i][1] === 'week' ? 'calcheck' : FAM[i][1], 96)}${TIER_UI[t].label}</div>`).join('');
-$('#m-a').innerHTML = TIERS.map((t, i) => `<div>${medalSVG(t, FAM[i][0], FAM[i][1], { size: 110 })}${TIER_UI[t].label}<small style="font-weight:600;opacity:.85">${FAM[i][2]}</small></div>`).join('');
-$('#m-b').innerHTML = TIERS.map((t, i) => `<div><div data-3dm="${t},${FAM[i][0]},${FAM[i][1]}" style="aspect-ratio:1;width:100%;max-width:120px"></div>${TIER_UI[t].label}<small style="font-weight:600;opacity:.85">${FAM[i][2]}</small></div>`).join('');
-const OTHER = [
-  ['monthly', 'square', 'week', 'Month Clear', 'Monthly'],
-  ['special', 'star', 'crown', 'Clean Sweep', 'Special'],
-  ['secret', 'diamond', 'moon', 'Well Rested', 'Secret'],
-];
-$('#m-other').innerHTML =
-  OTHER.map(([t, s, ic, n, l]) => `<div>${medalSVG(t, s, ic, { size: 110 })}A: ${l}<small style="font-weight:600;opacity:.85">${n}</small></div>`).join('') +
-  OTHER.map(([t, s, ic, n, l]) => `<div><div data-3dm="${t},${s},${ic}" style="aspect-ratio:1;width:100%;max-width:120px"></div>B: ${l}<small style="font-weight:600;opacity:.85">${n}</small></div>`).join('');
-
-const PAL = {
-  bronze: ['#d98a4a', '#c4561e', '#ffb469', 'Bronze metal, burnt orange enamel'],
-  silver: ['#e3e9f0', '#4a6c9c', '#cfe7ff', 'Silver, steel blue enamel'],
-  gold: ['#ffd84a', '#d81e2c', '#ffe27a', 'Gold, ruby enamel, laurels'],
-  diamond: ['#eef7ff', '#2f8fe8', '#9ef0ff', 'Platinum, sapphire, cut face'],
-  master: ['#2c2230', '#22102a', '#ff8a2a', 'Obsidian, ember cracks'],
-  legend: ['#ffe9f6', '#3b1f8f', '#ffd0f4', 'Pearl rainbow rim, violet'],
-};
-$('#palette').innerHTML = Object.entries(PAL)
-  .map(([t, [a, b, c, d]]) => `<div class="sw2"><div class="c"><span style="background:${a}"></span><span style="background:${b}"></span><span style="background:${c}"></span></div><b>${TIER_UI[t].label}</b><small>${d}</small></div>`)
+const mtile = (spec, label, sub) => `<div><div class="mimg" data-3d="${spec}" style="aspect-ratio:1;width:100%;max-width:130px"></div>${label}<small style="font-weight:600;opacity:.85">${sub}</small></div>`;
+$('#m-tiers').innerHTML = TIERS.map((t, i) => mtile(`medal:${t}:${chosen.medal[t] || ''}:${FAM[i][0]}:${FAM[i][1]}`, TIER_UI[t].label, FAM[i][2])).join('');
+$('#m-other').innerHTML = [
+  ['monthly', 'square', 'week', 'Month Clear'],
+  ['special', 'star', 'crown', 'Clean Sweep'],
+  ['secret', 'diamond', 'moon', 'Well Rested'],
+]
+  .map(([t, s, ic, n]) => mtile(`medal:${t}::${s}:${ic}`, TIER_UI[t].label, n))
   .join('');
-$('#lock-stone').insertAdjacentHTML('afterbegin', `<div class="ring">${medalSVG('locked', 'hex', 'lock', { size: 110 })}</div>`);
-$('#lock-faded').insertAdjacentHTML('afterbegin', `<div class="faded">${medalSVG('gold', 'hex', 'dumbbell', { size: 110 })}</div>`);
+$('#lock-stone').insertAdjacentHTML('afterbegin', '<div class="lockpic"><span class="ring2"></span><span class="lockimg" data-3d="lock"></span></div>');
 
-// The 3D pictures render when their section comes into view, a few at a time.
+// The 3D pictures render when they come near the screen, one frame at a time.
 const queue = [];
 let busy = false;
+function render(a, spec) {
+  const [kind, k, v, shape, icon] = spec.split(':');
+  if (kind === 'chest') return a.still(a.chest(k, v || undefined), CHEST_CAM);
+  if (kind === 'lock') return a.still(a.medal('locked', 'hex', 'lock'), { w: 216, h: 216, cam: [0, 0, 4.6], look: [0, 0, 0], rotY: 0, shadow: false });
+  // a medal: an option tile, or the tier rows
+  const info = MEDAL_OPTS[k];
+  const m = a.medal(k, shape || info?.shape || 'hex', icon || info?.icon || 'star', null, { variant: v || undefined, month: k === 'monthly' ? 'OCT 26' : undefined });
+  const far = k === 'legend' ? 7.2 : 5.4;
+  const tileShape = spec.split(':').length > 3;
+  return a.still(m, { w: tileShape ? 260 : 360, h: tileShape ? 260 : 308, cam: [0, 0.2, far], look: [0, 0, 0], rotY: -0.28, shadow: false });
+}
 async function pump() {
   if (busy) return;
   busy = true;
@@ -171,22 +262,24 @@ async function pump() {
   try {
     a = await get3d();
   } catch {
-    document.querySelectorAll('[data-3d],[data-3dm]').forEach((el) => (el.innerHTML += '<small style="color:#fff">3D unavailable</small>'));
+    document.querySelectorAll('[data-3d]').forEach((el) => (el.innerHTML = '<small style="color:#fff">3D unavailable</small>'));
     queue.length = 0;
     busy = false;
     return;
   }
   while (queue.length) {
     const el = queue.shift();
-    if (el.dataset.done) continue;
-    el.dataset.done = '1';
+    if (el.dataset.done === el.dataset['3d']) continue;
+    el.dataset.done = el.dataset['3d'];
     let url;
-    if (el.dataset['3d']) url = still3d(a, a.chest(el.dataset['3d']), { w: 340, h: 300, cam: [0, 2.0, 5.5], look: [0, 0.8, 0], rotY: -0.42 });
-    else {
-      const [t, s, ic] = el.dataset['3dm'].split(',');
-      url = still3d(a, a.medal(t, s, ic), { w: 240, h: 240, ...MEDAL_CAM });
+    try {
+      url = render(a, el.dataset['3d']);
+    } catch (e) {
+      console.error('3D picture failed', el.dataset['3d'], e);
+      continue;
     }
-    el.insertAdjacentHTML('beforeend', `<img src="${url}" alt="" style="width:100%;height:auto;display:block">`);
+    el.querySelector('img')?.remove();
+    el.insertAdjacentHTML('beforeend', `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:contain;display:block">`);
     await new Promise((r) => setTimeout(r, 16));
   }
   busy = false;
@@ -200,17 +293,135 @@ const io3 = new IntersectionObserver(
     });
     pump();
   },
-  { rootMargin: '400px' },
+  { rootMargin: '500px' },
 );
-document.querySelectorAll('[data-3d],[data-3dm]').forEach((el) => io3.observe(el));
-// the B panel in section 1
-const nowB = document.createElement('div');
-nowB.style.cssText = 'display:flex;flex-direction:column;align-items:center';
-nowB.innerHTML = `<div data-3dm="gold,diamond,trophy" style="width:124px;height:124px;margin-bottom:-14px"></div><div data-3d="gold" style="width:200px;height:176px"></div>`;
-$('#now-b').append(nowB);
-nowB.querySelectorAll('[data-3d],[data-3dm]').forEach((el) => io3.observe(el));
+function rerender(sel, prefix) {
+  document.querySelectorAll(sel).forEach((el) => {
+    const parts = el.dataset['3d'].split(':');
+    const next = prefix.split(':');
+    parts[2] = next[2];
+    el.dataset['3d'] = parts.join(':');
+    queue.push(el);
+  });
+  pump();
+}
+document.querySelectorAll('[data-3d]').forEach((el) => io3.observe(el));
+new IntersectionObserver((ents, ob) => {
+  if (!ents.some((e) => e.isIntersecting)) return;
+  ob.disconnect();
+  buildOptions();
+}, { rootMargin: '800px' }).observe($('#chests'));
 
-// ---------- 6. tokens and springs ----------
+// ---------- 5. the 34 ----------
+const groups = [...new Set(CARDS.map((c) => c.g))];
+const HPT = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 9v6M21 9v6"/></svg>';
+const slotName = Object.fromEntries([...SLOTS, ...MUSIC].map((s) => [s.id, s.label]));
+let n = 0;
+$('#cardgroups').innerHTML = groups
+  .map(
+    (g) =>
+      `<div class="grp"><h3>${g}</h3><div class="cards">${CARDS.filter((c) => c.g === g)
+        .map((c) => {
+          const i = CARDS.indexOf(c);
+          n++;
+          const slots = (c.slots || []).map((id) => `<a href="#slot-${id}">${slotName[id] || id}</a>`).join(', ');
+          return `<article class="card${c.tall ? ' tall' : ''}" data-card="${i}"><h4><span class="n">${n}</span>${c.t}${c.changed ? ' <span class="new">Changed</span>' : ''}</h4><div class="demo"></div><dl class="meta"><dt>When</dt><dd>${c.when}</dd><dt>Motion</dt><dd>${c.motion}</dd><dt>Sound</dt><dd>${c.sound}${slots ? ` <span class="slotref">(section 6: ${slots})</span>` : ''}</dd><dt>Haptic</dt><dd>${c.haptic}</dd><dt>Where</dt><dd>${c.where}</dd></dl><span class="hpt" title="Haptic">${HPT}</span></article>`;
+        })
+        .join('')}</div></div>`,
+  )
+  .join('');
+const ctx = {
+  toStage() {
+    $('#stage').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+  playFinish() {
+    $('#stage').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    S.ensure();
+    start3d().then(() => setTimeout(() => stage.playFinish(), 500));
+  },
+  get3d,
+  chosen,
+};
+document.querySelectorAll('[data-card]').forEach((el) => {
+  try {
+    CARDS[Number(el.dataset.card)].build(el.querySelector('.demo'), ctx);
+  } catch (e) {
+    el.querySelector('.demo').textContent = 'This demo could not start: ' + e.message;
+    console.error(e);
+  }
+});
+
+// ---------- 6 and 7. sounds and music ----------
+// What the analysis found (tools/contour.py): key, and "rises" when the pitch climbs.
+const TAG = {
+  'reveal-hit': 'F major, rises',
+  'reveal-pickup': 'F major, rises',
+  'reveal-upper': 'C# major',
+  'sparkle-a': 'D major',
+  'sparkle-c': 'G# major, rises',
+  'riser-a': 'rises',
+  'chime-a': 'D major, rises',
+  'done-pizzi': 'D# major, rises',
+  'done-steel': 'D# major',
+  'beat-pizzi': 'D major, rises',
+  'beat-steel': 'D major, rises',
+  'record-a': 'C major, rises',
+  'record-b': 'F major',
+  'goal-steel': 'A# major',
+  'm-chest-pop-a': 'F major',
+  'm-chest-pop-b': 'D major',
+  'm-chest-pop-c': 'G major',
+  'm-chest-cin-a': 'F major',
+  'm-chest-cin-b': 'D major',
+  'm-chest-cin-c': 'C major',
+  'm-chest-fit-a': 'F major',
+  'm-chest-fit-b': 'F major',
+  'm-chest-fit-c': 'F major',
+  'm-level-joth': 'G major',
+  'm-level-rise': 'F major',
+  'm-level-success': 'C major',
+  'm-level-win': 'F major',
+  'm-rank-a': 'E major',
+  'm-rank-b': 'C major',
+  'm-rank-c': 'C major',
+};
+const IN_KEY = new Set(['reveal', 'sparkle', 'tier', 'chime', 'done', 'beat', 'record', 'goal']);
+const PL = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
+function chip(s, [v, l]) {
+  const tag = TAG[v] || (IN_KEY.has(s.id) && v.startsWith('code') ? 'in key' : '');
+  return `<button type="button" class="opt" data-v="${v}" aria-pressed="${PICK[s.id] === v}"><span class="pl">${PL}</span>${l}${tag ? ` <span class="atag">${tag}</span>` : ''}${v === s.pick ? ' <span class="mine">My pick</span>' : ''}</button>`;
+}
+function slotRow(s, isMusic) {
+  const body = isMusic
+    ? s.groups.map(([g, o]) => `${g ? `<span class="ghead">${g}</span>` : ''}${o.map((x) => chip(s, x)).join('')}`).join('')
+    : s.opts.map((x) => chip(s, x)).join('');
+  return `<div class="slot2" id="slot-${s.id}" data-slot="${s.id}" data-music="${isMusic ? 1 : 0}"><div><b>${s.label}</b><span class="where">${isMusic ? (s.id === 'm-chest' ? 'The reward stage, from the drop to the end' : s.id === 'm-level' ? 'Level up (32)' : 'Rank up (33)') : s.where}</span></div><div class="opts">${body}</div></div>`;
+}
+$('#slots').innerHTML = SLOTS.map((s) => slotRow(s, false)).join('');
+$('#musics').innerHTML = MUSIC.map((s) => slotRow(s, true)).join('');
+document.querySelectorAll('.slot2').forEach((row) =>
+  row.addEventListener('click', (e) => {
+    const b = e.target.closest('.opt');
+    if (!b) return;
+    S.ensure();
+    const id = row.dataset.slot;
+    setPick(id, b.dataset.v);
+    row.querySelectorAll('.opt').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+    setRewardKey();
+    if (row.dataset.music === '1') {
+      if (b.dataset.v === 'off') S.stopMusic(0.2);
+      else if (b.dataset.v === 'code:shimmer') {
+        // a preview: the bed, then three taps lifting it
+        S.playMusic('code:shimmer', { loop: true });
+        [0, 1, 2].forEach((i) => setTimeout(() => SHIMMER.lift(i), 900 * (i + 1)));
+        setTimeout(() => S.stopMusic(0.6), 4200);
+      } else if (b.dataset.v.startsWith('code:')) SYN[b.dataset.v.slice(5)]?.();
+      else S.playMusic(b.dataset.v, { loop: false });
+    } else play(id, {}, b.dataset.v);
+  }),
+);
+
+// ---------- 8. tokens and springs ----------
 const TOK = [
   ['Press', DUR.press, EASE.out, 'Buttons going down'],
   ['Quick', DUR.quick, EASE.out, 'Fades, number rolls, toasts out'],
@@ -246,59 +457,7 @@ document.querySelectorAll('.tok').forEach((t) =>
   }),
 );
 
-// ---------- 7. the 34 ----------
-const groups = [...new Set(CARDS.map((c) => c.g))];
-const HPT = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 9v6M21 9v6"/></svg>';
-let n = 0;
-$('#cardgroups').innerHTML = groups
-  .map(
-    (g) =>
-      `<div class="grp"><h3>${g}</h3><div class="cards">${CARDS.filter((c) => c.g === g)
-        .map((c) => {
-          const i = CARDS.indexOf(c);
-          n++;
-          return `<article class="card${c.tall ? ' tall' : ''}" data-card="${i}"><h4><span class="n">${n}</span>${c.t}</h4><div class="demo"></div><dl class="meta"><dt>When</dt><dd>${c.when}</dd><dt>Motion</dt><dd>${c.motion}</dd><dt>Sound</dt><dd>${c.sound}</dd><dt>Haptic</dt><dd>${c.haptic}</dd><dt>Where</dt><dd>${c.where}</dd></dl><span class="hpt" title="Haptic">${HPT}</span></article>`;
-        })
-        .join('')}</div></div>`,
-  )
-  .join('');
-const ctx = {
-  toStage() {
-    $('#stage').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  },
-};
-document.querySelectorAll('[data-card]').forEach((el) => {
-  try {
-    CARDS[Number(el.dataset.card)].build(el.querySelector('.demo'), ctx);
-  } catch (e) {
-    el.querySelector('.demo').textContent = 'This demo could not start: ' + e.message;
-    console.error(e);
-  }
-});
-
-// ---------- 8 and 9. sounds and music ----------
-const PL = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
-function slotRow(s, isMusic) {
-  return `<div class="slot2" data-slot="${s.id}" data-music="${isMusic ? 1 : 0}"><div><b>${s.label}</b><small>${isMusic ? 'Music' : s.group === 'ui' ? 'Tap sound' : 'Effect'}</small></div><div class="opts">${s.opts
-    .map(([v, l]) => `<button type="button" class="opt" data-v="${v}" aria-pressed="${PICK[s.id] === v}"><span class="pl">${PL}</span>${l}${v === s.pick ? ' <span class="mine">My pick</span>' : ''}</button>`)
-    .join('')}</div></div>`;
-}
-$('#slots').innerHTML = SLOTS.map((s) => slotRow(s, false)).join('');
-$('#musics').innerHTML = MUSIC.map((s) => slotRow(s, true)).join('');
-document.querySelectorAll('.slot2').forEach((row) =>
-  row.addEventListener('click', (e) => {
-    const b = e.target.closest('.opt');
-    if (!b) return;
-    S.ensure();
-    const id = row.dataset.slot;
-    setPick(id, b.dataset.v);
-    row.querySelectorAll('.opt').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
-    if (row.dataset.music === '1') S.playMusic(b.dataset.v, { loop: false });
-    else play(id, {}, b.dataset.v);
-  }),
-);
-
-// ---------- 10. settings ----------
+// ---------- 9. settings ----------
 const ROW = (icon, label, sub, sw, isNew) =>
   `<div class="row"><span class="ibox">${icon}</span><span><span>${label}${isNew ? ' <span class="new">New</span>' : ''}</span>${sub ? `<small>${sub}</small>` : ''}</span>${sw === null ? '<span class="chev">&rsaquo;</span>' : `<button type="button" class="mswitch" role="switch" aria-checked="${sw}" aria-label="${label}"><i style="transform:translateX(${sw ? 22 : 0}px)"></i></button>`}</div>`;
 const I = (p) => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
@@ -314,5 +473,32 @@ document.querySelectorAll('#setmock .mswitch').forEach((sw) =>
     buzz('light', sw);
   }),
 );
+
+// ---------- 11. what I need from you ----------
+const optLabel = (list, sid) => list.find(([v]) => v === sid)?.[1] || sid;
+const slot = (id) => SLOTS.find((s) => s.id === id);
+const mus = (id) => MUSIC.find((s) => s.id === id);
+get3d()
+  .then((a) => a.mod)
+  .catch(() => null)
+  .then((m) => {
+    const cName = (k) => m?.CHEST_OPTIONS[k].find((o) => o.id === CHEST_OPTS[k].pick)?.name || CHEST_OPTS[k].pick;
+    const mName = (t) => m?.MEDAL_OPTIONS[t].find((o) => o.id === MEDAL_OPTS[t].pick)?.name || MEDAL_OPTS[t].pick;
+    const P = (t) => `<span class="pick">My pick: ${t}</span>`;
+    $('#decide-list').innerHTML = [
+      `<b>Chest music:</b> one piece, or the shimmer, or none (section 7). ${P(optLabel(mus('m-chest').opts, mus('m-chest').pick))}`,
+      `<b>The badge sound:</b> ${P(optLabel(slot('reveal').opts, slot('reveal').pick))}. And the lid: ${P(optLabel(slot('burst').opts, slot('burst').pick))}`,
+      `<b>The reward stage:</b> the layout, the swirl, the new card, the tray and the summary without a heading. ${P('as shown')}`,
+      `<b>The full finish:</b> Finish, a short roll and rise, Victory, then the chest. ${P('as shown')}`,
+      `<b>Chests:</b> Silver, Crystal (${cName('diamond')}), Obsidian (${cName('master')}), Prismatic (${cName('legend')}), Monthly (${cName('monthly')}), Royal (${cName('royal')}). ${P('as marked in section 3')}`,
+      `<b>Badges:</b> Gold (${mName('gold')}), Master (${mName('master')}), Legend (${mName('legend')}). ${P('as marked in section 4')}`,
+      `<b>The rank up on the stage:</b> the old shield breaks, the new one rises, then the new rank's chest with the title and frame first. ${P('as shown')}`,
+      `<b>The interactions marked Changed</b> in section 5: keep, or tell me what still feels off.`,
+      `<b>New sound options:</b> exercise complete, beat last time, weekly goal, back and close, sheet open, level up. ${P('the ones marked in sections 6 and 7')}`,
+      `<b>The Rank Road with chests:</b> on board 13, with its own questions.`,
+    ]
+      .map((t) => `<li>${t}</li>`)
+      .join('');
+  });
 
 document.body.dataset.done = '1';

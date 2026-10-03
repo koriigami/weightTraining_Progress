@@ -196,6 +196,27 @@ export const PALETTE = {
   monthly: { name: 'Monthly', chest: 'Monthly', metal: '#f6f2ea', metalDeep: '#b8a888', enamel: '#16b896', enamelDeep: '#0b5e4c', glow: '#ffc4cc', taps: 1 },
   special: { name: 'Special', chest: 'Royal', metal: '#ffc93a', metalDeep: '#9a5d00', enamel: '#7a3fe0', enamelDeep: '#2e0f6b', glow: '#e2d4ff', taps: 2 },
   secret: { name: 'Secret', chest: 'Pillow', metal: '#f3ecff', metalDeep: '#9a86d6', enamel: '#9b7bff', enamelDeep: '#3b1f8f', glow: '#efe6ff', taps: 1 },
+  locked: { name: 'Locked', metal: '#b9b2a6', enamel: '#9a9285', enamelDeep: '#5e574b', icon: '#ece6da', glow: '#ffffff' },
+};
+
+// Round 2 medal options: Gold loses its red, Master gets two more looks, Legend a silhouette.
+export const MEDAL_OPTIONS = {
+  gold: [
+    { id: 'blue', name: 'Royal blue', enamel: '#2a6ff0', enamelDeep: '#0b2a6e' },
+    { id: 'emerald', name: 'Emerald', enamel: '#1fc27c', enamelDeep: '#06452b' },
+    { id: 'onyx', name: 'Onyx', enamel: '#45454f', enamelDeep: '#0a0a0e', icon: '#ffe08a' },
+    { id: 'sunburst', name: 'Sunburst gold', enamel: '#ffd34a', enamelDeep: '#b8790a', rays: true, icon: '#6b3f00' },
+  ],
+  master: [
+    { id: 'ember', name: 'Ember (round 1)' },
+    { id: 'molten', name: 'Molten gold', crack: '#ffcc33', rimColor: '#1c1612', enamel: '#2a2018', enamelDeep: '#050403', icon: '#ffd76a' },
+    { id: 'violet', name: 'Violet flame', crack: '#b05cff', rimColor: '#1d1230', enamel: '#3a1a5c', enamelDeep: '#12061f', icon: '#e2c4ff' },
+  ],
+  legend: [
+    { id: 'halo', name: 'Star-burst' },
+    { id: 'wings', name: 'Winged crest' },
+    { id: 'crown', name: 'Crowned' },
+  ],
 };
 
 export const CHESTS = {
@@ -209,6 +230,166 @@ export const CHESTS = {
   royal: { tier: 'gold', body: 'velvet', paint: '#6d2fd6', strap: 'gold', gem: '#ffffff', crown: true, label: 'Royal' },
   pillow: { tier: 'silver', body: 'pillow', paint: '#b9a6ff', label: 'Pillow' },
 };
+
+// Round 2 options. Each overrides its chest's base look; the first is the default.
+export const CHEST_OPTIONS = {
+  silver: [{ id: 'a', name: 'Slate wood, polished silver', def: { wood: '#3c4a62', strap: 'brightsilver', gem: '#2f6dff' } }],
+  diamond: [
+    { id: 'a', name: 'Faceted crystal', def: { body: 'facet', strap: 'frost', gem: '#e8fbff', gemSize: 0.18 } },
+    { id: 'b', name: 'Clear ice', def: { body: 'ice', strap: 'platinum', gem: '#5fe3ff', gemSize: 0.16 } },
+  ],
+  master: [
+    { id: 'a', name: 'Ember (round 1)', def: {} },
+    { id: 'b', name: 'Volcanic', def: { crack: '#ffb020', strap: 'molten', gem: '#ff4a1a' } },
+    { id: 'c', name: 'Void', def: { bodyColor: '#1a0f2a', crack: '#b05cff', strap: 'darksilver', gem: '#c58bff' } },
+  ],
+  legend: [
+    { id: 'a', name: 'Opal', def: { body: 'opal', strap: 'gold', gem: 'rainbow' } },
+    { id: 'b', name: 'Starlight', def: { body: 'stars', strap: 'iridgold', gem: '#ffffff' } },
+    { id: 'c', name: 'Aurora', def: { body: 'aurora', strap: 'brightsilver', gem: '#7fffd4' } },
+  ],
+  monthly: [
+    { id: 'a', name: 'Lacquer and gold', def: { body: 'lacquer', paint: '#ff5d73', strap: 'gold', gem: '#ffd54a' } },
+    { id: 'b', name: 'Stained wood, month plate', def: { body: 'paint', paint: '#e8505f', strap: 'brightsilver', gem: null, plate: 'OCT' } },
+    { id: 'c', name: 'Two-tone', def: { body: 'wood', wood: '#6a3a1c', lidBody: 'lacquer', lidPaint: '#ff5d73', strap: 'gold', gem: '#ffd54a' } },
+  ],
+  royal: [
+    { id: 'a', name: 'Antique gold, ruby', def: { strap: 'antiquegold', gem: '#e0103a', crownMetal: 'antiquegold' } },
+    { id: 'b', name: 'Rose gold, emerald', def: { strap: 'rosegold', gem: '#14b866', crownMetal: 'rosegold' } },
+    { id: 'c', name: 'Warm gold, amethyst', def: { strap: 'warmgold', gem: '#a259ff', crownMetal: 'warmgold' } },
+  ],
+};
+
+export function chestDef(key, variant) {
+  const opts = CHEST_OPTIONS[key];
+  const o = opts ? opts.find((x) => x.id === variant) || opts[0] : null;
+  return { ...CHESTS[key], ...(o ? o.def : {}), key, variant: o ? o.id : '' };
+}
+
+// Facets: random flat cells, each leaning its own way, as a normal map.
+function facetNormals(seed = 9, cells = 70, tilt = 0.45) {
+  const r = rand(seed);
+  const S = 256;
+  const pts = Array.from({ length: cells }, () => [r() * S, r() * S, (r() - 0.5) * 2 * tilt, (r() - 0.5) * 2 * tilt]);
+  const c = canvas(S, S);
+  const x = c.getContext('2d');
+  const img = x.createImageData(S, S);
+  for (let y = 0; y < S; y++)
+    for (let xx = 0; xx < S; xx++) {
+      let best = 1e9;
+      let bp = pts[0];
+      for (const p of pts) {
+        // wrap so the texture tiles
+        const dx = Math.min(Math.abs(p[0] - xx), S - Math.abs(p[0] - xx));
+        const dy = Math.min(Math.abs(p[1] - y), S - Math.abs(p[1] - y));
+        const d = dx * dx + dy * dy;
+        if (d < best) {
+          best = d;
+          bp = p;
+        }
+      }
+      const v = new THREE.Vector3(bp[2], bp[3], 1).normalize();
+      const i = (y * S + xx) * 4;
+      img.data[i] = (v.x * 0.5 + 0.5) * 255;
+      img.data[i + 1] = (v.y * 0.5 + 0.5) * 255;
+      img.data[i + 2] = (v.z * 0.5 + 0.5) * 255;
+      img.data[i + 3] = 255;
+    }
+  x.putImageData(img, 0, 0);
+  return c;
+}
+
+// Opal: pastel rainbow with bright flecks.
+function opalCanvas() {
+  const r = rand(17);
+  const c = canvas(512, 512);
+  const x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, 512, 512);
+  ['#fff3fb', '#ffe0f1', '#fff1cf', '#dcffe8', '#d6f2ff', '#e9dcff', '#fff3fb'].forEach((cc, i, a) => g.addColorStop(i / (a.length - 1), cc));
+  x.fillStyle = g;
+  x.fillRect(0, 0, 512, 512);
+  const fl = ['#ff9ad5', '#7fe3ff', '#9cff9c', '#ffd36e', '#b99cff'];
+  for (let i = 0; i < 260; i++) {
+    x.fillStyle = fl[i % fl.length];
+    x.globalAlpha = 0.25 + r() * 0.4;
+    x.beginPath();
+    x.ellipse(r() * 512, r() * 512, 2 + r() * 9, 1 + r() * 4, r() * 3, 0, Math.PI * 2);
+    x.fill();
+  }
+  x.globalAlpha = 1;
+  return c;
+}
+
+// Starlight: a deep violet sky; the stars are also the glow map.
+function starCanvases() {
+  const r = rand(31);
+  const base = canvas(512, 512);
+  const glow = canvas(512, 512);
+  const b = base.getContext('2d');
+  const gl = glow.getContext('2d');
+  const g = b.createLinearGradient(0, 0, 512, 512);
+  g.addColorStop(0, '#2a1670');
+  g.addColorStop(0.5, '#1b0f4a');
+  g.addColorStop(1, '#0d0730');
+  b.fillStyle = g;
+  b.fillRect(0, 0, 512, 512);
+  gl.fillStyle = '#000';
+  gl.fillRect(0, 0, 512, 512);
+  const cols = ['#ffffff', '#ffe7a8', '#bfe0ff', '#ffc6f0'];
+  for (let i = 0; i < 220; i++) {
+    const x = r() * 512;
+    const y = r() * 512;
+    const s = r() < 0.08 ? 2.6 : 0.6 + r() * 1.2;
+    for (const ctx of [b, gl]) {
+      ctx.fillStyle = cols[i % cols.length];
+      ctx.beginPath();
+      ctx.arc(x, y, s, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  return { base, glow };
+}
+
+// Aurora: soft bands of green, teal and pink as a glow map; it drifts on stage.
+function auroraCanvas() {
+  const c = canvas(512, 256);
+  const x = c.getContext('2d');
+  x.fillStyle = '#000';
+  x.fillRect(0, 0, 512, 256);
+  const bands = [
+    ['#3dffb0', 70, 0.9],
+    ['#2ad4ff', 120, 0.7],
+    ['#ff7ad9', 175, 0.55],
+  ];
+  x.filter = 'blur(10px)';
+  for (const [col, y0, a] of bands) {
+    x.strokeStyle = col;
+    x.globalAlpha = a;
+    x.lineWidth = 26;
+    x.beginPath();
+    for (let xx = 0; xx <= 512; xx += 8) {
+      const y = y0 + Math.sin((xx / 512) * Math.PI * 4 + y0) * 22;
+      xx ? x.lineTo(xx, y) : x.moveTo(xx, y);
+    }
+    x.stroke();
+  }
+  x.filter = 'none';
+  x.globalAlpha = 1;
+  return c;
+}
+
+function textCanvas(text, bg, fg, w = 256, h = 160, size = 96) {
+  const c = canvas(w, h);
+  const x = c.getContext('2d');
+  x.fillStyle = bg;
+  x.fillRect(0, 0, w, h);
+  x.fillStyle = fg;
+  x.font = `${size}px 'Levl Display', 'Arial Rounded MT Bold', sans-serif`;
+  x.textAlign = 'center';
+  x.textBaseline = 'middle';
+  x.fillText(text, w / 2, h / 2 + 6);
+  return c;
+}
 
 // ---------- the renderer ----------
 export class Art {
@@ -256,12 +437,21 @@ export class Art {
       gold: { color: '#ffc93a', metalness: 1, roughness: 0.2 },
       deepgold: { color: '#d68a12', metalness: 1, roughness: 0.32 },
       brass: { color: '#e0a640', metalness: 1, roughness: 0.3 },
+      brightsilver: { color: '#f7f9fc', metalness: 1, roughness: 0.12 },
+      frost: { color: '#dff3ff', metalness: 0.85, roughness: 0.3 },
+      platinum: { color: '#eef4fa', metalness: 1, roughness: 0.16 },
+      molten: { color: '#d9962e', metalness: 1, roughness: 0.26, emissive: '#ff5a00', emissiveIntensity: 0.08 },
+      darksilver: { color: '#9aa0b4', metalness: 1, roughness: 0.2 },
+      antiquegold: { color: '#c8961e', metalness: 1, roughness: 0.34 },
+      rosegold: { color: '#e7a38f', metalness: 1, roughness: 0.2 },
+      warmgold: { color: '#f0b030', metalness: 1, roughness: 0.15 },
     }[kind];
+    if (kind === 'iridgold') return (this.cache[k] = new THREE.MeshPhysicalMaterial({ color: '#ffd76a', metalness: 1, roughness: 0.18, iridescence: 1, iridescenceIOR: 1.8, iridescenceThicknessRange: [200, 900] }));
     return (this.cache[k] = new THREE.MeshStandardMaterial(M));
   }
 
   bodyMaterial(def) {
-    const k = 'b-' + def.body + (def.wood || def.paint || '');
+    const k = 'b-' + def.body + (def.wood || def.paint || '') + (def.bodyColor || '') + (def.crack || '');
     if (this.cache[k]) return this.cache[k];
     let m;
     if (def.body === 'wood') {
@@ -271,9 +461,24 @@ export class Art {
       m = new THREE.MeshPhysicalMaterial({ color: '#ffc531', metalness: 1, roughness: 0.18, clearcoat: 0.6, clearcoatRoughness: 0.15 });
     } else if (def.body === 'crystal') {
       m = new THREE.MeshPhysicalMaterial({ color: '#7fdcff', metalness: 0, roughness: 0.04, transmission: 0.55, thickness: 0.8, ior: 1.6, clearcoat: 1, emissive: '#1d7fff', emissiveIntensity: 0.18, flatShading: true });
+    } else if (def.body === 'facet') {
+      m = new THREE.MeshPhysicalMaterial({ color: '#9fe7ff', metalness: 0.05, roughness: 0.05, transmission: 0.35, thickness: 0.8, ior: 1.5, clearcoat: 1, emissive: '#2a8cff', emissiveIntensity: 0.22, iridescence: 0.25, normalMap: tex(facetNormals(9, 60, 0.5), false, [1.5, 1.5]), normalScale: new THREE.Vector2(1, 1) });
+    } else if (def.body === 'ice') {
+      m = new THREE.MeshPhysicalMaterial({ color: '#c8f3ff', metalness: 0, roughness: 0.08, transmission: 0.6, thickness: 1.2, ior: 1.31, clearcoat: 1, emissive: '#4fc3ff', emissiveIntensity: 0.15, normalMap: tex(facetNormals(4, 26, 0.25), false), normalScale: new THREE.Vector2(0.8, 0.8) });
     } else if (def.body === 'obsidian') {
-      const ck = crackCanvas(11);
-      m = new THREE.MeshPhysicalMaterial({ color: '#17111c', metalness: 0.2, roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.05, emissive: '#ffffff', emissiveMap: tex(ck), emissiveIntensity: 1.6 });
+      const ck = crackCanvas(11, def.crack || '#ff7a1a');
+      m = new THREE.MeshPhysicalMaterial({ color: def.bodyColor || '#17111c', metalness: 0.2, roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.05, emissive: '#ffffff', emissiveMap: tex(ck), emissiveIntensity: 1.6 });
+    } else if (def.body === 'opal') {
+      m = new THREE.MeshPhysicalMaterial({ map: tex(opalCanvas()), metalness: 0.1, roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.04, iridescence: 1, iridescenceIOR: 1.5, iridescenceThicknessRange: [150, 900] });
+    } else if (def.body === 'stars') {
+      const st = starCanvases();
+      m = new THREE.MeshPhysicalMaterial({ map: tex(st.base), emissive: '#ffffff', emissiveMap: tex(st.glow), emissiveIntensity: 1.3, metalness: 0.1, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.06 });
+    } else if (def.body === 'aurora') {
+      const t = tex(auroraCanvas());
+      m = new THREE.MeshPhysicalMaterial({ color: '#0d1c3a', emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 1.1, metalness: 0.15, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.05 });
+      m.userData.drift = t;
+    } else if (def.body === 'lacquer') {
+      m = new THREE.MeshPhysicalMaterial({ color: def.paint, roughness: 0.28, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.08 });
     } else if (def.body === 'pearl') {
       const c = canvas(256, 256);
       const x = c.getContext('2d');
@@ -309,7 +514,8 @@ export class Art {
 
   // The lid's extruded sides map the texture along the curve, so turn wood a quarter.
   lidMaterial(def, body) {
-    if (!body.map) return body;
+    if (def.lidBody) return this.bodyMaterial({ body: def.lidBody, paint: def.lidPaint });
+    if (!body.map || def.body === 'opal' || def.body === 'stars') return body;
     const k = 'l-' + def.body + (def.wood || def.paint || '');
     if (this.cache[k]) return this.cache[k];
     const m = body.clone();
@@ -355,8 +561,8 @@ export class Art {
   }
 
   // The chest, standing on y = 0 and facing +z. userData has the parts the stage animates.
-  chest(key) {
-    const def = CHESTS[key];
+  chest(key, variant) {
+    const def = chestDef(key, variant);
     if (def.body === 'pillow') return this.pillow(def);
     const W = 2.0;
     const D = 1.42;
@@ -429,8 +635,13 @@ export class Art {
     plate.position.set(0, -0.02, D / 2 + 0.05);
     lid.add(plate);
     let gem = null;
-    if (def.gem) {
-      gem = new THREE.Mesh(this.gemGeo(0.14), this.gemMaterial(def.gem));
+    if (def.plate) {
+      const face = new THREE.Mesh(new THREE.PlaneGeometry(0.38, 0.3), new THREE.MeshStandardMaterial({ map: tex(textCanvas(def.plate, '#fff6e8', '#9c1630', 256, 160, 112)), roughness: 0.5 }));
+      face.position.set(0, -0.02, D / 2 + 0.112);
+      face.scale.set(1.05, 1.05, 1);
+      lid.add(face);
+    } else if (def.gem) {
+      gem = new THREE.Mesh(this.gemGeo(def.gemSize || 0.14), this.gemMaterial(def.gem));
       gem.position.set(0, 0.0, D / 2 + 0.12);
       lid.add(gem);
     } else {
@@ -441,10 +652,8 @@ export class Art {
       ks.position.set(0, -0.02, D / 2 + 0.115);
       lid.add(kh, ks);
     }
-    if (def.body === 'crystal') this.crystals(lid, LH, 5);
-    if (def.crown) this.crown(lid, LH);
-    if (def.body === 'pearl') this.crystals(lid, LH, 3, true);
-    g.userData = { hinge, lid, gem, inner, H, D, W, def, glow: PALETTE[def.tier].glow };
+    if (def.crown) this.crown(lid, LH, def.crownMetal || 'gold', def.gem || '#ff3b5c');
+    g.userData = { hinge, lid, gem, inner, H, D, W, def, glow: PALETTE[def.tier].glow, drift: body.userData.drift };
     return g;
   }
 
@@ -462,8 +671,8 @@ export class Art {
     }
   }
 
-  crown(lid, LH) {
-    const gold = this.metal('gold');
+  crown(lid, LH, metal = 'gold', gemColor = '#ff3b5c') {
+    const gold = this.metal(metal);
     const c = new THREE.Group();
     const band = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.3, 0.16, 32, 1, true), gold);
     band.material = gold.clone();
@@ -473,7 +682,7 @@ export class Art {
       const a = (i / 5) * Math.PI * 2;
       const sp = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.22, 4), gold);
       sp.position.set(Math.sin(a) * 0.31, 0.18, Math.cos(a) * 0.31);
-      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 8), this.gemMaterial('#ff3b5c'));
+      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 8), this.gemMaterial(gemColor));
       ball.position.set(Math.sin(a) * 0.31, 0.31, Math.cos(a) * 0.31);
       c.add(sp, ball);
     }
@@ -575,7 +784,9 @@ export class Art {
   }
 
   // The face art: the badge icon embossed, as colour and normal maps.
-  faceMaps(icon, text, tier) {
+  // The face art: the badge icon embossed, as colour and normal maps. The icon
+  // fills about 36% of the medal, as on the vector medals (round 1 was 54%).
+  faceMaps(icon, text, tier, P) {
     const S = 512;
     const hc = canvas(S, S);
     const hx = hc.getContext('2d');
@@ -587,13 +798,13 @@ export class Art {
       ctx.fillStyle = color;
       ctx.lineCap = ctx.lineJoin = 'round';
       if (text) {
-        ctx.font = `${text.length > 3 ? 150 : 190}px 'Levl Display', 'Arial Rounded MT Bold', sans-serif`;
+        ctx.font = `${text.length > 3 ? 100 : 128}px 'Levl Display', 'Arial Rounded MT Bold', sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(text, S / 2, S / 2 + 14);
+        ctx.fillText(text, S / 2, S / 2 + 10);
       } else if (icon) {
         ctx.translate(S / 2, S / 2);
-        ctx.scale(11.5, 11.5);
+        ctx.scale(7.6, 7.6);
         ctx.translate(-12, -12.2);
         ctx.lineWidth = lw;
         const d = ICON_PATHS[icon] || [];
@@ -601,10 +812,10 @@ export class Art {
       }
       ctx.restore();
     };
-    hx.filter = 'blur(10px)';
-    draw(hx, '#fff', 3.2);
-    hx.filter = 'blur(3px)';
-    draw(hx, '#fff', 2.5);
+    hx.filter = 'blur(7px)';
+    draw(hx, '#fff', 3.4);
+    hx.filter = 'blur(2px)';
+    draw(hx, '#fff', 2.6);
     const normal = heightToNormal(hc, 6);
     if (tier === 'diamond') {
       // cut facets: twelve flat planes leaning out from the centre, under the icon
@@ -628,13 +839,22 @@ export class Art {
     }
     const cc = canvas(S, S);
     const cx = cc.getContext('2d');
-    const P = PALETTE[tier];
     const g = cx.createLinearGradient(0, 0, S * 0.3, S);
     g.addColorStop(0, P.enamel);
     g.addColorStop(1, P.enamelDeep);
     cx.fillStyle = g;
     cx.fillRect(0, 0, S, S);
-    // fine guilloche rings in the enamel
+    if (P.rays) {
+      // a sunburst: alternating light and dark rays from the centre
+      for (let k = 0; k < 24; k++) {
+        cx.fillStyle = k % 2 ? 'rgba(255,255,255,.22)' : 'rgba(120,70,0,.18)';
+        cx.beginPath();
+        cx.moveTo(S / 2, S / 2);
+        cx.arc(S / 2, S / 2, S, (k / 24) * Math.PI * 2, ((k + 1) / 24) * Math.PI * 2);
+        cx.fill();
+      }
+    }
+    // fine engine-turned rings in the enamel
     cx.globalAlpha = 0.09;
     cx.strokeStyle = '#fff';
     for (let r = 20; r < S; r += 14) {
@@ -643,78 +863,132 @@ export class Art {
       cx.stroke();
     }
     cx.globalAlpha = 1;
-    draw(cx, tier === 'master' ? '#ffb15a' : '#fff6dc', 2.5);
+    draw(cx, P.icon || (tier === 'master' ? '#ffb15a' : '#fff6dc'), 2.6);
     return { color: tex(cc), normal: tex(normal, false) };
   }
 
-  medal(tier, shape = 'hex', icon = 'flame', text = null) {
-    const P = PALETTE[tier];
+  // A medal: a bevelled metal rim in the family's shape, an enamel face with the
+  // icon embossed, a raised bezel, and the tier's details. No laurels (round 2).
+  medal(tier, shape = 'hex', icon = 'flame', text = null, { variant, month } = {}) {
+    const opts = MEDAL_OPTIONS[tier];
+    const o = opts ? opts.find((x) => x.id === variant) || opts[0] : null;
+    const P = { ...PALETTE[tier], ...(o || {}) };
     const g = new THREE.Group();
     const outer = this.shapePath(shape);
-    const rimMat =
-      tier === 'legend'
-        ? new THREE.MeshPhysicalMaterial({ color: '#ffffff', metalness: 0.6, roughness: 0.15, iridescence: 1, iridescenceIOR: 1.8, clearcoat: 1 })
-        : tier === 'master'
-          ? new THREE.MeshPhysicalMaterial({ color: '#241a26', metalness: 0.5, roughness: 0.2, clearcoat: 1, emissive: '#ffffff', emissiveMap: tex(crackCanvas(23)), emissiveIntensity: 1.4 })
-          : new THREE.MeshStandardMaterial({ color: P.metal, metalness: 1, roughness: tier === 'bronze' ? 0.38 : 0.2 });
+    let rimMat;
+    if (tier === 'legend') rimMat = new THREE.MeshPhysicalMaterial({ color: '#ffffff', metalness: 0.6, roughness: 0.15, iridescence: 1, iridescenceIOR: 1.8, clearcoat: 1 });
+    else if (tier === 'master') rimMat = new THREE.MeshPhysicalMaterial({ color: P.rimColor || '#241a26', metalness: 0.5, roughness: 0.2, clearcoat: 1, emissive: '#ffffff', emissiveMap: tex(crackCanvas(23, P.crack || '#ff7a1a')), emissiveIntensity: 1.4 });
+    else if (tier === 'locked') rimMat = this.stone();
+    else rimMat = new THREE.MeshStandardMaterial({ color: P.metal, metalness: 1, roughness: tier === 'bronze' ? 0.38 : 0.2 });
     const rim = new THREE.Mesh(new THREE.ExtrudeGeometry(outer, { depth: 0.16, bevelEnabled: true, bevelThickness: 0.07, bevelSize: 0.07, bevelSegments: 5, curveSegments: 24 }), rimMat);
     rim.position.z = -0.08;
     g.add(rim);
-    // the inner face: the same outline, smaller, as an enamel inlay with the icon embossed
     const innerPts = outer.getPoints().map((v) => v.clone().multiplyScalar(0.8));
     const inner = new THREE.Shape(innerPts);
-    const maps = this.faceMaps(icon, text, tier);
+    const maps = this.faceMaps(icon, text, tier, P);
     const faceGeo = new THREE.ShapeGeometry(inner, 24);
-    // ShapeGeometry UVs are in shape units; map -1..1 to 0..1
     const uv = faceGeo.attributes.uv;
     const pos = faceGeo.attributes.position;
     for (let i = 0; i < uv.count; i++) uv.setXY(i, pos.getX(i) / 2 + 0.5, pos.getY(i) / 2 + 0.5);
+    const stone = tier === 'locked';
     const face = new THREE.Mesh(
       faceGeo,
-      new THREE.MeshPhysicalMaterial({ map: maps.color, normalMap: maps.normal, normalScale: new THREE.Vector2(1.4, 1.4), roughness: 0.25, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.08, emissive: tier === 'master' ? '#ff7a1a' : '#000000', emissiveIntensity: tier === 'master' ? 0.15 : 0 }),
+      new THREE.MeshPhysicalMaterial({ map: maps.color, normalMap: maps.normal, normalScale: new THREE.Vector2(1.4, 1.4), roughness: stone ? 0.9 : 0.25, metalness: stone ? 0 : 0.1, clearcoat: stone ? 0 : 1, clearcoatRoughness: 0.08, emissive: tier === 'master' ? P.crack || '#ff7a1a' : '#000000', emissiveIntensity: tier === 'master' ? 0.08 : 0 }),
     );
     face.position.z = 0.155;
     g.add(face);
-    // a raised inner bezel between face and rim
     const bezelShape = new THREE.Shape(outer.getPoints().map((v) => v.clone().multiplyScalar(0.86)));
     bezelShape.holes.push(new THREE.Path(innerPts.slice().reverse()));
     const bezel = new THREE.Mesh(new THREE.ExtrudeGeometry(bezelShape, { depth: 0.04, bevelEnabled: true, bevelThickness: 0.025, bevelSize: 0.02, bevelSegments: 3 }), rimMat);
     bezel.position.z = 0.13;
     g.add(bezel);
-    if (tier === 'gold' || tier === 'legend' || tier === 'special') this.laurels(g, tier === 'special' ? 'gold' : tier);
     if (tier === 'diamond') this.facets(g);
+    if (tier === 'legend') this.legendFrame(g, P.id || 'halo', new THREE.MeshPhysicalMaterial({ color: '#ffe7a6', metalness: 0.9, roughness: 0.18, iridescence: 1, iridescenceIOR: 1.7, iridescenceThicknessRange: [250, 950], clearcoat: 1 }));
+    if (month) this.monthRibbon(g, month, P);
     g.userData = { tier, rimMat };
     return g;
   }
 
-  // A laurel wreath round the lower half: a stem on each side with pointed leaves.
-  laurels(g, tier) {
-    const m = tier === 'legend' ? new THREE.MeshPhysicalMaterial({ color: '#ffffff', metalness: 0.7, roughness: 0.15, iridescence: 1, iridescenceIOR: 1.8 }) : this.metal('gold');
-    const leafShape = new THREE.Shape();
-    leafShape.moveTo(0, 0);
-    leafShape.quadraticCurveTo(0.09, 0.1, 0, 0.26);
-    leafShape.quadraticCurveTo(-0.09, 0.1, 0, 0);
-    const leafGeo = new THREE.ExtrudeGeometry(leafShape, { depth: 0.03, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.015, bevelSegments: 2 });
-    const R = 1.14;
-    for (const side of [-1, 1]) {
-      const stem = new THREE.Mesh(new THREE.TorusGeometry(R, 0.022, 8, 40, 1.9), m);
-      // the arc runs from the bottom centre up one side
-      stem.rotation.z = side > 0 ? -Math.PI / 2 + 0.12 : -Math.PI / 2 - 0.12 - 1.9;
-      stem.position.z = 0.02;
-      g.add(stem);
-      for (let i = 0; i < 7; i++) {
-        const a = -Math.PI / 2 + side * (0.22 + i * 0.25);
-        for (const out of [1, -1]) {
-          const leaf = new THREE.Mesh(leafGeo, m);
-          const rr = R + out * 0.02;
-          leaf.position.set(Math.cos(a) * rr, Math.sin(a) * rr, 0.0);
-          // leaves point along the stem, tipped outward or inward
-          leaf.rotation.z = a + (side > 0 ? 0 : Math.PI) + out * 0.55 * side;
-          leaf.scale.setScalar(1 - i * 0.04);
-          g.add(leaf);
-        }
-      }
+  // rough stone for locked badges
+  stone() {
+    if (this.cache.stone) return this.cache.stone;
+    const r = rand(41);
+    const c = canvas(256, 256);
+    const x = c.getContext('2d');
+    x.fillStyle = '#808080';
+    x.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 1400; i++) {
+      x.fillStyle = `rgba(${r() < 0.5 ? '0,0,0' : '255,255,255'},${0.05 + r() * 0.12})`;
+      x.beginPath();
+      x.arc(r() * 256, r() * 256, 0.5 + r() * 3.5, 0, Math.PI * 2);
+      x.fill();
     }
+    return (this.cache.stone = new THREE.MeshStandardMaterial({ color: '#b9b2a6', roughness: 0.95, metalness: 0, normalMap: tex(heightToNormal(c, 2.5), false, [2, 2]) }));
+  }
+
+  // Legend's silhouette, so it never reads as a plain circle.
+  legendFrame(g, kind, mat) {
+    if (kind === 'halo') {
+      const st = new THREE.Shape();
+      for (let i = 0; i < 48; i++) {
+        const rr = i % 2 ? 1.14 : 1.34;
+        const a = Math.PI / 2 + (i * Math.PI) / 24;
+        i ? st.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : st.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
+      }
+      const halo = new THREE.Mesh(new THREE.ExtrudeGeometry(st, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 2 }), mat);
+      halo.position.z = -0.2;
+      g.add(halo);
+    } else if (kind === 'wings') {
+      for (const side of [-1, 1]) {
+        const w = new THREE.Shape();
+        w.moveTo(0, 0.35);
+        w.bezierCurveTo(0.35, 0.6, 0.75, 0.55, 0.95, 0.2);
+        w.lineTo(0.72, 0.18);
+        w.lineTo(0.88, -0.05);
+        w.lineTo(0.62, -0.06);
+        w.lineTo(0.74, -0.3);
+        w.lineTo(0.4, -0.25);
+        w.bezierCurveTo(0.25, -0.35, 0.05, -0.3, 0, -0.2);
+        w.lineTo(0, 0.35);
+        const m = new THREE.Mesh(new THREE.ExtrudeGeometry(w, { depth: 0.06, bevelEnabled: true, bevelThickness: 0.025, bevelSize: 0.025, bevelSegments: 2 }), mat);
+        m.scale.set(side * 0.85, 0.85, 1);
+        m.position.set(side * 0.86, 0.1, -0.1);
+        g.add(m);
+      }
+    } else {
+      const c = new THREE.Group();
+      const band = new THREE.Mesh(new RoundedBoxGeometry(0.72, 0.14, 0.12, 3, 0.04), mat);
+      c.add(band);
+      [-0.3, -0.15, 0, 0.15, 0.3].forEach((x, i) => {
+        const h = i === 2 ? 0.3 : i % 2 ? 0.2 : 0.24;
+        const sp = new THREE.Mesh(new THREE.ConeGeometry(0.06, h, 4), mat);
+        sp.position.set(x, 0.07 + h / 2, 0);
+        const ball = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 8), this.gemMaterial(['#ff5c8a', '#7fe3ff', '#ffe27a', '#7fe3ff', '#ff5c8a'][i]));
+        ball.position.set(x, 0.07 + h + 0.02, 0);
+        c.add(sp, ball);
+      });
+      c.scale.setScalar(1.35);
+      c.position.set(0, 1.08, 0.02);
+      g.add(c);
+    }
+  }
+
+  // Monthly badges carry their month on a ribbon tab, as today's do.
+  monthRibbon(g, month, P) {
+    const r = new THREE.Shape();
+    r.moveTo(-0.75, 0.16);
+    r.lineTo(0.75, 0.16);
+    r.lineTo(0.62, 0);
+    r.lineTo(0.75, -0.16);
+    r.lineTo(-0.75, -0.16);
+    r.lineTo(-0.62, 0);
+    r.lineTo(-0.75, 0.16);
+    const m = new THREE.Mesh(new THREE.ExtrudeGeometry(r, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 2 }), new THREE.MeshStandardMaterial({ color: P.enamelDeep, roughness: 0.4 }));
+    m.position.set(0, -0.98, 0.18);
+    g.add(m);
+    const t = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.28), new THREE.MeshBasicMaterial({ map: tex(textCanvas(month, 'rgba(0,0,0,0)', '#ffffff', 512, 128, 92)), transparent: true }));
+    t.position.set(0, -0.98, 0.252);
+    g.add(t);
   }
 
   facets(g) {
@@ -764,6 +1038,7 @@ export const ICON_PATHS = {
   bike: ['M6 13a3.5 3.5 0 1 0 0.01 0Z', 'M18 13a3.5 3.5 0 1 0 0.01 0Z', 'M6 16.5l4-8h4.5l3.5 8M10 8.5l3 8M13 5.5h3'],
   week: ['M6 5h12a2.5 2.5 0 0 1 2.5 2.5v10a2.5 2.5 0 0 1-2.5 2.5H6a2.5 2.5 0 0 1-2.5-2.5v-10A2.5 2.5 0 0 1 6 5z', 'M3.5 10h17M8 3v4M16 3v4M7.5 14h9'],
   moon: ['M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z'],
+  lock: ['M7.5 10.5h9a2.5 2.5 0 0 1 2.5 2.5v5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 5 18v-5a2.5 2.5 0 0 1 2.5-2.5z', 'M8 10.5V8a4 4 0 0 1 8 0v2.5'],
   calcheck: ['M6 5h12a2.5 2.5 0 0 1 2.5 2.5v10a2.5 2.5 0 0 1-2.5 2.5H6a2.5 2.5 0 0 1-2.5-2.5v-10A2.5 2.5 0 0 1 6 5z', 'M3.5 10h17M8 3v4M16 3v4M9 15l2 2 4-4'],
 };
 

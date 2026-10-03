@@ -150,52 +150,110 @@ td code,p code,li code{font-size:12.5px;background:#f4e4c0;border-radius:6px;pad
 .rs-xpn{white-space:nowrap;text-shadow:0 1px 0 rgba(0,0,0,.4)}
 .rs-name{position:absolute;left:50%;top:116px;transform:translate(-50%,-10px);font-family:var(--display);font-size:30px;color:#fff;-webkit-text-stroke:5px #0e2a5c;paint-order:stroke fill;white-space:nowrap;opacity:0;transition:opacity .3s,transform .3s var(--e-over)}
 .rs-name.on{opacity:1;transform:translate(-50%,0)}
+.rs-name b{display:block;font-weight:400;text-align:center}
+.rs-name small{display:block;margin-top:2px;text-align:center;font-family:var(--body);font-weight:800;font-size:15px;color:#dbe8ff;-webkit-text-stroke:0;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.rs-name small:empty{display:none}
+.rs-item{position:absolute;left:110px;top:150px;width:170px;height:170px;z-index:2;pointer-events:none}
+.rs-item svg{display:block;width:170px;height:170px;filter:drop-shadow(0 8px 14px rgba(0,0,0,.45))}
+.rs-tray i svg{width:48px;height:48px;display:block}
+.rs-gi>svg{width:88px;height:88px;display:block}
+.rs-xp.unl{background:linear-gradient(180deg,#86ea64,#2ba438);color:#fff;box-shadow:0 3px 0 #186a20;text-shadow:0 2px 0 rgba(0,0,0,.25);font-size:17px;padding:4px 16px}
+/* the rank up on the stage, as card 33 shows it */
+.rs-rankup{position:absolute;inset:0;z-index:5;display:none;pointer-events:none}
+.rs-rankup.on{display:block}
+.rs-rankup.out{animation:vout .3s var(--e-in) forwards}
+.rs-rankup h3{position:absolute;left:0;right:0;top:120px;text-align:center;font-size:40px;color:#ffe68f;-webkit-text-stroke:6px #0e2a5c;paint-order:stroke fill;z-index:2}
+.ru-pillar{position:absolute;left:50%;bottom:0;width:170px;height:0;margin-left:-85px;background:linear-gradient(0deg,rgba(191,225,255,.95),rgba(191,225,255,0));filter:blur(6px);transition:height .4s var(--e-out)}
+.rs-rankup.beam .ru-pillar{height:100%}
+.ru-sh{position:absolute;left:50%;top:205px;transform:translateX(-50%);z-index:2}
+.ru-sh svg{display:block}
+.ru-title{position:absolute;left:50%;top:430px;transform:translateX(-50%) scaleX(0);background:var(--hero);border:3px solid #f5c542;box-shadow:0 3px 0 #154a94;border-radius:14px;padding:5px 20px;white-space:nowrap;z-index:3}
+.ru-title span{font-family:var(--display);font-size:24px;color:#fff;-webkit-text-stroke:4px #0e3a7a;paint-order:stroke fill}
+.ru-title.on{animation:unroll2 .4s var(--e-over) forwards}
 .rs-count{position:absolute;left:286px;top:420px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 40% 35%,#ff7a7a,#d81e2c);border:3px solid #fff;box-shadow:0 3px 0 rgba(0,0,0,.35);color:#fff;font-family:var(--display);font-size:22px;opacity:0;transform:scale(.4);transition:opacity .2s,transform .3s var(--e-over),top .36s var(--e-out),left .36s var(--e-out);z-index:3}
 .rs-count.on{opacity:1;transform:scale(1)}
-.rstage.open .rs-count{top:590px;left:276px}
 .rs-hint{position:absolute;left:50%;top:690px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;font-family:var(--display);font-size:24px;color:#fff;-webkit-text-stroke:4px #0e2a5c;paint-order:stroke fill;opacity:0;transition:opacity .25s;white-space:nowrap}
 .rs-hint.on{opacity:1;animation:bob 1s ease-in-out infinite alternate}
 @keyframes bob{to{transform:translate(-50%,-6px)}}
 .rs-pips{display:flex;gap:6px}
 .rs-pips i{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.3);border:2px solid #fff}
 .rs-pips i.on{background:#ffd34d}
-.rs-card{position:absolute;left:24px;right:24px;top:418px;display:flex;flex-direction:column;align-items:center;text-align:center;color:#fff;pointer-events:none;isolation:isolate;z-index:2}
-.rs-card::before{content:'';position:absolute;left:-30px;right:-30px;top:-34px;bottom:-30px;background:radial-gradient(ellipse at 50% 48%,rgba(5,20,52,.8) 0,rgba(5,20,52,.6) 42%,rgba(5,20,52,0) 70%);z-index:-1;opacity:0;transition:opacity .3s}
-.rs-card.on::before{opacity:1}
+.rs-card{position:absolute;left:36px;right:36px;top:354px;padding:0 14px 26px;border-radius:18px;background:linear-gradient(180deg,rgba(10,34,80,.94),rgba(5,20,52,.96));border:3px solid var(--tc,#b8790a);box-shadow:inset 0 0 0 2px rgba(255,255,255,.16),0 12px 26px -12px rgba(0,0,0,.7),0 0 34px -8px var(--tc,#b8790a);display:flex;flex-direction:column;align-items:center;text-align:center;color:#fff;pointer-events:none;z-index:2;opacity:0;transform:translateY(18px) scale(.92);transition:opacity .18s,transform .34s var(--e-over)}
+.rs-card.on{opacity:1;transform:none}
 .rs-card>*{opacity:0}
-.rs-rib{position:relative;transform:scaleX(0)}
-.rs-rib span{display:block;font-family:var(--display);font-size:18px;letter-spacing:.06em;text-transform:uppercase;padding:5px 26px;background:var(--tc);border:2px solid rgba(255,255,255,.7);border-radius:8px;box-shadow:0 3px 0 rgba(0,0,0,.3);text-shadow:0 2px 0 rgba(0,0,0,.3)}
-.rs-rib::before,.rs-rib::after{content:'';position:absolute;top:8px;width:18px;height:24px;background:var(--tc);filter:brightness(.7);z-index:-1}
-.rs-rib::before{left:-12px;clip-path:polygon(0 0,100% 0,100% 100%,0 100%,40% 50%)}
-.rs-rib::after{right:-12px;clip-path:polygon(0 0,100% 0,60% 50%,100% 100%,0 100%)}
-.rs-card h3{margin-top:12px;font-size:32px;line-height:1.05;-webkit-text-stroke:5px #0e2a5c;paint-order:stroke fill}
-.rs-card p{margin:6px 0 0;font-weight:700;font-size:15px;color:#eef5ff;max-width:300px;text-shadow:0 1px 2px rgba(0,0,0,.6)}
-.rs-xp{margin-top:12px;font-family:var(--display);font-size:22px;color:#4a3212;background:linear-gradient(180deg,#fff28f,#ffc21a);border:2px solid #fff;border-radius:999px;padding:3px 16px;box-shadow:0 3px 0 #c7870a}
-.rs-xp.none{background:#e9dcff;color:#3b1f8f;box-shadow:0 3px 0 #9a86d6;font-size:16px}
-.rs-card.on .rs-rib{opacity:1;animation:unroll .38s var(--e-over) forwards}
-.rs-card.on h3{animation:popin .32s var(--e-over) .18s forwards}
-.rs-card.on p{animation:fadeup .3s var(--e-out) .32s forwards}
-.rs-card.on .rs-xp{animation:popin .32s var(--e-over) .48s forwards}
+.rc-band{align-self:stretch;margin:0 -14px;height:28px;border-radius:14px 14px 0 0;background:var(--tc,#b8790a);display:grid;place-items:center;box-shadow:inset 0 -2px 0 rgba(0,0,0,.22),inset 0 2px 0 rgba(255,255,255,.25);transform-origin:50% 0}
+.rc-band span{font-family:var(--display);font-size:15px;letter-spacing:.1em;text-transform:uppercase;text-shadow:0 2px 0 rgba(0,0,0,.3)}
+.rs-card h3{margin-top:8px;font-size:27px;line-height:1.05;-webkit-text-stroke:5px #0e2a5c;paint-order:stroke fill}
+.rc-what{margin:4px 0 0;font-weight:700;font-size:13.5px;line-height:1.3;color:#dbe8ff}
+.rc-next{align-self:stretch;margin-top:9px;display:flex;flex-direction:column;gap:5px;font-weight:800;font-size:12.5px;color:#ffe68f}
+.rc-bar{height:8px;border-radius:4px;background:rgba(255,255,255,.16);overflow:hidden}
+.rc-bar i{display:block;height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,#fff28f,#ffc21a);transition:width .6s var(--e-out)}
+.rs-xp{position:absolute;left:0;right:0;bottom:-19px;width:max-content;margin:0 auto;font-family:var(--display);font-size:21px;color:#4a3212;background:linear-gradient(180deg,#fff28f,#ffc21a);border:2px solid #fff;border-radius:999px;padding:2px 16px;box-shadow:0 3px 0 #c7870a}
+.rs-xp.none{background:#e9dcff;color:#3b1f8f;box-shadow:0 3px 0 #9a86d6;font-size:15px;padding:5px 14px}
+.rs-card.on .rc-band{animation:bandin .3s var(--e-over) forwards}
+.rs-card.on h3{animation:popin .3s var(--e-over) .14s forwards}
+.rs-card.on .rc-what{animation:fadeup .28s var(--e-out) .26s forwards}
+.rs-card.on .rc-next{animation:fadeup .28s var(--e-out) .36s forwards}
+.rs-card.on .rs-xp{animation:popin .32s var(--e-over) .5s forwards}
+@keyframes bandin{from{opacity:0;transform:scaleY(0)}to{opacity:1;transform:none}}
 @keyframes unroll{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 @keyframes popin{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
 @keyframes fadeup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.rs-cont{position:absolute;left:50%;top:732px;transform:translateX(-50%);color:#fff;font-weight:800;font-size:15px;opacity:0;transition:opacity .3s;white-space:nowrap;text-shadow:0 1px 0 rgba(0,0,0,.5)}
+.rs-cont{position:absolute;left:50%;top:732px;transform:translateX(-50%);color:#fff;font-weight:800;font-size:15px;opacity:0;transition:opacity .3s;white-space:nowrap;text-shadow:0 1px 0 rgba(0,0,0,.5);z-index:3}
 .rs-cont.on{opacity:.9;animation:pulse 1.4s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.5}}
-.rs-got{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;opacity:0;pointer-events:none;transition:opacity .25s}
-.rs-got.on{opacity:1;pointer-events:auto}
-.rs-gotrib{background:var(--hero);border:3px solid #f5c542;box-shadow:0 3px 0 #154a94;border-radius:14px;padding:6px 26px}
-.rs-gotrib h3{font-size:26px;color:#fff;-webkit-text-stroke:4px #0e3a7a;paint-order:stroke fill}
-.rs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
-.rs-gi{background:rgba(3,12,32,.45);border:2px solid color-mix(in srgb,var(--tc) 70%,#fff);border-radius:16px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;color:#fff;text-align:center;opacity:0;transform:translateY(-30px) scale(.8)}
-.rs-gi.on{animation:gotin .36s var(--e-over) forwards}
-@keyframes gotin{to{opacity:1;transform:none}}
-.rs-gi img,.rs-gi svg{width:84px;height:84px}
+/* the tray: one slot per badge, under the level bar; each badge flies in after its card */
+.rs-tray{position:absolute;left:0;right:0;top:62px;display:flex;justify-content:center;gap:10px;opacity:0;transform:translateY(-8px);transition:opacity .25s,transform .3s var(--e-over);pointer-events:none;z-index:3}
+.rs-tray.on{opacity:1;transform:none}
+.rs-tray i{width:54px;height:54px;border-radius:15px;display:grid;place-items:center;background:rgba(3,12,32,.42);border:2px dashed rgba(255,255,255,.38)}
+.rs-tray i.got{border:2px solid rgba(255,255,255,.75);background:radial-gradient(circle,rgba(255,255,255,.22),rgba(3,12,32,.3) 70%)}
+.rs-tray img{width:50px;height:50px;display:block}
+.rs-fly{position:absolute;inset:0;pointer-events:none;z-index:4}
+.rs-flyer{position:absolute;display:block;transform-origin:50% 50%;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
+/* the summary: the tray grows into tiles; no heading, the total counts, Continue last */
+.rs-got{position:absolute;left:0;right:0;top:88px;bottom:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:0 20px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:3}
+.rs-got.on{opacity:1}
+.rs-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:100%}
+.rs-gi{background:rgba(3,12,32,.45);border:2px solid color-mix(in srgb,var(--tc) 70%,#fff);border-radius:16px;padding:8px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;color:#fff;text-align:center;min-width:0}
+.rs-gi img{width:88px;height:88px;display:block}
 .rs-gi b{font-size:13px;line-height:1.2}
 .rs-gi small{font-weight:800;color:#ffe68f}
-.rs-tot{font-family:var(--display);font-size:24px;color:#ffe68f;min-height:32px;-webkit-text-stroke:4px #0e2a5c;paint-order:stroke fill}
-.rs-done{max-width:300px;opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .25s,transform .3s var(--e-over)}
+.rs-gi>b,.rs-gi>small{opacity:0}
+.rs-gi.on>b,.rs-gi.on>small{animation:fadeup .26s var(--e-out) forwards}
+.rs-tot{font-family:var(--display);font-size:30px;color:#ffe68f;min-height:38px;-webkit-text-stroke:5px #0e2a5c;paint-order:stroke fill}
+.rs-done{position:absolute;left:45px;width:300px;bottom:40px;opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .25s,transform .3s var(--e-over);z-index:5}
 .rs-done.on{opacity:1;transform:none;pointer-events:auto}
+/* the full finish: the workout screen, then Victory as the app shows it */
+.rs-workout,.rs-victory{position:absolute;inset:0;z-index:6;display:none;flex-direction:column;gap:10px;padding:22px 16px;background:linear-gradient(180deg,#cdeeff 0,#fff6e2 200px,#fbeacb 520px);color:var(--ink);cursor:default}
+.rs-workout.on,.rs-victory.on{display:flex}
+.rw-head{display:flex;justify-content:space-between;align-items:baseline;margin:6px 4px 6px}
+.rw-head b{font-family:var(--display);font-weight:400;font-size:28px}
+.rw-time{font-family:var(--display);font-size:20px;color:var(--muted)}
+.rw-row{display:flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 3px 0 var(--bevel);font-weight:800}
+.rw-row span{flex:1}
+.rw-row small{color:var(--muted);font-weight:700}
+.rw-row i{width:26px;height:26px;border-radius:50%;background:#2ba438;color:#fff;display:grid;place-items:center;font-style:normal;font-size:14px}
+.rw-finish{margin-top:auto;height:56px;font-size:20px;overflow:hidden;z-index:2}
+.rw-finish .charge{position:absolute;left:0;bottom:0;height:5px;width:0;background:#fff28f}
+.rw-finish.charging .charge{animation:charge .9s linear forwards}
+.rw-dim{position:absolute;inset:0;background:rgba(7,29,71,0);pointer-events:none;transition:background .8s;z-index:1}
+.rs-workout.dim .rw-dim{background:rgba(7,29,71,.6)}
+.rs-victory{gap:14px}
+.rs-victory.out{animation:vout .3s var(--e-in) forwards}
+@keyframes vout{to{opacity:0;transform:scale(1.04)}}
+.rv-hero{position:relative;overflow:hidden;border-radius:22px;padding:24px 16px 20px;text-align:center;background:var(--hero);color:#fff;border:3px solid #f5c542;box-shadow:0 4px 0 #154a94,0 18px 30px -18px rgba(20,60,120,.7),inset 0 0 0 2px rgba(255,255,255,.25)}
+.rv-hero .rays{opacity:.8;top:40%;width:700px;height:700px;margin:-350px 0 0 -350px;background:repeating-conic-gradient(rgba(255,255,255,.6) 0 8deg,transparent 8deg 16deg);-webkit-mask:radial-gradient(circle,#000 8%,transparent 50%);mask:radial-gradient(circle,#000 8%,transparent 50%)}
+.rv-hero>*:not(.rays){position:relative}
+.rv-hero h3{font-size:52px;line-height:1;color:#ffe68f;-webkit-text-stroke:7px #0e3a7a;paint-order:stroke fill}
+.rv-hero p{margin:6px 0 10px;font-weight:800}
+.rv-xp{font-family:var(--display);font-size:30px;color:#fff28f;-webkit-text-stroke:5px #0e3a7a;paint-order:stroke fill;margin-bottom:8px}
+.rv-crowns{display:flex;justify-content:center;gap:10px;min-height:32px}
+.rv-crowns .cr{filter:drop-shadow(0 3px 0 #0e3a7a)}
+.rv-lines{list-style:none;margin:0;padding:12px 14px;background:var(--paper);border:1px solid var(--line);border-radius:18px;box-shadow:0 4px 0 var(--bevel);display:flex;flex-direction:column;gap:6px;min-height:150px}
+.rv-lines li{display:flex;justify-content:space-between;font-weight:800}
+.rv-lines li b{font-family:var(--display);font-weight:400;font-size:19px;color:var(--gold-ink)}
+/* half speed: a small tag in the stage corner so a slowed run is never mistaken for the real pace */
+html[data-slow='1'] .rstage::after{content:'Half speed';position:absolute;right:12px;bottom:12px;font:800 11px var(--body);letter-spacing:.06em;text-transform:uppercase;color:#fff;background:rgba(3,12,32,.55);border-radius:6px;padding:3px 8px;z-index:9}
 .rs-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
 .ctlbox{display:flex;flex-direction:column;gap:16px;min-width:0}
 .steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
@@ -230,6 +288,36 @@ td code,p code,li code{font-size:12.5px;background:#f4e4c0;border-radius:6px;pad
 .faded svg{filter:grayscale(1) brightness(.55) contrast(.9);opacity:.6}
 .ring{position:relative}
 .ring::after{content:'';position:absolute;inset:-6px;border-radius:50%;background:conic-gradient(#c7870a 0 62%,#e2cb98 62% 100%);-webkit-mask:radial-gradient(circle,transparent 61%,#000 62%);mask:radial-gradient(circle,transparent 61%,#000 62%)}
+
+/* option galleries */
+.ogrp{display:flex;flex-direction:column;gap:10px}
+.ogrp+.ogrp,#chest-opts>.ogrp:first-child,#medal-opts>.ogrp:first-child{margin-top:6px;padding-top:16px;border-top:1.5px dashed var(--line)}
+.ogrp .cap{margin:-4px 0 0}
+.otiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:12px}
+@media (max-width:600px){.otiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+.otile{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:0;padding:0;border-radius:16px;overflow:hidden;border:2px solid var(--line);background:var(--calm);font:inherit;color:inherit;text-align:left;cursor:pointer;min-width:0}
+.otile .oimg{position:relative;aspect-ratio:7/6;display:flex;align-items:center;justify-content:center}
+.otile .oimg img{width:100%;height:100%;object-fit:contain;display:block}
+.otile .otxt{display:flex;flex-direction:column;gap:2px;padding:8px 10px 10px}
+.otile .otxt b{font-size:14px;line-height:1.25}
+.otile .otxt small{color:var(--muted);font-size:12px;font-weight:700}
+.otile[aria-pressed=true]{border-color:#2ba438;box-shadow:0 0 0 3px #86ea64}
+.otile[aria-pressed=true] .otxt small{color:#186a20}
+.otile .pick{position:absolute;left:8px;top:8px;margin:0;z-index:2}
+div.otile{cursor:default}
+.ogrp .btn.sm{max-width:240px}
+.mrow.three{grid-template-columns:repeat(3,minmax(0,1fr));max-width:640px}
+.signed{background:#eaf7e2;border:1px solid #b9e3a5;border-radius:16px;padding:12px 14px}
+.signed .lbl{color:#186a20}
+.lockrow.one{grid-template-columns:minmax(0,260px)}
+.lockpic{position:relative;width:132px;height:132px;display:grid;place-items:center}
+.lockpic .ring2{position:absolute;inset:0;border-radius:50%;background:conic-gradient(#c7870a 0 62%,#e2cb98 62% 100%);-webkit-mask:radial-gradient(circle,transparent 63%,#000 64%);mask:radial-gradient(circle,transparent 63%,#000 64%)}
+.lockpic .lockimg{position:absolute;inset:12px;display:block}
+.atag{font-size:10.5px;font-weight:800;letter-spacing:.04em;border-radius:5px;padding:1px 5px;background:#dcecff;color:#174f9e;white-space:nowrap}
+.opt[aria-pressed=true] .atag{background:rgba(255,255,255,.85)}
+.slot2 .where{display:block;color:var(--muted);font-size:12.5px;font-weight:600}
+.ghead{flex-basis:100%;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:4px 0 -2px}
+.ghead:first-child{margin-top:0}
 
 /* ---------- rules ---------- */
 .tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:12px}
@@ -274,7 +362,8 @@ td code,p code,li code{font-size:12.5px;background:#f4e4c0;border-radius:6px;pad
 .mclock{position:absolute;left:0;right:0;top:46px;text-align:center;font-family:var(--display);font-size:44px;color:var(--ink)}
 .fsub{position:absolute;left:0;right:0;top:108px;margin:0;text-align:center;font-weight:800;color:var(--muted)}
 .mseg{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:5px;border-radius:16px;background:var(--calm);border:1px solid var(--line);width:100%;max-width:300px}
-.mseg .thumb{position:absolute;left:0;top:5px;height:44px;border-radius:12px;background:linear-gradient(180deg,#86ea64,#2ba438);box-shadow:0 3px 0 #186a20}
+.mseg .thumb{position:absolute;left:5px;top:5px;height:44px;width:calc((100% - 22px) / 3);border-radius:12px;background:linear-gradient(180deg,#86ea64,#2ba438);box-shadow:0 3px 0 #186a20}
+@media (min-width:768px){.mseg .thumb{height:40px}.mseg button{height:40px}}
 .mseg button{position:relative;height:44px;border:0;background:none;font:17px var(--display);color:var(--muted);cursor:pointer;transition:color .16s}
 .mseg button.on{color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.25)}
 .msetrow{display:flex;align-items:center;gap:14px;width:100%;max-width:300px;min-height:60px;padding:10px;font-weight:800;background:#fff;border-radius:14px;border:1px solid var(--line)}
@@ -285,7 +374,7 @@ td code,p code,li code{font-size:12.5px;background:#f4e4c0;border-radius:6px;pad
 .mswitch[aria-checked=true]{background:linear-gradient(180deg,#86ea64,#2ba438)}
 .mchips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .mstep{display:flex;align-items:center;gap:10px}
-.sbtn{width:48px;height:48px;border-radius:14px;border:1.5px solid #d49a2a;background:var(--s-grad);box-shadow:0 3px 0 #b8862e;font:24px var(--display);color:#4a3212;cursor:pointer;touch-action:manipulation}
+.sbtn{width:48px;height:48px;border-radius:14px;border:1.5px solid #d49a2a;background:var(--s-grad);box-shadow:0 3px 0 #b8862e;font:24px var(--display);color:#4a3212;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .sbtn:active{transform:translateY(2px);box-shadow:0 1px 0 #b8862e}
 .sval{position:relative;width:76px;height:48px;overflow:hidden;border-radius:12px;background:#fff;border:1px solid var(--line)}
 .sval .num{position:absolute;inset:0;display:grid;place-items:center;font:26px var(--display)}
@@ -312,7 +401,9 @@ td code,p code,li code{font-size:12.5px;background:#f4e4c0;border-radius:6px;pad
 .mtoast.bad{color:#ffd0c8}
 .mpage{width:100%;max-width:300px;height:130px;border-radius:14px;background:#fff6e2;border:1px solid var(--line);padding:12px;overflow:hidden}
 .mpage .pg{display:flex;flex-direction:column;gap:8px}
-.ln{height:12px;border-radius:6px;background:#ead9b3}.w5{width:50%}.w6{width:60%}.w8{width:80%}.w9{width:90%}
+.ln{height:12px;border-radius:6px;background:#ead9b3}
+.skel .ln,.skel .blk{background:linear-gradient(90deg,#ead9b3 0,#f7ecd2 40%,#ead9b3 80%)!important;background-size:250% 100%!important;animation:skel 1s linear infinite}
+@keyframes skel{from{background-position:100% 0}to{background-position:-150% 0}}.w5{width:50%}.w6{width:60%}.w8{width:80%}.w9{width:90%}
 .blk{height:56px;border-radius:12px}.blk.g{background:linear-gradient(180deg,#86ea64,#2ba438)}.blk.b{background:var(--hero)}
 .mset{position:relative;width:100%;max-width:300px;display:flex;flex-direction:column;gap:4px;padding-top:34px}
 .mset.one{padding-top:0}
@@ -416,11 +507,31 @@ td code,p code,li code{font-size:12.5px;background:#f4e4c0;border-radius:6px;pad
 .wf{display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:800;font-size:14px}
 .wf .fl{color:#f08a3c;display:grid}
 .stampslot{min-height:34px;margin-top:8px;text-align:right}
-.gstamp{display:inline-block;font-family:var(--display);font-size:16px;color:#186a20;border:3px solid #2ba438;border-radius:10px;padding:2px 10px;background:rgba(221,245,210,.9)}
+.gseal{position:relative;display:inline-flex;align-items:center;gap:6px;overflow:hidden;font-family:var(--display);font-size:15px;color:#fff;background:linear-gradient(180deg,#86ea64,#2ba438);border:2px solid #fff;border-radius:999px;padding:3px 14px 3px 4px;box-shadow:0 3px 0 #186a20,0 0 0 3px #b9e3a5;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.gseal i{width:24px;height:24px;border-radius:50%;background:#fff;color:#2ba438;display:grid;place-items:center}
+.gseal::after{content:'';position:absolute;top:0;bottom:0;left:-40%;width:30%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);transform:skewX(-20deg);animation:sealshine .7s ease-out .25s 1 both}
+@keyframes sealshine{from{left:-40%}to{left:120%}}
 .mtilt{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;padding:8px 0;touch-action:none}
 .tiltme{position:relative;transition:transform .05s;border-radius:50%}
 .glarebox{position:absolute;inset:0;border-radius:50%;pointer-events:none;mix-blend-mode:screen}
 .mtilt small{color:var(--muted);font-weight:700}
+
+/* round 2: the reward cards in 3D share one live view; the others show a still */
+.m3dh .rays{z-index:0}
+.m3d,.poster{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;pointer-events:none}
+.poster{object-fit:cover}
+.poster.off{display:none}
+.m3dh .mhint,.m3dh .tierto{z-index:3}
+.m3dh .tierto{top:180px}
+.mflash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:4}
+.mshards{position:absolute;z-index:3;pointer-events:none}
+.mshard{position:absolute;inset:0}
+.mshard svg{display:block}
+.mtilt .tiltme img{display:block;width:150px;height:150px}
+.glarebox{-webkit-mask-size:100% 100%;mask-size:100% 100%;border-radius:0}
+.mtilt .tiltme img{width:170px;height:170px}
+.slotref{color:var(--muted)}
+.slotref a{color:var(--link);font-weight:700}
 
 /* ---------- sounds and music ---------- */
 .slots{display:flex;flex-direction:column;gap:10px}
@@ -457,200 +568,180 @@ html[data-reduced='1'] *{animation-duration:1ms!important;animation-iteration-co
 <body>
 <div class="wrap">
   <header>
-    <span class="kick">Board 12 · Round 1</span>
+    <span class="kick">Board 12 · Round 2</span>
     <h1>Motion and sound</h1>
-    <p class="lede">Levl moves and sounds fine today, but flat: one pop for everything, one brown chest, medals that all look alike, and the same words on every reward. This board is a library for the whole app: new chests and medals in two art directions, a tap-to-open reward stage on a deep Levl-blue backdrop, 34 interactions with their timing, sound and haptic, and free music for the big moments. Everything plays. Turn your sound on.</p>
+    <p class="lede">Round 2, after your notes. The art is 3D. The sounds that felt sad or ominous are gone or rebuilt, and every reward sound now plays in the key of the chest music. The open chest stays on screen, earlier badges collect in a tray, and you can play the whole finish: Finish, Victory, then the chest. Turn your sound on.</p>
   </header>
 
   <div class="bar0" role="group" aria-label="Board settings">
     <span class="tg"><button type="button" class="sw" role="switch" aria-checked="true" id="t-sound" aria-label="Sound"><i></i></button>Sound</span>
     <span class="tg"><button type="button" class="sw" role="switch" aria-checked="true" id="t-music" aria-label="Music"><i></i></button>Music</span>
     <span class="tg"><button type="button" class="sw" role="switch" aria-checked="true" id="t-hapt" aria-label="Haptics"><i></i></button>Haptics</span>
+    <span class="tg"><button type="button" class="sw" role="switch" aria-checked="false" id="t-slow" aria-label="Half speed"><i></i></button>Half speed</span>
     <span class="tg"><button type="button" class="sw" role="switch" aria-checked="false" id="t-red" aria-label="Preview reduced motion"><i></i></button>Preview reduced motion</span>
-    <small>On iPhone the ring/silent switch mutes web pages. Haptics play on Android only; the board shows a small pulse instead.</small>
+    <small>Half speed slows the stage and every card so you can watch each beat. On iPhone the ring/silent switch mutes web pages. Haptics play on Android only; the board shows a small pulse instead.</small>
   </div>
 
   <nav class="jump" aria-label="Sections">
-    <a href="#now">Today and new</a><a href="#lessons">What makes it premium</a><a href="#stage">The reward stage</a><a href="#chests">Chests</a><a href="#badges">Badges</a><a href="#rules">Library rules</a><a href="#all">The 34</a><a href="#sounds">Sounds</a><a href="#music">Music</a><a href="#settings">Settings</a><a href="#carry">From board 09</a><a href="#decide">What I need from you</a>
+    <a href="#changed">What changed</a><a href="#stage">The reward stage</a><a href="#chests">Chests</a><a href="#badges">Badges</a><a href="#all">The 34</a><a href="#sounds">Sounds</a><a href="#music">Music</a><a href="#rules">Library rules</a><a href="#settings">Settings</a><a href="#carry">From board 09</a><a href="#decide">What I need from you</a>
   </nav>
 
-  <section class="sec" id="now">
-    <h2>1. Today and new</h2>
-    <p>The same badge, Record Breaker in Gold, as the app shows it today and in the two new directions. Both new ones are drawn from scratch: nothing from board 09's chest or medals is kept, only its list of tiers.</p>
-    <div class="trio">
-      <div class="panel"><div class="art today" id="now-today"></div><div class="txt"><h3>Today</h3><p>One brown chest for every tier and a flat hexagon medal. The lid flips, and that is it.</p></div></div>
-      <div class="panel"><div class="art blue" id="now-a"></div><div class="txt"><h3>A. Premium vector</h3><p>Layered SVG: metal trims with a hard highlight, a cut gem, a separate lid. Crisp at any size and about 6 KB a chest. Flat light, so it reads as a very good icon rather than an object.</p></div></div>
-      <div class="panel"><div class="art blue" id="now-b"></div><div class="txt"><h3>B. Real 3D <span class="pick">My pick</span></h3><p>Built in code with three.js: real light, reflections, wood grain, glowing cracks. Closest to the feel you showed me. The 3D engine (about 170 KB) loads only for a reward moment; small badges use pictures rendered from the same models.</p></div></div>
+  <section class="sec" id="changed">
+    <h2>1. What changed in round 2</h2>
+    <div class="signed">
+      <p class="lbl">Signed off in round 1</p>
+      <ul class="plain">
+        <li><b>3D art</b> for chests and badges. The vector galleries are gone; rank shields stay as they were, since you liked rank up.</li>
+        <li><b>Kept as they are:</b> the deep blue backdrop, the library rules, the Music switch in Settings, the Wooden, Golden and Pillow chests, the Bronze, Silver and Diamond medals, stone for locked badges, badge tilt, How it felt, the page change and untick.</li>
+        <li><b>Sounds kept:</b> the Victory music, the metal latch, the creak for the lid, Sack of gold for the coin shower, the made-in-code good news chime and Kenney's error.</li>
+        <li><b>The motion-language board</b> from the other chat is retired; this board replaces it.</li>
+        <li><b>May change later:</b> crowns (24) and the training day sound (19).</li>
+      </ul>
     </div>
-  </section>
-
-  <section class="sec" id="lessons">
-    <h2>2. What makes it feel premium</h2>
-    <p>From your five videos and five screenshots, watched frame by frame at 6 frames a second, with the sound plotted against the picture. Only these notes and timings came over; no frames, art or sound from the game are used anywhere.</p>
-    <div class="lessons">
-      <div class="lesson"><b>Anticipation first</b><p>The chest lands and waits for you. Opening is your tap, never a timer. Rare ones charge up for about a second, with particles drawn in, before they give.</p></div>
-      <div class="lesson"><b>Light is the reward</b><p>Light leaks from the seams before it opens and floods out when it does: a white flash, a beam, sparks. The light says "good" before any words do.</p></div>
-      <div class="lesson"><b>Rarity shows early</b><p>The chest's material tells you what is inside. The rarest also change the room: the backdrop tints and the reveal takes longer.</p></div>
-      <div class="lesson"><b>Layered sound</b><p>A music bed is always under the moment. Each hit lands on a motion beat: thud on landing, a crack per tap, a burst and about 1.3 s of rising chimes on the reveal, quick ticks while numbers fill.</p></div>
-      <div class="lesson"><b>Information cascades</b><p>Name, then object, then numbers that count up with a green plus. Never everything at once.</p></div>
-      <div class="lesson"><b>A counter keeps you going</b><p>The number on the chest shows how many rewards are left, and drops with each one.</p></div>
-      <div class="lesson"><b>Close comes last</b><p>The summary grid fills one card at a time, the total counts up, and only then does the button arrive, so nobody skips the best part.</p></div>
-      <div class="lesson"><b>One consistent stage</b><p>Every reward plays on the same dark blue with a soft diamond pattern. Ours is Levl's sky blue, deepened, so it is clearly ours.</p></div>
-    </div>
+    <div class="tw"><table><thead><tr><th>You said</th><th>Now</th></tr></thead><tbody>
+      <tr><td>Which chest opens, and when? Most people would only ever see Wooden and Silver</td><td><b>Decided: your rank decides your chest.</b> Each rank has its chest, the way each arena does in Clash Royale. Crossing a rank opens the new chest for the first time, with the title and profile frame, and from then on your chests are that kind. Every chest is on the Rank Road ahead of you (board 13).</td></tr>
+      <tr><td>The chest music doesn't suit the product</td><td>Nine new pieces in three feels (bright game-pop, cinematic build, upbeat workout), plus a shimmer made in code that lifts a note with each tap, and None. Every piece is a major key and loops on its bar lines. Section 6.</td></tr>
+      <tr><td>The badge sound is sad, "the main character died"</td><td>It was a bell a tritone away from the music's key. The badge now rises on bells in the music's own key, and every tonal reward sound is tuned to the chest music.</td></tr>
+      <tr><td>Chest opens: "You have failed"</td><td>That piece was in E minor and is gone. The lid now opens with the creak you liked plus a bright bloom.</td></tr>
+      <tr><td>The open chest falls off the screen</td><td>After the burst it moves down and shrinks a little, and stays whole in the lower third.</td></tr>
+      <tr><td>The first badge vanishes when the second comes</td><td>Each badge flies into a tray under the level bar. At the end the tray grows into the summary.</td></tr>
+      <tr><td>"You got": do we need it?</td><td>No heading. The badges, the total counting up, then Continue.</td></tr>
+      <tr><td>Summary badges too small</td><td>Rendered at twice the size; they fill most of their tile.</td></tr>
+      <tr><td>The cards after opening could be better</td><td>A new card framed in the tier colour: the tier, the name, what it measures, the line to the next tier with its bar, and +XP.</td></tr>
+      <tr><td>XP at the top should count up with the XP-lines sound</td><td>It does, coin by coin, and flashes when you cross a level.</td></tr>
+      <tr><td>Badge reveal feels lazy</td><td>A swirl: light spirals in, the medal rises on a curve spinning, pauses backlit, then flips to its face with a flash and a ring.</td></tr>
+      <tr><td>Finish then the chest</td><td>"Play the full finish": a short, quieter drum roll and rise, Victory as the app shows it with its music, then the chest after the app's 1.8 s hold.</td></tr>
+      <tr><td>Crystal and Prismatic: lose the spikes</td><td>Redesigned without spikes, with options. So are Silver (more contrast), Obsidian (two more), Monthly (less white) and Royal (gold tones and gems).</td></tr>
+      <tr><td>Gold: no laurels, the red is wrong. Master: options. Legend: no laurels, not a circle</td><td>No laurels anywhere. Four Gold enamels, three Master looks, three Legend silhouettes. Smaller icons on every 3D medal, matching the vector proportions.</td></tr>
+      <tr><td>Locked: centre the lock in the ring</td><td>A 3D stone medal, centred in the ring and checked to the pixel.</td></tr>
+      <tr><td>Segmented control, stepper</td><td>The thumb covers its label at every width; the stepper shows one number at a time.</td></tr>
+      <tr><td>Close and back are shrill; Got it and Saved are weird or loud</td><td>Soft, low close and open sounds; the Saved chime is made in code and quieter.</td></tr>
+      <tr><td>Exercise complete, beat last time, weekly goal, level up</td><td>New options for each, all rising and major. The weekly goal has a new seal instead of the stamp.</td></tr>
+      <tr><td>Tier up is ominous; rank up doesn't shatter</td><td>Tier up spins faster and steps through to the next tier's metal, no cracks. Rank up breaks the shield into real pieces, and its fanfare is 4 s.</td></tr>
+      <tr><td>Quieter: set tick, record, lap, training day. Louder: the chest landing</td><td>Done. Every file is levelled by loudness, and each kind of sound has its own volume.</td></tr>
+      <tr><td>Page change: add skeleton loading</td><td>Grey bars shimmer for 400 ms, then the page rises in (12).</td></tr>
+    </tbody></table></div>
   </section>
 
   <section class="sec" id="stage">
-    <h2>3. The reward stage</h2>
-    <p>Every badge moment becomes this: the chest drops in, waits for your taps, bursts open, and hands out its rewards one at a time. <b>Pick a chest and an art direction, press Play, then tap the chest in the phone.</b> Several badges earned at once open from one chest in the colour of the best one, and the best comes out last.</p>
+    <h2>2. The reward stage</h2>
+    <p><b>Your rank decides your chest</b> (decided this round): Wooden at E, Silver at D, Golden at C, Crystal at B, Obsidian at A and Prismatic at S. A workout that earns badges opens one chest, your rank's, and every badge comes out of it, the best one last. Crossing a rank opens the new rank's chest for the first time, with the rank's title and profile frame inside. Monthly, Royal and the Pillow open for monthly, special and secret badges. Board 13 puts these chests on the Rank Road.</p>
+    <p><b>Pick a chest, press Play, then tap the chest in the phone.</b> Your chest and badge options from sections 3 and 4 play here too.</p>
     <div class="demorow">
       <div class="phone"><div class="host" id="stagehost"></div></div>
       <div class="ctlbox">
-        <div><p class="lbl">Art direction</p><div class="seg" role="group" aria-label="Art direction"><button type="button" aria-pressed="false" data-mode="vec">A. Vector</button><button type="button" aria-pressed="true" data-mode="three">B. 3D</button></div><p class="offline" id="no3d">3D could not start in this browser, so the stage shows A.</p></div>
+        <p class="offline" id="no3d">3D could not start in this browser, so the stage shows a flat version.</p>
         <div><p class="lbl">Chest</p><div class="chips" id="chestchips"></div></div>
         <div><p class="lbl">Badges inside</p><div class="chips" id="countchips"><button type="button" class="chip on" aria-pressed="true" data-n="1">One badge</button><button type="button" class="chip" aria-pressed="false" data-n="3">Three badges</button></div></div>
-        <button type="button" class="btn bp" id="playstage">Play the opening</button>
+        <div class="pair"><button type="button" class="btn bp" id="playstage">Play the opening</button><button type="button" class="btn bs" id="playfinish">Play the full finish</button></div>
+        <button type="button" class="btn bs" id="playrank">Play a rank up, E to D</button>
         <ol class="steps">
-          <li><b>Drop.</b> <span>Falls for 430 ms, lands with a squash and springs back. Thud, dust, a 7 px shake. The chest's name shows.</span></li>
-          <li><b>Wait.</b> <span>It breathes, glints, and light leaks from the lid seam. "Tap to open", with a dot per tap when it takes more than one.</span></li>
-          <li><b>Taps.</b> <span>1 for Wooden, Silver, Monthly and the Pillow; 2 for Golden, Crystal and Royal; 3 for Obsidian and Prismatic. Each lets out more light.</span></li>
-          <li><b>Charge.</b> <span>3-tap chests shiver for 0.8 s with a rising sound first.</span></li>
-          <li><b>Burst.</b> <span>A 260 ms white flash, the lid goes, a beam and sparks in the tier colour; the music dips so the hit lands.</span></li>
-          <li><b>Medal.</b> <span>Spins up and out (820 ms) and lands with a ring. The ribbon unrolls, then the name, what it measures, and +XP, whose coins fly into your level bar.</span></li>
-          <li><b>Counter.</b> <span>The number on the chest drops by one. Tap for the next.</span></li>
-          <li><b>You got.</b> <span>With more than one badge: the medals drop into a grid one by one, the total counts up, and Continue arrives last.</span></li>
+          <li><b>Drop.</b> <span>Falls, lands with a squash: a heavy wood thud (louder now), dust and a shake. The chest's name shows and its music starts.</span></li>
+          <li><b>Taps.</b> <span>1, 2 or 3 by tier. Each tap: the latch, a shimmer one note higher, more light from the seam. 3-tap chests charge for 0.8 s.</span></li>
+          <li><b>Burst.</b> <span>A white flash, the lid opens with the creak and a bloom, sparks in the tier colour. The open chest moves down and stays on screen.</span></li>
+          <li><b>Swirl.</b> <span>Light spirals into the chest. The medal rises on a curve, spinning, pauses backlit, then flips to face you with a flash, a ring and rising bells.</span></li>
+          <li><b>Card.</b> <span>Framed in the tier colour. Coins fly from +XP to the level bar, and its number counts up with the XP-lines ticks.</span></li>
+          <li><b>Next.</b> <span>Tap: the badge flies into the tray at the top and the counter drops.</span></li>
+          <li><b>The end.</b> <span>The tray grows into the summary: badges, the total counting up, then Continue. No heading.</span></li>
         </ol>
+        <p class="cap"><b>The full finish:</b> tap Finish workout. A short drum roll and rise, Victory with its music, crowns and XP lines, the app's 1.8 s hold, then the chest drops.</p>
+        <p class="cap"><b>A rank up:</b> after Victory the E shield breaks into pieces, the D shield rises through a pillar of light with its title, then the first Silver chest drops. The D-Rank title and frame come out first, then the day's badges.</p>
         <p class="cap">With reduced motion each step shows its end state at once, with no shakes or flashes. Sounds follow their own setting.</p>
       </div>
     </div>
   </section>
 
   <section class="sec" id="chests">
-    <h2>4. Chests, one per tier</h2>
-    <p>One chest shape, dressed per tier, so the chest tells you what is inside before it opens. Each card shows A (vector) on the left and B (3D) on the right. Board 09's list of tiers is kept; its art is not.</p>
-    <div class="cgrid" id="chestgrid"></div>
+    <h2>3. Chests</h2>
+    <p>Wooden, Golden and Pillow are signed off. The rest have options. <b>Tap an option to use it</b>; the stage plays the one you chose.</p>
+    <div class="ogrp"><h3>Signed off</h3><div class="otiles" id="chest-kept"></div></div>
+    <div id="chest-opts"></div>
   </section>
 
   <section class="sec" id="badges">
-    <h2>5. Badges, redesigned</h2>
-    <p>Every medal gets a thick bevelled metal rim in its tier's metal, an enamel face with fine engine-turned rings, an embossed icon, and a moving glare. Gold and Legend get laurels, Diamond a cut face, Master glowing cracks, and Legend a rim that shifts through the rainbow. The family keeps its shape and icon, as today.</p>
-    <p class="rowlbl">Today (Badges tab)</p>
-    <div class="mrow today" id="m-today"></div>
-    <p class="rowlbl">A. Vector</p>
-    <div class="mrow blue" id="m-a"></div>
-    <p class="rowlbl">B. 3D</p>
-    <div class="mrow blue" id="m-b"></div>
+    <h2>4. Badges</h2>
+    <p>No laurels on any badge. Icons are smaller on every medal, about a third of its width as in the app. Each family keeps its shape and icon. <b>Tap an option to use it</b>; the stage plays it.</p>
+    <p class="rowlbl">The six tiers, with my picks</p>
+    <div class="mrow blue" id="m-tiers"></div>
+    <div id="medal-opts"></div>
     <h3>Monthly, special and secret</h3>
-    <div class="mrow blue" id="m-other"></div>
-    <h3>One palette</h3>
-    <p class="cap">Today the Badges tab and the unlock moment use two different tier palettes (<code>TIERS</code> and <code>MEDAL_TIERS</code> in <code>lib/badgeColors.ts</code>), so a Silver badge is a different colour in each place. After this, one palette: rim metal, enamel and glow per tier, used by the tab, the moment, the chest and the share card.</p>
-    <div class="pal" id="palette"></div>
-    <h3>Locked badges</h3>
-    <div class="lockrow">
-      <div id="lock-stone"><b>Stone <span class="pick">My pick</span></b><small class="cap">Board 09's pick, redrawn: the medal carved in stone, a lock, and the progress ring.</small></div>
-      <div id="lock-faded"><b>Faded</b><small class="cap">The real medal, greyed and dimmed. Shows what you will get, but reads as broken.</small></div>
-    </div>
-  </section>
-
-  <section class="sec" id="rules">
-    <h2>6. The library rules</h2>
-    <p>Every interaction below is built from these, so the app moves and sounds like one thing. They become <code>lib/motion.ts</code> and <code>lib/sound.ts</code> in the build. Tap a token to see it move.</p>
-    <h3>Durations and easings</h3>
-    <div class="tokens" id="tokens"></div>
-    <h3>Springs</h3>
-    <p class="cap">Two of these are the motion-language board's (the other chat's board 11): bouncy is its slam, heavy is its rise. Snappy is new, for controls.</p>
-    <div class="tokens" id="springs"></div>
-    <h3>From the motion-language board</h3>
-    <p class="cap">Its eight moves are all here, now with sound, haptics and a place in the app.</p>
-    <div class="tw"><table><thead><tr><th>Its move</th><th>Where it lives now</th></tr></thead><tbody>
-      <tr><td>Slam</td><td>Level up (32), Victory banner (21), Beat last time (16), the bouncy spring</td></tr>
-      <tr><td>Drop in</td><td>Chest drop-in (27), crowns (24), the daily bonus banner (19)</td></tr>
-      <tr><td>Roll</td><td>Stepper (7), XP lines (22), the level number (32)</td></tr>
-      <tr><td>Sparks</td><td>Chest burst, record (17), the FX layer on every reward</td></tr>
-      <tr><td>Gloss</td><td>The glare on medals and shields, the XP bar glint (23)</td></tr>
-      <tr><td>Chip to bar</td><td>XP coins flying to the level bar on the reward stage and the set tick (13)</td></tr>
-      <tr><td>Sky wipe</td><td>The wipe easing; Victory entrance (21)</td></tr>
-      <tr><td>Impact shake</td><td>Chest landing and burst, tier up (31), rank up (33)</td></tr>
-    </tbody></table></div>
-    <h3>One sound and one haptic per kind of moment</h3>
-    <div class="tw"><table><thead><tr><th>Kind</th><th>Sound</th><th>Haptic (Android)</th><th>Examples</th></tr></thead><tbody>
-      <tr><td>Press</td><td>Made in code, quiet: pop, tock</td><td>Light, 8 ms</td><td>Buttons</td></tr>
-      <tr><td>Select</td><td>Made in code: tick, pip, two-note switch</td><td>Light</td><td>Tabs, segments, chips, switches, steppers</td></tr>
-      <tr><td>Success</td><td>Recorded chime</td><td>Success: 10, 40, 18 ms</td><td>Saved, exercise done, goal met</td></tr>
-      <tr><td>Reward</td><td>Recorded hits under music</td><td>Reward: 12, 30, 12, 30, 28 ms</td><td>Chests, level up, rank up, Victory</td></tr>
-      <tr><td>Error</td><td>Low note, made in code</td><td>Error: 30, 40, 30 ms</td><td>Could not save</td></tr>
-    </tbody></table></div>
-    <h3>Sound buses</h3>
-    <div class="buses">
-      <div class="bus"><b>Taps</b><div class="lvl"><i style="width:32%"></i></div><small>32%. Made in code, so nothing to load.</small></div>
-      <div class="bus"><b>Effects</b><div class="lvl"><i style="width:85%"></i></div><small>85%. Recorded, loaded after your first tap.</small></div>
-      <div class="bus"><b>Music</b><div class="lvl"><i style="width:50%"></i></div><small>50%. Reward moments only. Dips under big hits.</small></div>
-    </div>
-    <ul class="plain">
-      <li><b>Plays alongside your own music.</b> Levl sets the browser's audio session to "ambient", so Spotify or Apple Music keep playing under our sounds instead of stopping (Safari 16.4 and later; other browsers already mix).</li>
-      <li><b>Nothing plays during training</b> except the quiet tap and set sounds. Music only in reward moments, never while you train.</li>
-      <li><b>Sounds off means silence everywhere.</b> Music has its own switch.</li>
-      <li><b>Reduced motion</b> shows end states: no shakes, flashes, spins or confetti. Sounds still play.</li>
-      <li><b>Haptics:</b> Android phones vibrate in the patterns above. iPhone browsers have no web vibration, so on iPhone Levl stays still; if Levl ever ships in the App Store, iPhone gets haptics too.</li>
-      <li><b>Weight:</b> the picked sounds and music are about 400 KB, loaded after your first tap and kept. All candidates on this board come to 1.4 MB.</li>
-    </ul>
+    <p class="cap">Monthly gets a month tab in its colour. Special and secret are as you liked them, without laurels.</p>
+    <div class="mrow blue three" id="m-other"></div>
+    <h3>Locked</h3>
+    <div class="lockrow one"><div id="lock-stone"><b>Stone</b><small class="cap">The medal in stone with a lock, centred in its progress ring.</small></div></div>
   </section>
 
   <section class="sec" id="all">
-    <h2>7. The 34 interactions</h2>
-    <p>Each one is live: press, tap or play it. The pulse at the top right of a card shows where a haptic lands. Sounds follow your picks in sections 8 and 9.</p>
+    <h2>5. The 34 interactions</h2>
+    <p>Each one is live: press, tap or play it. The pulse at the top right of a card shows where a haptic lands. Each card names its sound, which you can change in section 6. <span class="new">Changed</span> marks what is new in round 2.</p>
     <div id="cardgroups"></div>
   </section>
 
   <section class="sec" id="sounds">
-    <h2>8. Sounds</h2>
-    <p>Every slot with two or three free candidates. <b>Tap a chip to hear it and use it</b>; every demo on this board then plays your pick. Recorded sounds are from Kenney's packs and OpenGameArt, all CC0 (public domain), with sources in <code>docs/design/12-motion/sounds/LICENSES.md</code>.</p>
-    <div class="note"><b>A caveat on my picks:</b> I cannot listen. I chose by what each source is, its length and its shape on a spectrogram. Your ears decide.</div>
+    <h2>6. Sounds</h2>
+    <p>Every slot, where you hear it, and its candidates. <b>Tap a chip to hear it and use it</b>; every demo on this board then plays your pick. Recorded sounds are CC0 (public domain) from Kenney's packs and OpenGameArt, with sources in <code>docs/design/12-motion/sounds/LICENSES.md</code>.</p>
+    <div class="note"><b>Checked, not guessed.</b> I still cannot listen, so each candidate was analysed: its pitch over time, its key, and its loudness. Good moments only keep candidates that rise and sit in a major key; the tag on a chip says what the analysis found. Sounds made in code play in the key of the chest music.</div>
     <div class="slots" id="slots"></div>
   </section>
 
   <section class="sec" id="music">
-    <h2>9. Music</h2>
-    <p>Short free pieces in a bright, brassy, medieval-festival spirit, for the four reward moments only. Cut to length, faded, and evened out in loudness. The chest music loops under the opening.</p>
+    <h2>7. Music</h2>
+    <p>For reward moments only. The chest music loops under the opening, and its key sets the key of every reward sound. Level up and rank up are 4 s or less.</p>
     <div class="slots" id="musics"></div>
   </section>
 
+  <section class="sec" id="rules">
+    <h2>8. The library rules <span class="pick">Signed off</span></h2>
+    <p>Unchanged from round 1. Every interaction is built from these, so the app moves and sounds like one thing. They become <code>lib/motion.ts</code> and <code>lib/sound.ts</code> in the build. Tap a token to see it move.</p>
+    <h3>Durations and easings</h3>
+    <div class="tokens" id="tokens"></div>
+    <h3>Springs</h3>
+    <div class="tokens" id="springs"></div>
+    <h3>One sound and one haptic per kind of moment</h3>
+    <div class="tw"><table><thead><tr><th>Kind</th><th>Sound</th><th>Haptic (Android)</th><th>Examples</th></tr></thead><tbody>
+      <tr><td>Press</td><td>Made in code, quiet: pop, tock</td><td>Light, 8 ms</td><td>Buttons</td></tr>
+      <tr><td>Select</td><td>Made in code: tick, pip, two-note switch</td><td>Light</td><td>Tabs, segments, chips, switches, steppers</td></tr>
+      <tr><td>Close and open</td><td>Made in code, soft and low</td><td>None</td><td>Back, close, sheets, modals</td></tr>
+      <tr><td>Success</td><td>Rising, major, quiet</td><td>Success: 10, 40, 18 ms</td><td>Saved, exercise done, goal met</td></tr>
+      <tr><td>Reward</td><td>In the key of the music, under it</td><td>Reward: 12, 30, 12, 30, 28 ms</td><td>Chests, level up, rank up, Victory</td></tr>
+      <tr><td>Error</td><td>Kenney's error</td><td>Error: 30, 40, 30 ms</td><td>Could not save</td></tr>
+    </tbody></table></div>
+    <h3>Sound buses</h3>
+    <div class="buses">
+      <div class="bus"><b>Taps</b><div class="lvl"><i style="width:50%"></i></div><small>50%, the quietest. Made in code, so nothing to load.</small></div>
+      <div class="bus"><b>Effects</b><div class="lvl"><i style="width:90%"></i></div><small>90%, with a small reverb so nothing stops dead.</small></div>
+      <div class="bus"><b>Music</b><div class="lvl"><i style="width:50%"></i></div><small>50%. Reward moments only. Dips under big hits.</small></div>
+    </div>
+    <ul class="plain">
+      <li><b>Plays alongside your own music.</b> Levl sets the browser's audio session to "ambient", so Spotify or Apple Music keep playing under our sounds (Safari 16.4 and later; other browsers already mix).</li>
+      <li><b>Nothing plays during training</b> except the quiet tap and set sounds. Music only in reward moments.</li>
+      <li><b>Sounds off means silence everywhere.</b> Music has its own switch.</li>
+      <li><b>Reduced motion</b> shows end states: no shakes, flashes, spins or confetti. Sounds still play.</li>
+      <li><b>Loudness:</b> every file is levelled by its loudest moment (EBU R128) and limited, then each slot has its own volume: taps quietest, small successes a step up, rewards loudest.</li>
+    </ul>
+  </section>
+
   <section class="sec" id="settings">
-    <h2>10. Settings</h2>
-    <p>The App group today has Sounds and Haptics. One row is added: Music. Sounds stays on by default and quiet; Music is on by default and only plays in reward moments.</p>
+    <h2>9. Settings <span class="pick">Signed off</span></h2>
+    <p>The App group gets one new row: Music. Sounds stays on by default and quiet; Music is on by default and only plays in reward moments.</p>
     <div class="setmock" id="setmock"></div>
   </section>
 
   <section class="sec" id="carry">
-    <h2>11. Carried over from board 09</h2>
-    <p>Board 09 (badges and chests) left eight questions open. This board answers the art and the moment; the badge list itself still waits for board 09 round 2.</p>
+    <h2>10. Carried over from board 09</h2>
+    <p>Still open from board 09. The art and the moment are answered here; the badge list waits for board 09 round 2.</p>
     <ol class="plain">
-      <li><b>Tapping a badge you have</b> opens a badge view, not the "NEW BADGE!" replay: the medal large and tiltable (34), its ribbon, name, the date you earned it, what it measures and progress to the next tier. <span class="pick">My pick: yes</span></li>
+      <li><b>Tapping a badge you have</b> opens a badge view: the medal large and tiltable (34), its tier, name, the date you earned it, what it measures and progress to the next tier. <span class="pick">My pick: yes</span></li>
       <li><b>Locked ranks</b> open the same view, with the shield in stone and "Reach level 30". <span class="pick">My pick: yes</span></li>
-      <li><b>Locked style:</b> stone, redrawn above. <span class="pick">My pick: stone</span></li>
-      <li><b>A chest per tier:</b> the nine chests in section 4. <span class="pick">My pick: yes</span></li>
-      <li><b>The unlock moment:</b> you chose "tap to open, every chest", with more taps for rarer tiers. That is the stage in section 3.</li>
-      <li><b>Tier up:</b> the old medal cracks and shatters, the new one stamps down (31). <span class="pick">My pick: yes</span></li>
-      <li><b>First batch of new badges:</b> unchanged; it waits for board 09 round 2.</li>
-      <li><b>XP for new families:</b> unchanged; also board 09 round 2.</li>
+      <li><b>Tier up:</b> the medal spins into its next tier (31), no cracks. <span class="pick">My pick: yes</span></li>
+      <li><b>First batch of new badges</b> and <b>XP for new families:</b> unchanged; board 09 round 2.</li>
     </ol>
   </section>
 
   <section class="sec" id="decide">
-    <h2>12. What I need from you</h2>
-    <ol class="decide">
-      <li><b>Art direction:</b> A vector or B 3D. <span class="pick">My pick: B</span>, with small badges as pictures rendered from the same 3D models.</li>
-      <li><b>The stage backdrop:</b> deep Levl blue with the diamond pattern, for chests, level up, rank up and Victory. <span class="pick">My pick: yes</span></li>
-      <li><b>The chest set:</b> the nine chests and their taps (1, 2 or 3). <span class="pick">My pick: as shown</span></li>
-      <li><b>The medals:</b> the new finish, the tier details and one palette. <span class="pick">My pick: as shown</span></li>
-      <li><b>Locked badges:</b> stone or faded. <span class="pick">My pick: stone</span></li>
-      <li><b>The 34:</b> keep all, or tell me which to drop or change.</li>
-      <li><b>Sounds:</b> listen to each slot in section 8 and keep or change my pick.</li>
-      <li><b>Music:</b> one per moment in section 9.</li>
-      <li><b>Settings:</b> add the Music switch next to Sounds and Haptics. <span class="pick">My pick: yes</span></li>
-      <li><b>Board 09:</b> the carry-overs in section 11.</li>
-      <li><b>The motion-language board</b> from the other chat: this board takes over from it (its moves and springs are kept). <span class="pick">My pick: retire it</span></li>
-    </ol>
-    <p class="cap">Then I write <code>docs/V13_PLAN.md</code> and build it in stages: the sound engine and tokens first, then taps and overlays, training, Victory, the reward stage with the new chests and medals, and finally the badge view and tilt.</p>
+    <h2>11. What I need from you</h2>
+    <ol class="decide" id="decide-list"></ol>
+    <p class="cap">Then I write <code>docs/V13_PLAN.md</code> and build it in stages: the sound engine and tokens first, then taps and overlays, training, Victory, the reward stage with the chests and medals, and finally the badge view and tilt.</p>
   </section>
 </div>
 <script type="module" src="12-motion/board.js"></script>

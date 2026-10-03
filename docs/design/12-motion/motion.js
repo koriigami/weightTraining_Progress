@@ -60,7 +60,21 @@ export const ease = {
 
 export const reduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || document.documentElement.dataset.reduced === '1';
 
-export const wait = (ms) => new Promise((r) => setTimeout(r, reduced() ? Math.min(ms, 60) : ms));
+// Half speed for inspecting a moment: every tween, wait and animation slows.
+export const TIME = { speed: 1 };
+export function setSpeed(v) {
+  TIME.speed = v;
+  document.documentElement.dataset.slow = v < 1 ? '1' : '0';
+}
+// keep CSS and Web Animations in step with the speed
+(function syncRates() {
+  if (typeof document !== 'undefined' && document.getAnimations) {
+    for (const a of document.getAnimations()) if (a.playbackRate !== TIME.speed) a.playbackRate = TIME.speed;
+  }
+  if (typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(syncRates);
+})();
+
+export const wait = (ms) => new Promise((r) => setTimeout(r, reduced() ? Math.min(ms, 60) : ms / TIME.speed));
 
 // A tiny frame-driven tween runner for canvas and three.js scenes.
 export class Tweens {
@@ -70,7 +84,7 @@ export class Tweens {
   // fn(p) is called with progress 0..1 (eased); resolves when done
   add(ms, fn, ez = ease.outCubic, delay = 0) {
     return new Promise((resolve) => {
-      this.list.push({ t0: performance.now() + delay, ms: reduced() ? 1 : ms, fn, ez, resolve });
+      this.list.push({ t0: performance.now() + delay / TIME.speed, ms: reduced() ? 1 : ms / TIME.speed, fn, ez, resolve });
     });
   }
   // a spring from 0 to 1 handed to fn

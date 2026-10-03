@@ -1,6 +1,6 @@
 // Board 12: 2D effects drawn over a stage: sparks, stars, dust, rings, shards
 // and coins that fly to a target. One canvas per stage, sized in stage pixels.
-import { reduced } from './motion.js';
+import { reduced, TIME } from './motion.js';
 
 export class FX {
   constructor(canvas, w, h) {
@@ -75,6 +75,17 @@ export class FX {
     this.add(out);
   }
 
+  // Light that spirals in to a point, for the moment before a badge rises.
+  spiral(x, y, color = '#ffe27a', n = 28, scale = 1) {
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 4 + Math.random() * 0.4;
+      const r = (120 + Math.random() * 90) * scale;
+      out.push({ k: 'swirl', cx: x, cy: y, a, r, delay: (i % 7) * 0.03, life: 0.6 + Math.random() * 0.15, t: 0, size: 3 + Math.random() * 4, color: i % 3 ? color : '#ffffff', x: x + Math.cos(a) * r, y: y + Math.sin(a) * r * 0.55 });
+    }
+    this.add(out);
+  }
+
   // Coins that arc from one point to another; onLand(i) fires as each arrives.
   coins(from, to, n = 6, onLand, gap = 0.07) {
     const out = [];
@@ -94,7 +105,7 @@ export class FX {
   }
 
   loop(now) {
-    const dt = Math.min(0.05, (now - this.last) / 1000);
+    const dt = Math.min(0.05, (now - this.last) / 1000) * TIME.speed;
     this.last = now;
     const x = this.x;
     x.clearRect(0, 0, this.w, this.h);
@@ -115,6 +126,26 @@ export class FX {
         p.x = u * u * p.from.x + 2 * u * e * p.cx + e * e * p.to.x;
         p.y = u * u * p.from.y + 2 * u * e * p.cy + e * e * p.to.y;
         this.coin(p.x, p.y, p.size * (1 - k * 0.4), p.t * 14);
+        return true;
+      }
+      if (p.k === 'swirl') {
+        // in towards the centre, turning faster as it closes
+        const e = k * k;
+        const r = p.r * (1 - e);
+        const a = p.a + e * 5;
+        const px = p.cx + Math.cos(a) * r;
+        const py = p.cy + Math.sin(a) * r * 0.55;
+        x.globalAlpha = k < 0.2 ? k / 0.2 : 1;
+        x.strokeStyle = p.color;
+        x.lineWidth = p.size * 0.6;
+        x.lineCap = 'round';
+        x.beginPath();
+        x.moveTo(p.x, p.y);
+        x.lineTo(px, py);
+        x.stroke();
+        p.x = px;
+        p.y = py;
+        x.globalAlpha = 1;
         return true;
       }
       if (p.k === 'ring') {
@@ -217,4 +248,66 @@ export class FX {
     x.fillRect(-r * 0.15, -r * 0.55, r * 0.3, r * 1.1);
     x.restore();
   }
+}
+
+// Breaks an element into n pieces: copies clipped to wedges around an impact
+// point, each flying out, turning and falling under gravity.
+export function shatterEl(stage, target, n = 10) {
+  const sr = stage.getBoundingClientRect();
+  const tr = target.getBoundingClientRect();
+  // the stage may be drawn scaled (the reward stage fits its phone frame)
+  const k = sr.width / (stage.offsetWidth || sr.width) || 1;
+  const box = document.createElement('div');
+  box.className = 'mshards';
+  box.setAttribute('aria-hidden', 'true');
+  box.style.cssText = `left:${(tr.left - sr.left) / k}px;top:${(tr.top - sr.top) / k}px;width:${tr.width / k}px;height:${tr.height / k}px`;
+  stage.append(box);
+  const cx = 0.52;
+  const cy = 0.42;
+  const TAU = Math.PI * 2;
+  const angles = Array.from({ length: n }, (_, i) => ((i + 0.25 + Math.random() * 0.5) / n) * TAU);
+  const edge = (a) => {
+    const dx = Math.cos(a);
+    const dy = Math.sin(a);
+    let t = Infinity;
+    if (dx > 1e-6) t = Math.min(t, (1 - cx) / dx);
+    if (dx < -1e-6) t = Math.min(t, -cx / dx);
+    if (dy > 1e-6) t = Math.min(t, (1 - cy) / dy);
+    if (dy < -1e-6) t = Math.min(t, -cy / dy);
+    return [cx + dx * t, cy + dy * t];
+  };
+  const corners = [
+    [1, 0],
+    [1, 1],
+    [0, 1],
+    [0, 0],
+  ].map(([x, y]) => ({ p: [x, y], a: (Math.atan2(y - cy, x - cx) + TAU) % TAU }));
+  target.style.opacity = '0';
+  angles.forEach((a0, i) => {
+    let a1 = angles[(i + 1) % n];
+    if (a1 <= a0) a1 += TAU;
+    const inside = corners
+      .map((c) => ({ ...c, a: c.a < a0 ? c.a + TAU : c.a }))
+      .filter((c) => c.a > a0 && c.a < a1)
+      .sort((x, y) => x.a - y.a)
+      .map((c) => c.p);
+    const pts = [[cx, cy], edge(a0), ...inside, edge(a1)];
+    const piece = document.createElement('div');
+    piece.className = 'mshard';
+    piece.innerHTML = target.innerHTML;
+    piece.style.clipPath = `polygon(${pts.map(([x, y]) => `${(x * 100).toFixed(1)}% ${(y * 100).toFixed(1)}%`).join(',')})`;
+    box.append(piece);
+    const mid = (a0 + a1) / 2;
+    const v = 110 + Math.random() * 120;
+    const vx = Math.cos(mid) * v;
+    const vy = Math.sin(mid) * v - 90;
+    const spin = (Math.random() < 0.5 ? -1 : 1) * (120 + Math.random() * 260);
+    const frames = [];
+    for (let k = 0; k <= 8; k++) {
+      const t = (k / 8) * 0.9;
+      frames.push({ transform: `translate(${(vx * t).toFixed(1)}px,${(vy * t + 0.5 * 700 * t * t).toFixed(1)}px) rotate(${(spin * t).toFixed(1)}deg)`, opacity: k > 5 ? 1 - (k - 5) / 3 : 1 });
+    }
+    if (!reduced()) piece.animate(frames, { duration: 900 / TIME.speed, easing: 'linear', fill: 'forwards' });
+  });
+  setTimeout(() => box.remove(), 1000 / TIME.speed);
 }
