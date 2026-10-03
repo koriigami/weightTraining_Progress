@@ -502,8 +502,9 @@ write on read and no backup.
 - `guideDone`: false while the guide waits to play on Home, true once it was played or skipped.
 - `newsSeen`: the id of the newest update the person has seen.
 
-A state without them is someone who joined before they existed: no guide waits for them, and every
-update in `lib/news.ts` is unseen. `lib/store.ts` never fills them in (`upgrade` leaves them alone).
+A state without them is someone who joined before they existed. The guide waits for them too (only
+`guideDone: true` puts it away), and every update in `lib/news.ts` is unseen, so they get the guide on
+their first open and the updates on a later one. `lib/store.ts` never fills them in (`upgrade` leaves them alone).
 
 New people start with `guideDone: false` and `newsSeen` set to the newest update (`newUserState`, and an
 owner with nothing saved), so they never hear about what changed before they joined. The `savePrefs`

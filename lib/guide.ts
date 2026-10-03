@@ -257,8 +257,9 @@ export function scrollToFit(ring: Box, viewportHeight: number, bubbleHeight: num
 
 // What Home may show when it opens: the guide first, What's new on a later open, and
 // never more than one a load. Nothing before the setup questions are done, and
-// nothing while a workout is in progress. guideDone is false while the guide waits.
-// A missing guideDone is someone who joined before the guide, who only gets updates.
+// nothing while a workout is in progress. Only guideDone true puts the guide away: a
+// missing guideDone is someone who joined before the guide, and they get it once too
+// (changed 3 October 2026: everyone sees the guide), then the updates on a later open.
 export function introToShow(input: {
   guideDone: boolean | undefined;
   onboarded: boolean;
@@ -267,6 +268,6 @@ export function introToShow(input: {
   shownThisLoad: boolean;
 }): 'guide' | 'news' | null {
   if (!input.onboarded || input.sessionActive || input.shownThisLoad) return null;
-  if (input.guideDone === false) return 'guide';
+  if (input.guideDone !== true) return 'guide';
   return input.unseenCount > 0 ? 'news' : null;
 }

@@ -514,6 +514,9 @@ screens nobody sees any more.
     The welcome and How XP works cards keep the app's game modal look.
 
   Built as v12 (`docs/V12_PLAN.md`).
+- **Changed before release (3 October 2026):** "there are very few users who are actually using the
+  product, so it would be better if everyone sees the introductory screens." People already on Levl
+  get the guide once too, on their first open, then the October update on a later open.
 
 ## Where the chat lives
 

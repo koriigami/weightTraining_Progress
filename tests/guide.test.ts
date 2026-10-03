@@ -226,14 +226,19 @@ describe('introToShow', () => {
     expect(introToShow({ ...ready, unseenCount: 4 })).toBe('guide');
   });
 
-  it('shows What is new when there is no guide waiting and updates are unseen', () => {
+  it('shows What is new when the guide is done and updates are unseen', () => {
     expect(introToShow({ ...ready, guideDone: true, unseenCount: 4 })).toBe('news');
-    expect(introToShow({ ...ready, guideDone: undefined, unseenCount: 4 })).toBe('news'); // joined before the guide
   });
 
-  it('shows nothing when the guide is done and every update is seen, or someone joined before the guide with nothing new', () => {
+  it('gives someone who joined before the guide the guide once, then the update on a later open', () => {
+    expect(introToShow({ ...ready, guideDone: undefined, unseenCount: 4 })).toBe('guide');
+    expect(introToShow({ ...ready, guideDone: undefined, unseenCount: 0 })).toBe('guide');
+    // the guide ends with guideDone true, so the next open shows the update
+    expect(introToShow({ ...ready, guideDone: true, unseenCount: 4 })).toBe('news');
+  });
+
+  it('shows nothing when the guide is done and every update is seen', () => {
     expect(introToShow({ ...ready, guideDone: true })).toBeNull();
-    expect(introToShow({ ...ready, guideDone: undefined })).toBeNull();
   });
 
   it('shows one thing a load: nothing once something was shown', () => {

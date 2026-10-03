@@ -481,8 +481,8 @@ Automated checks fake the clock, so check these by hand after a deploy:
 - Android Back on a step ends the guide and stays on Home. It does not come back on the next open.
 - On a small phone the week step scrolls into view and its card stays on screen.
 - With VoiceOver or TalkBack each card reads its title and words first, then Skip and Next.
-- An account that joined before v12: the October update shows once, four pages, on the first
-  open after the release. Got it, then reopen the app: nothing shows, and the Home rules note
-  about the weekly goal bonus is gone.
+- An account that joined before v12: the guide plays on the first open after the release. On the
+  next open the October update shows once, four pages. Got it, then reopen the app: nothing shows,
+  and the Home rules note about the weekly goal bonus is gone.
 - Start a workout, go to Home: neither the guide nor What's new shows.
 

@@ -18,7 +18,7 @@ Both reuse the app's game modal look. The user signed off round 1 with my pick o
 ## Signed-off decisions (board 11)
 - **Who sees what:**
   - **New people:** after the setup questions, the guide plays on Home. They never see updates from before they joined.
-  - **People already on Levl:** the October update once. The guide waits for them in Settings ("How Levl works").
+  - **People already on Levl:** the guide once too, on their first open after the release, then the October update on a later open. (Changed on 3 October 2026, before release: there are very few people on Levl, so everyone should see the introduction. Board 11 had What's new only for them.)
   - **At most one thing per app open:** the guide first, What's new on a later open.
   - **Only on Home** (phone and computer), after any level-up or badge moments, and never while a workout is in progress.
 - **The guide (spotlight tour):**
@@ -75,7 +75,7 @@ Both reuse the app's game modal look. The user signed off round 1 with my pick o
   - `guideDone?: boolean`: false means the guide is waiting.
   - `newsSeen?: string`: the id of the newest update seen.
 
-  Missing means "joined before v12": no guide, and every update is unseen. That is decision 3, with no migration write and no backup. The fields are additive, like `source` in v11 stage 2b.
+  Missing means "joined before v12": the guide waits for them too (only `guideDone: true` puts it away), and every update is unseen. No migration write and no backup. The fields are additive, like `source` in v11 stage 2b.
 - **New people:**
   - `newUserState()` sets `guideDone: false` and `newsSeen` to the newest id. So does the owner's empty state.
   - In `savePrefs`, onboarding finishing for the first time (`onboarded` going from false to true) sets `guideDone: false` unless it is already true, and sets `newsSeen` to the newest id if it is missing. That covers someone who signed up before v12 and never finished setup. Visiting Setup questions again changes neither.
