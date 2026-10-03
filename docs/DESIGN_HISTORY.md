@@ -518,6 +518,53 @@ screens nobody sees any more.
   product, so it would be better if everyone sees the introductory screens." People already on Levl
   get the guide once too, on their first open, then the October update on a later open.
 
+## 12 Motion and sound
+
+`docs/design/12-motion-sound.html`, with its code, sounds and licences in `docs/design/12-motion/`.
+
+- **Why:** the user found Levl's motion and sound "okay" but boring: one pop for everything, the
+  same words on every reward, a single rudimentary brown chest. They sent five Clash Royale
+  screenshots and five videos (chest opening, card upgrade, level up, two screen recordings) and
+  asked for a motion and sound library for the whole app: micro-interactions and their sounds,
+  click sounds, music where it fits, a premium tap-to-open chest inspired by (not copied from) the
+  game, 34 premium interactions, and a free hand to redo every badge. They also said they did not
+  like board 09's chest and badge art.
+- **Answers before the board (3 October 2026):** music in reward moments only, never while
+  training; recorded free-licence sounds for rich moments and code-made sounds for tiny taps;
+  every chest waits for a tap, rarer tiers take more taps; tap sounds on by default, quiet, and
+  mixed with the person's own music.
+- **The other chat's board 11, "the Levl motion language"** (branch `claude/cool-euler-wpvctn`,
+  not merged), had eight moves, three springs and twelve code-made sounds. The user found it
+  boring and said the two boards go hand in hand. Board 12 takes it over: its springs (slam,
+  rise) and all eight moves are kept and mapped to where they now live. The number clash with
+  our board 11 (the guide) is settled when that branch is merged or retired.
+- **Round 1, shown (3 October 2026):**
+  - **References:** the videos were studied frame by frame (6 frames a second) with the sound
+    plotted against the picture. Only written lessons and timings were kept; no frame, art or
+    sound from the game is in the repo or the artifact.
+  - **Two art directions, both new:** A, premium vector (layered SVG); B, real 3D built in code
+    with three.js (no model files). Nine chests in each (Wooden, Silver, Golden, Crystal,
+    Obsidian, Prismatic, Monthly, Royal, Pillow; board 09's tier list), and medals for every tier,
+    shape, monthly, special and secret badge, a stone locked style, and one tier palette to
+    replace `TIERS` and `MEDAL_TIERS`. My pick: B, with small badges as pictures rendered from
+    the same models.
+  - **The reward stage:** a deep Levl-blue diamond backdrop; the chest drops, waits, takes 1 to 3
+    taps, bursts, and hands out each badge with a ribbon, name, what it measures and XP coins
+    that fly into the level bar; a counter of rewards left; a You got summary with Continue last.
+    Playable in both directions.
+  - **The 34 interactions,** each live with its motion, timing, sound and haptic: taps and
+    controls (8), overlays (4), training (8), Victory and progress (6), rewards (7), ambient (1).
+  - **Library rules:** durations, easings and three springs; one sound and one haptic per kind of
+    moment; three sound buses; the ambient audio session; reduced motion; haptics on Android
+    only (iPhone browsers have no web vibration).
+  - **Sounds and music:** 45 effect candidates and 12 music candidates, all CC0 (Kenney packs and
+    OpenGameArt), cut and evened out with ffmpeg, sources in `12-motion/sounds/LICENSES.md`. My
+    picks are marked, with the caveat that I chose them without listening.
+  - **Settings:** a Music switch next to Sounds and Haptics.
+  - **Board 09 carry-overs:** the badge view, rank gates, stone, a chest per tier, tap to open,
+    and tier up are answered here; the new badge list and XP for new families wait for board 09
+    round 2.
+
 ## Where the chat lives
 
 The conversation is not stored in the repo. Long chats are summarized when the
