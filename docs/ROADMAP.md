@@ -39,7 +39,7 @@ Sign-ups are open to any Google account since 1 October 2026 (`SIGNUPS=invite` c
 | v11 stage 2 | Log workout: add a workout you already did from Home, a routine's menu or a routine's page. The Edit screen with a chosen day and time, then Victory (board 10 round 3, `docs/V11_PLAN.md`) | Done, live |
 | v11 stage 3 | How it felt: five SVG faces and an optional 1 to 10 effort on Victory and the workout page, a face beside the title in workout rows, a "How workouts felt, last 30 days" card on Profile. Earns no XP (board 10 round 1, `docs/V11_PLAN.md`) | Done, live since 2 October 2026 |
 | v11 stage 4 | Rules v4: the weekly goal bonus grows with each week in a row (+50, then +10 more a week, up to +100), shown on Home, Victory, the workout page and Settings, with a one-time note, a v11 backup and a committed XP integrity test (board 10, `docs/V11_PLAN.md`) | Done, live since 2 October 2026 |
-| v12 | First-run guide and What's new: a spotlight tour on Home for new people (seven steps on the real screen, the ring wraps each element's shadow), a paged What's new card after releases starting with the October update, the `/news` page, and Settings rows How Levl works, What's new and Setup questions (board 11, `docs/V12_PLAN.md`) | Done, on branch, not live |
+| v12 | First-run guide and What's new: a spotlight tour on Home for new people (seven steps on the real screen, the ring wraps each element's shadow), a paged What's new card after releases starting with the October update, the `/news` page, and Settings rows How Levl works, What's new and Setup questions (board 11, `docs/V12_PLAN.md`) | Done, live since 3 October 2026 |
 
 
 ### Next

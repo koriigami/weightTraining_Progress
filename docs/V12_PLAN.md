@@ -1,6 +1,6 @@
 # v12 plan: the first-run guide and What's new
 
-(v11 is done and on `main`: laps, Log workout, how it felt, the growing weekly goal bonus. v12 stages 1 to 4 are built on the feature branch, 2 October 2026.)
+(v11 is done and on `main`: laps, Log workout, how it felt, the growing weekly goal bonus. v12 stages 1 to 4 are live since 3 October 2026; people already on Levl get the guide once too.)
 
 ## Context
 A new person lands on Home with no explanation, and changes reach people only as the Home rules note. Board 11 (`docs/design/11-guide-board.html`) documents every screen as it is today and designs two lasting systems:
