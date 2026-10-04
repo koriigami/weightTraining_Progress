@@ -1,8 +1,9 @@
-// Board 13: wiring. The moment chips, both looks of the road, the computer layout,
-// the chest table, and the rank up that hands back to the road.
+// Board 13 (round 2): wiring. The moment chips, the road on a phone and a computer,
+// the road with and without badges, the chest table, and the rank up that hands
+// back to the road.
 import { S, SYN } from '../12-motion/sound.js';
 import { RewardStage } from '../12-motion/stage.js';
-import { simulate, roadAt, roadA, roadB, placeB, scrollToNow, fillPics, firstChests, RANK_CHEST, CHEST_NAME } from './road.js';
+import { simulate, roadAt, roadA, placeFill, scrollToNow, fillPics, firstChests, RANK_CHEST, CHEST_NAME } from './road.js';
 
 const $ = (s) => document.querySelector(s);
 
@@ -66,7 +67,7 @@ $('#chests').innerHTML =
   RANKS.map((r) => `<div class="ctile"><div class="cimg"><img data-pic="c:${RANK_CHEST[r]}:" alt="${CHEST_NAME[RANK_CHEST[r]]} chest"></div><b>${CHEST_NAME[RANK_CHEST[r]]}</b><small>${r} rank, from level ${FROM[r]}</small></div>`).join('') +
   THEMED.map(([k, w]) => `<div class="ctile"><div class="cimg"><img data-pic="c:${k}:" alt="${CHEST_NAME[k]} chest"></div><b>${CHEST_NAME[k]}</b><small>${w}</small></div>`).join('');
 
-// ---------- 2 and 3. the road, in both looks and on a computer ----------
+// ---------- 2 and 3. the road on a phone and on a computer ----------
 const NAV_I = {
   Home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
   Routines: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6"/>',
@@ -75,24 +76,23 @@ const NAV_I = {
 };
 const navIcon = (n) => `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NAV_I[n]}</svg>`;
 const NAV = `<span>${navIcon('Home')}Home</span><span>${navIcon('Routines')}Routines</span><span class="wo">+ WORKOUT</span><span class="on">${navIcon('Rank')}Rank</span><span>${navIcon('Profile')}Profile</span>`;
-$('#navA').innerHTML = NAV;
-$('#navB').innerHTML = NAV;
+document.querySelectorAll('.anav').forEach((n) => (n.innerHTML = NAV));
 
 let cur = 1;
 function show(i, { just = null } = {}) {
   cur = i;
   const road = roadAt(hist, STATES[i][1]);
   const A = $('#roadA');
-  const B = $('#roadB');
   const D = $('#roadD');
   A.innerHTML = roadA(road, { just });
-  B.innerHTML = roadB(road, { just });
   D.innerHTML = roadA(road, { just });
-  requestAnimationFrame(() => {
-    placeB(B);
-    [A, B, D].forEach((s) => scrollToNow(s));
-  });
-  [A, B, D].forEach((s) => fillPics(s, picOpts));
+  requestAnimationFrame(() =>
+    [A, D].forEach((s) => {
+      placeFill(s);
+      scrollToNow(s);
+    }),
+  );
+  [A, D].forEach((s) => fillPics(s, picOpts));
   document.querySelectorAll('#states .chip').forEach((c, k) => {
     c.classList.toggle('on', k === i);
     c.setAttribute('aria-pressed', String(k === i));
@@ -105,6 +105,24 @@ $('#states').addEventListener('click', (e) => {
   SYN.pip(1);
   show(Number(b.dataset.i));
 });
+
+// ---------- the open question: badges on the road, or not ----------
+{
+  const road = roadAt(hist, STATES[4][1]);
+  [
+    ['#roadQ1', true],
+    ['#roadQ2', false],
+  ].forEach(([id, badges]) => {
+    const q = $(id);
+    q.innerHTML = roadA(road, { badges });
+    fillPics(q, picOpts);
+    requestAnimationFrame(() => {
+      placeFill(q);
+      const el = q.querySelector('[data-l="27"]');
+      if (el) q.scrollTop = el.offsetTop - 40;
+    });
+  });
+}
 
 // the computer layout is drawn at its real size and scaled to fit the board
 const deskwrap = $('#deskwrap');
@@ -130,6 +148,7 @@ function showX(i, just = null) {
   X.innerHTML = roadA(road, { just });
   fillPics(X, picOpts);
   requestAnimationFrame(() => {
+    placeFill(X);
     const el = just ? X.querySelector(`[data-l="${just}"]`) : X.querySelector('.cur');
     if (el) X.scrollTop = el.offsetTop - X.clientHeight / 2 + el.offsetHeight / 2;
   });

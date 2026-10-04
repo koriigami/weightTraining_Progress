@@ -288,25 +288,12 @@ html[data-slow='1'] .rstage::after{content:'Half speed';position:absolute;right:
 .gcard{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;border-radius:18px;padding:12px 8px 12px 14px;background:var(--paper);border:1px solid var(--line);box-shadow:inset 0 0 0 3px rgba(255,255,255,.6),0 4px 0 #d7ba7c}
 .gtop{display:flex;gap:6px;align-items:center}
 .gtext{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-.gmore{display:flex;flex-direction:column;gap:2px;padding-right:6px}
-.gmore small{color:var(--muted)}
-.g-past .gmore small,.g-current .gmore small{color:rgba(255,255,255,.92)}
 .gtext small{color:var(--muted);line-height:1.35}
 .gtext .gt{font-family:var(--display);font-size:20px;line-height:1.15;color:#fff;-webkit-text-stroke:4px #3a230c;paint-order:stroke fill}
 .gtext .k{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
-.g-past .gcard,.g-current .gcard{background:var(--hero);color:#fff;border:3px solid #f5c542;box-shadow:0 4px 0 #154a94,inset 0 0 0 2px rgba(255,255,255,.25)}
-.g-past .gtext small,.g-current .gtext small{color:rgba(255,255,255,.92)}
-.g-current .nowk{color:#ffe68f}
-.g-current .upn{border-top-color:rgba(255,255,255,.4)}
-.g-current .upk,.g-current .upt b span{color:rgba(255,255,255,.85)}
-.g-current .upt small{color:rgba(255,255,255,.92)}
-.g-past .gtext .gt,.g-current .gtext .gt{-webkit-text-stroke-color:#0e3a7a}
-.g-current .gcard{box-shadow:0 0 0 4px rgba(245,197,66,.5),0 0 26px rgba(245,197,66,.6),0 4px 0 #154a94}
-.g-next .gcard{background:linear-gradient(180deg,#fffbee,#fff0c8);border:2.5px solid #e3b03a;box-shadow:0 3px 0 #c8932a}
-.g-locked .gcard{background:var(--paper);border:2px dashed #d9bd7f;box-shadow:none}
 .lockchip{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;font-weight:800;color:var(--muted);background:#f4e4c0;border-radius:10px;padding:3px 9px;min-height:20px}
 .gchest{position:relative;flex:none;width:92px}
-.gchest img{width:92px;height:auto;display:block}
+.gchest img{width:92px;height:auto;aspect-ratio:260/220;display:block}
 .ok{position:absolute;right:2px;bottom:6px;width:22px;height:22px;border-radius:50%;background:#2ba438;border:2px solid #fff;display:grid;place-items:center;box-shadow:0 2px 0 rgba(0,0,0,.25)}
 .sh{position:relative;display:inline-grid}
 .sh.locked svg{filter:saturate(.5) brightness(1.08);opacity:.85}
@@ -317,54 +304,12 @@ html[data-slow='1'] .rstage::after{content:'Half speed';position:absolute;right:
 .mw .tk{position:absolute;right:-3px;bottom:-3px;width:15px;height:15px;border-radius:50%;background:#2ba438;border:1.5px solid #fff;display:grid;place-items:center}
 .mw .tk svg{width:9px;height:9px}
 .more{font-weight:800;font-size:12px;color:var(--muted)}
-.came{margin:8px 0 0;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
-.inside{font-weight:700}
-.upn{margin-top:10px;padding-top:9px;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:8px}
-.upk{margin:0;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.upr{display:flex;gap:10px;align-items:center}
-.upr img{width:34px;height:34px;flex:none}
 .pm.dim{filter:grayscale(.8) brightness(1.06);opacity:.85}
-.upt{flex:1;min-width:0;display:flex;flex-direction:column}
-.upt b{font-size:13.5px;font-weight:800}
-.upt b span{font-weight:700;color:var(--muted)}
-.minibar{height:6px;border-radius:3px;background:rgba(110,70,20,.2);margin:3px 0 1px;overflow:hidden}
-.minibar i{display:block;height:100%;background:linear-gradient(90deg,#86ea64,#2ba438)}
-.upt small{font-size:12px;color:var(--muted)}
 .nextchip{display:flex;justify-content:center;padding:10px 0 2px}
 .nextchip .chip{cursor:default;max-width:100%}
 .just .gchest img,.just .gc img{animation:justpop .7s cubic-bezier(.2,1.6,.4,1)}
 .just .ok{animation:justpop .5s cubic-bezier(.2,1.6,.4,1) .35s both}
 @keyframes justpop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
-/* look B: a Trophy Road on the stage blue */
-.app.b .ascroll{padding:0 12px 16px 6px;background:repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 2px,transparent 2px 34px),repeating-linear-gradient(-45deg,rgba(255,255,255,.05) 0 2px,transparent 2px 34px),linear-gradient(180deg,#0c3477,#1d5fbf 40%,#0c3477);background-attachment:local}
-.troad{position:relative;padding:18px 0 18px 46px;display:flex;flex-direction:column;gap:16px}
-.rail{position:absolute;left:18px;top:0;bottom:0;width:10px;border-radius:5px;background:rgba(3,12,32,.5);overflow:hidden}
-.rail i{position:absolute;left:0;right:0;bottom:0;top:100%;background:linear-gradient(180deg,#fff28f,#ffc21a 40%,#c7870a)}
-.marker{position:absolute;left:0;z-index:4;background:#fff;color:#1d5fbf;font:800 12px var(--body);border-radius:10px;padding:6px 8px;box-shadow:0 3px 0 #0e3a7a;white-space:nowrap}
-.tile{position:relative;background:linear-gradient(180deg,#fffaf0,#f4e4c0);border-radius:16px;padding:10px 12px 12px 14px;box-shadow:0 6px 0 #c9a868,0 12px 20px -8px rgba(0,0,0,.55);min-height:56px;display:flex;flex-direction:column;justify-content:center}
-.tile .tl{position:absolute;left:-44px;top:50%;transform:translateY(-50%);width:34px;text-align:center;font-family:var(--display);font-size:15px;color:#fff;-webkit-text-stroke:3px #0e2a5c;paint-order:stroke fill;z-index:2}
-.tile.now .tl{opacity:0}
-.tile.ahead{background:rgba(255,248,232,.12);box-shadow:none;border:1.5px dashed rgba(255,255,255,.35);min-height:44px}
-.tile.ahead .xpa{color:#cfe2ff;font-weight:800}
-.tile .cleared{color:var(--muted);font-weight:800}
-.tile .meds{margin-top:0}
-.tile.now{border:3px solid #ffc21a;box-shadow:0 6px 0 #c7870a,0 0 0 5px rgba(255,194,26,.25),0 12px 20px -8px rgba(0,0,0,.55)}
-.tnow>b{font-family:var(--display);font-weight:400;font-size:19px}
-.tnow>small{color:var(--muted);font-weight:700}
-.tile.gate{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 8px;align-items:center;padding:12px 10px 12px 12px;color:#fff;background:linear-gradient(160deg,var(--g1),var(--g2));box-shadow:0 6px 0 rgba(0,0,0,.35),inset 0 0 0 2px rgba(255,255,255,.3),0 12px 20px -8px rgba(0,0,0,.55)}
-.r-E{--g1:#98a3b1;--g2:#3e4652}.r-D{--g1:#3dc98a;--g2:#0a5236}.r-C{--g1:#5aa2ff;--g2:#14318f}.r-B{--g1:#b272f0;--g2:#46106f}.r-A{--g1:#ffc933;--g2:#7a4e00}.r-S{--g1:#ff5c7c;--g2:#6e0b27}
-.tile.gate.now{border:3px solid #ffc21a}
-.gl{display:flex;gap:10px;align-items:center;min-width:0}
-.gl .sh{flex:none}
-.gl>div>b{display:block;font-family:var(--display);font-weight:400;font-size:18px;line-height:1.1;-webkit-text-stroke:4px rgba(0,0,0,.35);paint-order:stroke fill}
-.gl>div>small{display:block;font-weight:700;font-size:12px;opacity:.95;line-height:1.3}
-.gc{position:relative}
-.gc img{width:104px;display:block}
-.pill{display:inline-flex;align-items:center;gap:5px;margin-top:6px;font-size:11.5px;font-weight:800;border-radius:999px;padding:3px 9px;min-height:20px;white-space:nowrap}
-.pill.ok{position:static;width:auto;height:auto;border:0;box-shadow:none;background:#2ba438;color:#fff}
-.pill.next{background:#fff2b8;color:#4a3212}
-.pill.lock{background:rgba(0,0,0,.32);color:#fff}
-.tile.gate .meds{grid-column:1/-1}
 /* desktop */
 .deskwrap{position:relative;width:100%;overflow:hidden}
 .desk{position:absolute;left:0;top:0;width:1200px;height:760px;transform-origin:0 0;display:grid;grid-template-columns:252px minmax(0,1fr);border-radius:18px;overflow:hidden;border:6px solid #1b1409;background:linear-gradient(180deg,#86ccff 0%,#cdeeff 200px,#fff6e2 380px,#fbeacb 100%)}
@@ -380,8 +325,24 @@ html[data-slow='1'] .rstage::after{content:'Half speed';position:absolute;right:
 .dbadges{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-content:start;padding-top:6px}
 .dbadges p{grid-column:1/-1;margin:0;color:var(--muted);font-weight:700}
 .dbadges div{height:150px;border-radius:18px;background:var(--paper);border:1px solid var(--line);box-shadow:0 4px 0 #d7ba7c;display:grid;place-items:center;color:var(--muted);font-weight:800;font-size:13px}
-.tile.gate .gnow{grid-column:1/-1;background:rgba(255,250,240,.96);color:var(--ink);border-radius:12px;padding:8px 10px}
-.gnow>small{color:var(--muted);font-weight:700}
+
+/* round 2: gate cards in their rank's colours, the level once, progress on the road's line */
+.r-E{--g1:#8f9aa8;--g2:#3e4652}.r-D{--g1:#3dc98a;--g2:#0a5236}.r-C{--g1:#5aa2ff;--g2:#14318f}.r-B{--g1:#b272f0;--g2:#46106f}.r-A{--g1:#f0b416;--g2:#7a4e00}.r-S{--g1:#ff5c7c;--g2:#6e0b27}
+.gate .gcard{background:linear-gradient(160deg,var(--g1),var(--g2));color:#fff;border:2px solid rgba(255,255,255,.45);box-shadow:0 4px 0 rgba(0,0,0,.28),inset 0 0 0 2px rgba(255,255,255,.18),0 12px 20px -14px rgba(0,0,0,.5)}
+.gate .gtext .gt{font-size:22px;-webkit-text-stroke:4px var(--g2)}
+.gate .gtext small{color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.gate .gtext .gc2{font-weight:600;opacity:.95}
+.g-current .gcard{border:3px solid #f5c542;box-shadow:0 0 0 4px rgba(245,197,66,.45),0 0 24px rgba(245,197,66,.55),0 4px 0 rgba(0,0,0,.28)}
+.g-locked .gcard{border:2px dashed rgba(255,255,255,.6)}
+.gate .lockchip{background:rgba(0,0,0,.3);color:#fff;margin:4px 0 2px}
+.gate .meds{margin-top:8px}
+.road{position:relative}
+.fillnow{position:absolute;left:27px;width:8px;border-radius:4px;background:linear-gradient(180deg,#fff28f,#ffc21a 55%,#c7870a);pointer-events:none}
+.fillnow::before{content:'';position:absolute;left:50%;top:-5px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:#fff28f;border:2px solid #c7870a;box-shadow:0 0 10px 3px rgba(255,214,70,.8)}
+.looks.q{grid-template-columns:repeat(2,minmax(0,390px))}
+@media (max-width:900px){.looks.q{grid-template-columns:minmax(0,390px)}}
+.signed{background:#eaf7e2;border:1px solid #b9e3a5;border-radius:16px;padding:12px 14px}
+.signed .lbl{color:#186a20}
 
 @media (prefers-reduced-motion:reduce){*{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}}
 </style>
@@ -389,23 +350,92 @@ html[data-slow='1'] .rstage::after{content:'Half speed';position:absolute;right:
 <body>
 <div class="wrap">
   <header>
-    <span class="kick">Board 13 · Round 1</span>
+    <span class="kick">Board 13 · Round 2</span>
     <h1>Rank Road and chests</h1>
-    <p class="lede">Which chest opens, and where you see them coming. You decided: your rank decides your chest. This board puts the chests on the Rank Road, Clash Royale style, so you can scroll up and see every chest waiting for you, and it fills the road's empty level rows with the badges you earned on them.</p>
+    <p class="lede">Round 2, after your notes. Today's light road it is, with far fewer words: each rank gate says its rank, its level once and its chest, in its rank's colours. Your progress to the next level now runs along the road's own line, and Up next is gone. The questions you have not answered yet are kept open at the end.</p>
   </header>
 
   <div class="bar0" role="group" aria-label="Board settings">
     <span class="tg"><button type="button" class="sw" role="switch" aria-checked="true" id="t-sound" aria-label="Sound"><i></i></button>Sound</span>
     <span class="tg"><button type="button" class="sw" role="switch" aria-checked="true" id="t-music" aria-label="Music"><i></i></button>Music</span>
-    <small>The road on this board is a real simulation: a regular lifter (3 workouts a week, 15 sets each) scored with the app's own XP rules and badge thresholds.</small>
+    <small>The road is a real simulation: a regular lifter (3 workouts a week, 15 sets each) scored with the app's own XP rules and badge thresholds.</small>
   </div>
 
   <nav class="jump" aria-label="Sections">
-    <a href="#rule">Which chest opens</a><a href="#road">The road</a><a href="#desk">On a computer</a><a href="#cross">Crossing a rank</a><a href="#tiles">What the tiles hold</a><a href="#early">Early levels</a><a href="#decide">What I need from you</a>
+    <a href="#changed">What changed</a><a href="#road">The road</a><a href="#desk">On a computer</a><a href="#cross">Crossing a rank</a><a href="#badges">Badges on the road</a><a href="#rule">Which chest opens</a><a href="#early">Early levels</a><a href="#decide">What I need from you</a>
   </nav>
 
+  <section class="sec" id="changed">
+    <h2>1. What changed in round 2</h2>
+    <div class="signed">
+      <p class="lbl">Signed off in round 1</p>
+      <ul class="plain">
+        <li><b>Look A,</b> today's light road with a chest at each rank gate. The Trophy Road (B) is retired.</li>
+        <li><b>From look B:</b> each rank gate card takes the colours of its rank's shield.</li>
+        <li><b>Up next is dropped.</b> The Badges tab already shows what you are close to.</li>
+        <li><b>Your rank decides your chest</b> (decided on board 12; section 6 here).</li>
+      </ul>
+    </div>
+    <div class="tw"><table><thead><tr><th>You said</th><th>Now</th></tr></thead><tbody>
+      <tr><td>Rank cards have too much detail; drop "Hunter"; the level only once; a shorter chest line</td><td>A gate card says "B rank", its level once ("Level 15", or "Your rank, since level 15"), and "Crystal chest: title and frame". The extra lines are gone.</td></tr>
+      <tr><td>"4 levels to the next rank" and its bar are unnecessary</td><td>Removed. Scroll up to see the next gate.</td></tr>
+      <tr><td>"Now 0 / 100 XP to level 2" repeats "100 XP to go"</td><td>Removed. Your level says "You are here"; the next level keeps "XP to go".</td></tr>
+      <tr><td>Show level progress on the vertical bar, not in a card</td><td>The road's line fills from your level toward the next one as you earn XP, with a glowing tip where you are.</td></tr>
+      <tr><td>Up next is not needed</td><td>Removed.</td></tr>
+      <tr><td>Rank gate cards in their rank's colour, as in B</td><td>Done: grey E, green D, blue C, purple B, gold A, red S. Your rank has a gold frame; ranks ahead have a dashed edge and a lock.</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="sec" id="road">
+    <h2>2. The Rank Road</h2>
+    <p>The same lifter at five moments. <b>Pick a moment</b>; the phone opens on your level, as the app does. Scroll the phone to see the whole road.</p>
+    <div class="states" id="states"></div>
+    <div class="looks">
+      <div><div class="phone"><div class="host"><div class="app a"><div class="ahead"><h2 class="atitle">Rank</h2><div class="aseg"><span class="on">Rank Road</span><span>Badges</span></div></div><div class="ascroll" id="roadA"></div><div class="anav"></div></div></div></div></div>
+      <div>
+        <ul class="plain">
+          <li><b>Rank gates:</b> the rank, its level once, and its chest with what is inside. A tick once you have opened it. Your rank has a gold frame.</li>
+          <li><b>Your level:</b> "You are here". The gold line between your level and the next fills as you earn XP.</li>
+          <li><b>The next level</b> says how much XP is left, as today.</li>
+          <li><b>Rows behind you:</b> "Cleared", with the badges you earned there (an open question, section 5).</li>
+          <li><b>The chip at the top</b> still jumps to your next rank: "Next rank: C at level 10".</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="desk">
+    <h2>3. On a computer</h2>
+    <p>The road on the left, the Badges list on the right, as the Rank page is today on a wide screen.</p>
+    <div class="deskwrap" id="deskwrap"><div class="desk"><div class="dside"><span class="logo">Levl</span><span class="start">START</span><span class="it">Home</span><span class="it">Routines</span><span class="it">Exercises</span><span class="it on">Rank</span><span class="it">Profile</span></div><div class="dmain"><h2 class="atitle">Rank</h2><div class="dcols"><div class="ascroll" id="roadD"></div><div class="dbadges"><p>The Badges list, unchanged</p><div>Finisher</div><div>Iron Mover</div><div>Record Breaker</div><div>Streak Keeper</div></div></div></div></div></div>
+  </section>
+
+  <section class="sec" id="cross">
+    <h2>4. Crossing a rank, then back to the road</h2>
+    <p>Play the moment a workout takes this lifter from level 9 to level 10: Victory, the D shield breaks, C rises, the first Golden chest opens with the C rank title and frame, then the day's badge. When you tap Continue, the road beside it opens on the C gate, now ticked.</p>
+    <div class="demorow">
+      <div class="phone"><div class="host" id="stagehost"></div></div>
+      <div class="ctlbox">
+        <button type="button" class="btn bp" id="playcross" style="max-width:390px">Play level 9 to 10</button>
+        <p class="cap">The road after the moment:</p>
+        <div class="phone"><div class="host"><div class="app a" style="height:560px"><div class="ascroll" id="roadX"></div></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="badges">
+    <h2>5. Badges on the road, or not? <span class="new">Open</span></h2>
+    <p>You liked seeing which badges came at which level, and asked whether the road needs them when the Badges tab has them. Both, side by side, for the same S rank lifter:</p>
+    <div class="looks q">
+      <div><h3>With badges <span class="pick">My pick</span></h3><div class="phone"><div class="host"><div class="app a" style="height:560px"><div class="ascroll" id="roadQ1"></div></div></div></div>
+        <p class="cap">The Badges tab shows what you have and how far you are. The road shows when you got each one, so it reads as your own story. Small medals only, no names, so it adds no words.</p></div>
+      <div><h3>Without</h3><div class="phone"><div class="host"><div class="app a" style="height:560px"><div class="ascroll" id="roadQ2"></div></div></div></div>
+        <p class="cap">Only levels and chests. The quietest road; badges live in one place.</p></div>
+    </div>
+  </section>
+
   <section class="sec" id="rule">
-    <h2>1. Which chest opens <span class="pick">Decided</span></h2>
+    <h2>6. Which chest opens <span class="pick">Decided</span></h2>
     <p><b>Your rank decides your chest</b>, the way each arena does in Clash Royale. After a workout that earns a badge, one chest drops after Victory, and it is your rank's chest; every badge comes out of it, the best one last. Crossing a rank opens the new rank's chest for the first time, with the rank's title and profile frame inside, and from then on your chests are that kind.</p>
     <div class="ctbl" id="chests"></div>
     <ul class="plain">
@@ -419,51 +449,8 @@ html[data-slow='1'] .rstage::after{content:'Half speed';position:absolute;right:
     <p class="cap">Simulated with the real rules: <code>xpForLevel</code>, <code>WORKOUT_XP</code>, badge XP and the badge thresholds. The casual lifter sees Obsidian and Prismatic only on the road in their first year; that is the point of the road: they can see what is coming.</p>
   </section>
 
-  <section class="sec" id="road">
-    <h2>2. The Rank Road with chests</h2>
-    <p>Both looks show the same lifter at the same moment. <b>Pick a moment</b>; each phone opens on your level, as the app does. Scroll the phone to see the whole road.</p>
-    <div class="states" id="states"></div>
-    <div class="looks">
-      <div><h3>A. Today's light road <span class="pick">My pick</span></h3><div class="phone"><div class="host"><div class="app a"><div class="ahead"><h2 class="atitle">Rank</h2><div class="aseg"><span class="on">Rank Road</span><span>Badges</span></div></div><div class="ascroll" id="roadA"></div><div class="anav" id="navA"></div></div></div></div>
-        <p class="cap">What changes from today: each rank gate shows its chest and what is inside, the rows behind you show the badges you earned there, and your level shows the badges you are closest to. Everything else is today's road.</p></div>
-      <div><h3>B. Trophy Road</h3><div class="phone"><div class="host"><div class="app b"><div class="ahead"><h2 class="atitle">Rank</h2><div class="aseg"><span class="on">Rank Road</span><span>Badges</span></div></div><div class="ascroll" id="roadB"></div><div class="anav" id="navB"></div></div></div></div>
-        <p class="cap">Closest to your screenshot: tiles on the deep stage blue, a rail on the left with a marker where you are, and a big tile per rank with its chest. It reads more like a game, but it is the only dark page in a light app.</p></div>
-    </div>
-    <ul class="plain">
-      <li><b>Rows behind you:</b> the badges you earned while on that level, with a tick. Tapping one replays it.</li>
-      <li><b>Your level:</b> your XP to the next level, and Up next: the three badges closest to unlocking, with how far you are.</li>
-      <li><b>Rank gates:</b> the rank's chest, open with a tick once you have it; the next one shows how many levels to go; the rest are locked but in full colour, so you can see them. A gate also shows the badges that came out of its chest.</li>
-      <li><b>Rows ahead:</b> the level and its XP, as today. Nothing is promised that does not exist.</li>
-    </ul>
-  </section>
-
-  <section class="sec" id="desk">
-    <h2>3. On a computer</h2>
-    <p>Look A in the computer layout: the road on the left, the Badges list on the right, as the Rank page is today on a wide screen.</p>
-    <div class="deskwrap" id="deskwrap"><div class="desk"><div class="dside"><span class="logo">Levl</span><span class="start">START</span><span class="it">Home</span><span class="it">Routines</span><span class="it">Exercises</span><span class="it on">Rank</span><span class="it">Profile</span></div><div class="dmain"><h2 class="atitle">Rank</h2><div class="dcols"><div class="ascroll" id="roadD"></div><div class="dbadges"><p>The Badges list, unchanged</p><div>Finisher</div><div>Iron Mover</div><div>Record Breaker</div><div>Streak Keeper</div></div></div></div></div></div>
-  </section>
-
-  <section class="sec" id="cross">
-    <h2>4. Crossing a rank, then back to the road</h2>
-    <p>Play the moment a workout takes this lifter from level 9 to level 10: Victory, the D shield breaks, C rises, the first Golden chest opens with the C-Rank title and frame, then the day's badge. When you tap Continue, the road beside it opens on the C gate, now ticked.</p>
-    <div class="demorow">
-      <div class="phone"><div class="host" id="stagehost"></div></div>
-      <div class="ctlbox">
-        <button type="button" class="btn bp" id="playcross" style="max-width:390px">Play level 9 to 10</button>
-        <p class="cap">The road after the moment:</p>
-        <div class="phone"><div class="host"><div class="app a" style="height:560px"><div class="ascroll" id="roadX"></div></div></div></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="sec" id="tiles">
-    <h2>5. What the tiles hold, and what could come later</h2>
-    <p>Clash Royale fills its road with gold and cards. Levl has neither, and it does not need them: <b>badges are Levl's collectibles</b>. So the road holds the badges you earned, the ones you are close to, and the chests at the rank gates. No new currency, nothing to buy, nothing random.</p>
-    <p><b>Later, not now:</b> small unlocks every few levels would give the long stretch between ranks more to aim for, for example share-card backgrounds, frame colours or a pinned badge on your profile. Each needs art and a design of its own, so it would be its own board if you want it.</p>
-  </section>
-
   <section class="sec" id="early">
-    <h2>6. Should early levels be easier?</h2>
+    <h2>7. Should early levels be easier? <span class="new">Open</span></h2>
     <p><b>Not yet.</b> The start is already quick with today's rules:</p>
     <div class="tw"><table class="tbl"><thead><tr><th>Moment</th><th>Regular lifter, 3 a week</th><th>Casual, 2 a week</th></tr></thead><tbody>
       <tr><td>Level 3</td><td>After the 1st workout</td><td>After the 2nd workout</td></tr>
@@ -478,15 +465,19 @@ html[data-slow='1'] .rstage::after{content:'Half speed';position:absolute;right:
     </ul>
   </section>
 
+  <section class="sec" id="later">
+    <h2>8. Later unlocks <span class="new">Open</span></h2>
+    <p>Small unlocks every few levels would give the long stretch between ranks more to aim for, for example share-card backgrounds, frame colours or a pinned badge on your profile. Each needs art and a design of its own, so it would be its own board if you want it.</p>
+  </section>
+
   <section class="sec" id="decide">
-    <h2>7. What I need from you</h2>
+    <h2>9. What I need from you</h2>
     <ol class="decide">
-      <li><b>The look:</b> A, today's light road, or B, the Trophy Road. <span class="pick">My pick: A</span></li>
-      <li><b>Badges on the rows behind you,</b> with a tick, tap to replay. <span class="pick">My pick: yes</span></li>
-      <li><b>Up next</b> on your level: the three closest badges. <span class="pick">My pick: yes</span></li>
-      <li><b>Themed chests:</b> Monthly, Royal and Pillow for those badges, and a rank crossing always wins. <span class="pick">My pick: yes</span></li>
-      <li><b>Early levels:</b> no change now; check Insights in 4 to 6 weeks. <span class="pick">My pick: yes</span></li>
-      <li><b>Later unlocks</b> every few levels: a board of its own, or not at all.</li>
+      <li><b>The simpler road:</b> gate cards with the rank, the level once and the chest, in the rank's colours; progress on the road's line. <span class="pick">My pick: as shown</span></li>
+      <li><b>Badges on the rows behind you</b> (section 5): keep them as small medals, or remove them. <span class="pick">My pick: keep</span></li>
+      <li><b>Themed chests:</b> Monthly, Royal and Pillow for those badges, and a rank crossing always wins. <span class="pick">My pick: yes</span> <span class="new">Open since round 1</span></li>
+      <li><b>Early levels:</b> no change now; check Insights in 4 to 6 weeks. <span class="pick">My pick: yes</span> <span class="new">Open since round 1</span></li>
+      <li><b>Later unlocks</b> every few levels: a board of its own, or not at all. <span class="new">Open since round 1</span></li>
     </ol>
     <p class="cap">Then the chest rule, the road and board 12's motion and sound go into <code>docs/V13_PLAN.md</code> together.</p>
   </section>

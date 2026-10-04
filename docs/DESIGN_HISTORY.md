@@ -623,6 +623,26 @@ screens nobody sees any more.
   - **Early levels:** no change now. The start is already quick (D rank by week 2 to 3); the slow
     part is the middle. Insights (median days to D) decides in 4 to 6 weeks.
   - **Later, not now:** small unlocks every few levels (share-card backgrounds, frame colours).
+- **Round 1 answers (4 October 2026):**
+  - **Look A,** today's light road. From B, the user liked the gate cards in their rank's colour.
+  - **Too much detail on the gate cards:** drop the "Hunter" copy, say the level once, shorten
+    the chest line.
+  - **Your rank:** "4 levels to the next rank" and its bar are unnecessary; scroll up instead.
+  - **Your level:** "Now 0 / 100 XP to level 2" repeats "100 XP to go"; show the progress on the
+    road's vertical line, not in a card. Up next is not needed: the Badges tab has it.
+  - **Badges on the rows behind you:** liked, but asked whether they are needed when the Badges
+    tab has them (open).
+  - Themed chests, early levels and later unlocks: not answered yet (kept open).
+- **Round 2, shown (4 October 2026):**
+  - **Gate cards:** the rank's shield colours (grey E, green D, blue C, purple B, gold A, red S),
+    "C rank", the level once ("Level 10", or "Your rank, since level 10"), and "Golden chest:
+    title and frame". A tick on the chest once opened; a gold frame on your rank; a dashed edge
+    and a lock for ranks ahead.
+  - **Your level:** "You are here". The road's gold line fills from your shield toward the next
+    level's dot as you earn XP, with a glowing tip. The next level keeps "XP to go".
+  - **Up next and look B removed.**
+  - **Open question shown both ways:** the road with small medals on the rows behind you (my
+    pick) and without.
 
 ## Where the chat lives
 

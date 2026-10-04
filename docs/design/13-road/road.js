@@ -1,7 +1,7 @@
 // Board 13: the Rank Road with chests. A regular lifter's history is simulated with
 // the real XP rules (WORKOUT_XP in lib/routines.ts, XP and xpForLevel in
 // lib/progress.ts, the badge thresholds in lib/badges.ts), and the road is drawn
-// from it in two looks: today's light road (A) and a Trophy Road (B).
+// from it: today's light road with a chest at each rank gate.
 import { shieldSVG } from '../12-motion/artvec.js';
 
 // ---------- the rules, as the app has them ----------
@@ -14,7 +14,6 @@ export function levelForXp(xp) {
 export const rankForLevel = (l) => (l >= 30 ? 'S' : l >= 20 ? 'A' : l >= 15 ? 'B' : l >= 10 ? 'C' : l >= 5 ? 'D' : 'E');
 export const GATES = { 1: 'E', 5: 'D', 10: 'C', 15: 'B', 20: 'A', 30: 'S' };
 const GATE_LEVELS = [1, 5, 10, 15, 20, 30];
-export const TITLE = (r) => `${r}-Rank Hunter`;
 // The rule decided on board 12 round 2: your rank decides your chest.
 export const RANK_CHEST = { E: 'bronze', D: 'silver', C: 'gold', B: 'diamond', A: 'master', S: 'legend' };
 export const CHEST_NAME = { bronze: 'Wooden', silver: 'Silver', gold: 'Golden', diamond: 'Crystal', master: 'Obsidian', legend: 'Prismatic', monthly: 'Monthly', royal: 'Royal', pillow: 'Pillow' };
@@ -85,8 +84,6 @@ export function roadAt(hist, upTo) {
   const last = h[h.length - 1];
   const xp = last ? last.xp : 0;
   const level = levelForXp(xp);
-  const totals = last ? last.totals : Object.fromEntries(Object.keys(FAMILIES).map((f) => [f, 0]));
-  const got = last ? last.got : Object.fromEntries(Object.keys(FAMILIES).map((f) => [f, 0]));
   // where each badge sits: on the level you reached that day; a rank-crossing workout's
   // badges came out of the new rank's chest, so they sit on its gate
   const at = {};
@@ -95,16 +92,10 @@ export function roadAt(hist, upTo) {
     const row = crossed ? gateFor(e.level) : e.level;
     (at[row] ||= []).push(...e.badges);
   }
-  // Up next: the badges closest to unlocking
-  const upNext = Object.entries(FAMILIES)
-    .filter(([f]) => got[f] < 6)
-    .map(([f, info]) => ({ fam: f, tier: got[f], have: totals[f], need: info.tiers[got[f]], p: Math.min(0.99, totals[f] / info.tiers[got[f]]) }))
-    .sort((a, b) => b.p - a.p)
-    .slice(0, 3);
   const into = xp - xpForLevel(level);
   const needed = xpForLevel(level + 1) - xpForLevel(level);
   const top = Math.max(32, level + 2);
-  return { xp, level, rank: rankForLevel(level), at, upNext, into, needed, top, week: last ? last.week : 0, workouts: upTo };
+  return { xp, level, rank: rankForLevel(level), at, into, needed, top, week: last ? last.week : 0, workouts: upTo };
 }
 
 // ---------- pictures: medals and chests from board 12's 3D models, cached ----------
@@ -167,90 +158,67 @@ function medals(list, max = 5) {
   const more = list.length - shown.length;
   return `<div class="meds">${shown.map((b) => `<span class="mw">${medal(b)}<i class="tk">${TICK}</i></span>`).join('')}${more ? `<span class="more">+${more}</span>` : ''}</div>`;
 }
-function upNext(road) {
-  return `<div class="upn"><p class="upk">Up next</p>${road.upNext
-    .map(
-      (u) =>
-        `<div class="upr">${medal({ fam: u.fam, tier: u.tier }, 'dim')}<div class="upt"><b>${FAMILIES[u.fam].name} <span>${TIER_LABEL[u.tier]}</span></b><div class="minibar"><i style="width:${Math.round(u.p * 100)}%"></i></div><small>${fmt(u.have)} of ${fmt(u.need)} ${FAMILIES[u.fam].unit}</small></div></div>`,
-    )
-    .join('')}</div>`;
-}
-const inside = (r) => `<small class="inside">Inside: the ${r}-Rank title and frame</small>`;
 
-// ---------- look A: today's light road, with chests at the gates and badges on the rows ----------
-export function roadA(road, { just = null } = {}) {
+// ---------- the road (look A, signed off): today's light road with a chest at each rank ----------
+// Round 2: gate cards take their rank's colours (from look B), say the rank and the level
+// once, and name the chest in a few words. Your progress to the next level runs along
+// the road's own line instead of a bar in a card. `badges: false` draws the road
+// without the medals on the rows, for the open question on the board.
+export function roadA(road, { just = null, badges = true } = {}) {
   const cur = road.level;
   const ng = nextGate(cur);
+  const meds = (list, max) => (badges ? medals(list, max) : '');
   const rows = [];
   for (let l = road.top; l >= 1; l--) {
     const done = l < cur;
     const now = l === cur;
+    const pct = now ? Math.round((road.into / road.needed) * 100) : 0;
     if (GATES[l]) {
       const r = GATES[l];
       const chest = RANK_CHEST[r];
-      const state = l <= cur ? (gateFor(cur) === l ? 'current' : 'past') : l === ng ? 'next' : 'locked';
-      const lv = l - cur;
-      const gpct = ng ? Math.round(((road.xp - xpForLevel(gateFor(cur))) / (xpForLevel(ng) - xpForLevel(gateFor(cur)))) * 100) : 100;
-      let body;
-      if (state === 'past') body = `<div class="k">Unlocked at level ${l} · ${CHEST_NAME[chest]} chest opened</div><div class="gt">${TITLE(r)}</div>${inside(r)}`;
-      else if (state === 'current')
-        body = `<div class="k">Your rank · since level ${l}</div><div class="gt">${TITLE(r)}</div><small>Your chests are ${CHEST_NAME[chest]} now</small>${ng ? `<div class="bar"><i style="width:${gpct}%"></i></div><small>${ng - cur} ${ng - cur === 1 ? 'level' : 'levels'} to ${TITLE(GATES[ng])}</small>` : '<small>The top rank</small>'}`;
-      else if (state === 'next')
-        body = `<div class="k">Next rank · ${lv} ${lv === 1 ? 'level' : 'levels'} to go</div><div class="gt">${TITLE(r)}</div><small>Opens the ${CHEST_NAME[chest]} chest: the title and a ${r}-Rank frame. From then on your chests are ${CHEST_NAME[chest]}.</small><div class="bar"><i style="width:${gpct}%"></i></div>`;
-      else body = `<div class="k">Rank gate · level ${l}</div><div class="gt">${TITLE(r)}</div><small>Opens the ${CHEST_NAME[chest]} chest: the title and a ${r}-Rank frame</small><span class="lockchip">${LOCK} Reach level ${l}</span>`;
-      const nowPart = now ? `<div class="bar"><i style="width:${Math.round((road.into / road.needed) * 100)}%"></i></div><small><span class="nowk">Now</span> · ${fmt(road.into)} / ${fmt(road.needed)} XP to level ${l + 1}</small>` : '';
-      const extra = `${nowPart}${road.at[l]?.length ? `<p class="came">Came in this chest</p>${medals(road.at[l], 6)}` : ''}${now ? upNext(road) : ''}`;
+      const state = l <= cur ? (gateFor(cur) === l ? 'current' : 'past') : 'locked';
+      const where = state === 'current' ? `<small class="gl">Your rank, since level ${l}</small>` : state === 'past' ? `<small class="gl">Level ${l}</small>` : `<span class="lockchip">${LOCK} Level ${l}</span>`;
       rows.push(
-        `<li class="rrow gate g-${state}${done ? ' done' : ''}${now ? ' cur' : ''}${just === l ? ' just' : ''}" data-l="${l}"><span class="node"><span class="sh${l > cur ? ' locked' : ''}">${shield(r, 54)}${l > cur ? `<i class="lk">${LOCK}</i>` : ''}</span></span><div class="gcard"><div class="gtop"><div class="gtext">${body}</div><div class="gchest">${chestImg(chest, '', l <= cur)}${l <= cur ? `<i class="ok">${TICK}</i>` : ''}</div></div>${extra ? `<div class="gmore">${extra}</div>` : ''}</div></li>`,
+        `<li class="rrow gate g-${state} r-${r}${done ? ' done' : ''}${now ? ' cur' : ''}${just === l ? ' just' : ''}" data-l="${l}"${now ? ` data-pct="${pct}"` : ''}><span class="node"><span class="sh${l > cur ? ' locked' : ''}">${shield(r, 54)}${l > cur ? `<i class="lk">${LOCK}</i>` : ''}</span></span><div class="gcard"><div class="gtop"><div class="gtext"><div class="gt">${r} rank</div>${where}<small class="gc2">${CHEST_NAME[chest]} chest: title and frame</small></div><div class="gchest">${chestImg(chest, '', l <= cur)}${l <= cur ? `<i class="ok">${TICK}</i>` : ''}</div></div>${meds(road.at[l], 6)}</div></li>`,
       );
     } else {
-      const label = now ? `${fmt(xpForLevel(l))} XP` : done ? 'Cleared' : `${fmt(xpForLevel(l) - road.xp)} XP to go`;
+      const label = now ? '<span class="nowk">You are here</span>' : done ? 'Cleared' : `${fmt(xpForLevel(l) - road.xp)} XP to go`;
       rows.push(
-        `<li class="rrow${done ? ' done' : ''}${now ? ' cur' : ''}" data-l="${l}"><span class="node">${now ? `<span class="pulse">${shield(road.rank, 44, l)}</span>` : `<span class="dot">${l}</span>`}</span><div class="rt"><b>Level ${l}</b><small>${label}</small>${now ? `<div class="bar"><i style="width:${Math.round((road.into / road.needed) * 100)}%"></i></div><small><span class="nowk">Now</span> · ${fmt(road.into)} / ${fmt(road.needed)} XP to level ${l + 1}</small>${upNext(road)}` : ''}${medals(road.at[l])}</div></li>`,
+        `<li class="rrow${done ? ' done' : ''}${now ? ' cur' : ''}" data-l="${l}"${now ? ` data-pct="${pct}"` : ''}><span class="node">${now ? `<span class="pulse">${shield(road.rank, 44, l)}</span>` : `<span class="dot">${l}</span>`}</span><div class="rt"><b>Level ${l}</b><small>${label}</small>${meds(road.at[l])}</div></li>`,
       );
     }
   }
-  const chip = ng ? `<div class="nextchip"><span class="chip">${STAR} Next rank: ${TITLE(GATES[ng])} at level ${ng}</span></div>` : '';
+  const chip = ng ? `<div class="nextchip"><span class="chip">${STAR} Next rank: ${GATES[ng]} at level ${ng}</span></div>` : '';
   return `${chip}<ol class="road">${rows.join('')}</ol>`;
 }
 
-// ---------- look B: a Trophy Road on the stage blue, tiles on a rail with a marker ----------
-export function roadB(road, { just = null } = {}) {
-  const cur = road.level;
-  const ng = nextGate(cur);
-  const tiles = [];
-  for (let l = road.top; l >= 1; l--) {
-    const done = l < cur;
-    const now = l === cur;
-    const ahead = l > cur;
-    if (GATES[l]) {
-      const r = GATES[l];
-      const chest = RANK_CHEST[r];
-      const reached = l <= cur;
-      const state = reached ? `<span class="pill ok">${TICK} Opened at level ${l}</span>` : l === ng ? `<span class="pill next">${l - cur} ${l - cur === 1 ? 'level' : 'levels'} to go</span>` : `<span class="pill lock">${LOCK} Level ${l}</span>`;
-      tiles.push(
-        `<div class="tile gate r-${r}${reached ? ' reached' : ''}${now ? ' now' : ''}${just === l ? ' just' : ''}" data-l="${l}"><span class="tl">${l}</span><div class="gl"><span class="sh">${shield(r, 46)}</span><div><b>${TITLE(r)}</b><small>${CHEST_NAME[chest]} chest: title and frame</small>${state}</div></div><div class="gc">${chestImg(chest, '', reached)}${reached ? `<i class="ok">${TICK}</i>` : ''}</div>${road.at[l]?.length ? medals(road.at[l], 6) : ''}${now ? `<div class="gnow"><div class="bar"><i style="width:${Math.round((road.into / road.needed) * 100)}%"></i></div><small>${fmt(road.into)} / ${fmt(road.needed)} XP to level ${l + 1}</small>${upNext(road)}</div>` : ''}</div>`,
-      );
-    } else {
-      tiles.push(
-        `<div class="tile lvl${done ? ' done' : ''}${now ? ' now' : ''}${ahead ? ' ahead' : ''}" data-l="${l}"><span class="tl">${l}</span>${now ? `<div class="tnow"><b>Level ${l}</b><div class="bar"><i style="width:${Math.round((road.into / road.needed) * 100)}%"></i></div><small>${fmt(road.into)} / ${fmt(road.needed)} XP</small>${upNext(road)}</div>` : done ? road.at[l]?.length ? medals(road.at[l], 6) : '<small class="cleared">Cleared</small>' : `<small class="xpa">${fmt(xpForLevel(l))} XP</small>`}</div>`,
-      );
-    }
-  }
-  return `<div class="troad"><div class="rail"><i></i></div><div class="marker">You · ${cur}</div>${tiles.join('')}</div>`;
+// Your progress to the next level, drawn on the road's line between your level and the
+// next one, with a glowing tip where you are.
+export function placeFill(scroller) {
+  const roadEl = scroller.querySelector('.road');
+  const cur = roadEl?.querySelector('.rrow.cur');
+  const up = cur?.previousElementSibling;
+  if (!cur || !up) return;
+  roadEl.querySelector('.fillnow')?.remove();
+  // the visible stretch: from the top of your shield to the bottom of the next level's dot,
+  // measured on screen and divided by any scale the road is drawn at
+  const rr = roadEl.getBoundingClientRect();
+  const k = rr.height / roadEl.offsetHeight || 1;
+  const edge = (li, side) => {
+    const r = li.querySelector('.node > *').getBoundingClientRect();
+    return ((side === 'top' ? r.top : r.bottom) - rr.top) / k;
+  };
+  const from = edge(cur, 'top');
+  const to = edge(up, 'bottom');
+  const h = (from - to) * (Number(cur.dataset.pct) / 100);
+  const f = document.createElement('i');
+  f.className = 'fillnow';
+  f.style.top = `${from - h}px`;
+  f.style.height = `${h}px`;
+  roadEl.append(f);
 }
 
-// Puts the rail fill and the marker at your tile, and scrolls it into view.
-export function placeB(scroller) {
-  const troad = scroller.querySelector('.troad');
-  const now = troad?.querySelector('.tile.now');
-  if (!now) return;
-  const top = now.offsetTop + now.offsetHeight / 2;
-  troad.querySelector('.rail i').style.top = `${top}px`;
-  const m = troad.querySelector('.marker');
-  m.style.top = `${top - 14}px`;
-}
-export function scrollToNow(scroller, sel = '.cur, .now') {
+export function scrollToNow(scroller, sel = '.cur') {
   const el = scroller.querySelector(sel);
   if (el) scroller.scrollTop = el.offsetTop - scroller.clientHeight / 2 + el.offsetHeight / 2;
 }
