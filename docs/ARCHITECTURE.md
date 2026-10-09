@@ -577,6 +577,9 @@ rules notes. `ProgressProvider` has a method for each, resolving to an error mes
   `rules: true` when it announces an XP rules change: it gets the "XP rules changed" tag and closing it
   clears the Home rules notes. A rules change is announced here from now on, not with a new Home note.
   `tests/news.test.ts` checks the list is newest first and that every picture exists.
+  Order comes from position in the list, never from comparing the id text, so a second update in a month
+  can use an id such as `2026-10b` (October part 2, v13: chests, the Rank Road, 3D badges, sound and music,
+  level up on Victory; pictures `public/news/2026-10b-*.jpg`, cut from the real screens at 2x and scaled to 640 px wide).
 
 ### The guide's pure parts
 

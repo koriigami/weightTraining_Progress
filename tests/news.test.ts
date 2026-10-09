@@ -16,10 +16,19 @@ const LIST: NewsEntry[] = [
 const titles = (pages: { title: string }[]) => pages.map((p) => p.title);
 
 describe('the real update list', () => {
-  it('starts with October 2026: four pages, and only the goal bonus page is about the rules', () => {
-    expect(NEWS[0]).toMatchObject({ id: '2026-10', date: '2026-10-02', label: 'October 2026' });
-    expect(titles(NEWS[0].pages)).toEqual(['Laps for runners', 'Log a workout you already did', 'How did it feel?', 'Your goal bonus grows']);
-    expect(NEWS[0].pages.map((p) => p.rules === true)).toEqual([false, false, false, true]);
+  it('starts with October part 2: five pages, none about the rules, and the first October update follows it', () => {
+    expect(NEWS[0]).toMatchObject({ id: '2026-10b', date: '2026-10-09', label: 'October 2026, part 2' });
+    expect(titles(NEWS[0].pages)).toEqual(['Chests', 'The Rank Road', 'Badges in 3D', 'Sound and music', 'Level up on Victory']);
+    expect(NEWS[0].pages.some((p) => p.rules)).toBe(false);
+    expect(NEWS[1]).toMatchObject({ id: '2026-10', date: '2026-10-02', label: 'October 2026' });
+    expect(titles(NEWS[1].pages)).toEqual(['Laps for runners', 'Log a workout you already did', 'How did it feel?', 'Your goal bonus grows']);
+    expect(NEWS[1].pages.map((p) => p.rules === true)).toEqual([false, false, false, true]);
+  });
+
+  it('orders by position, not by the text of the id, so 2026-10b counts as newer than 2026-10', () => {
+    expect(unseenEntries('2026-10').map((e) => e.id)).toEqual(['2026-10b']);
+    expect(advanceNewsSeen('2026-10', '2026-10b')).toBe('2026-10b');
+    expect(advanceNewsSeen('2026-10b', '2026-10')).toBe('2026-10b');
   });
 
   it('is newest first with ids that are not repeated, so adding an update at the top works', () => {

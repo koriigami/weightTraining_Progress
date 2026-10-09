@@ -28,6 +28,38 @@ export const MAX_NEWS_PAGES = 5;
 
 export const NEWS: NewsEntry[] = [
   {
+    id: '2026-10b',
+    date: '2026-10-09',
+    label: 'October 2026, part 2',
+    pages: [
+      {
+        title: 'Chests',
+        text: 'Your rank decides your chest. After a workout that earns a badge, tap the chest to open it. A new rank opens a new chest with its title and frame.',
+        image: '/news/2026-10b-chest.jpg',
+      },
+      {
+        title: 'The Rank Road',
+        text: 'Every rank has its chest on the road. Your level shows how close the next level is, and each badge sits on the level you earned it.',
+        image: '/news/2026-10b-road.jpg',
+      },
+      {
+        title: 'Badges in 3D',
+        text: 'Tap any badge to see it up close and tilt it with your finger. Tap Watch it unlock to see it open again.',
+        image: '/news/2026-10b-badge.jpg',
+      },
+      {
+        title: 'Sound and music',
+        text: 'Buttons, sets and rewards have new sounds. Music plays only in reward moments, and you can turn Music off in Settings.',
+        image: '/news/2026-10b-sound.jpg',
+      },
+      {
+        title: 'Level up on Victory',
+        text: 'A new level now plays on the level bar on Victory, right under your XP.',
+        image: '/news/2026-10b-victory.jpg',
+      },
+    ],
+  },
+  {
     id: '2026-10',
     date: '2026-10-02',
     label: 'October 2026',

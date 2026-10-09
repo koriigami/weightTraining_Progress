@@ -451,6 +451,29 @@ in as each, then log a workout or send `saveWorkout` to `/api/state`).
       still listed as static.
 - [ ] A search for the em dash character (U+2014) over `app components lib data tests docs README.md` finds nothing.
 
+## Sound, motion and 3D on real phones (v13)
+
+Only a real phone can judge these. Do them once on an iPhone and once on a mid-range Android phone.
+
+- [ ] iPhone silent switch: with the switch on silent, Levl plays nothing. With it off, taps, sets and the reward
+      moments play. Turn Sounds off in Settings and check it is silent either way.
+- [ ] Android haptics: a set tick, a Finish, the chest taps and the burst each buzz. Haptics off in Settings
+      means no buzz. A phone with vibration switched off in the system stays quiet without errors.
+- [ ] Ambient audio: start Spotify (or any music app), open Levl and finish a workout. Button and set sounds
+      mix over it without stopping it. The reward moments play the Levl music over it and the other music comes
+      back afterwards. With Music off in Settings, no Levl music plays and the other music is not touched.
+- [ ] 3D frame rate: on a mid-range phone, open the chest stage and the badge view. The chest, the medal tilt
+      and the sparks stay smooth. Note any phone that drops frames, and check the flat fallback also plays the
+      whole sequence.
+- [ ] Reduced motion (iPhone: Settings, Accessibility, Motion; Android: remove animations): Victory, the chest,
+      the rank-up and the badge view show end states with no movement. The taps are still needed.
+- [ ] Chest flow: finish a workout that earns a badge. After Victory's hold the chest drops. Tap to open, take
+      each item, tap through to the summary and Continue. Back and Esc close it. Reload and nothing replays.
+- [ ] Rank up: finish a workout that crosses a rank (set the XP close to the gate first). The shield breaks, the
+      new shield rises with the rank music, the title unrolls, then the new rank's chest opens with the title
+      and frame first.
+- [ ] Level up on Victory: a level inside the same rank plays on the level bar on Victory, with no extra moment.
+
 ## Share card on real phones
 
 Automated checks run in desktop Chromium only, so check these by hand after a deploy:
