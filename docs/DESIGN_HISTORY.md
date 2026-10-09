@@ -654,6 +654,14 @@ screens nobody sees any more.
   - **Open question shown both ways:** the road with small medals on the rows behind you (my
     pick) and without.
 
+- **Round 2 answers and sign-off (9 October 2026):** the simpler road as shown, badges on the
+  rows behind you, themed chests (a rank crossing wins), no change to early levels for now, no
+  small unlocks planned. After a workout: a plain level up plays on Victory's own level bar, not
+  as a full screen (the full-screen level up stays an option for later), and a level up comes
+  before the chest. Board 12's reward stage and its changed interactions, and the board 09
+  carry-overs (the badge view, locked ranks in stone), signed off with my picks. Plan:
+  `docs/V13_PLAN.md`.
+
 ## Where the chat lives
 
 The conversation is not stored in the repo. Long chats are summarized when the

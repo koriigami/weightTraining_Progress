@@ -39,15 +39,15 @@ Sign-ups are open to any Google account since 1 October 2026 (`SIGNUPS=invite` c
 | v11 stage 2 | Log workout: add a workout you already did from Home, a routine's menu or a routine's page. The Edit screen with a chosen day and time, then Victory (board 10 round 3, `docs/V11_PLAN.md`) | Done, live |
 | v11 stage 3 | How it felt: five SVG faces and an optional 1 to 10 effort on Victory and the workout page, a face beside the title in workout rows, a "How workouts felt, last 30 days" card on Profile. Earns no XP (board 10 round 1, `docs/V11_PLAN.md`) | Done, live since 2 October 2026 |
 | v11 stage 4 | Rules v4: the weekly goal bonus grows with each week in a row (+50, then +10 more a week, up to +100), shown on Home, Victory, the workout page and Settings, with a one-time note, a v11 backup and a committed XP integrity test (board 10, `docs/V11_PLAN.md`) | Done, live since 2 October 2026 |
-| v13 design | Motion and sound library: 3D chests and medals with options, a tap-to-open reward stage, 34 interactions with timing, sound and haptic, CC0 sounds and music in the chest music's key, a Music switch (board 12, `docs/design/12-motion-sound.html`) | Round 2 shown, waiting for sign-off |
-| v13 design | Which chest opens: your rank decides your chest (decided). The Rank Road with a chest at every rank gate, the badges you earned on each level, and Up next (board 13, `docs/design/13-rank-road.html`) | Round 1 shown, waiting for sign-off |
+| v13 design | Motion and sound library: 3D chests and medals with options, a tap-to-open reward stage, 34 interactions with timing, sound and haptic, CC0 sounds and music in the chest music's key, a Music switch (board 12, `docs/design/12-motion-sound.html`) | Signed off 9 October 2026; plan in `docs/V13_PLAN.md` |
+| v13 design | Which chest opens: your rank decides your chest (decided). The Rank Road with a chest at every rank gate, the badges you earned on each level, and Up next (board 13, `docs/design/13-rank-road.html`) | Signed off 9 October 2026; plan in `docs/V13_PLAN.md` |
 | v12 | First-run guide and What's new: a spotlight tour on Home for new people (seven steps on the real screen, the ring wraps each element's shadow), a paged What's new card after releases starting with the October update, the `/news` page, and Settings rows How Levl works, What's new and Setup questions (board 11, `docs/V12_PLAN.md`) | Done, live since 3 October 2026 |
 
 
 ### Next
 
 v11 stage 1 (laps) is live since 2 October 2026. Stage 2 (Log workout) is live since 2 October 2026. Stages 3 (how it felt) and 4 (the growing weekly goal bonus, rules v4) are live since
-2 October 2026, which finishes v11 (`docs/V11_PLAN.md`). Board 09 (badges and chests) waits for another round with the owner. Board 12 (motion and sound, new chests and medals) round 2 and board 13 (the Rank Road with chests) are shown and wait for sign-off; after them comes `docs/V13_PLAN.md`, with the rule that your rank decides your chest. Besides that, these two come first, in this order (agreed when sign-ups opened):
+2 October 2026, which finishes v11 (`docs/V11_PLAN.md`). Board 09 (badges and chests) waits for another round with the owner. Boards 12 (motion and sound) and 13 (the Rank Road with chests) are signed off; the build is `docs/V13_PLAN.md`, in seven stages. Besides that, these two come first, in this order (agreed when sign-ups opened):
 
 1. **An in-app feedback box.** "Send feedback" in Settings, stored per person. The cheapest
    source of roadmap signal, and what feedback triage needs later (`docs/AGENTS.md`).
