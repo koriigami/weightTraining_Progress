@@ -24,6 +24,8 @@ export type BadgeArt = {
   text?: string;
   month?: string;
   colorKey?: string;
+  /** A special badge: drawn as the Special medal, not by its tier. */
+  special?: boolean;
   label: string;
 };
 
@@ -123,7 +125,7 @@ export function specialCard(id: SpecialBadgeId, got: { earnedAt: string } | unde
     what: meta.description,
     earned,
     tierName: earned ? 'Earned' : 'Locked',
-    art: { shape: 'star', tier: 'gold', icon: meta.icon, label: meta.name },
+    art: { shape: 'star', tier: 'gold', icon: meta.icon, special: true, label: meta.name },
     value: earned ? 1 : 0,
     target: 1,
     pct: earned ? 100 : 0,

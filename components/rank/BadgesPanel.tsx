@@ -5,7 +5,8 @@ import { SectionLabel } from '@/components/ui/Card';
 import { XpBar } from '@/components/ui/XpBar';
 import { cn } from '@/components/ui/cn';
 import type { BadgeCard, BadgeCards } from '@/lib/badgeCards';
-import { BadgeArt, LockedArt } from './BadgeArt';
+import { BadgeImage } from '@/components/art3d/BadgeImage';
+import { LockedArt } from './BadgeArt';
 import type { Preview } from './PreviewModal';
 
 /** The preview dialog for a badge: full colour, Unlocked or Locked, and what it takes. */
@@ -13,7 +14,7 @@ export function badgePreview(card: BadgeCard): Preview {
   return {
     title: card.name,
     unlocked: card.earned,
-    art: <BadgeArt art={card.art} size={120} />,
+    art: <BadgeImage art={card.art} size={120} />,
     body: card.hint,
     ladder: card.ladder,
   };
@@ -21,7 +22,7 @@ export function badgePreview(card: BadgeCard): Preview {
 
 /** A badge as a game card: medal, tier name, progress bar and "x of y". Locked ones stay visible, muted, with a padlock. */
 function BadgeCardButton({ card, extra, onOpen }: { card: BadgeCard; extra?: string; onOpen: (card: BadgeCard) => void }) {
-  const art = <BadgeArt art={card.art} size={64} decorative />;
+  const art = <BadgeImage art={card.art} size={64} decorative locked={!card.earned} />;
   return (
     <button type="button" className={cn('wt-bcard', !card.earned && 'locked')} onClick={() => onOpen(card)} data-badge={card.id}>
       {card.earned ? art : <LockedArt>{art}</LockedArt>}
@@ -81,7 +82,7 @@ export function BadgesPanel({ cards, today, onOpen }: { cards: BadgeCards; today
           <div className="wt-trophies">
             {cards.trophies.map((c) => (
               <button key={c.id} type="button" className="wt-trophy" onClick={() => onOpen(c)} data-badge={c.id}>
-                <BadgeArt art={c.art} size={72} decorative />
+                <BadgeImage art={c.art} size={72} decorative />
                 <small>{c.name}</small>
               </button>
             ))}

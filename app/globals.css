@@ -7347,3 +7347,10 @@ button.wt-frow:focus-visible {
     opacity: 0;
   }
 }
+
+/* A badge picture from the 3D art: sits where the vector medal sat. */
+.wt-badge-img {
+  display: block;
+  flex: none;
+  pointer-events: none;
+}

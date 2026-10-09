@@ -735,3 +735,8 @@ no component test suite. Screens are checked two ways:
 The test policy (related tests while coding, `npm run verify` before every
 commit, the build before a push, screenshots only for touched screens) is in
 `CLAUDE.md`. CI runs `verify` and the build on every push.
+
+## The 3D art (v13)
+- `components/art3d/art.ts` builds the chests and medals with three.js (ported from the board 12 reference, picked options only). `lib/badgeModel.ts` is the pure side: which medal look and chest look each badge gets, the icon paths, and cache keys. It is tested; the art is checked with screenshots.
+- `components/art3d/pictures.ts` is the only door in. It loads three.js with a dynamic import on first use, renders one picture at a time on a shared offscreen renderer, and caches data URLs. With no WebGL it returns null.
+- `<BadgeImage>` shows the vector medal first, then swaps in the picture at the same size. three.js is its own chunk and is not in any page's first load.
