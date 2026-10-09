@@ -1,7 +1,9 @@
 'use client';
 
 import { X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { anim } from '@/lib/anim';
+import { DUR, EASE } from '@/lib/motion';
 import { cardioRate } from '@/lib/liveStats';
 import { fastestLap, fmtLapTime, lapBars, lapRate, lapSummary, parseLapTime } from '@/lib/laps';
 import type { Lap } from '@/lib/routines';
@@ -80,6 +82,20 @@ export function LapTable({ laps, units, kind, running, onUpdate, onRemove }: {
   const best = fastestLap(laps);
   const unit = units.distance;
   const rateLabel = cardioRate(kind, undefined, undefined).label;
+  const body = useRef<HTMLTableSectionElement>(null);
+  const count = useRef(laps.length);
+
+  // A new lap drops into the list (8 px, 200 ms). When it is the fastest so far, its row flashes green once.
+  useLayoutEffect(() => {
+    const row = body.current?.children[laps.length - 1];
+    if (editable && laps.length > count.current && row) {
+      void anim(row, [{ transform: 'translateY(-8px)', opacity: 0 }, { transform: 'translateY(0)', opacity: 1 }], { duration: DUR.base - 40, easing: EASE.out });
+      if (laps.length > 1 && best === laps.length - 1) void anim(row, [{ background: '#bff0a8' }, { background: 'transparent' }], { duration: 700, easing: 'ease-out' });
+    }
+    count.current = laps.length;
+    // Only a change in the number of laps is a new lap.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [laps.length]);
   return (
     <table className={editable ? 'wt-laps ed' : 'wt-laps'}>
       <colgroup>
@@ -102,7 +118,7 @@ export function LapTable({ laps, units, kind, running, onUpdate, onRemove }: {
           )}
         </tr>
       </thead>
-      <tbody>
+      <tbody ref={body}>
         {laps.map((lap, i) => {
           const n = i + 1;
           const rate = lapRate(kind, lap, unit);

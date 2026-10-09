@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dumbbell, Flag, Plus, Settings, Trash2 } from 'lucide-react';
 import { fmtPreviousBest, previousBestSet } from '@/lib/exerciseHistory';
@@ -9,6 +9,8 @@ import { dailyBonusLive, liveXp, statTiles } from '@/lib/liveStats';
 import { fillOnTick } from '@/lib/setColumns';
 import type { SetPatch } from '@/lib/session';
 import { formatElapsed, localWhen } from '@/lib/session';
+import { reducedMotion, wait } from '@/lib/anim';
+import { SYN, buzz, play, preload } from '@/lib/sound';
 import { dailyBonusPaid, dayMinutes, liveMarks } from '@/lib/workoutScoring';
 import { useDesktopLayout, useWideLayout } from '@/lib/useMediaQuery';
 import { useToday } from '@/lib/useToday';
@@ -28,7 +30,11 @@ import { DiscardDialog } from './DiscardDialog';
 import { ExerciseBlock } from './ExerciseBlock';
 import { ExerciseMenu } from './ExerciseMenu';
 import { FinishDialog } from './FinishDialog';
+import { TrainingDayBanner } from './TrainingDayBanner';
 import { WorkoutStats } from './WorkoutStats';
+
+/** Finish: the screen dims and a bar charges along the button for this long, then Victory takes over. */
+export const FINISH_ROLL_MS = 900;
 
 type PickerState = { mode: 'add' } | { mode: 'replace'; index: number } | null;
 
@@ -60,6 +66,8 @@ export function LogScreen() {
 
   const [confirm, setConfirm] = useState<'finish' | 'discard' | null>(null);
   const [saving, setSaving] = useState(false);
+  // The 0.9 s drum roll and rise before Victory.
+  const [charging, setCharging] = useState(false);
   // True while leaving after Finish or Discard, so the screen does not flash "No workout in progress".
   const [leaving, setLeaving] = useState(false);
   const [menuIndex, setMenuIndex] = useState<number | null>(null);
@@ -90,6 +98,15 @@ export function LogScreen() {
     const now = localWhen(new Date());
     return dailyBonusLive(dayMinutes(workouts, today, items ?? [], lookup, now), dailyBonusPaid(workouts, today, lookup, now));
   }, [workouts, today, items, lookup]);
+
+  // The training day is reached once: the banner shows when this workout takes the day to 20 minutes.
+  const dayReached = bonus.state === 'earned';
+  const wasReached = useRef(dayReached);
+  const [dayBanner, setDayBanner] = useState(false);
+  useEffect(() => {
+    if (dayReached && !wasReached.current) setDayBanner(true);
+    wasReached.current = dayReached;
+  }, [dayReached]);
 
   if (!ws.ready) return <Screen header={<PageHeader title="Workout" back="/" />}>{null}</Screen>;
 
@@ -124,10 +141,22 @@ export function LogScreen() {
   }
 
   async function finish() {
+    if (charging) return;
+    // The screen dims and a bar charges along the button while a drum rolls into a rise; then the workout saves and Victory takes over.
+    // Reduced motion skips the wait.
+    if (!reducedMotion()) {
+      setCharging(true);
+      preload(['victory', 'level']);
+      SYN.drumroll(FINISH_ROLL_MS / 1000);
+      play('riser');
+      await wait(FINISH_ROLL_MS);
+      buzz('heavy');
+    }
     setSaving(true);
     setLeaving(true);
     const result = await ws.finish();
     setSaving(false);
+    setCharging(false);
     setConfirm(null);
     if (!result.ok) {
       setLeaving(false);
@@ -372,7 +401,9 @@ export function LogScreen() {
       <ExerciseInfoSheet exercise={infoId ? lookup(infoId) ?? null : null} onClose={() => setInfoId(null)} />
 
       <DiscardDialog open={confirm === 'discard'} tickedSets={ws.counts.done} xp={parts.total} onKeepLogging={() => setConfirm(null)} onDiscard={discard} />
-      <FinishDialog open={confirm === 'finish'} unticked={unticked} saving={saving} onKeepLogging={() => setConfirm(null)} onFinish={() => void finish()} />
+      <FinishDialog open={confirm === 'finish'} unticked={unticked} saving={saving} charging={charging} onKeepLogging={() => !charging && setConfirm(null)} onFinish={() => void finish()} />
+      {charging && <div className="wt-finish-dim" aria-hidden="true" />}
+      {dayBanner && <TrainingDayBanner onDone={() => setDayBanner(false)} />}
     </Screen>
   );
 }

@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Plus } from 'lucide-react';
+import { anim } from '@/lib/anim';
 import { EFFORT_MAX, EFFORT_MIN, EFFORT_START, FEELS, effortReadout } from '@/lib/feel';
 import type { Feel } from '@/lib/feel';
+import { SYN, buzz } from '@/lib/sound';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHead } from '@/components/ui/Card';
 import { FeelFace } from '@/components/ui/FeelFace';
@@ -62,8 +64,22 @@ export function HowItFelt({ feel, effort, onFeel, onEffort, error }: Props) {
     <Card>
       <CardHead title="How did it feel?" />
       <div className="wt-faces" role="group" aria-label="How did it feel?">
-        {FEELS.map((f) => (
-          <button key={f.key} type="button" className="wt-facebtn" aria-pressed={feel === f.key} onClick={() => onFeel(feel === f.key ? null : f.key)}>
+        {FEELS.map((f, i) => (
+          <button
+            key={f.key}
+            type="button"
+            className="wt-facebtn"
+            aria-pressed={feel === f.key}
+            onClick={(e) => {
+              if (feel !== f.key) {
+                // The face squashes to 85% and bounces to 115%, with a note: low for Rough, high for Great.
+                void anim(e.currentTarget.querySelector('svg'), [{ transform: 'scale(1)' }, { transform: 'scale(.85)', offset: 0.25 }, { transform: 'scale(1.15)', offset: 0.6 }, { transform: 'scale(1)' }], { duration: 360, easing: 'ease-out' });
+                SYN.face(i);
+                buzz('light');
+              }
+              onFeel(feel === f.key ? null : f.key);
+            }}
+          >
             <FeelFace feel={f.key} />
             {f.label}
           </button>

@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { BarChart3, EllipsisVertical, LogOut, Settings, User } from 'lucide-react';
 import { onRetap } from '@/lib/rankRetap';
+import { buzz, play } from '@/lib/sound';
 import { useProgress } from '@/components/ProgressProvider';
 import { useElapsed, useWorkoutSession } from '@/components/WorkoutSessionProvider';
 import { Avatar } from '@/components/ui/Avatar';
@@ -133,7 +134,15 @@ export function Sidebar({ onStart, onSignOut }: { onStart: () => void; onSignOut
           const Icon = item.icon;
           const on = item.active(pathname);
           return (
-            <Link key={item.key} href={item.href} className="wt-navi" data-guide={item.key} aria-current={on ? 'page' : undefined} onClick={(e) => onRetap(e, on, item.key)}>
+            <Link key={item.key} href={item.href} className="wt-navi" data-guide={item.key} aria-current={on ? 'page' : undefined}
+              onClick={(e) => {
+                if (!on) {
+                  play('tick');
+                  buzz('light');
+                }
+                onRetap(e, on, item.key);
+              }}
+            >
               <Icon size={22} aria-hidden="true" />
               <span>{item.label}</span>
             </Link>

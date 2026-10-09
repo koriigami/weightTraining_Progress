@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/Button';
 import { useDialog } from '@/components/ui/useDialog';
 import { newsKicker } from '@/lib/news';
+import { play } from '@/lib/sound';
 import type { NewsCardPage } from '@/lib/news';
 import { useBackToClose } from '@/lib/useBackToClose';
 
@@ -28,9 +29,13 @@ export function NewsModal({ pages, onClose }: { pages: NewsCardPage[]; onClose: 
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
+  // The card pops in with a pip and a lift, and leaves with the soft puff.
+  useEffect(() => play('modal'), []);
+
   const finish = useCallback(() => {
     if (doneRef.current) return;
     doneRef.current = true;
+    play('close');
     onCloseRef.current();
   }, []);
   // Back runs finish. Every other way to close asks Back to, so the history entry the card pushed is used up.

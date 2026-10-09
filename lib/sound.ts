@@ -429,6 +429,27 @@ export const SYN = {
     osc('triangle', 1000, null, 0.03, { g: 0.18 });
     osc('triangle', 640, null, 0.035, { g: 0.18, at: 0.05 });
   },
+  clink: (p = 1) => {
+    osc('sine', 2800 * p, 3200 * p, 0.12, { g: 0.1, bus: 'fx' });
+    noise(0.03, { f0: 6000, q: 3, g: 0.06, bus: 'fx' });
+  },
+  // One tick of a number rolling: the stepper and the XP total.
+  roll: (p = 1) => osc('square', 1800 * p, null, 0.012, { g: 0.04 }),
+  // The Finish drum roll: soft hits that get louder.
+  drumroll: (dur = 0.9) => {
+    for (let t = 0; t < dur; t += 0.05) noise(0.05, { at: t, f0: 900, q: 0.8, g: 0.025 + (t / dur) * 0.1, bus: 'fx' });
+  },
+  // How it felt: a note per face, low for Rough and high for Great.
+  face: (i = 2) => {
+    const f = [392, 440, 523.25, 587.33, 659.25][Math.max(0, Math.min(4, i))];
+    osc('sine', f, f * 1.02, 0.22, { g: 0.22 });
+    osc('sine', f * 2, null, 0.12, { g: 0.05, at: 0.01 });
+  },
+  // A day tile flipping.
+  flip: (i = 0) => {
+    noise(0.04, { f0: 2400, q: 1.5, g: 0.08 });
+    osc('sine', deg(i, 5), null, 0.12, { g: 0.08, at: 0.02 });
+  },
   puff: () => noise(0.09, { type: 'lowpass', f0: 700, f1: 240, q: 0.7, g: 0.12 }),
   lift: () => {
     noise(0.14, { type: 'lowpass', f0: 260, f1: 1200, q: 0.8, g: 0.09 });

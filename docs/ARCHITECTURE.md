@@ -670,6 +670,33 @@ Audio, or before the first tap, every call does nothing.
 `whoosh`, `badgeReveal`, `dayCleared`, `warm`) on top of the engine, so callers did
 not change. The file lists which new sound each one plays.
 
+### Taps, overlays, training and Victory (v13 stage 3)
+
+- `lib/anim.ts` (`anim`, `springTo`, `reducedMotion`, `wait`) wraps the Web Animations
+  API. Under reduced motion nothing animates, so every element shows its end state.
+  `lib/fx.ts` draws the one-off effects (ring, stars, a coin flying to a tile, a coin
+  shower) with plain elements. `lib/interactions.ts` is the pure part, with tests:
+  streaks (set ticks and chips climb), the stepper's repeat timing, which toast
+  gets the error sound, and the Victory timeline.
+- `Button` and `ButtonLink` use `usePress`: green buttons play `tap`, gold ones `tock`,
+  with a light buzz, and spring back on release. Tabs and the sidebar play `tick`; the tab
+  bar's lit pill is one element that slides between tabs. `Segmented` (md and lg)
+  slides a thumb sized in shares of the control; `sm` has unequal segments, so it keeps
+  colouring the pressed one. `Switch`, `Chip` and `Stepper` carry their own motion and sound.
+  The stepper shows one number, repeats while held and stops on pointer up, leave, cancel or blur.
+- `Sheet` and `GameModal` stay on screen for their exit (`usePresence`) and keep showing
+  what they showed (`useLastOpen`). `Toast` rises with a bounce and shakes on an error.
+- Training: `WorkoutSessionProvider.toggleSet` plays the set tick (`feedback.setTicked`,
+  climbing), the untick, or the exercise-done sound; `SetTable` does the stamp, ring and coin,
+  `ExerciseBlock` the gold sweep, check, beat and record chips, `LapTable` the new lap row.
+  Finish waits 0.9 s (drum roll, riser, a bar on the button) before saving.
+  `TrainingDayBanner` shows when a workout takes the day to 20 minutes.
+- Victory: `useVictoryFx` plays the music, crowns, XP lines (a coin each, the total rolling),
+  the weekly goal seal and the level bar. `afterWorkout().levelUpOnVictory` decides the level
+  up: the bar fills, flashes white, the number pops and the level music plays, and that
+  level-up event is no longer queued as a full-screen moment. Rank ups and badges still go
+  through `CelebrationProvider` until stage 5.
+
 ## Rendering and layout
 
 - Every route is a static shell. Pages that depend on a person's routine ids

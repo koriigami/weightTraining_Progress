@@ -4,7 +4,7 @@
 // Stages 3 and 5 move callers to play(slot) directly.
 //
 // Old call -> new sound:
-//   tick()      -> the set tick (SYN.set) and a light buzz
+//   tick()      -> the set tick (SYN.set) and a light buzz; components use setTicked() and its streak
 //   dayCleared()-> slot 'done' and a success buzz
 //   levelUp()   -> music 'level' and a reward buzz
 //   rankUp()    -> slot 'shatter', music 'rank' and a reward buzz
@@ -12,6 +12,8 @@
 //   chest()     -> 'crack' x4, 'burst', 'reveal' on the old beats, with the old buzz pattern
 //   badgeReveal -> slot 'sparkle' and a success buzz
 
+import { SET_STREAK_MS, stepStreak } from './interactions';
+import type { Streak } from './interactions';
 import { buzz, duck, getPrefs, music, play, setMusicEnabled, setSoundEnabled, setVibrateEnabled, SYN, unlock } from './sound';
 import type { Prefs } from './sound';
 
@@ -27,6 +29,35 @@ export function warm() {
 export function tick() {
   buzz('light');
   SYN.set(0);
+}
+
+// Sets ticked in a row: each one is two semitones higher than the last, until a pause or an untick.
+let setStreak: Streak | null = null;
+
+/** A set was ticked. */
+export function setTicked() {
+  setStreak = stepStreak(setStreak, Date.now(), SET_STREAK_MS);
+  buzz('light');
+  SYN.set(setStreak.n);
+}
+
+/** A set was unticked: a soft falling note, and the climb starts again. */
+export function setUnticked() {
+  setStreak = null;
+  SYN.untick();
+}
+
+/** The last set of an exercise was ticked: its own sound instead of the set tick. */
+export function exerciseDone() {
+  setStreak = stepStreak(setStreak, Date.now(), SET_STREAK_MS);
+  buzz('success');
+  play('done');
+}
+
+/** A lap was stamped. */
+export function lap() {
+  buzz('medium');
+  play('lap');
 }
 
 export function dayCleared() {

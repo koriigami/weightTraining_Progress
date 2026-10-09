@@ -1,13 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { createContext, useCallback, useContext, useId, useMemo, useRef } from 'react';
+import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { anim, springTo } from '@/lib/anim';
+import { DUR, EASE, SPRINGS } from '@/lib/motion';
+import { play } from '@/lib/sound';
 import { useBackToClose } from '@/lib/useBackToClose';
 import { cn } from './cn';
 import { useDialog } from './useDialog';
+import { useLastOpen, usePresence } from './usePresence';
+
+/** How long a sheet takes to leave: 200 ms down and away (a fade on the desktop dialog). */
+export const SHEET_EXIT_MS = 200;
 
 type SheetControls = {
   /** Closes the sheet the way Back would, so the history entry it pushed is consumed. */
@@ -32,18 +39,10 @@ export function useSheet(): SheetControls {
 /**
  * A bottom sheet on the phone (pickers and menus) and a centered dialog on
  * desktop. Back and Esc close it, focus is trapped and restored, and tapping the
- * scrim closes it. For destructive confirms use GameModal instead.
+ * scrim closes it. For destructive confirms use GameModal instead. It rises with
+ * a snappy spring and a soft lift sound, and leaves with a real exit and the low puff.
  */
-export function Sheet({
-  open,
-  onClose,
-  title,
-  ariaLabel,
-  description,
-  footer,
-  className,
-  children,
-}: {
+export function Sheet(props: {
   open: boolean;
   onClose: () => void;
   title?: string;
@@ -56,6 +55,9 @@ export function Sheet({
   className?: string;
   children: ReactNode;
 }) {
+  const { open, onClose, className } = props;
+  // What the sheet showed stays on screen while it leaves, even if the parent empties it on close.
+  const { title, ariaLabel, description, footer, children } = useLastOpen(open, props);
   const ref = useRef<HTMLDivElement>(null);
   const uid = useId();
   const pending = useRef<(() => void) | null>(null);
@@ -84,12 +86,26 @@ export function Sheet({
 
   useDialog(open, ref, controls.close);
 
-  if (!open || typeof document === 'undefined') return null;
+  const { mounted, closing } = usePresence(open, SHEET_EXIT_MS);
+
+  // The phone's sheet rises with a spring and never overshoots the bottom edge.
+  // The desktop dialog fades in (CSS).
+  useLayoutEffect(() => {
+    if (open && window.matchMedia?.('(max-width: 767px)').matches) void springTo(ref.current, 100, 0, (v) => `translateY(${Math.max(0, v)}%)`, SPRINGS.snappy);
+  }, [open]);
+
+  const was = useRef(false);
+  useEffect(() => {
+    if (open !== was.current) play(open ? 'open' : 'close');
+    was.current = open;
+  }, [open]);
+
+  if (!mounted || typeof document === 'undefined') return null;
   const titleId = `${uid}-t`;
 
   return createPortal(
     <SheetContext.Provider value={controls}>
-      <div className="wt-sheet-wrap">
+      <div className={cn('wt-sheet-wrap', closing && 'closing')} inert={closing || undefined}>
         <button type="button" tabIndex={-1} className="wt-scrim" aria-label="Close" onClick={controls.close} />
         <div
           ref={ref}
@@ -107,7 +123,16 @@ export function Sheet({
                 <h2 id={titleId} className="wt-sheet-title gt">
                   {title}
                 </h2>
-                <button type="button" className="wt-iconbtn wt-sheet-close" aria-label="Close" onClick={controls.close}>
+                <button
+                  type="button"
+                  className="wt-iconbtn wt-sheet-close"
+                  aria-label="Close"
+                  onClick={(e) => {
+                    // The cross turns a quarter as the sheet leaves.
+                    void anim(e.currentTarget.firstElementChild, [{ transform: 'rotate(0)' }, { transform: 'rotate(90deg)' }], { duration: DUR.base, easing: EASE.out, fill: 'forwards' });
+                    controls.close();
+                  }}
+                >
                   <X size={20} aria-hidden="true" />
                 </button>
               </div>

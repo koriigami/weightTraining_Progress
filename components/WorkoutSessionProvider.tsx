@@ -288,7 +288,7 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
       const next = S.addLap(cur, index, new Date(), km);
       if (next === cur) return;
       commit(next);
-      feedback.tick();
+      feedback.lap();
     },
     [commit]
   );
@@ -317,7 +317,10 @@ export function WorkoutSessionProvider({ children }: { children: React.ReactNode
       if (!cur || !item || !before) return null;
       commit(S.toggleSet(cur, index, setIndex));
       const done = !before.done;
-      if (done) feedback.tick();
+      // The last set of an exercise has its own sound; any other tick climbs, and an untick falls.
+      if (!done) feedback.setUnticked();
+      else if (item.sets.every((x, k) => (k === setIndex ? true : Boolean(x.done)))) feedback.exerciseDone();
+      else feedback.setTicked();
       const e = lookupRef.current(item.exerciseId);
       return { done, xp: done && e ? setXp(e, before) : 0 };
     },

@@ -7,6 +7,9 @@ import { displayValue, liveHeader, liveValue, parseTyped, patchFor, setColumns }
 import type { SetColumn, Units } from '@/lib/setColumns';
 import type { SetPlan } from '@/lib/routines';
 import type { SetPatch } from '@/lib/session';
+import { anim, springTo } from '@/lib/anim';
+import { centreOf, coinFly, ring } from '@/lib/fx';
+import { DUR, EASE, SPRINGS } from '@/lib/motion';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/components/ui/cn';
 
@@ -66,6 +69,19 @@ export type SetTableProps = {
   onToggle?: (setIndex: number) => { done: boolean; xp: number } | null;
 };
 
+// Ticking a set: the tick stamps from 135% (bouncy), an ink ring spreads, and a coin flies
+// to the XP tile. Unticking is the reverse and softer: the tick dips to 85% and back.
+function tickFx(tick: HTMLElement, done: boolean, xp: number) {
+  if (!done) {
+    void anim(tick, [{ transform: 'scale(1)' }, { transform: 'scale(.85)' }, { transform: 'scale(1)' }], { duration: DUR.quick, easing: EASE.out });
+    return;
+  }
+  void springTo(tick, 1.35, 1, (v) => `scale(${v})`, SPRINGS.bouncy);
+  ring(centreOf(tick), '#2ba438', 10, 34, 350, 4);
+  const tile = xp > 0 ? document.querySelector<HTMLElement>('[data-testid="xp-stat"]') : null;
+  if (tile && tile.getClientRects().length > 0) coinFly(tick, tile, () => void springTo(tile, 1.3, 1, (v) => `scale(${v})`, SPRINGS.bouncy));
+}
+
 function SetRow({ index, mode, exercise, set, units, previous, cols, template, canRemove, onUpdate, onRemove, onToggle }: {
   index: number;
   mode: 'editor' | 'log';
@@ -100,8 +116,9 @@ function SetRow({ index, mode, exercise, set, units, previous, cols, template, c
           className="wt-tick"
           aria-pressed={done}
           aria-label={`Set ${n} done`}
-          onClick={() => {
+          onClick={(e) => {
             const r = onToggle?.(index);
+            if (r) tickFx(e.currentTarget, r.done, r.xp);
             if (r?.done && r.xp > 0) setPop({ id: Date.now(), xp: r.xp });
           }}
         >

@@ -708,7 +708,7 @@ button:disabled {
 }
 /* Pressed: squish. */
 .wt-btn:active:not(:disabled):not([aria-disabled='true']) {
-  transform: translateY(3px);
+  transform: translateY(3px) scale(0.97);
 }
 .wt-btn-p:active:not(:disabled):not([aria-disabled='true']) {
   box-shadow: 0 1px 0 var(--p-bevel), inset 0 2px 0 rgba(255, 255, 255, 0.3);
@@ -1089,16 +1089,20 @@ button:disabled {
 
 /* ---- segmented control ---- */
 .wt-seg {
+  --seg-gap: 6px;
+  --seg-pad: 5px;
+  position: relative;
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
-  gap: 6px;
-  padding: 5px;
+  gap: var(--seg-gap);
+  padding: var(--seg-pad);
   border-radius: 16px;
   background: var(--calm);
   border: 1px solid var(--line);
 }
 .wt-seg button {
+  position: relative;
   height: 44px;
   border: 0;
   border-radius: 12px;
@@ -1111,11 +1115,23 @@ button:disabled {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color 0.16s;
+}
+/* The thumb: one share of the control, so it always covers its label. --n segments, --i the active one. */
+.wt-seg-thumb {
+  position: absolute;
+  top: var(--seg-pad);
+  bottom: var(--seg-pad);
+  left: var(--seg-pad);
+  width: calc((100% - 2 * var(--seg-pad) - (var(--n) - 1) * var(--seg-gap)) / var(--n));
+  border-radius: 12px;
+  background: var(--chip-on);
+  box-shadow: 0 3px 0 var(--p-bevel);
+  transform: translateX(calc(var(--i) * (100% + var(--seg-gap))));
+  pointer-events: none;
 }
 .wt-seg button[aria-pressed='true'] {
-  background: var(--chip-on);
   color: #fff;
-  box-shadow: 0 3px 0 var(--p-bevel);
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
 }
 @media (min-width: 768px) {
@@ -1124,15 +1140,15 @@ button:disabled {
   }
 }
 .wt-seg-lg {
-  gap: 5px;
+  --seg-gap: 5px;
 }
 .wt-seg-lg button {
   height: 46px;
 }
 .wt-seg-sm {
+  --seg-gap: 2px;
+  --seg-pad: 3px;
   display: inline-flex;
-  gap: 2px;
-  padding: 3px;
   border-radius: 12px;
 }
 .wt-seg-sm button {
@@ -1149,6 +1165,7 @@ button:disabled {
   }
 }
 .wt-seg-sm button[aria-pressed='true'] {
+  background: var(--chip-on);
   box-shadow: 0 2px 0 var(--p-bevel);
   text-shadow: none;
 }
@@ -1473,6 +1490,52 @@ textarea.wt-input {
     transform: none;
   }
 }
+/* The ribbon drops in 80 ms after the panel. */
+.wt-gm-rib {
+  animation: wt-gribin 0.26s cubic-bezier(0.2, 1.6, 0.4, 1) 0.08s both;
+}
+@keyframes wt-gribin {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Leaving: to 92% and a fade in 160 ms. */
+.wt-gm-wrap.closing {
+  pointer-events: none;
+}
+.wt-gm-wrap.closing .wt-scrim {
+  animation: wt-fade-out 0.16s linear forwards;
+}
+.wt-gm-wrap.closing .wt-gmodal {
+  animation: wt-gmout 0.16s cubic-bezier(0.5, 0, 0.75, 0) forwards;
+}
+@keyframes wt-gmout {
+  to {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+/* Finish: a bar charges along the confirm button while the drum rolls. */
+.wt-btn .wt-charge {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 4px;
+  width: 0;
+  border-radius: 0 2px 2px 0;
+  background: #fff28f;
+  animation: wt-charge 0.9s linear forwards;
+}
+@keyframes wt-charge {
+  to {
+    width: 100%;
+  }
+}
 @keyframes wt-gshake {
   20% {
     transform: translateX(-8px);
@@ -1686,8 +1749,22 @@ textarea.wt-input {
   max-height: 86dvh;
   display: flex;
   flex-direction: column;
-  animation: wt-up 0.26s cubic-bezier(0.2, 0.8, 0.2, 1);
   outline: none;
+}
+/* Leaving: 200 ms down and away on the phone (the rise is a spring in Sheet.tsx), a fade on the desktop dialog. */
+.wt-sheet-wrap.closing {
+  pointer-events: none;
+}
+.wt-sheet-wrap.closing .wt-scrim {
+  animation: wt-fade-out 0.2s linear forwards;
+}
+.wt-sheet-wrap.closing .wt-sheet {
+  animation: wt-sheet-out 0.2s cubic-bezier(0.5, 0, 0.75, 0) forwards;
+}
+@keyframes wt-sheet-out {
+  to {
+    transform: translateY(105%);
+  }
 }
 .wt-sheet-body {
   flex: 1 1 auto;
@@ -1748,6 +1825,9 @@ textarea.wt-input {
     border: 3px solid #e3b03a;
     box-shadow: 0 4px 0 #c8932a, 0 30px 60px -20px rgba(60, 30, 0, 0.6);
     animation: wt-fade 0.2s;
+  }
+  .wt-sheet-wrap.closing .wt-sheet {
+    animation: wt-fade-out 0.2s linear forwards;
   }
   .wt-sheet-head {
     padding-top: 16px;
@@ -1956,6 +2036,9 @@ textarea.wt-input {
   font-size: 14px;
   text-align: center;
   --focus: #ffe68f;
+}
+.wt-toast.bad {
+  color: #ffd0c8;
 }
 .wt-toast button {
   min-height: 44px;
@@ -2406,8 +2489,22 @@ textarea.wt-input {
 .wt-tab[aria-current='page'] {
   color: var(--nav-on);
 }
-.wt-tab[aria-current='page'] .pill {
+/* The lit pill is its own element that slides between tabs (TabBar.tsx). */
+.wt-tabpill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 52px;
+  height: 32px;
+  border-radius: 14px;
   background: var(--nav-pill);
+  opacity: 0;
+  pointer-events: none;
+}
+.wt-tab,
+.wt-startfab {
+  position: relative;
+  z-index: 1;
 }
 .wt-startfab {
   justify-self: center;
@@ -3127,6 +3224,38 @@ textarea.wt-input {
     padding: 18px 20px;
   }
 }
+/* Exercise complete: a gold light runs once round the card edge, then the check badge on the title. */
+@property --a {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+.wt-exblock {
+  position: relative;
+}
+.wt-exsweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  padding: 3px;
+  background: conic-gradient(from var(--a, 0deg), transparent 0 70%, #ffd34d 80%, #fff6c4 85%, transparent 95%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+}
+.wt-exok {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-left: 8px;
+  vertical-align: -4px;
+  border-radius: 50%;
+  background: var(--ok);
+  color: #fff;
+}
 .wt-eb-top {
   display: flex;
   align-items: center;
@@ -3173,6 +3302,9 @@ textarea.wt-input {
   padding: 4px;
   border-radius: 12px;
   position: relative;
+  /* The green fill of a done row grows in from the left: 240 ms on, 160 ms off. */
+  background: linear-gradient(var(--ok-soft), var(--ok-soft)) no-repeat 0 0 / 0% 100%;
+  transition: background-size 0.16s ease-out;
 }
 .wt-srow.hdr {
   font-size: 12px;
@@ -3190,7 +3322,8 @@ textarea.wt-input {
   white-space: nowrap;
 }
 .wt-srow.done {
-  background: var(--ok-soft);
+  background-size: 100% 100%;
+  transition-duration: 0.24s;
 }
 .wt-setno {
   height: 40px;
@@ -3420,7 +3553,6 @@ textarea.wt-input {
   font-size: 52px;
   line-height: 1;
   color: var(--v-title);
-  animation: wt-dropin 0.6s cubic-bezier(0.2, 1.5, 0.4, 1) both;
   margin: 0;
   font-weight: 400;
 }
@@ -3443,12 +3575,12 @@ textarea.wt-input {
 .wt-crown {
   color: var(--xp-hi);
   filter: drop-shadow(0 3px 0 var(--stroke));
-  animation: wt-crown 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+  animation: wt-crown 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both;
 }
 @keyframes wt-crown {
   from {
     opacity: 0;
-    transform: scale(2.2) translateY(-10px);
+    transform: translateY(-40px);
   }
   to {
     opacity: 1;
@@ -3542,7 +3674,6 @@ textarea.wt-input {
   height: 24px;
   border-radius: 50%;
   background: #fff;
-  transition: transform 0.2s;
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
 }
 .wt-switch[aria-checked='true'] {
@@ -4531,6 +4662,9 @@ textarea.wt-input {
   gap: 12px;
   margin-bottom: 4px;
 }
+.wt-stepnum {
+  display: inline-block;
+}
 .wt-stepper output {
   font-family: var(--font-num);
   font-size: 34px;
@@ -4538,6 +4672,10 @@ textarea.wt-input {
   font-variant-numeric: tabular-nums;
 }
 .wt-stepbtn {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -4935,6 +5073,7 @@ button.wt-setrow:hover {
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
   margin-left: auto;
   padding: 0;
+  transition: background 0.16s;
 }
 .wt-switch::after {
   content: '';
@@ -4949,7 +5088,6 @@ button.wt-setrow:hover {
   height: 24px;
   border-radius: 50%;
   background: #fff;
-  transition: transform 0.2s;
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
 }
 .wt-switch[aria-checked='true'] {
@@ -7061,5 +7199,151 @@ button.wt-frow:focus-visible {
   .wt-guide-card,
   .wt-guide-dim {
     animation: none;
+  }
+}
+
+/* ---- v13 motion: Finish, the training day banner ---- */
+.wt-finish-dim {
+  position: fixed;
+  inset: 0;
+  z-index: 79;
+  background: rgba(20, 12, 4, 0.5);
+  pointer-events: none;
+  animation: wt-fade 0.9s ease-out both;
+}
+.wt-dayban-wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: calc(env(safe-area-inset-top) + 12px);
+  z-index: 88;
+  display: flex;
+  justify-content: center;
+  padding: 0 12px;
+  pointer-events: none;
+}
+.wt-dayban {
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: var(--hero);
+  border: var(--hero-border);
+  box-shadow: 0 4px 0 #154a94, 0 12px 24px -10px rgba(10, 30, 80, 0.5);
+  color: var(--hero-ink);
+  font-family: var(--font-num);
+  font-size: 20px;
+  --stroke: var(--hero-stroke);
+}
+.wt-dayban b {
+  color: var(--xp-hi);
+  font-weight: 400;
+}
+
+/* ---- v13 motion: Victory ---- */
+/* The XP lines slide in from the left, one after another (see useVictoryFx). */
+.wt-xpl.wait {
+  visibility: hidden;
+}
+.wt-xpl.in {
+  animation: wt-xpl-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes wt-xpl-in {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Weekly goal met: a green seal pops in from 60% with a small overshoot and a soft shine crosses it. */
+.wt-gseal {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  padding: 2px 12px 2px 3px;
+  border-radius: 999px;
+  border: 2px solid #fff;
+  background: linear-gradient(180deg, var(--p1), var(--p2));
+  box-shadow: 0 3px 0 var(--p-bevel), 0 0 0 3px #b9e3a5;
+  color: #fff;
+  font-family: var(--font-num);
+  font-size: 14px;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+  animation: wt-seal-pop 0.4s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+.wt-gseal i {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--p2);
+}
+.wt-gseal::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -40%;
+  width: 30%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  transform: skewX(-20deg);
+  animation: wt-seal-shine 0.7s ease-out 0.25s 1 both;
+}
+@keyframes wt-seal-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes wt-seal-shine {
+  from {
+    left: -40%;
+  }
+  to {
+    left: 120%;
+  }
+}
+/* The level bar on Victory fills over 900 ms; after a level up it flashes white and starts again from empty. */
+.wt-vbar i {
+  transition: width 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.wt-vbar.snap i {
+  transition: none;
+}
+.wt-lv-shield {
+  display: inline-flex;
+  flex: none;
+}
+.wt-lvcard {
+  position: relative;
+}
+.wt-lvcard.flash::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #fff;
+  pointer-events: none;
+  animation: wt-flash 0.4s ease-out both;
+}
+@keyframes wt-flash {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
   }
 }

@@ -10,9 +10,10 @@ const MAX_ROWS = 5;
 /**
  * The centered green dialog Finish opens. It says how many sets are not ticked
  * and lists them by exercise, so an accidental Finish can be undone with
- * "Keep logging". Both buttons are the same width.
+ * "Keep logging". Both buttons are the same width. While `charging` the Finish
+ * button fills along its bottom edge.
  */
-export function FinishDialog({ open, unticked, saving, onKeepLogging, onFinish }: { open: boolean; unticked: UntickedRow[]; saving: boolean; onKeepLogging: () => void; onFinish: () => void }) {
+export function FinishDialog({ open, unticked, saving, charging, onKeepLogging, onFinish }: { open: boolean; unticked: UntickedRow[]; saving: boolean; charging?: boolean; onKeepLogging: () => void; onFinish: () => void }) {
   const count = unticked.reduce((n, r) => n + r.sets.length, 0);
   const shown = unticked.slice(0, MAX_ROWS);
   const more = unticked.length - shown.length;
@@ -25,6 +26,7 @@ export function FinishDialog({ open, unticked, saving, onKeepLogging, onFinish }
       cancelLabel="Keep logging"
       confirmLabel="Finish"
       confirmLoading={saving}
+      confirmCharging={charging}
       onCancel={onKeepLogging}
       onConfirm={onFinish}
       extra={

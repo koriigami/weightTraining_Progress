@@ -2,6 +2,9 @@
 
 import { useEffect, useRef } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { isErrorToast } from '@/lib/interactions';
+import { SPRINGS } from '@/lib/motion';
+import { buzz, play } from '@/lib/sound';
 
 export type ToastState = { id: number; text: string; actionLabel?: string; onAction?: () => void } | null;
 
@@ -12,7 +15,9 @@ const ACTION_MS = 6000;
 /**
  * The dark wood pill toast. One toast at a time: a newer id replaces the
  * current one and restarts the timer, and hovering or focusing it pauses the
- * timer.
+ * timer. It rises 60 px with a bounce and sinks 20 px as it fades. Good news gets
+ * the quiet chime; a message that says something went wrong shakes once sideways
+ * and gets the error sound.
  */
 export function Toast({ toast, onDismiss }: { toast: ToastState; onDismiss: () => void }) {
   const reduceMotion = useReducedMotion();
@@ -40,6 +45,9 @@ export function Toast({ toast, onDismiss }: { toast: ToastState; onDismiss: () =
       clearTimer();
       return undefined;
     }
+    const bad = isErrorToast(toast.text);
+    play(bad ? 'error' : 'chime');
+    buzz(bad ? 'error' : 'success');
     pausedRef.current = false;
     schedule(toast.actionLabel ? ACTION_MS : BASE_MS);
     return clearTimer;
@@ -59,6 +67,7 @@ export function Toast({ toast, onDismiss }: { toast: ToastState; onDismiss: () =
     schedule(remainingRef.current);
   }
 
+  const bad = toast ? isErrorToast(toast.text) : false;
   return (
     <div className="wt-toast-wrap">
       <AnimatePresence>
@@ -66,15 +75,19 @@ export function Toast({ toast, onDismiss }: { toast: ToastState; onDismiss: () =
           <motion.div
             key={toast.id}
             role="status"
-            className="wt-toast"
+            className={bad ? 'wt-toast bad' : 'wt-toast'}
             onMouseEnter={pause}
             onMouseLeave={resume}
             onFocus={pause}
             onBlur={resume}
-            initial={{ opacity: 0, y: reduceMotion ? 0 : 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: reduceMotion ? 0 : 16 }}
-            transition={{ duration: reduceMotion ? 0 : 0.2 }}
+            initial={{ opacity: 0, y: reduceMotion ? 0 : 60 }}
+            animate={{ opacity: 1, y: 0, x: bad && !reduceMotion ? [0, -8, 8, 0] : 0 }}
+            exit={{ opacity: 0, y: reduceMotion ? 0 : 20, transition: { duration: reduceMotion ? 0 : 0.2, ease: [0.5, 0, 0.75, 0] } }}
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : { y: { type: 'spring', stiffness: SPRINGS.bouncy.k, damping: SPRINGS.bouncy.c, mass: SPRINGS.bouncy.m }, opacity: { duration: 0.12 }, x: { delay: 0.3, duration: 0.26, ease: 'linear' } }
+            }
           >
             <span>{toast.text}</span>
             {toast.actionLabel && (

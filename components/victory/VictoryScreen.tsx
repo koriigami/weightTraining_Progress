@@ -2,16 +2,20 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, ChevronRight, Crown, Share2 } from 'lucide-react';
+import { Calendar, Check, ChevronRight, Crown, Share2 } from 'lucide-react';
+import { anim, springTo } from '@/lib/anim';
 import { formatWhen } from '@/lib/date';
 import type { Feel } from '@/lib/feel';
+import { centreOf, stars } from '@/lib/fx';
+import { victoryTimes } from '@/lib/interactions';
+import { SPRINGS } from '@/lib/motion';
 import { workoutTotals } from '@/lib/routines';
 import type { Routine } from '@/lib/routines';
 import { RANK_TITLES, rankForLevel } from '@/lib/progress';
+import { afterWorkout } from '@/lib/rewards';
 import { routineWouldChange, updateRoutineFromWorkout } from '@/lib/routineUpdate';
 import { shareCardData } from '@/lib/shareCard';
 import { fmtVolume } from '@/lib/units';
-import { useCountUp } from '@/lib/useCountUp';
 import { useDesktopLayout } from '@/lib/useMediaQuery';
 import { useToday } from '@/lib/useToday';
 import { xpLines, xpTotal } from '@/lib/victory';
@@ -28,9 +32,12 @@ import { DateTimeModal } from '@/components/ui/DatePicker';
 import { Field, Input, Textarea } from '@/components/ui/Field';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Screen } from '@/components/ui/Screen';
+import { Switch } from '@/components/ui/Switch';
 import { XpBar } from '@/components/ui/XpBar';
+import { cn } from '@/components/ui/cn';
 import { HowItFelt } from '@/components/workout/HowItFelt';
 import { ShareSheet } from './ShareSheet';
+import { useVictoryFx } from './useVictoryFx';
 
 const SAVE_DELAY_MS = 700;
 const MAX_CROWNS = 10;
@@ -82,12 +89,18 @@ function Victory({ finished }: { finished: Finished }) {
   // Level-ups, rank-ups and new badges play from here. finish() held them back.
   // The banner, the rolling XP, the crowns and the XP bar play first: the moments
   // start about 1.8 seconds in, or at the first tap if that comes sooner.
+  // A level up inside the same rank plays on Victory's own level bar, so its full-screen moment is not queued.
   const played = useRef(false);
+  const levelUpHere = afterWorkout({
+    levelBefore: finished.before.level,
+    levelAfter: finished.after.level,
+    earned: finished.events.flatMap((e) => (e.kind === 'badge' ? [e.badge] : [])),
+  }).levelUpOnVictory;
   useEffect(() => {
     if (played.current) return;
     played.current = true;
-    celebration.enqueue(finished.events, { delayMs: VICTORY_HOLD_MS });
-  }, [finished, celebration]);
+    celebration.enqueue(levelUpHere ? finished.events.filter((e) => e.kind !== 'levelup') : finished.events, { delayMs: VICTORY_HOLD_MS });
+  }, [finished, celebration, levelUpHere]);
 
   const saved = finished.workout;
   const live = workouts.find((w) => w.id === saved.id) ?? saved;
@@ -197,10 +210,48 @@ function Victory({ finished }: { finished: Finished }) {
   const totals = workoutTotals(live.items, lookup);
   const span = Date.parse(live.finishedAt) - Date.parse(live.startedAt);
   const minutes = Number.isFinite(span) && span >= 0 ? Math.max(1, Math.round(span / 60000)) : null;
-  const rolled = useCountUp(total);
   const crowns = Math.min(MAX_CROWNS, totals.exercises);
   const leveled = to.level > from.level;
   const ranked = leveled && rankForLevel(to.level) !== rankForLevel(from.level);
+
+  // The parts of Victory play in order: the banner, the crowns, the XP lines with the total rolling, then the level bar.
+  const rowXps = [...lines.map((l) => l.xp), ...(other > 0 ? [other] : [])];
+  const fx = useVictoryFx({
+    rowXps,
+    weeklyRow: lines.findIndex((l) => l.key === 'weekly' && l.xp > 0),
+    crowns,
+    total,
+    levelUp: levelUpHere,
+    pctFrom: leveled && !levelUpHere ? 0 : pct(from),
+    pctTo: pct(to),
+    level: to.level,
+  });
+  const times = victoryTimes(crowns, rowXps.length + 1);
+  const rolled = fx.rolled;
+  const shownSnap = fx.level === to.level ? to : from;
+
+  // The entrance: the stage fades in, the banner slams from 240% (bouncy) and stars burst behind it.
+  const stage = useRef<HTMLElement>(null);
+  const banner = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    void anim(stage.current, [{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: 'linear' });
+    void springTo(banner.current, 2.4, 1, (v) => `scale(${v})`, SPRINGS.bouncy);
+    const burst = setTimeout(() => banner.current && stars(centreOf(banner.current), 22, '#fff28f', 160), 180);
+    return () => clearTimeout(burst);
+  }, []);
+
+  // The total bumps when it lands; the level number and the shield pop on a level up.
+  const bigXp = useRef<HTMLDivElement>(null);
+  const levelNum = useRef<HTMLElement>(null);
+  const shield = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (fx.totalKey > 0) void springTo(bigXp.current, 1.2, 1, (v) => `scale(${v})`, SPRINGS.bouncy);
+  }, [fx.totalKey]);
+  useEffect(() => {
+    if (fx.popKey === 0) return;
+    void springTo(levelNum.current, 1.5, 1, (v) => `scale(${v})`, SPRINGS.bouncy);
+    void springTo(shield.current, 1.3, 1, (v) => `scale(${v})`, SPRINGS.bouncy);
+  }, [fx.popKey]);
 
   // The card shows the workout as the screen shows it now (a renamed title counts), the rank and level right after it.
   const card = useMemo(
@@ -235,16 +286,18 @@ function Victory({ finished }: { finished: Finished }) {
         </Button>
       }
     >
-      <section className="wt-victory" aria-label="Workout complete">
+      <section ref={stage} className="wt-victory" aria-label="Workout complete">
         <div className="wt-v-rays" aria-hidden="true" />
-        <h2 className="gt wt-v-title">VICTORY!</h2>
+        <h2 ref={banner} className="gt wt-v-title">
+          VICTORY!
+        </h2>
         <div className="wt-v-sub">{live.title} complete</div>
-        <div className="gt wt-v-xp" aria-label={`Plus ${total} XP`}>
+        <div ref={bigXp} className="gt wt-v-xp" aria-label={`Plus ${total} XP`}>
           +<span data-testid="rolling-xp">{rolled}</span> XP
         </div>
         <div className="wt-crowns" role="img" aria-label={`${totals.exercises} ${totals.exercises === 1 ? 'exercise' : 'exercises'} finished`}>
           {Array.from({ length: crowns }, (_, i) => (
-            <span key={i} className="wt-crown" style={{ animationDelay: `${0.5 + i * 0.18}s` }}>
+            <span key={i} className="wt-crown" style={{ animationDelay: `${times.crowns[i]}ms` }}>
               <Crown size={32} fill="currentColor" aria-hidden="true" />
             </span>
           ))}
@@ -270,17 +323,25 @@ function Victory({ finished }: { finished: Finished }) {
       </section>
 
       <Card aria-label="XP earned">
-        {lines.map((l) => (
-          <div key={l.key} className="wt-xpl">
+        {lines.map((l, i) => (
+          <div key={l.key} className={cn('wt-xpl', i < fx.rowsShown ? 'in' : 'wait')}>
             <div>
               <b>{l.title}</b>
               {l.sub && <small>{l.sub}</small>}
             </div>
+            {l.key === 'weekly' && l.xp > 0 && fx.seal && (
+              <span className="wt-gseal">
+                <i>
+                  <Check size={14} strokeWidth={3.4} aria-hidden="true" />
+                </i>
+                Goal met
+              </span>
+            )}
             <span className="wt-xpv">+{l.xp}</span>
           </div>
         ))}
         {other > 0 && (
-          <div className="wt-xpl">
+          <div className={cn('wt-xpl', lines.length < fx.rowsShown ? 'in' : 'wait')}>
             <div>
               <b>New badge</b>
               <small>Badges pay XP too</small>
@@ -288,7 +349,7 @@ function Victory({ finished }: { finished: Finished }) {
             <span className="wt-xpv">+{other}</span>
           </div>
         )}
-        <div className="wt-xpl total">
+        <div className={cn('wt-xpl total', rowXps.length < fx.rowsShown ? 'in' : 'wait')}>
           <b>Added to your XP</b>
           <span className="wt-xpv" data-testid="xp-total">
             +{total} XP
@@ -296,17 +357,19 @@ function Victory({ finished }: { finished: Finished }) {
         </div>
       </Card>
 
-      <Card className="wt-lvcard">
-        <RankShield rank={to.rank} level={to.level} size={48} />
+      <Card className={cn('wt-lvcard', fx.flash && 'flash')}>
+        <span ref={shield} className="wt-lv-shield">
+          <RankShield rank={to.rank} level={fx.level} size={48} />
+        </span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="wt-lvl-row">
-            <b>Level {to.level}</b>
+            <b ref={levelNum}>Level {fx.level}</b>
             <small style={{ color: 'var(--muted)' }}>
-              {to.current} / {to.needed} XP
+              {shownSnap.current} / {shownSnap.needed} XP
             </small>
           </div>
-          <XpBar from={leveled ? 0 : pct(from)} value={pct(to)} animate label={`Level ${to.level} progress`} />
-          {leveled && (
+          <XpBar value={fx.barPct} className={cn('wt-vbar', fx.barSnap && 'snap')} label={`Level ${fx.level} progress`} />
+          {leveled && fx.level === to.level && (
             <small style={{ display: 'block', marginTop: 8, color: 'var(--link)', fontWeight: 800 }}>
               {ranked ? `Rank up! You're ${RANK_TITLES[to.rank]} now.` : `Level up! Level ${to.level}.`}
             </small>
@@ -396,9 +459,7 @@ function Victory({ finished }: { finished: Finished }) {
             <b>Save weights to {before.current.title}</b>
             <small>{logged ? "Use these weights and reps as next time's plan." : <>Use today&apos;s weights and reps as next time&apos;s plan.</>}</small>
           </span>
-          <button type="button" role="switch" aria-checked={updateOn} aria-labelledby="update-label" className="wt-switch" onClick={toggleUpdate}>
-            <i />
-          </button>
+          <Switch checked={updateOn} labelledBy="update-label" onChange={toggleUpdate} />
         </Card>
       )}
 

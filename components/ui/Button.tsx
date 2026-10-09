@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { forwardRef } from 'react';
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import { cn } from './cn';
+import { usePress, withPress } from './usePress';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'soft-destructive' | 'solid-destructive';
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -15,6 +16,9 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
   'soft-destructive': 'wt-btn-ds',
   'solid-destructive': 'wt-btn-dd',
 };
+
+// Green buttons pop, gold ones tock (board 12). The flat dashed one does not squish.
+const SLOT: Record<ButtonVariant, 'tap' | 'tock'> = { primary: 'tap', 'solid-destructive': 'tap', secondary: 'tock', tertiary: 'tock', 'soft-destructive': 'tock' };
 
 const SIZE_CLASS: Record<ButtonSize, string> = { sm: 'wt-btn-sm', md: '', lg: 'wt-btn-lg' };
 
@@ -40,11 +44,12 @@ function classes({ variant = 'primary', size = 'md', block, loading, className }
 
 export type ButtonProps = Shared & Omit<ComponentPropsWithoutRef<'button'>, keyof Shared>;
 
-/** The chunky 3D button. Pressed is CSS (:active), disabled is desaturated and flat. */
+/** The chunky 3D button. The squish is CSS (:active); the press sound and the spring back on release are usePress. Disabled is desaturated and flat. */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { variant, size, block, loading, icon, iconRight, className, children, disabled, type = 'button', ...rest },
+  { variant = 'primary', size, block, loading, icon, iconRight, className, children, disabled, type = 'button', ...rest },
   ref
 ) {
+  const press = usePress<HTMLButtonElement>(SLOT[variant], !disabled && !loading, variant !== 'tertiary');
   return (
     <button
       ref={ref}
@@ -53,6 +58,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       {...rest}
+      {...withPress(press, rest)}
     >
       {icon}
       {children}
@@ -64,9 +70,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
 export type ButtonLinkProps = Shared & Omit<ComponentPropsWithoutRef<typeof Link>, keyof Shared>;
 
 /** The same button as a link, for navigation. */
-export function ButtonLink({ variant, size, block, loading, icon, iconRight, className, children, ...rest }: ButtonLinkProps) {
+export function ButtonLink({ variant = 'primary', size, block, loading, icon, iconRight, className, children, ...rest }: ButtonLinkProps) {
+  const press = usePress<HTMLAnchorElement>(SLOT[variant], !loading, variant !== 'tertiary');
   return (
-    <Link className={classes({ variant, size, block, loading, className })} aria-busy={loading || undefined} {...rest}>
+    <Link className={classes({ variant, size, block, loading, className })} aria-busy={loading || undefined} {...rest} {...withPress(press, rest)}>
       {icon}
       {children}
       {iconRight}

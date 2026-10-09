@@ -7,6 +7,8 @@ import { useSession } from 'next-auth/react';
 import { ProgressProvider, useProgress } from '@/components/ProgressProvider';
 import { WorkoutSessionProvider, useWorkoutSession } from '@/components/WorkoutSessionProvider';
 import { SignInScreen } from '@/components/SignInScreen';
+import { anim } from '@/lib/anim';
+import { DUR, EASE } from '@/lib/motion';
 import { isPublicPath } from '@/lib/legal';
 import { Sidebar } from '@/components/nav/Sidebar';
 import { TabBar } from '@/components/nav/TabBar';
@@ -58,6 +60,15 @@ function Frame({ children }: { children: React.ReactNode }) {
     if (needsOnboarding) router.replace('/onboarding');
   }, [needsOnboarding, router]);
 
+  // A page change: the new page rises 8 px and fades in (200 ms). Nothing slides sideways.
+  const main = useRef<HTMLElement>(null);
+  const shownPath = useRef(pathname);
+  useEffect(() => {
+    if (shownPath.current === pathname) return;
+    shownPath.current = pathname;
+    void anim(main.current, [{ transform: 'translateY(8px)', opacity: 0 }, { transform: 'translateY(0)', opacity: 1 }], { duration: DUR.base - 40, easing: EASE.out });
+  }, [pathname]);
+
   const tabs = isTabRoot(pathname);
   const showMini = tabs && Boolean(session) && pathname !== '/workout';
   const dock = tabs ? `calc(${TABBAR_H} + env(safe-area-inset-bottom)${showMini ? ` + ${MINIBAR_H}` : ''})` : '0px';
@@ -96,7 +107,7 @@ function Frame({ children }: { children: React.ReactNode }) {
       </a>
       <div className={cn('wt-shell', bare && 'bare')} style={{ '--dock-h': dock } as CSSProperties}>
         {!bare && <Sidebar onStart={value.openStart} onSignOut={value.askSignOut} />}
-        <main id="main" tabIndex={-1} className={cn('wt-main', tabs && 'has-dock')} style={{ outline: 'none' }}>
+        <main ref={main} id="main" tabIndex={-1} className={cn('wt-main', tabs && 'has-dock')} style={{ outline: 'none' }}>
           {booting || needsOnboarding ? <ShellSkeleton /> : children}
         </main>
         {!bare && tabs && <TabBar onStart={value.openStart} showMini={showMini} />}
