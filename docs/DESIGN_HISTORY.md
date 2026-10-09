@@ -607,6 +607,16 @@ screens nobody sees any more.
   new rank's chest for the first time with the title and frame; Monthly, Royal and Pillow stay for
   monthly, special and secret badges. Nothing new is stored.
 
+- **Round 2 answers (9 October 2026):**
+  - **Chests:** Silver as shown; Crystal: faceted crystal; Obsidian: void; Prismatic: opal;
+    Monthly: two-tone; Royal: antique gold with a ruby. Wooden, Golden and Pillow as before.
+  - **Medals:** Gold: sunburst gold; Master: violet flame; Legend: star-burst.
+  - **Sounds:** my pick for every slot, except: the medal flying out is Air move (Almitory);
+    exercise complete is the marimba run made in code; new record is the fanfare made in code.
+  - **Music:** no chest music; rank up is Triumphant (Emma_MA, C major, 4 s).
+  - **Asked:** what the end of a workout shows when there is no badge and no level up, or a
+    level up without a rank up.
+
 ## 13 Rank Road and chests
 
 - **Why:** the chest rule above needs a place where people see the chests coming. The user asked
