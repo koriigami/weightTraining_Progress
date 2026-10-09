@@ -3,16 +3,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, Check, ChevronRight, Crown, Share2 } from 'lucide-react';
-import { anim, springTo } from '@/lib/anim';
+import { anim, reducedMotion, springTo } from '@/lib/anim';
 import { formatWhen } from '@/lib/date';
 import type { Feel } from '@/lib/feel';
 import { centreOf, stars } from '@/lib/fx';
-import { victoryTimes } from '@/lib/interactions';
+import { VICTORY, victoryTimes } from '@/lib/interactions';
 import { SPRINGS } from '@/lib/motion';
 import { workoutTotals } from '@/lib/routines';
 import type { Routine } from '@/lib/routines';
 import { RANK_TITLES, rankForLevel } from '@/lib/progress';
 import { afterWorkout } from '@/lib/rewards';
+import { stageDelay } from '@/lib/rewardStage';
 import { routineWouldChange, updateRoutineFromWorkout } from '@/lib/routineUpdate';
 import { shareCardData } from '@/lib/shareCard';
 import { fmtVolume } from '@/lib/units';
@@ -86,21 +87,12 @@ function Victory({ finished }: { finished: Finished }) {
   const { state, workouts, routines, prefs, lookup, progress, updateWorkout, saveRoutine, showToast } = useProgress();
   const celebration = useCelebration();
 
-  // Level-ups, rank-ups and new badges play from here. finish() held them back.
-  // The banner, the rolling XP, the crowns and the XP bar play first: the moments
-  // start about 1.8 seconds in, or at the first tap if that comes sooner.
   // A level up inside the same rank plays on Victory's own level bar, so its full-screen moment is not queued.
-  const played = useRef(false);
   const levelUpHere = afterWorkout({
     levelBefore: finished.before.level,
     levelAfter: finished.after.level,
     earned: finished.events.flatMap((e) => (e.kind === 'badge' ? [e.badge] : [])),
   }).levelUpOnVictory;
-  useEffect(() => {
-    if (played.current) return;
-    played.current = true;
-    celebration.enqueue(levelUpHere ? finished.events.filter((e) => e.kind !== 'levelup') : finished.events, { delayMs: VICTORY_HOLD_MS });
-  }, [finished, celebration, levelUpHere]);
 
   const saved = finished.workout;
   const live = workouts.find((w) => w.id === saved.id) ?? saved;
@@ -198,6 +190,7 @@ function Victory({ finished }: { finished: Finished }) {
       return;
     }
     clearLastFinished();
+    celebration.release();
     router.replace('/');
     showToast('Workout saved');
   }
@@ -227,6 +220,18 @@ function Victory({ finished }: { finished: Finished }) {
     level: to.level,
   });
   const times = victoryTimes(crowns, rowXps.length + 1);
+
+  // The rank up and the chest play from here, finish() held them back. Victory plays
+  // first: the banner, the crowns, the XP lines, the total and the level bar (and the
+  // level up on it), then it holds for VICTORY_HOLD_MS before the stage starts.
+  // Done before then lets them go at once.
+  const played = useRef(false);
+  useEffect(() => {
+    if (played.current) return;
+    played.current = true;
+    const delayMs = stageDelay({ barEnd: times.barEnd, levelUpMs: levelUpHere ? VICTORY.levelHoldMs + 60 + VICTORY.barFillMs : 0, hold: VICTORY_HOLD_MS, reduced: reducedMotion() });
+    celebration.enqueue(levelUpHere ? finished.events.filter((e) => e.kind !== 'levelup') : finished.events, { delayMs });
+  }, [finished, celebration, levelUpHere, times.barEnd]);
   const rolled = fx.rolled;
   const shownSnap = fx.level === to.level ? to : from;
 

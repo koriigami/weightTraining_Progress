@@ -157,7 +157,7 @@ function crackCanvas(seed = 3, glow = '#ff7a1a') {
 }
 
 // A soft round sprite, for glow, dust and sparks.
-function dotTexture(inner = 'rgba(255,255,255,1)', outer = 'rgba(255,255,255,0)') {
+export function dotTexture(inner = 'rgba(255,255,255,1)', outer = 'rgba(255,255,255,0)') {
   const c = canvas(128, 128);
   const x = c.getContext('2d')!;
   const g = x.createRadialGradient(64, 64, 0, 64, 64, 64);

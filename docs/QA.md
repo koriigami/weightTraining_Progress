@@ -238,9 +238,10 @@ Tick these on each screen below, at 390 px and at 1440 px.
 ## Victory `/workout/done`
 
 - [ ] Banner, rolling XP, crowns for sets and the XP bar play first.
-- [ ] Reward moments start about 1.8 seconds later, or at the first tap if that is
-      sooner. Never on top of the banner at once.
-- [ ] Order: level up or rank up first, then new badges, one at a time.
+- [ ] The reward stage starts 1.8 seconds after Victory has finished counting (the
+      crowns, XP lines, total and level bar, and the level up on the bar). A tap on
+      Victory does not start it early. Done starts it at once on Home.
+- [ ] Order: the rank-up moment first if a rank was crossed, then one chest.
 - [ ] How did it feel? is its own card between the level card and Workout details. Pick a face, add an
       effort, move the slider: each change saves on its own ("Saved" shows in Workout details), and
       neither changes the XP. Finish and Log workout both end here with nothing picked.
@@ -274,26 +275,40 @@ Tick these on each screen below, at 390 px and at 1440 px.
       the browser can. Tapping the dice makes a new try.
 - [ ] Done is pinned at the bottom. Reload the page: no celebration replays.
 
-## Reward moments
+## Reward stage
 
-For each of Level up, Rank up and Badge unlock:
+The chest, the rank-up moment and the replays from Rank. A same-rank level up plays on
+Victory itself. A level up that arrives outside Victory (a logged past workout) still
+uses the plain full-screen level up.
 
-- [ ] Full screen with a radial scrim. Rays spin, the glow and sparks appear,
-      the title drops in, and "Tap to continue" pulses.
-- [ ] Level up: the shield slams in with the new level and the number rolls.
-- [ ] Rank up: the old shield spins out and shrinks, the new one slams in late,
-      then the rank title and "Level N, new title and profile frame".
-- [ ] Badge: the chest shakes and opens. The lid and the medal are not cropped.
-      The hexagon medal rises with a shine sweep, then the tier ribbon (Bronze to
-      Legend, Monthly or Special), the name and what it measures.
-- [ ] Tap, Enter, Space and Esc continue. A tap in the first fraction of a second
-      is ignored. The browser Back button closes it.
-- [ ] Focus is inside the moment, and returns to where it was.
-- [ ] A screen reader announces "Level up", "Rank up" or "New badge" with the
-      details.
-- [ ] Sound off: silent. Haptics off: no vibration. On: a chime, a fanfare and a
-      chest cue, each with its own vibration pattern.
-- [ ] Reduced motion: the end state, nothing spinning.
+- [ ] The deep blue backdrop fills the screen at 390 and 1440; the stage stays centred
+      and nothing is cut off at the edges.
+- [ ] The chest drops with a land sound, dust and a shake. A counter on its corner shows
+      how many items are inside. "Tap to open" bobs, with 1, 2 or 3 pips for the chest.
+- [ ] Each tap cracks the latch and jolts the chest. A three-tap chest (Obsidian,
+      Prismatic) charges for about 0.8 s with a riser, then bursts: a flash, the burst
+      sound, sparks, the lid opens. The open chest sits in the lower third and stays whole.
+- [ ] Each item: light spirals into the chest, it rises spinning, pauses backlit, flips to
+      its face with a flash, a ring and stars. The card is framed in the tier colour with
+      the tier, name, what it measures, the next tier line with its bar and the +XP pill.
+- [ ] Coins fly from the +XP pill to the level bar at the top, which counts up with ticks.
+- [ ] Several items: "Tap to continue", the item flies into a tray under the level bar. At
+      the end the tray grows into the summary with no heading, the total counts up and
+      Continue is last.
+- [ ] Rank up: the old shield shakes, flashes and breaks into pieces, a pillar of light,
+      the new shield rises with the rank music and the title unrolls. Then the new rank's
+      chest holds the title and the profile frame first, then any badges.
+- [ ] Chests: your rank decides it (Wooden, Silver, Golden, Crystal, Obsidian,
+      Prismatic); Monthly for monthly badges, Royal for special badges.
+- [ ] Rank screen: tap an earned badge for a one-item chest, or a reached gate for the
+      rank up and its chest. The card says "Earned" or "Unlocked", with no coins.
+- [ ] Esc and the browser Back button close the stage. Focus is inside it and returns.
+- [ ] No WebGL (for example the browser's WebGL switched off): the same sequence plays
+      with a flat chest and the vector medal.
+- [ ] Reduced motion: every step shows its end state, with the taps still needed.
+- [ ] Sound off: silent. Music off: no rank music. Haptics off: no vibration. There is no
+      music while the chest opens.
+- [ ] Real phone only: the silent switch, and ambient audio when other music is playing.
 
 ## Rank `/rank`
 
@@ -305,8 +320,8 @@ For each of Level up, Rank up and Badge unlock:
 - [ ] The "Next rank" chip sits above the road and never covers a gate card.
       Tapping it scrolls to the next gate.
 - [ ] Tap a locked gate or a locked badge: a full-colour preview marked Locked
-      and the requirement. Tap an unlocked gate or an earned badge: its moment
-      replays, without the "+XP" line.
+      and the requirement. Tap an unlocked gate or an earned badge: the reward stage
+      replays, without coins.
 - [ ] Tap the Rank tab again (or the sidebar item) after scrolling: the road
       re-centres on your level.
 - [ ] Badges: Workouts, Lifetime, This month, Trophies and Milestones. The retired

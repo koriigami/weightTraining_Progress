@@ -8,7 +8,8 @@ import type { Rank } from './progress';
 import { GATE_RANK } from './rankRoad';
 
 export type CelebrationEvent =
-  | { kind: 'badge'; badge: EarnedBadgeSummary; replay?: boolean }
+  /** `level` and `xpNow` are where the person stood when it came in: the level picks the rank's chest, the XP fills the stage's level bar. */
+  | { kind: 'badge'; badge: EarnedBadgeSummary; level?: number; xpNow?: number; replay?: boolean }
   | { kind: 'levelup'; from: number; to: number; rank: Rank; xpNow: number; replay?: boolean }
   /** fromRank is null for the very first rank, which nobody ranks up into. */
   | { kind: 'rankup'; fromRank: Rank | null; toRank: Rank; level: number; xpNow: number; /** the level before, for the old shield */ from?: number; replay?: boolean };
@@ -50,6 +51,26 @@ export function mergeQueue(queue: CelebrationEvent[], incoming: CelebrationEvent
   if (fresh.length === 0) return queue;
   const tail = orderEvents([...rest, ...fresh]);
   return head ? [head, ...tail] : tail;
+}
+
+export type NextUp =
+  /** A level up that came in outside Victory plays alone. */
+  | { kind: 'levelup'; event: Extract<CelebrationEvent, { kind: 'levelup' }> }
+  /** Everything else waiting is one reward stage and one chest (see planStage in lib/rewardStage.ts). */
+  | { kind: 'stage'; events: CelebrationEvent[]; key: string };
+
+/**
+ * What plays next from the queue. A level up that came in somewhere other than
+ * Victory plays alone. Otherwise every waiting rank up and badge is one stage
+ * and one chest. A replay (tapping an earned badge or a reached rank on the Rank
+ * screen) is always a stage of its own.
+ */
+export function nextUp(queue: CelebrationEvent[]): NextUp | null {
+  const head = queue[0];
+  if (!head) return null;
+  if (head.kind === 'levelup') return { kind: 'levelup', event: head };
+  const events = head.replay ? [head] : queue.filter((e) => e.kind !== 'levelup' && !e.replay);
+  return { kind: 'stage', events, key: events.map(eventKey).join('|') };
 }
 
 /** The rank up that took you to a rank gate, for replaying it from the Rank Road. */

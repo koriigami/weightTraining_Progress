@@ -30,9 +30,9 @@ Mounted in `app/layout.tsx` and `components/AppShell.tsx`, outermost first:
 1. `SessionProvider` (next-auth). The root layout is static: the session is
    fetched on the client, so every route can be prerendered.
 2. `CelebrationProvider` (`components/celebrate/`). Holds the queue of reward
-   moments and renders the one on screen. API: `enqueue(events, { delayMs })`
-   and `replay(event)`. It is above the shell so a moment can outlive a
-   page change.
+   moments and renders the one on screen. API: `enqueue(events, { delayMs })`,
+   `replay(event)` and `release()`. It is above the shell so a moment can
+   outlive a page change.
 3. `AppShell`. Shows a skeleton while the session loads, the sign-in screen when
    signed out, and otherwise mounts the two providers below plus the frame
    (sidebar, tab bar, START sheet, sign-out dialog, skip link).
@@ -172,28 +172,66 @@ component state in `CardioFields`, not stored. The running lap row ticks from th
 ### Victory and the reward moments
 
 `/workout/done` shows the Victory screen from the last finished workout (in
-memory only). Its banner, rolling XP, crowns and XP bar play first. The screen
-then calls `celebration.enqueue(events, { delayMs: 1800 })`: the events are held
-back until 1.8 seconds after mount, or the first tap or key press if that comes
-sooner. Then `CelebrationProvider` plays them one at a time: level ups and rank
-ups first, then badges, in the order `lib/celebrations.ts` gives. A rank up
-already says the level, and monthly and special badges reuse the badge moment.
+memory only). Its banner, rolling XP, crowns, XP lines and level bar play first
+(and the level up on that bar, for a new level inside the same rank). Only then does
+the screen call `celebration.enqueue(events, { delayMs })`, where `delayMs` is
+`stageDelay(...)` in `lib/rewardStage.ts`: when Victory's last part ends, plus the
+1.8 s hold (`VICTORY_HOLD_MS`). Under reduced motion Victory shows its end state at
+once, so only the hold is left. A tap does not cut the hold short (that used to put a
+moment on top of the counting); tapping Done calls `celebration.release()` so the
+events go at once on Home.
 
-A moment (`Moment.tsx`, with `Chest.tsx`) is a full-screen `role="dialog"`. Focus
-moves into it and is restored after. Tap, Enter, Space or Esc continue, and the
-browser Back button closes it too. A tap in the first 300 ms is ignored so the
-tap that started it cannot skip it. Sound and haptics fire with the animation,
-through `lib/feedback.ts`, which plays them on the sound engine (see "Sound and motion"). With reduced motion the moment shows its end state
-with nothing spinning.
+Then `CelebrationProvider` asks `nextUp(queue)` (`lib/celebrations.ts`) what plays next.
+A level up that came in outside Victory (a past workout logged or edited) plays alone
+as the old `Moment.tsx`. Everything else waiting, every rank up and badge, is one
+stage: `RewardStage` calls `planStage` (`lib/rewardStage.ts`, loaded with the stage, not with the page), which runs the events through `afterWorkout` (`lib/rewards.ts`) and gives
+the rank-up moment if a rank was crossed, then the one chest with its items (title and
+frame first, badges with the best last) and the level bar's start and end XP. Events
+that join the queue while a stage is open wait for the next one. A replay is always a
+stage of its own.
+
+### The reward stage (v13 stage 5)
+`components/celebrate/RewardStage.tsx` is loaded with `next/dynamic`, so it and the 3D
+art are not in any page's first load. It is a full-screen `role="dialog"` over the deep
+blue backdrop; the stage itself is 390 by 780 and scaled to fit and centred. The sequence
+is `components/celebrate/stage/run.ts` (a port of `docs/design/12-motion/stage.js`):
+
+- the chest drops (land sound, dust, shake), a counter shows the items left, "Tap to open"
+  shows pips for 1, 2 or 3 taps, each tap is a latch and a jolt, a three-tap chest charges
+  for 0.8 s with a riser, then it bursts (flash, burst sound, the music ducks, sparks, the
+  lid opens). The open chest settles in the lower third and stays whole;
+- per item: light spirals into the chest, the item rises spinning on a curve, pauses
+  backlit, flips to its face with a flash and the reveal sound, with a ring and stars. The
+  card is framed in the tier colour (band, name, what it measures, the next tier line and
+  bar, the +XP pill), and coins fly to the level bar at the top, which counts up with roll
+  ticks. With several items a tap continues and each item flies into a tray under the
+  level bar; at the end the tray grows into the summary (no heading, the XP total counts
+  up) and Continue comes last;
+- the rank-up moment comes first: the old shield shakes, flashes and breaks into about ten
+  clipped pieces (`shatterEl`, the shatter sound), a pillar of light, the new shield rises
+  with the rank music and the title unrolls. The first rank has no old shield to break;
+- the title and the profile frame are drawn in the page (SVG templates rendered by React in
+  `.wt-rs-tpl` and copied in), with the same swirl as a medal.
+
+`stage/driver.ts` is what the sequence asks of whatever draws the chest and medals.
+`components/art3d/stage3d.ts` (three.js, a port of `stage3d.js`) is the real one, imported
+dynamically; `stage/flat.ts` is the fallback when WebGL is missing: a flat SVG chest and
+the vector medal, the same sequence. `stage/fx.ts` draws sparks, stars, dust, rings,
+shards, the spiral and the coins on one canvas the size of the screen. There is no chest
+music. Esc, Back and Continue close the stage; the screen reader hears a line per step.
+With reduced motion every step shows its end state and the taps are still needed.
 
 Nothing replays on reload. `wt:seen:{userId}` in localStorage records the
 highest level and the set of badge ids already shown, and only ever grows.
 Events come from two places: `diffCelebrations` (the change an action caused)
-and the first load (what was earned since the last visit).
+and the first load (what was earned since the last visit). A badge event carries
+the `level` and `xpNow` the person stood at, which pick the rank's chest and fill the
+stage's level bar.
 
 Replay is separate from this. On the Rank screen, tapping an earned badge or an
 unlocked rank gate calls `replay(event)`, which marks the event as a replay: it
-skips seen-tracking, and a badge replay leaves out the "+XP" line.
+skips seen-tracking, pays no XP (the card says "Earned") and plays the same stage, with
+one item for a badge or the rank up and its chest for a gate.
 
 ## Scoring is derived, never stored
 
@@ -694,8 +732,8 @@ not change. The file lists which new sound each one plays.
 - Victory: `useVictoryFx` plays the music, crowns, XP lines (a coin each, the total rolling),
   the weekly goal seal and the level bar. `afterWorkout().levelUpOnVictory` decides the level
   up: the bar fills, flashes white, the number pops and the level music plays, and that
-  level-up event is no longer queued as a full-screen moment. Rank ups and badges still go
-  through `CelebrationProvider` until stage 5.
+  level-up event is no longer queued as a full-screen moment. Rank ups and badges play on
+  the reward stage (stage 5).
 
 ## Rendering and layout
 

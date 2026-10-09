@@ -41,6 +41,7 @@ Sign-ups are open to any Google account since 1 October 2026 (`SIGNUPS=invite` c
 | v11 stage 4 | Rules v4: the weekly goal bonus grows with each week in a row (+50, then +10 more a week, up to +100), shown on Home, Victory, the workout page and Settings, with a one-time note, a v11 backup and a committed XP integrity test (board 10, `docs/V11_PLAN.md`) | Done, live since 2 October 2026 |
 | v13 design | Motion and sound library: 3D chests and medals with options, a tap-to-open reward stage, 34 interactions with timing, sound and haptic, CC0 sounds and music in the chest music's key, a Music switch (board 12, `docs/design/12-motion-sound.html`) | Signed off 9 October 2026; plan in `docs/V13_PLAN.md` |
 | v13 design | Which chest opens: your rank decides your chest (decided). The Rank Road with a chest at every rank gate, the badges you earned on each level, and Up next (board 13, `docs/design/13-rank-road.html`) | Signed off 9 October 2026; plan in `docs/V13_PLAN.md` |
+| v13 stage 5 | The reward stage: tap-to-open chest, swirl reveal, card, tray and summary, the rank-up shatter, and the sequence after Victory's hold (`docs/V13_PLAN.md`) | Built on the feature branch; not released |
 | v12 | First-run guide and What's new: a spotlight tour on Home for new people (seven steps on the real screen, the ring wraps each element's shadow), a paged What's new card after releases starting with the October update, the `/news` page, and Settings rows How Levl works, What's new and Setup questions (board 11, `docs/V12_PLAN.md`) | Done, live since 3 October 2026 |
 
 

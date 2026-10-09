@@ -7,22 +7,12 @@ import type { BadgeArt } from '@/lib/badgeCards';
 import { medalKey, medalModel } from '@/lib/badgeModel';
 import type { ChestKey, MedalModel } from '@/lib/badgeModel';
 import type { Art } from './art';
+import { webglAvailable } from './webgl';
 
 let art: Promise<Art | null> | null = null;
 const done = new Map<string, string>();
 const pending = new Map<string, Promise<string | null>>();
 let queue: Promise<unknown> = Promise.resolve();
-
-/** Whether the browser can make a WebGL context at all. Checked once. */
-export function webglAvailable(): boolean {
-  if (typeof document === 'undefined') return false;
-  try {
-    const c = document.createElement('canvas');
-    return Boolean(c.getContext('webgl2') || c.getContext('webgl'));
-  } catch {
-    return false;
-  }
-}
 
 function sharedArt(): Promise<Art | null> {
   art ??= (async () => {

@@ -13,7 +13,7 @@ export type ChestKey = 'bronze' | 'silver' | 'gold' | 'diamond' | 'master' | 'le
 export const CHEST_FOR_RANK: Record<Rank, ChestKey> = { E: 'bronze', D: 'silver', C: 'gold', B: 'diamond', A: 'master', S: 'legend' };
 
 /** The palette entry each chest takes its colours, name and taps from. */
-const CHEST_PALETTE = { bronze: 'bronze', silver: 'silver', gold: 'gold', diamond: 'diamond', master: 'master', legend: 'legend', monthly: 'monthly', royal: 'special', pillow: 'secret' } as const;
+export const CHEST_PALETTE = { bronze: 'bronze', silver: 'silver', gold: 'gold', diamond: 'diamond', master: 'master', legend: 'legend', monthly: 'monthly', royal: 'special', pillow: 'secret' } as const;
 
 export const chestName = (key: ChestKey): string => TIER_PALETTE[CHEST_PALETTE[key]].chest;
 

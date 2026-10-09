@@ -48,12 +48,12 @@ export default function RankPage() {
   // An unlocked rank or an earned badge replays its moment. Anything still locked opens the preview.
   function openGate(g: GateRow) {
     const moment = g.reached ? rankMomentForGate(g.level) : null;
-    if (moment) celebration.replay(moment);
+    if (moment) celebration.replay({ ...moment, xpNow: progress.xp });
     else setPreview(gateToPreview(g));
   }
   function openBadge(c: BadgeCard) {
     const earned = cardToEarned(c);
-    if (earned) celebration.replay({ kind: 'badge', badge: earned });
+    if (earned) celebration.replay({ kind: 'badge', badge: earned, level: progress.level, xpNow: progress.xp });
     else setPreview(badgePreview(c));
   }
 

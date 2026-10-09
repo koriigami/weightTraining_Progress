@@ -488,6 +488,11 @@ export const SYN = {
     INS.thump(120, { g: 0.7 });
     noise(0.1, { type: 'lowpass', f0: 500, g: 0.3, bus: 'fx' });
   },
+  // A medal flies to the tray: a soft rising swirl.
+  swirl: () => {
+    noise(0.5, { f0: 300, f1: 2600, q: 1.4, g: 0.1, bus: 'fx', att: 0.25 });
+    osc('sine', deg(0, 4), deg(4, 5), 0.5, { g: 0.05, bus: 'fx', att: 0.2 });
+  },
   // The lid bursts: a swell into a bright major chord.
   bloom: () => {
     noise(0.28, { type: 'lowpass', f0: 300, f1: 4000, q: 0.7, g: 0.12, bus: 'fx', att: 0.24 });

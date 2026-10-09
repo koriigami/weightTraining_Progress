@@ -154,11 +154,11 @@ function levelEvent(fromLevel: number, toLevel: number, xpNow: number): Celebrat
 function diffCelebrations(before: AppState, after: AppState, today: string): CelebrationEvent[] {
   const beforeIds = new Set(allEarnedBadges(before, today).map((b) => b.id));
   const newBadges = allEarnedBadges(after, today).filter((b) => !beforeIds.has(b.id));
-  const events: CelebrationEvent[] = newBadges.map((b) => ({ kind: 'badge', badge: b }));
-
   const afterXp = totalXp(after, today);
   const beforeLevel = levelForXp(totalXp(before, today));
   const afterLevel = levelForXp(afterXp);
+  // A badge carries where the person stands, so the reward stage picks the right chest and fills its level bar.
+  const events: CelebrationEvent[] = newBadges.map((b) => ({ kind: 'badge', badge: b, level: afterLevel, xpNow: afterXp }));
   if (afterLevel > beforeLevel) events.push(levelEvent(beforeLevel, afterLevel, afterXp));
   return orderEvents(events);
 }
@@ -230,7 +230,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
           writeSeen(uid, { level, badgeIds });
         } else {
           const newBadges = allEarnedBadges(data, now).filter((b) => !seen.badgeIds.includes(b.id));
-          const events: CelebrationEvent[] = newBadges.map((b) => ({ kind: 'badge', badge: b }));
+          const events: CelebrationEvent[] = newBadges.map((b) => ({ kind: 'badge', badge: b, level, xpNow }));
           if (level > seen.level) events.push(levelEvent(seen.level, level, xpNow));
           if (events.length) celebration.enqueue(orderEvents(events));
           updateSeen(uid, level, badgeIds);

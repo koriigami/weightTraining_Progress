@@ -5,13 +5,11 @@ import type { CSSProperties } from 'react';
 import { RankShield } from '@/components/RankShield';
 import { cn } from '@/components/ui/cn';
 import { useDialog } from '@/components/ui/useDialog';
-import { describeMomentBadge } from '@/lib/badgeDisplay';
 import { momentCopy } from '@/lib/celebrations';
 import type { CelebrationEvent } from '@/lib/celebrations';
-import { RANK_TITLES, xpIntoLevel } from '@/lib/progress';
+import { xpIntoLevel } from '@/lib/progress';
 import { useBackToClose } from '@/lib/useBackToClose';
 import * as feedback from '@/lib/feedback';
-import { Chest } from './Chest';
 import { momentBurst } from './confetti';
 
 // A tap in the first moments is ignored, so the tap that started a moment (or a
@@ -64,7 +62,9 @@ function Sparks({ base }: { base: number }) {
   );
 }
 
-function LevelBody({ event, reduced }: { event: Extract<CelebrationEvent, { kind: 'levelup' }>; reduced: boolean }) {
+type LevelUpEvent = Extract<CelebrationEvent, { kind: 'levelup' }>;
+
+function LevelBody({ event, reduced }: { event: LevelUpEvent; reduced: boolean }) {
   const rolled = useRoll(event.from, event.to, 900, 700, reduced);
   const { current, needed } = xpIntoLevel(event.xpNow);
   return (
@@ -83,51 +83,16 @@ function LevelBody({ event, reduced }: { event: Extract<CelebrationEvent, { kind
   );
 }
 
-function RankBody({ event }: { event: Extract<CelebrationEvent, { kind: 'rankup' }> }) {
-  const old = event.fromRank;
-  return (
-    <>
-      <div className="gt wt-m-k">RANK UP!</div>
-      <div className="wt-m-stage">
-        {old && (
-          <div className="wt-m-old">
-            <RankShield rank={old} level={event.from ?? event.level - 1} size={110} />
-          </div>
-        )}
-        <div className={cn('wt-slam', old && 'late')}>
-          <RankShield rank={event.toRank} level={event.level} size={170} />
-        </div>
-      </div>
-      <div className="gt wt-m-title">{RANK_TITLES[event.toRank]}</div>
-      <div className="wt-m-sub">Level {event.level}, new title and profile frame</div>
-    </>
-  );
-}
-
-function BadgeBody({ event }: { event: Extract<CelebrationEvent, { kind: 'badge' }> }) {
-  const b = describeMomentBadge(event.badge);
-  return (
-    <>
-      <div className="gt wt-m-k">NEW BADGE!</div>
-      <Chest badge={b} />
-      <div className="wt-m-ribbon" style={{ '--tc': b.ribbonColor } as CSSProperties}>
-        {b.ribbon}
-      </div>
-      <div className="gt wt-m-title">{b.name}</div>
-      <div className="wt-m-sub">{b.what}</div>
-      {!event.replay && b.xp > 0 && <div className="wt-m-xp">+{b.xp} XP</div>}
-    </>
-  );
-}
-
 /**
- * One reward moment, full screen: level up, rank up or a badge unlock. Ported
- * from board 05 with the same keyframes and timings. It is a dialog: focus moves
+ * The level up moment, full screen. Ranks and badges play on the reward stage
+ * (RewardStage.tsx); a level up inside a rank plays on Victory's own level bar,
+ * so this is only for a level that came in somewhere else (a workout logged or
+ * edited from the history). Ported from board 05 with the same keyframes and timings. It is a dialog: focus moves
  * into it, Tab stays inside, and focus goes back afterwards. Tap, Enter, Space
  * or Esc continue. Screen readers get the text as a sentence. With reduced
  * motion it shows its end state with nothing spinning.
  */
-export function Moment({ event, onDone }: { event: CelebrationEvent; onDone: () => void }) {
+export function Moment({ event, onDone }: { event: LevelUpEvent; onDone: () => void }) {
   const [reduced] = useState(reducedNow);
   const rootRef = useRef<HTMLDivElement>(null);
   const tapRef = useRef<HTMLButtonElement>(null);
@@ -177,49 +142,34 @@ export function Moment({ event, onDone }: { event: CelebrationEvent; onDone: () 
     feedback.warm();
     const timers: number[] = [];
     const at = (ms: number, fn: () => void) => timers.push(window.setTimeout(fn, reduced ? Math.min(ms, 150) : ms));
-    if (event.kind === 'levelup') {
-      at(650, () => {
-        feedback.levelUp();
-        momentBurst();
-      });
-    } else if (event.kind === 'rankup') {
-      const late = Boolean(event.fromRank);
-      if (late && !reduced) at(200, feedback.whoosh);
-      at(late ? 1350 : 650, () => {
-        feedback.rankUp();
-        momentBurst();
-        if (!reduced) timers.push(window.setTimeout(momentBurst, 350));
-      });
-    } else {
-      at(200, feedback.chest);
-      at(1450, momentBurst);
-    }
+    at(650, () => {
+      feedback.levelUp();
+      momentBurst();
+    });
     return () => timers.forEach((t) => window.clearTimeout(t));
     // The moment is keyed by its event, so it plays once per mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const sparkBase = event.kind === 'levelup' ? 0.45 : event.kind === 'rankup' ? (event.fromRank ? 1.15 : 0.45) : 0.95;
+  const sparkBase = 0.45;
 
   return (
     <div
       ref={rootRef}
-      className={cn('wt-moment', `wt-moment-${event.kind}`, leaving && 'leaving')}
+      className={cn('wt-moment', 'wt-moment-levelup', leaving && 'leaving')}
       role="dialog"
       aria-modal="true"
       aria-label={copy.label}
       aria-describedby={descId}
       tabIndex={-1}
-      data-moment={event.kind}
+      data-moment="levelup"
       onClick={request}
     >
       <div className="wt-m-glow" aria-hidden="true" />
       <div className="wt-m-rays" aria-hidden="true" />
       <Sparks base={sparkBase} />
       <div className="wt-m-body" aria-hidden="true">
-        {event.kind === 'levelup' && <LevelBody event={event} reduced={reduced} />}
-        {event.kind === 'rankup' && <RankBody event={event} />}
-        {event.kind === 'badge' && <BadgeBody event={event} />}
+        <LevelBody event={event} reduced={reduced} />
       </div>
       <p id={descId} className="sr-only">
         {copy.announce}
