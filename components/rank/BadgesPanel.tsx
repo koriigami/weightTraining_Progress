@@ -7,18 +7,6 @@ import { cn } from '@/components/ui/cn';
 import type { BadgeCard, BadgeCards } from '@/lib/badgeCards';
 import { BadgeImage } from '@/components/art3d/BadgeImage';
 import { LockedArt } from './BadgeArt';
-import type { Preview } from './PreviewModal';
-
-/** The preview dialog for a badge: full colour, Unlocked or Locked, and what it takes. */
-export function badgePreview(card: BadgeCard): Preview {
-  return {
-    title: card.name,
-    unlocked: card.earned,
-    art: <BadgeImage art={card.art} size={120} />,
-    body: card.hint,
-    ladder: card.ladder,
-  };
-}
 
 /** A badge as a game card: medal, tier name, progress bar and "x of y". Locked ones stay visible, muted, with a padlock. */
 function BadgeCardButton({ card, extra, onOpen }: { card: BadgeCard; extra?: string; onOpen: (card: BadgeCard) => void }) {
@@ -58,7 +46,7 @@ export function BadgesPanel({ cards, today, onOpen }: { cards: BadgeCards; today
   const daysLeft = Math.max(0, daysBetween(today, lastDayOfMonth(today)));
   return (
     <div className="wt-badges">
-      <p className="wt-badges-hint">Tap an earned badge to watch it unlock again. Locked badges stay visible: tap one to see what it takes.</p>
+      <p className="wt-badges-hint">Tap a badge to see it up close. An earned one can unlock again. Locked badges stay visible: tap one to see what it takes.</p>
 
       <SectionLabel>Workouts</SectionLabel>
       <Grid cards={cards.workouts} onOpen={onOpen} />

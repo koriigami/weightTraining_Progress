@@ -11,7 +11,7 @@ import type { EarnedBadgeSummary } from './badges';
 import { goalStatus } from './goals';
 import { RANK_TITLES, XP, levelForXp, rankForLevel, xpForGoal, xpForLevel, xpIntoLevel } from './progress';
 import type { AppState, Rank } from './progress';
-import { CHEST_FOR_RANK } from './rewards';
+import { CHEST_FOR_RANK, chestName } from './rewards';
 import type { ChestKey } from './rewards';
 import { scoreState } from './workoutScoring';
 
@@ -34,9 +34,6 @@ export type GateRow = {
   unlockXp: number; // XP the gate starts at
   chest: ChestKey; // the rank's chest, opened for the first time on reaching the gate
   badges: EarnedBadgeSummary[]; // badges earned by the workout that crossed into this rank, or on the day you are at this level
-  nextTitle: string | null; // for your rank: the rank after it
-  nextLevelsToGo: number | null; // for your rank: levels to the next gate
-  rankProgress: number; // 0..100, for your rank and the next one: how far through the rank you are
 };
 
 export type LevelRow = {
@@ -137,11 +134,7 @@ export function roadBadges(state: AppState, today: string): Map<number, EarnedBa
 export function buildRoad(xp: number, badges: RowBadges = new Map()): Road {
   const level = levelForXp(xp);
   const { current: into, needed } = xpIntoLevel(xp);
-  const curGate = gateFor(level);
   const nextGate = nextGateAbove(level);
-  const rankProgress = nextGate
-    ? Math.round(((xp - xpForLevel(curGate)) / (xpForLevel(nextGate) - xpForLevel(curGate))) * 100)
-    : 100;
   const top = Math.max(ROAD_TOP_LEVEL, level);
 
   const rows: RoadRow[] = [];
@@ -163,9 +156,6 @@ export function buildRoad(xp: number, badges: RowBadges = new Map()): Road {
         unlockXp: xpForLevel(l),
         chest: CHEST_FOR_RANK[rank],
         badges: reached ? (badges.get(l) ?? []) : [],
-        nextTitle: state === 'current' && nextGate ? RANK_TITLES[GATE_RANK[nextGate]] : null,
-        nextLevelsToGo: state === 'current' && nextGate ? nextGate - level : null,
-        rankProgress: state === 'current' || state === 'next' ? rankProgress : 0,
       });
     } else {
       rows.push({
@@ -190,19 +180,38 @@ export function buildRoad(xp: number, badges: RowBadges = new Map()): Road {
   };
 }
 
-/** What a tap on a rank gate shows: the shield in colour, a ribbon and what it takes. */
+/** Under a gate's rank name: where you stand on it. Null for a gate you have not reached, which shows a lock chip instead. */
+export function gateWhere(row: GateRow): string | null {
+  if (!row.reached) return null;
+  return row.state === 'current' ? `Your rank, since level ${row.level}` : `Level ${row.level}`;
+}
+
+/** The line naming what a gate's chest holds. */
+export function chestLine(row: GateRow): string {
+  return `${chestName(row.chest)} chest: title and frame`;
+}
+
+/** The text of the chip above the road, e.g. "Next rank: C at level 10". Null at the top rank. */
+export function nextRankText(road: Road): string | null {
+  return road.nextGate === null ? null : `Next rank: ${GATE_RANK[road.nextGate]} at level ${road.nextGate}`;
+}
+
+/** The medals a row has room for: the latest ones, with how many more there are. */
+export function visibleMedals<T>(list: readonly T[], max: number): { shown: T[]; more: number } {
+  const shown = list.slice(-max);
+  return { shown, more: list.length - shown.length };
+}
+
+/** What a tap on a locked rank gate shows: the shield in stone and what it takes. */
 export function gatePreview(row: GateRow): { title: string; unlocked: boolean; body: string } {
-  const letter = row.rank;
+  const title = `${row.rank} rank`;
+  const frame = `${row.rank}-Rank profile frame`;
   if (row.reached) {
-    return {
-      title: row.title,
-      unlocked: true,
-      body: `You unlocked this at level ${row.level}. It gave you the title and the ${letter}-Rank profile frame.`,
-    };
+    return { title, unlocked: true, body: `You unlocked this at level ${row.level}. It gave you the title ${row.title} and the ${frame}.` };
   }
   return {
-    title: row.title,
+    title,
     unlocked: false,
-    body: `Reach level ${row.level} to unlock it. That is ${row.xpToGo.toLocaleString('en-US')} XP from where you are. It comes with the title and a ${letter}-Rank profile frame.`,
+    body: `Reach level ${row.level}. That is ${row.xpToGo.toLocaleString('en-US')} XP from where you are. It opens a ${chestName(row.chest)} chest with the title ${row.title} and a ${frame}.`,
   };
 }

@@ -327,6 +327,13 @@ uses the plain full-screen level up.
 - [ ] Badges: Workouts, Lifetime, This month, Trophies and Milestones. The retired
       plan badges (Perfect Month, Awakening, Program Complete, Iron Will and the
       like) are nowhere. Goal Month and Clean Sweep exist.
+- [ ] Rank Road: gate cards are in their rank's colours with a chest (open with a tick once
+      reached), your rank has the gold frame, ranks ahead are dashed with a lock chip. Your
+      level says "You are here" and the gold line fills from your shield toward the next level.
+- [ ] Medals on rows and a badge in the Badges tab open the badge view: the medal tilts under
+      a finger and springs back, and "Watch it unlock" replays the reward. A locked badge shows
+      the stone medal in its ring; a locked rank shows the shield in stone and "Reach level N".
+      Tilt on a real phone feels smooth and does not scroll the page.
 - [ ] Phone: a segment switches between Rank Road and Badges. Desktop: the
       Badges column stays in place while the road scrolls.
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { xpForLevel } from '../lib/progress';
-import { GATE_LEVELS, buildRoad, gateFor, gatePreview, gateState, levelsWord, nextGateAbove, roadBadges } from '../lib/rankRoad';
+import { GATE_LEVELS, buildRoad, chestLine, gateFor, gatePreview, gateState, gateWhere, levelsWord, nextGateAbove, nextRankText, roadBadges, visibleMedals } from '../lib/rankRoad';
 import type { GateRow, LevelRow } from '../lib/rankRoad';
 import { stateWith, trainingDay } from './helpers';
 
@@ -101,18 +101,9 @@ describe('the rows around your level', () => {
     expect(level(11)).toMatchObject({ kind: 'level', xpToGo: 0 });
   });
 
-  it('shows progress through the rank on your rank and the next one', () => {
-    // Level 12 of a rank that spans levels 10 to 15: 2 levels of XP in, out of 5.
+  it('counts the levels to the next gate', () => {
     const road = atLevel(12);
-    const c = road.rows.find((r) => r.kind === 'gate' && r.level === 10) as GateRow;
     const n = road.rows.find((r) => r.kind === 'gate' && r.level === 15) as GateRow;
-    const l = road.rows.find((r) => r.kind === 'gate' && r.level === 20) as GateRow;
-    const pct = Math.round(((xpForLevel(12) - xpForLevel(10)) / (xpForLevel(15) - xpForLevel(10))) * 100);
-    expect(c.rankProgress).toBe(pct);
-    expect(n.rankProgress).toBe(pct);
-    expect(l.rankProgress).toBe(0);
-    expect(c.nextTitle).toBe('B-Rank Hunter');
-    expect(c.nextLevelsToGo).toBe(3);
     expect(n.levelsToGo).toBe(3);
   });
 
@@ -136,9 +127,9 @@ describe('gate preview', () => {
   it('says when a rank was unlocked', () => {
     const d = atLevel(12).rows.find((r) => r.kind === 'gate' && r.level === 5) as GateRow;
     expect(gatePreview(d)).toEqual({
-      title: 'D-Rank Hunter',
+      title: 'D rank',
       unlocked: true,
-      body: 'You unlocked this at level 5. It gave you the title and the D-Rank profile frame.',
+      body: 'You unlocked this at level 5. It gave you the title D-Rank Hunter and the D-Rank profile frame.',
     });
   });
 
@@ -147,10 +138,33 @@ describe('gate preview', () => {
     const a = buildRoad(xp).rows.find((r) => r.kind === 'gate' && r.level === 20) as GateRow;
     const p = gatePreview(a);
     expect(p.unlocked).toBe(false);
-    expect(p.title).toBe('A-Rank Hunter');
+    expect(p.title).toBe('A rank');
     expect(p.body).toContain('Reach level 20');
     expect(p.body).toContain((xpForLevel(20) - xp).toLocaleString('en-US'));
     expect(p.body).toContain('A-Rank profile frame');
+  });
+
+  it('words where you stand on a gate: your rank, an earlier one, or none for a locked one', () => {
+    const at12 = atLevel(12);
+    const gate = (l: number) => at12.rows.find((r) => r.kind === 'gate' && r.level === l) as GateRow;
+    expect(gateWhere(gate(10))).toBe('Your rank, since level 10');
+    expect(gateWhere(gate(5))).toBe('Level 5');
+    expect(gateWhere(gate(15))).toBeNull();
+  });
+
+  it('names the rank chest on the gate', () => {
+    const gate = atLevel(1).rows.find((r) => r.kind === 'gate' && r.level === 10) as GateRow;
+    expect(chestLine(gate)).toBe('Golden chest: title and frame');
+  });
+
+  it('writes the next rank chip with the letter only, and nothing at the top rank', () => {
+    expect(nextRankText(atLevel(9))).toBe('Next rank: C at level 10');
+    expect(nextRankText(atLevel(30))).toBeNull();
+  });
+
+  it('keeps the latest medals that fit and counts the rest', () => {
+    expect(visibleMedals([1, 2, 3, 4, 5, 6, 7], 5)).toEqual({ shown: [3, 4, 5, 6, 7], more: 2 });
+    expect(visibleMedals([1, 2], 5)).toEqual({ shown: [1, 2], more: 0 });
   });
 
   it('words levels to go', () => {

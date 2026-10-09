@@ -7,7 +7,7 @@
 // says what it takes.
 import { computeBadges, LIFETIME_FAMILIES, MONTHLY_BADGES, SPECIAL_BADGES } from './badges';
 import type { BadgeShape, BadgeState, EarnedBadgeSummary, FamilyProgress, LifetimeFamilyId, MonthlyBadgeId, SpecialBadgeId } from './badges';
-import { monthKey, monthLabel, monthRibbon } from './date';
+import { formatDateFull, monthKey, monthLabel, monthRibbon } from './date';
 import type { AppState, BadgeTier } from './progress';
 import { fmtNumber } from './units';
 
@@ -192,4 +192,35 @@ export function cardToEarned(card: BadgeCard): EarnedBadgeSummary | null {
   }
   if (card.group === 'special') return { id: card.id, kind: 'special', badge: card.id.slice('special:'.length) as SpecialBadgeId, earnedAt };
   return null;
+}
+
+/** The card an earned badge belongs to: a family card stands for all of its tiers. Null when no card matches. */
+export function cardForBadge(cards: BadgeCards, b: EarnedBadgeSummary): BadgeCard | null {
+  const id = b.kind === 'lifetime' ? `lifetime:${b.family}` : b.id;
+  const all = [...cards.workouts, ...cards.lifetime, ...cards.month.cards, ...cards.trophies, ...cards.milestones];
+  return all.find((c) => c.id === id) ?? null;
+}
+
+export type BadgeFacts = {
+  tier: string; // Bronze to Legend, Monthly, Special, or Locked
+  earnedLine: string | null; // "Earned Mar 4, 2026"
+  what: string; // what it measures
+  progress: string; // "Silver: 3 of 10 workouts", "Not yet", or the top tier
+  pct: number;
+};
+
+/**
+ * What the badge view says. `earned` is the tier or month the person tapped, which
+ * can be a lower tier than the family's current one (a medal on the road).
+ */
+export function badgeFacts(card: BadgeCard, earned: EarnedBadgeSummary | null): BadgeFacts {
+  const nextTier = card.ladder.find((l) => !l.earned)?.tier;
+  const progress = card.group === 'lifetime' && nextTier && card.target !== null ? `${tierLabel(nextTier)}: ${card.progressText}` : card.progressText;
+  return {
+    tier: earned?.kind === 'lifetime' ? tierLabel(earned.tier) : card.tierName,
+    earnedLine: earned ? `Earned ${formatDateFull(earned.earnedAt)}` : null,
+    what: card.what,
+    progress,
+    pct: card.pct,
+  };
 }

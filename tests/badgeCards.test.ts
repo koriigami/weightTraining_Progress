@@ -5,7 +5,9 @@ import {
   LEGACY_FAMILIES,
   WORKOUT_FAMILIES,
   badgeCardsFrom,
+  badgeFacts,
   buildBadgeCards,
+  cardForBadge,
   lifetimeCard,
   specialCard,
   tierLabel,
@@ -157,5 +159,31 @@ describe('badge cards', () => {
       expect(Object.keys(MONTHLY_BADGES).sort()).toEqual(['20k-walk-run', '40k-ride', 'cardio-month', 'goal-month', 'month-clear', 'pushup-month', 'weigh-in-month']);
       expect(Object.keys(SPECIAL_BADGES).sort()).toEqual(['clean-sweep', 'goal-getter']);
     });
+  });
+});
+
+describe('the badge view', () => {
+  const state = stateWith([push('2026-09-01'), push('2026-09-03')]);
+  const cards = buildBadgeCards(state, TODAY);
+
+  it('finds the family card for any tier a person earned', () => {
+    const bronze = allEarnedBadges(state, TODAY).find((b) => b.id === 'lifetime:finisher:bronze')!;
+    expect(cardForBadge(cards, bronze)?.name).toBe('Finisher');
+  });
+
+  it('names the tier tapped, the date earned and the way to the next tier', () => {
+    const bronze = allEarnedBadges(state, TODAY).find((b) => b.id === 'lifetime:finisher:bronze')!;
+    const card = cardForBadge(cards, bronze)!;
+    const f = badgeFacts(card, bronze);
+    expect(f.tier).toBe('Bronze');
+    expect(f.earnedLine).toBe('Earned Sep 1, 2026');
+    expect(f.progress).toBe(`Silver: ${card.progressText}`);
+  });
+
+  it('says Locked with no date for a badge nobody has', () => {
+    const rider = cards.lifetime.find((c) => c.name === 'Rider')!;
+    const f = badgeFacts(rider, null);
+    expect(f.tier).toBe('Locked');
+    expect(f.earnedLine).toBeNull();
   });
 });

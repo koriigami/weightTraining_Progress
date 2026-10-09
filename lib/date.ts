@@ -117,3 +117,9 @@ export function formatDayLong(date: string): string {
   const dt = new Date(Date.UTC(y, m - 1, d));
   return `${dt.toLocaleDateString('en-GB', { weekday: 'long', timeZone: 'UTC' })} ${d} ${dt.toLocaleDateString('en-GB', { month: 'long', timeZone: 'UTC' })} ${y}`;
 }
+
+// "Mar 4, 2026" - a date with its year, for when something was earned.
+export function formatDateFull(date: string): string {
+  const d = new Date(`${date}T00:00:00`);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
