@@ -4,14 +4,50 @@ import type { BadgeTier } from './progress';
 
 export type BadgeMaterial = { rim: string[]; face: [string, string]; label: string };
 
+/** Every tier a medal or a chest can have: the six ranks plus the themed ones. */
+export type PaletteKey = BadgeTier | 'monthly' | 'special' | 'secret';
+
+export type TierColors = {
+  label: string;
+  chest: string; // the chest's name, "Wooden" for bronze
+  taps: 1 | 2 | 3;
+  metal: string; // rim and lid metal, the light colour
+  metalDeep: string;
+  enamel: string; // face and body, the main colour
+  enamelDeep: string;
+  glow: string; // light behind the medal and out of the chest
+  color: string; // text and ribbon colour on a light page
+};
+
+// The one palette. Values are the PALETTE in docs/design/12-motion/art3d.js and
+// the TIER_UI in docs/design/12-motion/stage.js. The 3D art reads it as is.
+export const TIER_PALETTE: Record<PaletteKey, TierColors> = {
+  bronze: { label: 'Bronze', chest: 'Wooden', taps: 1, metal: '#c27a43', metalDeep: '#7a4220', enamel: '#d9772f', enamelDeep: '#7a3410', glow: '#ffb469', color: '#a4521f' },
+  silver: { label: 'Silver', chest: 'Silver', taps: 1, metal: '#e4ebf2', metalDeep: '#7d8a99', enamel: '#5f7fa8', enamelDeep: '#243b5e', glow: '#cfe7ff', color: '#5f7086' },
+  gold: { label: 'Gold', chest: 'Golden', taps: 2, metal: '#ffcf4a', metalDeep: '#b07a0c', enamel: '#e0262f', enamelDeep: '#6e0b14', glow: '#ffe27a', color: '#b8790a' },
+  diamond: { label: 'Diamond', chest: 'Crystal', taps: 2, metal: '#eaf6ff', metalDeep: '#7fa9c9', enamel: '#3fb5ff', enamelDeep: '#1a3fb8', glow: '#9ef0ff', color: '#1f7fc4' },
+  master: { label: 'Master', chest: 'Obsidian', taps: 3, metal: '#3a2c38', metalDeep: '#120b12', enamel: '#2a1630', enamelDeep: '#0b0510', glow: '#ff8a2a', color: '#b4410f' },
+  legend: { label: 'Legend', chest: 'Prismatic', taps: 3, metal: '#fff4fb', metalDeep: '#c7b2ff', enamel: '#3b1f8f', enamelDeep: '#10063a', glow: '#ffd0f4', color: '#6d3fd6' },
+  monthly: { label: 'Monthly', chest: 'Monthly', taps: 1, metal: '#f6f2ea', metalDeep: '#b8a888', enamel: '#16b896', enamelDeep: '#0b5e4c', glow: '#ffc4cc', color: '#0e8c73' },
+  special: { label: 'Special', chest: 'Royal', taps: 2, metal: '#ffc93a', metalDeep: '#9a5d00', enamel: '#7a3fe0', enamelDeep: '#2e0f6b', glow: '#e2d4ff', color: '#6d2fd6' },
+  secret: { label: 'Secret', chest: 'Pillow', taps: 1, metal: '#f3ecff', metalDeep: '#9a86d6', enamel: '#9b7bff', enamelDeep: '#3b1f8f', glow: '#efe6ff', color: '#6b4fd6' },
+};
+
+/** A locked badge: stone, from the board's `locked` entry. */
+export const LOCKED_COLORS = { metal: '#b9b2a6', enamel: '#9a9285', enamelDeep: '#5e574b', icon: '#ece6da', glow: '#ffffff' };
+
+// The flat vector medal (components/Badge) reads these until the 3D art replaces
+// it, so they come from the palette too. Legend keeps its rainbow rim.
+const material = (k: PaletteKey): BadgeMaterial => ({ rim: [TIER_PALETTE[k].metal, TIER_PALETTE[k].metalDeep], face: [TIER_PALETTE[k].enamel, TIER_PALETTE[k].enamelDeep], label: TIER_PALETTE[k].label });
+
 export const TIERS: Record<BadgeTier | 'locked', BadgeMaterial> = {
-  bronze: { rim: ['#E3A86B', '#8C5A2B'], face: ['#B87B45', '#5E3A1A'], label: 'Bronze' },
-  silver: { rim: ['#F4F7FA', '#8E9AA6'], face: ['#B7C2CD', '#56616E'], label: 'Silver' },
-  gold: { rim: ['#FFE27A', '#B8860B'], face: ['#E8B83A', '#7A5600'], label: 'Gold' },
-  diamond: { rim: ['#9EF0FF', '#6A5CFF'], face: ['#5DB6F5', '#3423C9'], label: 'Diamond' },
-  master: { rim: ['#FFB36B', '#C2410C'], face: ['#3A2A3F', '#120C18'], label: 'Master' },
-  legend: { rim: ['#FF6B8A', '#FFD24A', '#5EE0A3', '#7CC0FF', '#B272F0'], face: ['#3A1F7A', '#120A33'], label: 'Legend' },
-  locked: { rim: ['#B3B7C4', '#6C7080'], face: ['#8C90A0', '#4D5160'], label: 'Locked' },
+  bronze: material('bronze'),
+  silver: material('silver'),
+  gold: material('gold'),
+  diamond: material('diamond'),
+  master: material('master'),
+  legend: { ...material('legend'), rim: ['#FF6B8A', '#FFD24A', '#5EE0A3', '#7CC0FF', '#B272F0'] },
+  locked: { rim: [LOCKED_COLORS.metal, '#6C7080'], face: [LOCKED_COLORS.enamel, LOCKED_COLORS.enamelDeep], label: 'Locked' },
 };
 
 // Keyed by the colorKey each monthly badge carries in lib/badges.ts.
@@ -26,14 +62,14 @@ export const MONTHLY_COLORS: Record<string, [string, string]> = {
 };
 
 // The hexagon medal in the badge unlock moment and its tier ribbon: a light and
-// a dark colour per tier, from board 05. The ribbon uses the dark one.
+// a dark colour per tier. The ribbon uses the dark one.
 export const MEDAL_TIERS: Record<BadgeTier, [string, string]> = {
-  bronze: ['#F0B383', '#8C4A1F'],
-  silver: ['#EEF2F7', '#7D8796'],
-  gold: ['#FFE58A', '#C78A00'],
-  diamond: ['#B5F0FF', '#1F8FC4'],
-  master: ['#DCC2FF', '#6D28D9'],
-  legend: ['#FFB8C6', '#BE123C'],
+  bronze: [TIER_PALETTE.bronze.metal, TIER_PALETTE.bronze.color],
+  silver: [TIER_PALETTE.silver.metal, TIER_PALETTE.silver.color],
+  gold: [TIER_PALETTE.gold.metal, TIER_PALETTE.gold.color],
+  diamond: [TIER_PALETTE.diamond.metal, TIER_PALETTE.diamond.color],
+  master: [TIER_PALETTE.master.glow, TIER_PALETTE.master.color],
+  legend: [TIER_PALETTE.legend.glow, TIER_PALETTE.legend.color],
 };
 
 const channel = (v: number): number => {

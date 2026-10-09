@@ -102,9 +102,9 @@ describe('badge medal for the unlock moment', () => {
   it('a lifetime tier: the tier ribbon and medal colours, the threshold in words', () => {
     const m = describeMomentBadge({ id: 'x', kind: 'lifetime', family: 'iron-mover', tier: 'gold', earnedAt: '2026-09-27' });
     expect(m).toMatchObject({ name: 'Iron Mover', ribbon: 'Gold', what: 'Sets logged: 500 sets', icon: 'dumbbell' });
-    expect(m.medal).toEqual(['#FFE58A', '#C78A00']);
-    // The gold ribbon is the tier's dark gold, darkened until the white text on it reads.
-    expect(m.ribbonColor).toBe(ribbonBackground('#C78A00'));
+    expect(m.medal).toEqual(['#ffcf4a', '#b8790a']);
+    // The gold ribbon is the tier's dark gold from the tier palette, darkened until the white text on it reads.
+    expect(m.ribbonColor).toBe(ribbonBackground('#b8790a'));
     expect(contrastWithWhite(m.ribbonColor)).toBeGreaterThanOrEqual(4.5);
   });
 

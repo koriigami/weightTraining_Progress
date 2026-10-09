@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { xpForLevel } from '../lib/progress';
-import { GATE_LEVELS, buildRoad, gateFor, gatePreview, gateState, levelsWord, nextGateAbove } from '../lib/rankRoad';
-import type { GateRow } from '../lib/rankRoad';
+import { GATE_LEVELS, buildRoad, gateFor, gatePreview, gateState, levelsWord, nextGateAbove, roadBadges } from '../lib/rankRoad';
+import type { GateRow, LevelRow } from '../lib/rankRoad';
+import { stateWith, trainingDay } from './helpers';
 
 const atLevel = (l: number, extra = 0) => buildRoad(xpForLevel(l) + extra);
 const gates = (l: number) => Object.fromEntries((atLevel(l).rows.filter((r) => r.kind === 'gate') as GateRow[]).map((g) => [g.level, g.state]));
@@ -155,5 +156,38 @@ describe('gate preview', () => {
   it('words levels to go', () => {
     expect(levelsWord(1)).toBe('1 level');
     expect(levelsWord(3)).toBe('3 levels');
+  });
+});
+
+describe('the chest and the badges on the road', () => {
+  // Twelve training days two days apart: 110 XP after the first, 1,230 after the tenth.
+  const days = Array.from({ length: 12 }, (_, i) => `2026-09-${String(i * 2 + 1).padStart(2, '0')}`);
+  const state = stateWith(days.map((d) => trainingDay(d)));
+  const placed = roadBadges(state, '2026-10-01');
+  const ids = (level: number) => (placed.get(level) ?? []).map((b) => b.id).sort();
+
+  it('gives each gate its rank chest', () => {
+    const g = atLevel(1).rows.filter((r) => r.kind === 'gate') as GateRow[];
+    expect(g.map((r) => r.chest)).toEqual(['legend', 'master', 'diamond', 'gold', 'silver', 'bronze']);
+  });
+
+  it('puts a badge on the level you were at the day you earned it', () => {
+    expect(ids(2)).toEqual(['lifetime:finisher:bronze', 'lifetime:pushup-path:bronze']);
+    expect(ids(3)).toEqual(['lifetime:streak-keeper:bronze']);
+    expect(ids(4)).toEqual(['lifetime:iron-mover:bronze', 'lifetime:pushup-path:silver']);
+  });
+
+  it('puts the badges of a rank-crossing day on the gate', () => {
+    // The tenth training day takes level 4 to level 5 and earns Finisher Silver.
+    expect(ids(5)).toContain('lifetime:finisher:silver');
+    expect(ids(4)).not.toContain('lifetime:finisher:silver');
+  });
+
+  it('carries the badges onto the rows of a built road, and none onto rows ahead', () => {
+    const road = buildRoad(1450, placed);
+    const row = (l: number) => road.rows.find((r) => r.level === l) as LevelRow | GateRow;
+    expect(row(2).badges).toHaveLength(2);
+    expect(row(5).badges.map((b) => b.id)).toContain('lifetime:finisher:silver');
+    expect(row(6).badges).toEqual([]);
   });
 });

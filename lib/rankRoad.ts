@@ -6,8 +6,14 @@
 //   current  your rank
 //   next     the next rank to unlock
 //   locked   further away
-import { RANK_TITLES, levelForXp, rankForLevel, xpForLevel, xpIntoLevel } from './progress';
-import type { Rank } from './progress';
+import { allEarnedBadges } from './badges';
+import type { EarnedBadgeSummary } from './badges';
+import { goalStatus } from './goals';
+import { RANK_TITLES, XP, levelForXp, rankForLevel, xpForGoal, xpForLevel, xpIntoLevel } from './progress';
+import type { AppState, Rank } from './progress';
+import { CHEST_FOR_RANK } from './rewards';
+import type { ChestKey } from './rewards';
+import { scoreState } from './workoutScoring';
 
 export const GATE_LEVELS = [1, 5, 10, 15, 20, 30] as const;
 export const GATE_RANK: Record<number, Rank> = { 1: 'E', 5: 'D', 10: 'C', 15: 'B', 20: 'A', 30: 'S' };
@@ -26,6 +32,8 @@ export type GateRow = {
   levelsToGo: number; // levels to reach this gate, 0 once reached
   xpToGo: number; // XP to reach this gate, 0 once reached
   unlockXp: number; // XP the gate starts at
+  chest: ChestKey; // the rank's chest, opened for the first time on reaching the gate
+  badges: EarnedBadgeSummary[]; // badges earned by the workout that crossed into this rank, or on the day you are at this level
   nextTitle: string | null; // for your rank: the rank after it
   nextLevelsToGo: number | null; // for your rank: levels to the next gate
   rankProgress: number; // 0..100, for your rank and the next one: how far through the rank you are
@@ -37,6 +45,7 @@ export type LevelRow = {
   xp: number; // XP the level starts at
   xpToGo: number; // XP to reach this level, 0 once reached
   state: 'done' | 'now' | 'ahead';
+  badges: EarnedBadgeSummary[]; // badges earned on the day this level was reached
 };
 
 export type RoadRow = GateRow | LevelRow;
@@ -77,7 +86,55 @@ export function levelsWord(n: number): string {
   return `${n} ${plural(n, 'level', 'levels')}`;
 }
 
-export function buildRoad(xp: number): Road {
+/** Badges by the road row (level) they sit on, from roadBadges. */
+export type RowBadges = ReadonlyMap<number, EarnedBadgeSummary[]>;
+
+/**
+ * Where each earned badge sits on the road, derived from the badge's earnedAt
+ * date and the level reached that day. A badge earned on a day that took you
+ * across a rank gate sits on that gate (the highest one crossed); any other
+ * badge sits on the level you ended that day at. The day is the unit: levels
+ * are worked out from XP through the end of each date, so nothing is stored.
+ */
+export function roadBadges(state: AppState, today: string): Map<number, EarnedBadgeSummary[]> {
+  const badges = allEarnedBadges(state, today);
+  // XP per date: workouts, weigh-ins, badges and achieved goals, as totalXp counts them.
+  const perDate = new Map<string, number>();
+  const add = (date: string, n: number) => perDate.set(date, (perDate.get(date) ?? 0) + n);
+  for (const s of scoreState(state, today)) add(s.date, s.xp);
+  for (const d of Object.keys(state.weights)) add(d, XP.weighIn);
+  for (const b of badges) add(b.earnedAt, b.kind === 'lifetime' ? XP.badgeTier[b.tier] : b.kind === 'monthly' ? XP.monthlyBadge : XP.specialBadge);
+  for (const g of state.goals) if (goalStatus(g, state, today) === 'achieved') add(g.achievedAt?.slice(0, 10) ?? today, xpForGoal(g));
+
+  const dates = Array.from(perDate.keys()).sort();
+  const endXp = new Map<string, number>();
+  let running = 0;
+  for (const d of dates) {
+    running += perDate.get(d) ?? 0;
+    endXp.set(d, running);
+  }
+  // The XP at the end of the last date before `date`.
+  const xpBefore = (date: string): number => {
+    let xp = 0;
+    for (const d of dates) {
+      if (d >= date) break;
+      xp = endXp.get(d) ?? xp;
+    }
+    return xp;
+  };
+
+  const out = new Map<number, EarnedBadgeSummary[]>();
+  for (const b of badges) {
+    const before = levelForXp(xpBefore(b.earnedAt));
+    const after = levelForXp(endXp.get(b.earnedAt) ?? xpBefore(b.earnedAt));
+    const crossed = GATE_LEVELS.filter((g) => g > before && g <= after);
+    const row = crossed.length ? crossed[crossed.length - 1] : after;
+    out.set(row, [...(out.get(row) ?? []), b]);
+  }
+  return out;
+}
+
+export function buildRoad(xp: number, badges: RowBadges = new Map()): Road {
   const level = levelForXp(xp);
   const { current: into, needed } = xpIntoLevel(xp);
   const curGate = gateFor(level);
@@ -104,12 +161,21 @@ export function buildRoad(xp: number): Road {
         levelsToGo: reached ? 0 : l - level,
         xpToGo: reached ? 0 : xpForLevel(l) - xp,
         unlockXp: xpForLevel(l),
+        chest: CHEST_FOR_RANK[rank],
+        badges: reached ? (badges.get(l) ?? []) : [],
         nextTitle: state === 'current' && nextGate ? RANK_TITLES[GATE_RANK[nextGate]] : null,
         nextLevelsToGo: state === 'current' && nextGate ? nextGate - level : null,
         rankProgress: state === 'current' || state === 'next' ? rankProgress : 0,
       });
     } else {
-      rows.push({ kind: 'level', level: l, xp: xpForLevel(l), xpToGo: l > level ? xpForLevel(l) - xp : 0, state: l < level ? 'done' : l === level ? 'now' : 'ahead' });
+      rows.push({
+        kind: 'level',
+        level: l,
+        xp: xpForLevel(l),
+        xpToGo: l > level ? xpForLevel(l) - xp : 0,
+        state: l < level ? 'done' : l === level ? 'now' : 'ahead',
+        badges: l <= level ? (badges.get(l) ?? []) : [],
+      });
     }
   }
   return {
