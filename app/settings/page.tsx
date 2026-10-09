@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { BarChart3, ChevronRight, CircleHelp, Compass, Dumbbell, FileText, LogOut, Mail, Scale, ShieldCheck, Sparkles, Target, Volume2, Vibrate, X } from 'lucide-react';
+import { BarChart3, ChevronRight, CircleHelp, Compass, Dumbbell, FileText, LogOut, Mail, Scale, ShieldCheck, Sparkles, Music, Target, Volume2, Vibrate, X } from 'lucide-react';
 import { useShell } from '@/components/nav/ShellContext';
 import { AvoidFields, EquipmentFields, UnitsFields, WeeklyGoalFields } from '@/components/prefs/PrefsFields';
 import { useProgress } from '@/components/ProgressProvider';
@@ -82,11 +82,18 @@ function Row({ icon, label, value, onClick }: { icon: React.ReactNode; label: st
   );
 }
 
-function SwitchRow({ icon, label, checked, onChange }: { icon: React.ReactNode; label: string; checked: boolean; onChange: (next: boolean) => void }) {
+function SwitchRow({ icon, label, hint, checked, onChange }: { icon: React.ReactNode; label: string; hint?: string; checked: boolean; onChange: (next: boolean) => void }) {
   return (
     <div className="wt-setrow">
       <span className="ibox">{icon}</span>
-      <span>{label}</span>
+      {hint ? (
+        <span className="lbl">
+          {label}
+          <small>{hint}</small>
+        </span>
+      ) : (
+        <span>{label}</span>
+      )}
       <Switch label={label} checked={checked} onChange={onChange} />
     </div>
   );
@@ -98,6 +105,9 @@ export default function SettingsPage() {
   const { askSignOut } = useShell();
   const { prefs, progress, savePrefs, showToast } = useProgress();
   const [editor, setEditor] = useState<Editor | null>(null);
+  // Music is a choice for this device only (wt:prefs); the rest of the prefs are saved to the account.
+  const [music, setMusic] = useState(true);
+  useEffect(() => setMusic(feedback.getPrefs().music), []);
   const name = auth?.user?.name || auth?.user?.email || 'You';
 
   // wt:prefs on this device is what actually plays, so it is set at once, and the same
@@ -110,6 +120,10 @@ export default function SettingsPage() {
       feedback.setSoundEnabled(prefs.sound);
       showToast(error);
     }
+  }
+  function toggleMusic(next: boolean) {
+    feedback.setMusicEnabled(next);
+    setMusic(next);
   }
   async function toggleHaptic(next: boolean) {
     feedback.setVibrateEnabled(next);
@@ -144,6 +158,7 @@ export default function SettingsPage() {
       <SectionLabel>App</SectionLabel>
       <Card className="wt-setpanel">
         <SwitchRow icon={<Volume2 size={20} aria-hidden="true" />} label="Sounds" checked={prefs.sound} onChange={toggleSound} />
+        <SwitchRow icon={<Music size={20} aria-hidden="true" />} label="Music" hint="Only in reward moments" checked={music} onChange={toggleMusic} />
         <SwitchRow icon={<Vibrate size={20} aria-hidden="true" />} label="Haptics" checked={prefs.haptic} onChange={toggleHaptic} />
         <Row icon={<CircleHelp size={20} aria-hidden="true" />} label="How Levl works" onClick={() => router.push('/?guide=1')} />
         <Row icon={<Sparkles size={20} aria-hidden="true" />} label="What's new" onClick={() => router.push('/news')} />

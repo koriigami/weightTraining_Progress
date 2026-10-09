@@ -4900,6 +4900,13 @@ button.wt-setrow:hover {
   flex: none;
   color: var(--s-ink);
 }
+.wt-setrow .lbl small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12px;
+}
 .wt-setrow .val {
   margin-left: auto;
   color: var(--muted);

@@ -183,7 +183,7 @@ A moment (`Moment.tsx`, with `Chest.tsx`) is a full-screen `role="dialog"`. Focu
 moves into it and is restored after. Tap, Enter, Space or Esc continue, and the
 browser Back button closes it too. A tap in the first 300 ms is ignored so the
 tap that started it cannot skip it. Sound and haptics fire with the animation,
-through `lib/feedback.ts`. With reduced motion the moment shows its end state
+through `lib/feedback.ts`, which plays them on the sound engine (see "Sound and motion"). With reduced motion the moment shows its end state
 with nothing spinning.
 
 Nothing replays on reload. `wt:seen:{userId}` in localStorage records the
@@ -317,7 +317,7 @@ Redis keys, all per person (`{id}` is the Google account id):
 
 Browser storage, all per person and device: `wt:session:{id}` (workout in
 progress), `wt:seen:{id}` (what reward moments were shown), and `wt:prefs`
-(sound and haptics for this device). Every read and write is wrapped in
+(sound, haptics and music for this device). Every read and write is wrapped in
 try/catch, and the app works with storage blocked.
 
 `lib/store.ts` has one `KV` interface with two backends: Upstash Redis, and an
@@ -639,6 +639,36 @@ Behaviour:
   `data-autofocus`, no outline), never on a button, so no focus ring shows before anyone uses the keyboard.
 - Reduced motion: no ring movement and no card animation.
 - On a phone under 340 px wide the welcome card's two buttons stack, since "Show me around" does not fit beside Skip.
+
+## Sound and motion
+
+`lib/motion.ts` is pure: the durations (`DUR`), the easing curves (`EASE`), the
+three springs (`SPRINGS`: snappy, bouncy, heavy), `spring()`, `springMs()` (when
+it settles) and `springFrames()` (Web Animations keyframes for a spring).
+
+`lib/sound.ts` is the engine, safe to import anywhere: on the server, without Web
+Audio, or before the first tap, every call does nothing.
+- Three buses (taps 0.5, effects 0.9, music 0.5), a small generated reverb and a
+  limiter. `navigator.audioSession.type = 'ambient'` so a person's own music keeps playing.
+- Audio is allowed after the first tap or key press (`unlock()`); the context
+  starts and the picked effect files are fetched then. A file not yet loaded plays
+  late only if it arrives within 400 ms.
+- `SLOTS` is the table of 25 slots with the signed-off pick, bus and gain. A pick
+  is a file in `public/sounds/`, a sound made in code (`code:name`, the `SYN`
+  functions) or two layered (`layer:a+b`). `play(slotId, opts)` plays one.
+  Reward sounds play in C (`REWARD_KEY`); only `sparkle-a` is recorded in D and is pitched down to match.
+- `MUSIC` has three cues, `music('level' | 'rank' | 'victory')`, one at a time;
+  the chest has no music. `duck()` pulls the music down for a big hit, `stopMusic()` fades it out.
+- `buzz(kind)` vibrates (Android only; iPhone browsers have no web vibration).
+- Prefs are in `wt:prefs`: `sound`, `vibrate` and `music`, all on by default. Sounds
+  off is silence for everything; Music off is no music. Music is stored on the device
+  only; sound and haptics are also saved to the account (`lib/routines.ts` Prefs).
+- `public/sounds/` ships only the files the table plays, with `LICENSES.md`. A test
+  checks the folder and the table match.
+
+`lib/feedback.ts` keeps the older calls (`tick`, `levelUp`, `rankUp`, `chest`,
+`whoosh`, `badgeReveal`, `dayCleared`, `warm`) on top of the engine, so callers did
+not change. The file lists which new sound each one plays.
 
 ## Rendering and layout
 
